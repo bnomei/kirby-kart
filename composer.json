@@ -49,12 +49,14 @@
     "optimize-autoloader": true,
     "allow-plugins": {
       "getkirby/composer-installer": true,
-      "pestphp/pest-plugin": true
+      "pestphp/pest-plugin": true,
+      "php-http/discovery": true
     }
   },
   "require": {
     "php": ">=8.2",
-    "getkirby/composer-installer": "^1.1"
+    "getkirby/composer-installer": "^1.1",
+    "ext-intl": "*"
   },
   "require-dev": {
     "getkirby/cms": "^5.0.0-beta.3",
@@ -65,7 +67,8 @@
     "getkirby/cli": "^1.5",
     "stripe/stripe-php":"^v16.5.1",
     "mollie/mollie-api-php":"^v2.78.0",
-    "PaddleHQ/paddle-php-sdk": "^1.9.0"
+    "paddlehq/paddle-php-sdk": "^1.9.0",
+    "php-http/guzzle7-adapter": "^1.1"
   },
   "scripts": {
     "stan": "./vendor/bin/phpstan",
@@ -91,6 +94,6 @@
   "suggest": {
     "stripe/stripe-php": "Stripe PHP SDK",
     "mollie/mollie-api-php": "Mollie PHP SDK",
-    "PaddleHQ/paddle-php-sdk": "Paddle PHP SDK"
+    "paddlehq/paddle-php-sdk": "Paddle PHP SDK"
   }
 }

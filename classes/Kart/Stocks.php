@@ -2,7 +2,4 @@
 
 namespace Bnomei\Kart;
 
-class Stocks
-{
-
-}
+class Stocks {}

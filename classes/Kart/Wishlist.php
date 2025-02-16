@@ -2,7 +2,4 @@
 
 namespace Bnomei\Kart;
 
-class CartLine
-{
-
-}
+class Wishlist extends Cart {}

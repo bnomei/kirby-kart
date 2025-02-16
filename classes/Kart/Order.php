@@ -2,7 +2,4 @@
 
 namespace Bnomei\Kart;
 
-class Order implements OrderInterface
-{
-
-}
+class Order implements OrderInterface {}

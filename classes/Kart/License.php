@@ -6,14 +6,15 @@ use Closure;
 use Kirby\Data\Json;
 use Kirby\Filesystem\F;
 use Kirby\Http\Remote;
-use Kirby\Plugin\License;
+use Kirby\Plugin\License as KirbyLicense;
 use Kirby\Plugin\LicenseStatus;
 use Kirby\Plugin\Plugin;
-use function Bnomei\kirby;
-use function Bnomei\option;
-use function Bnomei\t;
 
-class License extends License
+use function kirby;
+use function option;
+use function t;
+
+class License extends KirbyLicense
 {
     const NAME = 'Kirby Kart';
 

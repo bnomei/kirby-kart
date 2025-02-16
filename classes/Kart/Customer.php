@@ -2,7 +2,4 @@
 
 namespace Bnomei\Kart;
 
-class Customer
-{
-
-}
+class Customer {}

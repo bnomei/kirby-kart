@@ -1,0 +1,65 @@
+<?php
+
+use Bnomei\Kart\Router;
+use Kirby\Cms\App;
+use Kirby\Cms\Response;
+
+return function (App $kirby) {
+    return [
+        [
+            'pattern' => Router::CHECKOUT,
+            'method' => 'POST',
+            'action' => function () {
+                if ($r = Router::denied()) {
+                    return $r;
+                }
+
+                go(kart()->provider()->checkout());
+            },
+        ],
+        [
+            'pattern' => Router::LOGIN,
+            'method' => 'POST',
+            'action' => function () use ($kirby) {
+                if ($r = Router::denied()) {
+                    return $r;
+                }
+
+                $user = $kirby->user(get('email'));
+                if (! $user || ! $user->login(get('password'))) {
+                    return Response::json([], 401);
+                }
+
+                go(get('redirect', $kirby->site()->url()));
+            },
+        ],
+        [
+            'pattern' => Router::LOGOUT,
+            'method' => 'POST',
+            'action' => function () use ($kirby) {
+                if ($r = Router::denied()) {
+                    return $r;
+                }
+
+                if ($user = $kirby->user()) {
+                    $user->logout();
+                }
+
+                go(get('redirect', $kirby->site()->url()));
+            },
+        ],
+        [
+            'pattern' => Router::CART_ADD,
+            'method' => 'POST',
+            'action' => function () {
+                if ($r = Router::denied()) {
+                    return $r;
+                }
+
+                kart()->cart()->add(get('product'));
+
+                return Response::json([], 200);
+            },
+        ],
+    ];
+};

@@ -1,7 +1,3 @@
 <?php
 
-
-class ProductsPage extends \Kirby\Cms\Page
-{
-
-}
+class ProductPage extends \Kirby\Cms\Page {}

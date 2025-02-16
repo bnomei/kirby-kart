@@ -1,6 +1,3 @@
 <?php
 
-class OrderPage
-{
-
-}
+class OrderPage extends \Kirby\Cms\Page {}

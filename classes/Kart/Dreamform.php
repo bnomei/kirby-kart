@@ -2,7 +2,4 @@
 
 namespace Bnomei\Kart;
 
-class OrderDreamform extends Order
-{
-
-}
+class Dreamform extends Order {}

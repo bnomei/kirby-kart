@@ -2,7 +2,9 @@
 
 namespace Bnomei\Kart\Provider;
 
-class Paddle
-{
+use Bnomei\Kart\Provider;
 
+class Paddle extends Provider
+{
+    protected string $name = 'paddle';
 }

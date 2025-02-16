@@ -4,7 +4,7 @@ namespace Bnomei\Kart\Provider;
 
 use Bnomei\Kart\Provider;
 
-class Mollie extends Provider
+class Kirby extends Provider
 {
-    protected string $name = 'mollie';
+    protected string $name = 'kirby';
 }
