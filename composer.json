@@ -1,0 +1,96 @@
+{
+  "name": "bnomei/kirby-kart",
+  "type": "kirby-plugin",
+  "version": "5.0.0",
+  "description": "Streamlined E-Commerce Shopping Cart Solution",
+  "license": "proprietary",
+  "authors": [
+    {
+      "name": "Bruno Meilick",
+      "email": "b@bnomei.com"
+    }
+  ],
+  "keywords": [
+    "kirby",
+    "kirby-cms",
+    "kirby-plugin",
+    "e-commerce",
+    "shop",
+    "cart",
+    "buy",
+    "payment",
+    "gateway",
+    "provider",
+    "sell",
+    "stock",
+    "order",
+    "invoice",
+    "merchant-of-record",
+    "stripe",
+    "lemonsqueeze",
+    "paypal",
+    "paddle",
+    "mollie",
+    "snipcart"
+  ],
+  "autoload": {
+    "psr-4": {
+      "Bnomei\\Kart\\": "classes/Kart"
+    },
+    "files": [
+      "models/OrderPage.php",
+      "models/OrdersPage.php",
+      "models/ProductPage.php",
+      "models/ProductsPage.php",
+      "models/StocksPage.php"
+    ]
+  },
+  "config": {
+    "optimize-autoloader": true,
+    "allow-plugins": {
+      "getkirby/composer-installer": true,
+      "pestphp/pest-plugin": true
+    }
+  },
+  "require": {
+    "php": ">=8.2",
+    "getkirby/composer-installer": "^1.1"
+  },
+  "require-dev": {
+    "getkirby/cms": "^5.0.0-beta.3",
+    "larastan/larastan": "^v3.0.0",
+    "laravel/pint": "^1.13",
+    "pestphp/pest": "^v3.5.1",
+    "spatie/ray": "^1.39",
+    "getkirby/cli": "^1.5",
+    "stripe/stripe-php":"^v16.5.1",
+    "mollie/mollie-api-php":"^v2.78.0",
+    "PaddleHQ/paddle-php-sdk": "^1.9.0"
+  },
+  "scripts": {
+    "stan": "./vendor/bin/phpstan",
+    "fix": "./vendor/bin/pint",
+    "test": "./vendor/bin/pest --profile",
+    "dist": [
+      "composer fix",
+      "composer install --no-dev --optimize-autoloader",
+      "git rm -rf --cached .; git add .;"
+    ],
+    "kirby": [
+      "composer install",
+      "composer update",
+      "composer install --working-dir=tests/kirby --no-dev --optimize-autoloader",
+      "composer update --working-dir=tests/kirby",
+      "sed -i.bak 's/function dump(/function xdump(/g' tests/kirby/config/helpers.php",
+      "sed -i.bak 's/function e(/function xe(/g' tests/kirby/config/helpers.php"
+    ]
+  },
+  "extra": {
+    "kirby-cms-path": "tests/kirby"
+  },
+  "suggest": {
+    "stripe/stripe-php": "Stripe PHP SDK",
+    "mollie/mollie-api-php": "Mollie PHP SDK",
+    "PaddleHQ/paddle-php-sdk": "Paddle PHP SDK"
+  }
+}
