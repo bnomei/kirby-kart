@@ -13,6 +13,7 @@
         </div>
     </article>
     <aside class="w-1/3 border-l border-gray-100 p-4 space-y-4">
+        <?php snippet('profile') ?>
         <?php snippet(option('tests.frontend').'/cart') ?>
         <?php snippet(option('tests.frontend').'/wishlist') ?>
     </aside>

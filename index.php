@@ -25,9 +25,18 @@ Kirby::plugin(
             'provider' => 'kirby', // stripe, mollie, paddle, ...
             'locale' => 'en_EN', // or current locale on multilanguage setups
             'currency' => 'EUR',
-            'ordersPage' => 'orders',
-            'productsPage' => 'products',
-            'stocksPage' => 'stocks',
+            'orders' => [
+                'enabled' => true, // true|false, 'dreamform'
+                'page' => 'orders', // 'orders' or point to root of dreamform
+                'slug' => fn (OrdersPage $orders, array $props) => \Bnomei\Kart\Data::uuid(5), // aka order id
+            ],
+            'products' => [
+                'page' => 'products',
+            ],
+            'stocks' => [
+                'enabled' => true,
+                'page' => 'stocks',
+            ],
             'csrf' => [
                 'enabled' => true,
             ],
@@ -41,16 +50,36 @@ Kirby::plugin(
             'mollie' => [],
             'paddle' => [],
         ],
+        'blueprints' => [
+            'users/customer' => require_once __DIR__.'/blueprints/users/customer.php',
+            'page/order' => OrderPage::phpBlueprint(),
+            'page/orders' => OrdersPage::phpBlueprint(),
+            'page/product' => ProductPage::phpBlueprint(),
+            'page/products' => ProductsPage::phpBlueprint(),
+            'page/stocks' => StocksPage::phpBlueprint(),
+        ],
+        'pageModels' => [
+            'order' => OrderPage::class,
+            'orders' => OrdersPage::class,
+            'product' => ProductPage::class,
+            'products' => ProductsPage::class,
+            'stocks' => StocksPage::class,
+        ],
         'snippets' => [
+            'kart/login' => __DIR__.'/snippets/kart/login.php',
+            'kart/logout' => __DIR__.'/snippets/kart/logout.php',
             'kart/html/cart' => __DIR__.'/snippets/kart/html/cart.php',
             'kart/html/add' => __DIR__.'/snippets/kart/html/add.php',
-            'kart/html/login' => __DIR__.'/snippets/kart/html/login.php',
-            'kart/html/logout' => __DIR__.'/snippets/kart/html/logout.php',
             'kart/html/wishlist' => __DIR__.'/snippets/kart/html/wishlist.php',
-            'kart/html/wish' => __DIR__.'/snippets/kart/html/wish-or-forget.php',
-            'kart/html/forget' => __DIR__.'/snippets/kart/html/forget.php',
+            'kart/html/wish-or-forget' => __DIR__.'/snippets/kart/html/wish-or-forget.php',
         ],
         'routes' => require_once __DIR__.'/routes.php',
+        'hooks' => [
+            'system.loadPlugins:after' => function () {
+                // make sure the kart singleton is ready in calling it once
+                kart();
+            },
+        ],
         'commands' => [
             'kart:flush' => [
                 'description' => 'Flush Kart Cache(s)',

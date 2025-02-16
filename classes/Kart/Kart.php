@@ -6,7 +6,11 @@ use Bnomei\Kart\Provider\Kirby;
 use Bnomei\Kart\Provider\Mollie;
 use Bnomei\Kart\Provider\Paddle;
 use Bnomei\Kart\Provider\Stripe;
+use Exception;
+use Kirby\Cms\App;
 use Kirby\Cms\Collection;
+use Kirby\Cms\Page;
+use Kirby\Toolkit\Str;
 
 class Kart
 {
@@ -17,6 +21,15 @@ class Kart
     private ?Cart $cart;
 
     private ?Cart $wishlist;
+
+    private App $kirby;
+
+    public function __construct()
+    {
+        $this->kirby = kirby();
+
+        $this->makeContentPages();
+    }
 
     public function provider(): Provider
     {
@@ -122,9 +135,39 @@ class Kart
             }
 
             return true;
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             // if given a cache that does not exist or is not flushable
             return false;
+        }
+    }
+
+    public function page(string $key): ?Page
+    {
+        $id = option("bnomei.kart.{$key}.page");
+
+        return $this->kirby->page($id);
+    }
+
+    public function makeContentPages(): void
+    {
+        $pages = array_filter([
+            'orders' => option('bnomei.kart.orders.enabled') === true ? \OrdersPage::class : null,
+            'products' => \ProductsPage::class,
+            'stocks' => option('bnomei.kart.stocks.enabled') === true ? \StocksPage::class : null,
+        ]);
+
+        foreach ($pages as $key => $class) {
+            if (! $this->page($key)) {
+                $title = str_replace('Page', '', $class);
+                site()->createChild([
+                    'id' => option("bnomei.kart.{$key}.page"),
+                    'template' => Str::lower($title),
+                    'content' => [
+                        'title' => $title,
+                        'uuid' => Str::lower($title),
+                    ],
+                ]);
+            }
         }
     }
 }

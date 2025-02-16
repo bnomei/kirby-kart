@@ -56,4 +56,13 @@ class Data
 
         return self::formatter(NumberFormatter::CURRENCY)->formatCurrency($amount, $currency);
     }
+
+    public static function uuid(int $length): string
+    {
+        return str_replace(
+            ['o', 'O', 'l', 'L', 'I', 'i', 'B', 'S', 's'],
+            ['0', '0', '1', '1', '1', '1', '8', '5', '5'],
+            \Kirby\Uuid\Uuid::generate($length)
+        );
+    }
 }
