@@ -7,5 +7,5 @@ return [
         'locking' => false,
     ],
 
-    'tests.frontend' => 'html', // html htmx datastar
+    'tests.frontend' => 'kart/html', // html htmx datastar
 ];

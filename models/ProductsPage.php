@@ -45,8 +45,20 @@ class ProductsPage extends Page
                 'products' => [
                     'label' => t('kart.products', 'Products'),
                     'type' => 'pages',
+                    'layout' => 'cards',
                     'template' => 'product',
                     'info' => '{{ page.formattedPrice }} + {{ page.tax }}%',
+                    'image' => [
+                        'query' => 'page.gallery.first.toFile',
+                    ],
+                ],
+                'files' => [
+                    'type' => 'files',
+                    'info' => '{{ file.dimensions }} ・ {{ file.niceSize }}',
+                    'layout' => 'cardlets',
+                    'image' => [
+                        'cover' => true,
+                    ],
                 ],
             ],
         ];

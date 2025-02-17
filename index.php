@@ -73,6 +73,7 @@ Kirby::plugin(
             'stocks' => StocksPage::class,
         ],
         'snippets' => [
+            'kart/json-ld/product' => __DIR__.'/snippets/kart/json-ld/product.php',
             'kart/login' => __DIR__.'/snippets/kart/login.php',
             'kart/logout' => __DIR__.'/snippets/kart/logout.php',
             'kart/html/cart' => __DIR__.'/snippets/kart/html/cart.php',
@@ -81,6 +82,12 @@ Kirby::plugin(
             'kart/html/wish-or-forget' => __DIR__.'/snippets/kart/html/wish-or-forget.php',
         ],
         'routes' => require_once __DIR__.'/routes.php',
+        'translations' => [
+            'de' => require_once __DIR__.'/translations/de.php',
+            'en' => require_once __DIR__.'/translations/en.php',
+            'fr' => require_once __DIR__.'/translations/fr.php',
+            'it' => require_once __DIR__.'/translations/it.php',
+        ],
         'hooks' => [
             'system.loadPlugins:after' => function (): void {
                 // make sure the kart singleton is ready in calling it once

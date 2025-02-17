@@ -28,6 +28,9 @@ class Kart
     public function __construct()
     {
         $this->kirby = kirby();
+        $this->provider = null;
+        $this->cart = null;
+        $this->wishlist = null;
 
         $this->makeContentPages();
     }

@@ -1,4 +1,5 @@
 <?php
+$product ??= $page;
 /** @var ProductPage $product */
 ?>
 <script type="application/ld+json">
@@ -6,7 +7,7 @@
         "@context": "https://schema.org/",
         "@type": "Product",
         "name": "<?= $product->title() ?>",
-        <?php /* TODO: "image": "?= $product->cover()->url() ?>", */ ?>
+        "image": "<?= $product->gallery()->toFiles()->first()?->url() ?>",
         "description": "<?= $product->description()->esc() ?>",
         "url": "<?= $product->url() ?>",
         "offers": {

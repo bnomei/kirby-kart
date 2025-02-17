@@ -1,5 +1,5 @@
 <?php
-header("Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-eval' https://cdn.jsdelivr.net https://unpkg.com; style-src 'self' 'unsafe-inline';");
+header("Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-eval' https://cdn.jsdelivr.net https://unpkg.com; style-src 'self' 'unsafe-inline'; img-src 'self' https://www.gravatar.com;");
 ?><!doctype html>
 <html lang="en">
 <head>
@@ -8,9 +8,9 @@ header("Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-e
     <title><?= $page->title() ?> | <?= site()->title() ?></title>
 
     <?= match (option('tests.frontend')) {
-        'datastar' => '<script type="module" src="https://cdn.jsdelivr.net/gh/starfederation/datastar@v1.0.0-beta.7/bundles/datastar.js"></script>',
-        'htmx' => '<script type="module" src="https://unpkg.com/htmx.org@1/dist/htmx.min.js"></script>',
-        'html' => '<script>/* plain HTML forms */</script>',
+        'kart/datastar' => '<script type="module" src="https://cdn.jsdelivr.net/gh/starfederation/datastar@v1.0.0-beta.7/bundles/datastar.js"></script>',
+        'kart/htmx' => '<script type="module" src="https://unpkg.com/htmx.org@1/dist/htmx.min.js"></script>',
+        'kart/html' => '<script>/* plain HTML forms */</script>',
     } ?>
 
     <script src="https://unpkg.com/@tailwindcss/browser@4"></script>

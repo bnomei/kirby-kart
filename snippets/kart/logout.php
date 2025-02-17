@@ -1,3 +1,3 @@
 <form method="POST" action="<?= kart()->logout() ?>">
-    <button type="submit">Logout</button>
+    <button type="submit" class="cursor-pointer text-xs px-2 py-1 border border-kart text-kart rounded-md">Logout</button>
 </form>

@@ -1,5 +1,5 @@
 <div>
-    <h3>Wishlist</h3>
+    <h3 class="font-bold">Wishlist <small>(<?= kart()->products()->count() ?>)</small></h3>
 
     <ol>
     <?php foreach (kart()->wishlist()->products() as $product) { ?>
