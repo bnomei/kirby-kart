@@ -13,9 +13,19 @@ abstract class Provider implements ProviderInterface
 
     private App $kirby;
 
-    public function __construct()
+    public function __construct($kirby)
     {
-        $this->kirby = kirby();
+        $this->kirby = $kirby;
+    }
+
+    public function title(): string
+    {
+        return ucfirst($this->name);
+    }
+
+    public function updatedAt(): string
+    {
+        return date('c'); // TODO
     }
 
     protected function env(string $env, mixed $default = null): mixed

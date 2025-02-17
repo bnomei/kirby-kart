@@ -10,13 +10,14 @@ use Exception;
 use Kirby\Cms\App;
 use Kirby\Cms\Collection;
 use Kirby\Cms\Page;
+use Kirby\Filesystem\Dir;
 use Kirby\Toolkit\Str;
 
 class Kart
 {
     private static ?Kart $singleton = null;
 
-    private ?Provider $provider;
+    private ?Provider $provider = null;
 
     private ?Cart $cart;
 
@@ -34,11 +35,11 @@ class Kart
     public function provider(): Provider
     {
         if (! $this->provider) {
-            $this->provider = match (kirby()->option('bnomei.kart.provider')) {
-                'kirby' => new Kirby,
-                'mollie' => new Mollie,
-                'paypal' => new Paddle,
-                'stripe' => new Stripe,
+            $this->provider = match ($this->kirby->option('bnomei.kart.provider')) {
+                'kirby' => new Kirby($this->kirby),
+                'mollie' => new Mollie($this->kirby),
+                'paypal' => new Paddle($this->kirby),
+                'stripe' => new Stripe($this->kirby),
             };
         }
 
@@ -95,17 +96,17 @@ class Kart
 
     public function sum(): string
     {
-        return Data::formatCurrency($this->cart->sum());
+        return Helper::formatCurrency($this->cart->sum());
     }
 
     public function tax(): string
     {
-        return Data::formatCurrency($this->cart->tax());
+        return Helper::formatCurrency($this->cart->tax());
     }
 
     public function sumtax(): string
     {
-        return Data::formatCurrency($this->cart->sumtax());
+        return Helper::formatCurrency($this->cart->sumtax());
     }
 
     public static function singleton(): Kart
@@ -160,7 +161,7 @@ class Kart
             foreach ($pages as $key => $class) {
                 if (! $this->page($key)) {
                     $title = str_replace('Page', '', $class);
-                    site()->createChild([
+                    $page = site()->createChild([
                         'id' => $this->kirby->option("bnomei.kart.{$key}.page"),
                         'template' => Str::lower($title),
                         'content' => [
@@ -168,6 +169,8 @@ class Kart
                             'uuid' => Str::lower($title),
                         ],
                     ]);
+                    // force unlisted
+                    Dir::move($page->root(), str_replace('_drafts/', '', $page->root()));
                 }
             }
         });

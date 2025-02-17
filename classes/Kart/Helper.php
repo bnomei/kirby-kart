@@ -4,7 +4,7 @@ namespace Bnomei\Kart;
 
 use NumberFormatter;
 
-class Data
+class Helper
 {
     public static function sanitize(mixed $data, bool $checkLength = true): mixed
     {

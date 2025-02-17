@@ -13,7 +13,7 @@
             "@type": "Offer",
             "price": "<?= $product->price()->toFloat() ?>",
             "priceCurrency": "<?= kart()->currency() ?>",
-            "availability": "https://schema.org/<?= $product->availability()->toBool() ?? 'InStock' ?>"
+            "availability": "https://schema.org/<?= $product->stock() > 0 ? 'InStock' : 'OutOfStock' ?>"
         }
     }
 </script>

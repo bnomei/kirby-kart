@@ -21,13 +21,34 @@ class OrdersPage extends Page
                 'move' => false,
                 'sort' => false,
             ],
+            'buttons' => [
+                'preview' => true,
+                // TODO: add a sync with provider button
+                'sync' => [
+                    // 'icon' => 'refresh',
+                    'text' => 'xxx', // t('kart.syncprovider', 'Sync Provider'),
+                    'link' => 'https://stats.io/{{ page.uuid.id }}',
+                    // 'theme' => '#7157FF',
+                ],
+                'status' => true,
+            ],
             'sections' => [
                 'stats' => [
+                    'label' => t('kart.summary', 'Summary'),
                     'type' => 'stats',
                     'reports' => [
                         [
-                            'label' => t('kart.sum', 'Sum'),
-                            'value' => '{{ page.formattedSum }}',
+                            'label' => t('kart.latest', 'Latest'),
+                            'value' => '{{ page.children.sortBy("paidDate", "desc").first.paidDate }}',
+                        ],
+                        [
+                            // 'label' => t('kart.sum', 'Sum'),
+                            'value' => '{{ page.children.sumField("sum").toFormattedCurrency }}',
+                            'info' => '+ {{ page.children.sumField("tax").toFormattedCurrency }}',
+                        ],
+                        [
+                            'label' => t('kart.orders', 'Orders'),
+                            'value' => '{{ page.children.count }}',
                         ],
                     ],
                 ],
@@ -43,6 +64,9 @@ class OrdersPage extends Page
                             'required' => true,
                             'translate' => false,
                         ],
+                        'line' => [
+                            'type' => 'line',
+                        ],
                     ],
                 ],
                 'orders' => [
@@ -51,7 +75,7 @@ class OrdersPage extends Page
                     'template' => 'order',
                     'sortBy' => 'paidDate desc',
                     'text' => '#{{ page.invoiceNumber }}',
-                    'info' => '{{ page.formattedSum }} {{ page.paidDate }}',
+                    'info' => '{{ page.formattedSum }} + {{ page.formattedTax }} ・ {{ page.paidDate }}',
                 ],
             ],
         ];

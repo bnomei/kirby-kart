@@ -1,19 +1,24 @@
 <?php
 
+use Bnomei\Kart\Helper;
+use Bnomei\Kart\Kart;
+use Bnomei\Kart\License;
+use Kirby\Cms\Page;
+use Kirby\Content\Field;
 use Kirby\Toolkit\A;
 
 @include_once __DIR__.'/vendor/autoload.php';
 
 if (! function_exists('kart')) {
-    function kart(): \Bnomei\Kart\Kart
+    function kart(): Kart
     {
-        return \Bnomei\Kart\Kart::singleton();
+        return Kart::singleton();
     }
 }
 
 Kirby::plugin(
     name: 'bnomei/kart',
-    license: fn ($plugin) => new \Bnomei\Kart\License($plugin, \Bnomei\Kart\License::NAME),
+    license: fn ($plugin) => new License($plugin, License::NAME),
     extends: [
         'options' => [
             'license' => '', // set your license from https://buy-kart.bnomei.com code in the config `bnomei.kart.license`
@@ -30,7 +35,7 @@ Kirby::plugin(
             'orders' => [
                 'enabled' => true, // true|false, 'dreamform'
                 'page' => 'orders', // 'orders' or point to root of dreamform
-                'slug' => fn (OrdersPage $orders, array $props) => \Bnomei\Kart\Data::uuid(5), // aka order id
+                'slug' => fn (OrdersPage $orders, array $props) => Helper::uuid(5), // aka order id
             ],
             'products' => [
                 'page' => 'products',
@@ -81,27 +86,57 @@ Kirby::plugin(
                 // make sure the kart singleton is ready in calling it once
                 kart();
             },
-            'page.create:after' => function (\Kirby\Cms\Page $page): void {
+            'page.create:after' => function (Page $page): void {
                 if ($page instanceof OrderPage) {
                     $page->updateInvoiceNumber();
                 }
             },
-            'page.update:before' => function (\Kirby\Cms\Page $page, array $values, array $strings): void {
+            'page.update:before' => function (Page $page, array $values, array $strings): void {
                 if ($page instanceof StocksPage) {
                     if (! $page->onlyUniqueProducts(A::get($values, 'stocks', []))) {
-                        throw new \Exception(t('kart.stocks.exception.uniqueness', 'Stocks must contain unique products'));
+                        throw new Exception(t('kart.stocks.exception.uniqueness', 'Stocks must contain unique products'));
                     }
                 }
             },
-            'page.update:after' => function (\Kirby\Cms\Page $newPage, \Kirby\Cms\Page $oldPage): void {
+            'page.update:after' => function (Page $newPage, Page $oldPage): void {
                 //                if ($newPage instanceof OrderPage) {
                 //                    $newPage->updateInvoiceNumber();
                 //                }
             },
         ],
         'siteMethods' => [
-            'kart' => function (): \Bnomei\Kart\Kart {
+            'kart' => function (): Kart {
                 return kart();
+            },
+        ],
+        'fieldMethods' => [
+            'toFormattedNumber' => function ($field): string {
+                $field->value = Helper::formatNumber(floatval($field->value));
+
+                return $field;
+            },
+            'toFormattedCurrency' => function (Field $field): string {
+                $field->value = Helper::formatCurrency(floatval($field->value));
+
+                return $field;
+            },
+        ],
+        'pagesMethods' => [
+            'sum' => function (string $field): float|int {
+                return array_sum($this->toArray(function ($i) use ($field) {
+                    if (property_exists($i, $field)) {
+                        return $i;
+                    }
+                    $f = $i->$field();
+                    if ($f instanceof Field) {
+                        return $i->toFloat();
+                    }
+
+                    return is_numeric($f) ? $f : 0;
+                }));
+            },
+            'sumField' => function (string $field): Field {
+                return new Field(null, $field, $this->sum($field));
             },
         ],
         'commands' => [
@@ -119,7 +154,7 @@ Kirby::plugin(
                 'command' => static function ($cli): void {
                     $name = $cli->arg('name');
                     $cli->out("🚽 Flushing Kart Cache [$name]...");
-                    \Bnomei\Kart\Kart::flush($name);
+                    Kart::flush($name);
                     $cli->success('✅ Done.');
 
                     if (function_exists('janitor')) {

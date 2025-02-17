@@ -1,6 +1,6 @@
 <?php
 
-use Bnomei\Kart\Data;
+use Bnomei\Kart\Helper;
 use Kirby\Cms\Page;
 use Kirby\Content\Field;
 
@@ -49,10 +49,9 @@ class OrderPage extends Page
                             // 'label' => t('kart.sum', 'Sum'),
                             'value' => '{{ page.formattedSum }}',
                             'info' => '+ {{ page.formattedTax }}',
-                            'theme' => 'neutral',
                         ],
                         [
-                            'label' => t('kart.items', 'Items'),
+                            'label' => t('kart.items', 'Item(s)'),
                             'value' => '{{ page.items.toStructure.count }}',
                         ],
                     ],
@@ -60,8 +59,13 @@ class OrderPage extends Page
                 'meta' => [
                     'type' => 'fields',
                     'fields' => [
-                        'line' => [
-                            'type' => 'line',
+                        'customer' => [
+                            'label' => t('kart.customer', 'Customer'),
+                            'type' => 'users',
+                            'multiple' => false,
+                            'query' => 'kirby.users.filterBy("role", "customer")',
+                            'translate' => false,
+                            'width' => '1/2',
                         ],
                         'invnumber' => [
                             'label' => t('kart.invoiceNumber', 'Invoice Number'),
@@ -71,6 +75,23 @@ class OrderPage extends Page
                             'default' => 1,
                             // 'required' => true,
                             'translate' => false,
+                            'width' => '1/2',
+                        ],
+                        'paymentComplete' => [
+                            'label' => t('kart.paymentcomplete', 'Payment Complete'),
+                            'type' => 'toggle',
+                            'width' => '1/3',
+                            'text' => [
+                                ['en' => 'No', 'de' => 'Nein'],
+                                ['en' => 'Yes', 'de' => 'Ja'],
+                            ],
+                            'translate' => false,
+                        ],
+                        'paymentMethod' => [
+                            'label' => t('kart.paymentmethod', 'Payment Method'),
+                            'type' => 'text',
+                            'width' => '1/3',
+                            'translate' => false,
                         ],
                         'paidDate' => [ // Merx 1.7+ https://github.com/wagnerwagner/merx/blob/8cadc64a0c4e98144c33b476094601560f204191/models/orderPageAbstract.php#L76C25-L76C33
                             'label' => t('kart.paidDate', 'Paid Date'),
@@ -79,20 +100,17 @@ class OrderPage extends Page
                             'time' => true,
                             'default' => 'now',
                             'translate' => false,
+                            'width' => '1/3',
                         ],
-                        'customer' => [
-                            'label' => t('kart.customer', 'Customer'),
-                            'type' => 'users',
-                            'multiple' => false,
-                            'query' => 'kirby.users.filterBy("role", "customer")',
-                            'translate' => false,
+                        'line' => [
+                            'type' => 'line',
                         ],
                         'items' => [ // use `items` for Merx compatibility
                             'label' => t('kart.products', 'Products'),
                             'type' => 'structure',
                             'translate' => false,
                             'fields' => [
-                                'id' => [ // use `id` for Merx compatibility
+                                'key' => [ // use `key` for Merx compatibility, `id` breaks Structures
                                     'label' => t('kart.product', 'Product'),
                                     'type' => 'pages',
                                     'query' => 'site.kart.page("products")',
@@ -101,7 +119,7 @@ class OrderPage extends Page
                                     'subpages' => false,
                                 ],
                                 'quantity' => [
-                                    'label' => t('kart.quantity', 'Amount'),
+                                    'label' => t('kart.quantity', 'Quantity'),
                                     'type' => 'number',
                                     'required' => true,
                                     'min' => 1,
@@ -133,34 +151,61 @@ class OrderPage extends Page
         ];
     }
 
-    public function formattedSum(): string
+    public function productsCount(string|ProductPage|null $key = null): int
     {
+        if ($key instanceof ProductPage) {
+            $key = $key->id();
+        }
+
         $sum = 0;
+        foreach ($this->items()->toStructure() as $item) {
+            // it does not matter if id or uuid is stored with this query
+            if (! $key || $item->key()->toPage()?->id() === $key || $item->key()->toPage()?->uuid()->toString() === $key) {
+                $sum += $item->quantity()->toInt();
+            }
+        }
+
+        return $sum;
+    }
+
+    public function sum(): float
+    {
+        $sum = 0.0;
         foreach ($this->items()->toStructure() as $item) {
             $sum += $item->price()->toFloat() * $item->quantity()->toFloat();
         }
 
-        return Data::formatCurrency($sum);
+        return (float) $sum;
     }
 
-    public function formattedTax(): string
+    public function tax(): float
     {
         $tax = 0;
         foreach ($this->items()->toStructure() as $item) {
             $tax += ($item->price()->toFloat() * $item->tax()->toFloat() / 100.0) * $item->quantity()->toFloat();
         }
 
-        return Data::formatCurrency($tax);
+        return (float) $tax;
+    }
+
+    public function sumtax(): float
+    {
+        return $this->sum() + $this->tax();
+    }
+
+    public function formattedSum(): string
+    {
+        return Helper::formatCurrency($this->sum());
+    }
+
+    public function formattedTax(): string
+    {
+        return Helper::formatCurrency($this->tax());
     }
 
     public function formattedSumTax(): string
     {
-        $sumtax = 0;
-        foreach ($this->items()->toStructure() as $item) {
-            $sumtax += ($item->price()->toFloat() * (1.0 + $item->tax()->toFloat() / 100.0)) * $item->quantity()->toFloat();
-        }
-
-        return Data::formatCurrency($sumtax);
+        return Helper::formatCurrency($this->sumtax());
     }
 
     public function invoiceNumber(): string

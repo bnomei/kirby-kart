@@ -2,8 +2,6 @@
 
 namespace Bnomei\Kart;
 
-use Kirby\Cms\StructureObject;
-
 class Product
 {
     public function __construct(
@@ -85,13 +83,9 @@ class Product
         }
 
         // NOTE: the product.id is expected to match the productpage.uuid
-        /** @var StructureObject $stock */
-        foreach (kart()->page('stocks')->stocks()->toStructure() as $stock) {
-            if ($stock->product()->id() === 'page://'.$this->id()) {
-                return $stock->stock() > 0;
-            }
-        }
+        /** @var \StocksPage $stocks */
+        $stocks = kart()->page('stocks');
 
-        return true; // no stock entry means it is InStock
+        return $stocks->stock('page://'.$this->id) > 0;
     }
 }
