@@ -21,7 +21,7 @@ class Cart
             $this->products->append($item);
         }
 
-        return $item->amount();
+        return $item->quantity();
     }
 
     public function remove(Product $item): int
@@ -37,7 +37,7 @@ class Cart
             return 0;
         }
 
-        return $item->amount();
+        return $item->quantity();
     }
 
     public function products(): Collection
@@ -50,24 +50,24 @@ class Cart
         return $this->products()->count();
     }
 
-    public function amount(): int
+    public function quantity(): int
     {
         return (int) array_sum($this->products->values(
-            fn (Product $item) => $item->amount()
+            fn (Product $item) => $item->quantity()
         ));
     }
 
     public function sum(): float
     {
         return array_sum($this->products->values(
-            fn (Product $item) => $item->amount() * $item->price()
+            fn (Product $item) => $item->quantity() * $item->price()
         ));
     }
 
     public function tax(): float
     {
         return array_sum($this->products->values(
-            fn (Product $item) => $item->amount() * $item->tax()
+            fn (Product $item) => $item->quantity() * $item->tax()
         ));
     }
 

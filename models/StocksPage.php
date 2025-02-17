@@ -2,11 +2,15 @@
 
 use Kirby\Cms\Page;
 
+/**
+ * @method \Kirby\Content\Field stocks()
+ */
 class StocksPage extends Page
 {
     public static function phpBlueprint(): array
     {
         return [
+            'name' => 'stocks',
             'options' => [
                 'preview' => false,
                 'changeSlug' => false,
@@ -25,7 +29,7 @@ class StocksPage extends Page
                         'page' => [
                             'label' => t('kart.product', 'Product'),
                             'type' => 'pages',
-                            'query' => 'kart.page("products")',
+                            'query' => 'site.kart.page("products")',
                             'required' => true,
                             'multiple' => false,
                             'subpages' => false,
@@ -49,5 +53,12 @@ class StocksPage extends Page
                 ],
             ],
         ];
+    }
+
+    public function onlyUniqueProducts(array $stocks): bool
+    {
+        $pages = array_map(fn ($i) => count($i['page']) ? page($i['page'][0])?->id() : null, $stocks);
+
+        return count($pages) === count(array_unique($pages));
     }
 }

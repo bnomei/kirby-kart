@@ -6,7 +6,7 @@
             <li class="flex space-x-2">
                 <a class="hover:underline" href="<?= $product->url() ?>"><?= $product->title() ?></a>
                 <span class="grow"><!-- spacer --></span>
-                <span><?= $product->amount() ?>x</span>
+                <span><?= $product->quantity() ?>x</span>
                 <span class="grow"><!-- spacer --></span>
                 <form method="POST" action="<?= $product->add() ?>">
                     <button type="submit">+</button>

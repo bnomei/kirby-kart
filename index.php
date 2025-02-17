@@ -52,11 +52,11 @@ Kirby::plugin(
         ],
         'blueprints' => [
             'users/customer' => require_once __DIR__.'/blueprints/users/customer.php',
-            'page/order' => OrderPage::phpBlueprint(),
-            'page/orders' => OrdersPage::phpBlueprint(),
-            'page/product' => ProductPage::phpBlueprint(),
-            'page/products' => ProductsPage::phpBlueprint(),
-            'page/stocks' => StocksPage::phpBlueprint(),
+            'pages/order' => OrderPage::phpBlueprint(),
+            'pages/orders' => OrdersPage::phpBlueprint(),
+            'pages/product' => ProductPage::phpBlueprint(),
+            'pages/products' => ProductsPage::phpBlueprint(),
+            'pages/stocks' => StocksPage::phpBlueprint(),
         ],
         'pageModels' => [
             'order' => OrderPage::class,
@@ -75,9 +75,31 @@ Kirby::plugin(
         ],
         'routes' => require_once __DIR__.'/routes.php',
         'hooks' => [
-            'system.loadPlugins:after' => function () {
+            'system.loadPlugins:after' => function (): void {
                 // make sure the kart singleton is ready in calling it once
                 kart();
+            },
+            'page.create:after' => function (\Kirby\Cms\Page $page): void {
+                if ($page instanceof OrderPage) {
+                    $page->updateInvoiceNumber();
+                }
+            },
+            'page.update:before' => function (\Kirby\Cms\Page $page, array $values, array $strings): void {
+                if ($page instanceof StocksPage) {
+                    if (! $page->onlyUniqueProducts(A::get($values, 'stocks', []))) {
+                        throw new \Exception(t('kart.stocks.exception.uniqueness', 'Stocks must contain unique products'));
+                    }
+                }
+            },
+            'page.update:after' => function (\Kirby\Cms\Page $newPage, \Kirby\Cms\Page $oldPage): void {
+                if ($newPage instanceof OrderPage) {
+                    $newPage->updateInvoiceNumber();
+                }
+            },
+        ],
+        'siteMethods' => [
+            'kart' => function (): \Bnomei\Kart\Kart {
+                return kart();
             },
         ],
         'commands' => [

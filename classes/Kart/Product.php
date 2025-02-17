@@ -2,32 +2,36 @@
 
 namespace Bnomei\Kart;
 
+use Kirby\Cms\StructureObject;
+
 class Product
 {
-    private int $amount;
-
-    public function __construct(public string $id)
-    {
-        $this->amount = 1;
+    public function __construct(
+        public string $id,
+        private float $price,
+        private float $taxrate,
+        private int $quantity,
+    ) {
+        $this->quantity = 1;
     }
 
-    public function amount(): int
+    public function quantity(): int
     {
-        return $this->amount;
+        return $this->quantity;
     }
 
     public function increment(): int
     {
-        $this->amount++;
+        $this->quantity++;
 
-        return $this->amount;
+        return $this->quantity;
     }
 
     public function decrement(): int
     {
-        $this->amount--;
+        $this->quantity--;
 
-        return $this->amount;
+        return $this->quantity;
     }
 
     /**
@@ -40,12 +44,12 @@ class Product
 
     public function price(): float
     {
-        return 0;
+        return $this->price;
     }
 
-    public function tax(): float
+    public function taxrate(): float
     {
-        return 0;
+        return $this->taxrate;
     }
 
     public function add(): string
@@ -66,5 +70,28 @@ class Product
     public function forget(): string
     {
         return Router::wishlist_remove($this);
+    }
+
+    public function availability(): ?string
+    {
+        // https://schema.org/ItemAvailability
+        return $this->hasStock() ? 'InStock' : 'OutOfStock';
+    }
+
+    public function hasStock(): bool
+    {
+        if (! kirby()->option('bnomei.kart.stocks.enabled')) {
+            return true;
+        }
+
+        // NOTE: the product.id is expected to match the productpage.uuid
+        /** @var StructureObject $stock */
+        foreach (kart()->page('stocks')->stocks()->toStructure() as $stock) {
+            if ($stock->product()->id() === 'page://'.$this->id()) {
+                return $stock->stock() > 0;
+            }
+        }
+
+        return true; // no stock entry means it is InStock
     }
 }

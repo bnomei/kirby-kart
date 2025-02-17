@@ -88,9 +88,9 @@ class Kart
         return $this->cart->count();
     }
 
-    public function amount(): int
+    public function quantity(): int
     {
-        return $this->cart->amount();
+        return $this->cart->quantity();
     }
 
     public function sum(): string
@@ -143,7 +143,7 @@ class Kart
 
     public function page(string $key): ?Page
     {
-        $id = option("bnomei.kart.{$key}.page");
+        $id = $this->kirby->option("bnomei.kart.{$key}.page");
 
         return $this->kirby->page($id);
     }
@@ -151,23 +151,31 @@ class Kart
     public function makeContentPages(): void
     {
         $pages = array_filter([
-            'orders' => option('bnomei.kart.orders.enabled') === true ? \OrdersPage::class : null,
+            'orders' => $this->kirby->option('bnomei.kart.orders.enabled') === true ? \OrdersPage::class : null,
             'products' => \ProductsPage::class,
-            'stocks' => option('bnomei.kart.stocks.enabled') === true ? \StocksPage::class : null,
+            'stocks' => $this->kirby->option('bnomei.kart.stocks.enabled') === true ? \StocksPage::class : null,
         ]);
 
-        foreach ($pages as $key => $class) {
-            if (! $this->page($key)) {
-                $title = str_replace('Page', '', $class);
-                site()->createChild([
-                    'id' => option("bnomei.kart.{$key}.page"),
-                    'template' => Str::lower($title),
-                    'content' => [
-                        'title' => $title,
-                        'uuid' => Str::lower($title),
-                    ],
-                ]);
+        $this->kirby->impersonate('kirby', function () use ($pages) {
+            foreach ($pages as $key => $class) {
+                if (! $this->page($key)) {
+                    $title = str_replace('Page', '', $class);
+                    site()->createChild([
+                        'id' => $this->kirby->option("bnomei.kart.{$key}.page"),
+                        'template' => Str::lower($title),
+                        'content' => [
+                            'title' => $title,
+                            'uuid' => Str::lower($title),
+                        ],
+                    ]);
+                }
             }
-        }
+        });
+
+    }
+
+    public function currency(): string
+    {
+        return $this->kirby->option('bnomei.kart.currency');
     }
 }

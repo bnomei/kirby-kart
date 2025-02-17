@@ -45,16 +45,16 @@ class Data
         return new NumberFormatter($locale, $style ?? NumberFormatter::DECIMAL);
     }
 
-    public static function formatNumber(float $amount): string
+    public static function formatNumber(float $number): string
     {
-        return self::formatter(NumberFormatter::DECIMAL)->format($amount);
+        return self::formatter(NumberFormatter::DECIMAL)->format($number);
     }
 
-    public static function formatCurrency(float $amount): string
+    public static function formatCurrency(float $number): string
     {
         $currency = kirby()->option('bnomei.kart.currency', 'EUR');
 
-        return self::formatter(NumberFormatter::CURRENCY)->formatCurrency($amount, $currency);
+        return self::formatter(NumberFormatter::CURRENCY)->formatCurrency($number, $currency);
     }
 
     public static function uuid(int $length): string
