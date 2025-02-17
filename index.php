@@ -1,5 +1,7 @@
 <?php
 
+use Kirby\Toolkit\A;
+
 @include_once __DIR__.'/vendor/autoload.php';
 
 if (! function_exists('kart')) {
@@ -92,9 +94,9 @@ Kirby::plugin(
                 }
             },
             'page.update:after' => function (\Kirby\Cms\Page $newPage, \Kirby\Cms\Page $oldPage): void {
-                if ($newPage instanceof OrderPage) {
-                    $newPage->updateInvoiceNumber();
-                }
+                //                if ($newPage instanceof OrderPage) {
+                //                    $newPage->updateInvoiceNumber();
+                //                }
             },
         ],
         'siteMethods' => [

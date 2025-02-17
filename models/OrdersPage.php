@@ -3,7 +3,7 @@
 use Kirby\Cms\Page;
 
 /**
- * @method \Kirby\Content\Field invoiceNumber()
+ * @method \Kirby\Content\Field invnumber()
  */
 class OrdersPage extends Page
 {
@@ -34,7 +34,7 @@ class OrdersPage extends Page
                 'meta' => [
                     'type' => 'fields',
                     'fields' => [
-                        'invoiceNumber' => [
+                        'invnumber' => [
                             'label' => t('kart.invoiceNumber', 'Invoice Number'),
                             'type' => 'number',
                             'min' => 1,
@@ -51,7 +51,7 @@ class OrdersPage extends Page
                     'template' => 'order',
                     'sortBy' => 'paidDate desc',
                     'text' => '#{{ page.invoiceNumber }}',
-                    'info' => '{{ page.formattedSum }} {{ page.payedDate }}',
+                    'info' => '{{ page.formattedSum }} {{ page.paidDate }}',
                 ],
             ],
         ];

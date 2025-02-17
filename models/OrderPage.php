@@ -5,8 +5,8 @@ use Kirby\Cms\Page;
 use Kirby\Content\Field;
 
 /**
- * @method Field invoiceNumber()
- * @method Field payedDate()
+ * @method Field invnumber()
+ * @method Field paidDate()
  * @method Field customer()
  * @method Field items()
  */
@@ -43,7 +43,7 @@ class OrderPage extends Page
                         [
                             // 'label' => t('kart.invoiceNumber', 'Invoice Number'),
                             'value' => '#{{ page.invoiceNumber }}',
-                            'info' => '{{ page.payedDate }}',
+                            'info' => '{{ page.paidDate }}',
                         ],
                         [
                             // 'label' => t('kart.sum', 'Sum'),
@@ -63,14 +63,17 @@ class OrderPage extends Page
                         'line' => [
                             'type' => 'line',
                         ],
-                        'invoiceNumber' => [
+                        'invnumber' => [
                             'label' => t('kart.invoiceNumber', 'Invoice Number'),
-                            'type' => 'text',
+                            'type' => 'number',
+                            'min' => 1,
+                            'step' => 1,
+                            'default' => 1,
                             // 'required' => true,
                             'translate' => false,
                         ],
-                        'payedDate' => [
-                            'label' => t('kart.payedDate', 'Payed Date'),
+                        'paidDate' => [ // Merx 1.7+ https://github.com/wagnerwagner/merx/blob/8cadc64a0c4e98144c33b476094601560f204191/models/orderPageAbstract.php#L76C25-L76C33
+                            'label' => t('kart.paidDate', 'Paid Date'),
                             'type' => 'date',
                             'required' => true,
                             'time' => true,
@@ -160,20 +163,51 @@ class OrderPage extends Page
         return Data::formatCurrency($sumtax);
     }
 
-    public function updateInvoiceNumber(): ?int
+    public function invoiceNumber(): string
     {
-        $next = null;
-        if ($this->invoiceNumber()->isEmpty()) {
-            $next = $this->kirby()->impersonate('kirby', function () {
-                $next = $this->parent()->increment('invoiceNumber')->invoiceNumber()->toInt();
-                $this->update([
-                    'invoiceNumber' => str_pad($next, 5, 0, STR_PAD_LEFT),
-                ]);
+        $page = $this->updateInvoiceNumber();
 
-                return $next;
+        return str_pad($page->invnumber()->value(), 5, 0, STR_PAD_LEFT);
+    }
+
+    /*
+     * takes care of migrating the Merx invoiceNumber from their
+     * virtual 0000x of $page->num to a persisted value.
+     */
+    public function updateInvoiceNumber(): Page
+    {
+        $page = $this;
+        if ($this->invnumber()->isEmpty()) {
+            $page = $this->kirby()->impersonate('kirby', function () {
+                $current = $this->num();
+                if ($this->parent()->invnumber()->toInt() < $current) {
+                    $this->parent()->update([
+                        'invnumber' => $current,
+                    ]);
+                }
+
+                return $this->update([
+                    'invnumber' => $current,
+                ]);
             });
         }
 
-        return $next;
+        return $page;
+    }
+
+    public function incrementInvoiceNumber(): Page
+    {
+        $page = $this;
+        if ($this->invnumber()->isEmpty()) {
+            $page = $this->kirby()->impersonate('kirby', function () {
+                $next = $this->parent()->increment('invnumber')->invnumber()->toInt();
+
+                return $this->update([
+                    'invnumber' => $next,
+                ]);
+            });
+        }
+
+        return $page;
     }
 }
