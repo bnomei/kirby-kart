@@ -1,18 +1,21 @@
 <div>
-    <h3 class="font-bold">Cart <small>(<?= kart()->products()->count() ?>)</small></h3>
+    <h3 class="font-bold">Cart <small>(<?= kart()->cart()->lines()->count() ?>)</small></h3>
 
     <ol>
-        <?php foreach (kart()->products() as $product) { ?>
-            <li class="flex space-x-2">
+        <?php
+        /** @var \Bnomei\Kart\CartLine $line */
+        foreach (kart()->lines() as $line) {
+            $product = $line->product(); ?>
+            <li class="flex space-x-1 py-1 items-center">
                 <a class="hover:underline" href="<?= $product->url() ?>"><?= $product->title() ?></a>
                 <span class="grow"><!-- spacer --></span>
-                <span><?= $product->quantity() ?>x</span>
-                <span class="grow"><!-- spacer --></span>
+                <span class="text-gray-500"><?= $line->quantity() ?>x</span>
+                <span class="w-4"><!-- spacer --></span>
                 <form method="POST" action="<?= $product->add() ?>">
-                    <button type="submit">+</button>
+                    <button type="submit" class="flex pb-px justify-center items-center cursor-pointer w-5 h-5 bg-kart text-white rounded-xs">+</button>
                 </form>
                 <form method="POST" action="<?= $product->remove() ?>">
-                    <button type="submit">-</button>
+                    <button type="submit" class="flex pb-px justify-center items-center cursor-pointer w-5 h-5 bg-kart text-white rounded-xs">-</button>
                 </form>
             </li>
         <?php } ?>

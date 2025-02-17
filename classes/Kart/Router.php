@@ -13,13 +13,13 @@ class Router
 
     const LOGOUT = 'kart/logout';
 
-    const CART_ADD = '(:any)/kart/cart/add';
+    const CART_ADD = 'kart/cart/add';
 
-    const CART_REMOVE = '(:any)/kart/cart/remove';
+    const CART_REMOVE = 'kart/cart/remove';
 
-    const WISHLIST_ADD = '(:any)/kart/wishlist/add';
+    const WISHLIST_ADD = 'kart/wishlist/add';
 
-    const WISHLIST_REMOVE = '(:any)/kart/wishlist/remove';
+    const WISHLIST_REMOVE = 'kart/wishlist/remove';
 
     public static function denied(): ?Response
     {
@@ -96,42 +96,47 @@ class Router
         ])->toString();
     }
 
-    public static function cart_add(Product $product): string
+    public static function current(): string
+    {
+        return kirby()->request()->path();
+    }
+
+    public static function cart_add(\ProductPage $product): string
     {
         return Uri::index()->clone([
-            'path' => str_replace('(:any)/', '', self::CART_ADD),
+            'path' => self::current().'/'.self::CART_ADD,
             'query' => [
-                'product' => $product->id(),
+                'product' => $product->uuid()->id(),
             ] + static::queryCsrf(),
         ])->toString();
     }
 
-    public static function cart_remove(Product $product): string
+    public static function cart_remove(\ProductPage $product): string
     {
         return Uri::index()->clone([
-            'path' => str_replace('(:any)/', '', self::CART_REMOVE),
+            'path' => self::current().'/'.self::CART_REMOVE,
             'query' => [
-                'product' => $product->id(),
+                'product' => $product->uuid()->id(),
             ] + static::queryCsrf(),
         ])->toString();
     }
 
-    public static function wishlist_add(Product $product): string
+    public static function wishlist_add(\ProductPage $product): string
     {
         return Uri::index()->clone([
-            'path' => str_replace('(:any)/', '', self::WISHLIST_ADD),
+            'path' => self::current().'/'.self::WISHLIST_ADD,
             'query' => [
-                'product' => $product->id(),
+                'product' => $product->uuid()->id(),
             ] + static::queryCsrf(),
         ])->toString();
     }
 
-    public static function wishlist_remove(Product $product): string
+    public static function wishlist_remove(\ProductPage $product): string
     {
         return Uri::index()->clone([
-            'path' => str_replace('(:any)/', '', self::WISHLIST_REMOVE),
+            'path' => self::current().'/'.self::WISHLIST_REMOVE,
             'query' => [
-                'product' => $product->id(),
+                'product' => $product->uuid()->id(),
             ] + static::queryCsrf(),
         ])->toString();
     }

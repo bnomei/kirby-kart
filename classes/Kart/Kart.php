@@ -17,7 +17,7 @@ class Kart
 {
     private static ?Kart $singleton = null;
 
-    private ?Provider $provider = null;
+    private ?Provider $provider;
 
     private ?Cart $cart;
 
@@ -52,7 +52,7 @@ class Kart
     public function cart(): Cart
     {
         if (! $this->cart) {
-            $this->cart = new Cart;
+            $this->cart = new Cart('cart');
         }
 
         return $this->cart;
@@ -61,7 +61,7 @@ class Kart
     public function wishlist(): Cart
     {
         if (! $this->wishlist) {
-            $this->wishlist = new Cart;
+            $this->wishlist = new Cart('wishlist');
         }
 
         return $this->wishlist;
@@ -82,9 +82,9 @@ class Kart
         return Router::logout();
     }
 
-    public function products(): Collection
+    public function lines(): Collection
     {
-        return $this->cart->products();
+        return $this->cart->lines();
     }
 
     public function count(): int

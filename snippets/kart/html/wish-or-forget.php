@@ -1,7 +1,7 @@
 <?php
 $product ??= $page;
 ?>
-<?php if (! kart()->cart()->has($product)) { ?>
+<?php if (! kart()->wishlist()->has($product)) { ?>
 <form method="POST" action="<?= $product->wish() ?>">
     <button type="submit" class="cursor-pointer px-4 py-2 bg-kart text-white rounded-md" title="add to wishlist">
         <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><title>favorite-1</title><g fill="currentColor" stroke-miterlimit="10"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" d="M14.328,2.672 c-1.562-1.562-4.095-1.562-5.657,0C8.391,2.952,8.18,3.27,8,3.601c-0.18-0.331-0.391-0.65-0.672-0.93 c-1.562-1.562-4.095-1.562-5.657,0c-1.562,1.562-1.562,4.095,0,5.657L8,14.5l6.328-6.172C15.891,6.766,15.891,4.234,14.328,2.672z"></path> </g></svg>

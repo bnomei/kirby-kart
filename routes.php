@@ -49,16 +49,67 @@ return function (App $kirby) {
             },
         ],
         [
-            'pattern' => Router::CART_ADD,
+            'pattern' => '(:all)/'.Router::CART_ADD,
             'method' => 'POST',
-            'action' => function () {
+            'action' => function ($id) {
                 if ($r = Router::denied()) {
                     return $r;
                 }
 
-                kart()->cart()->add(get('product'));
+                kart()->cart()->add(
+                    page('page://'.get('product'))
+                );
 
-                return Response::json([], 200);
+                // TODO: add htmx and data-star
+                return go($id); // prg
+            },
+        ],
+        [
+            'pattern' => '(:all)/'.Router::CART_REMOVE,
+            'method' => 'POST',
+            'action' => function ($id) {
+                if ($r = Router::denied()) {
+                    return $r;
+                }
+
+                kart()->cart()->remove(
+                    page('page://'.get('product'))
+                );
+
+                // TODO: add htmx and data-star
+                return go($id); // prg
+            },
+        ],
+        [
+            'pattern' => '(:all)/'.Router::WISHLIST_ADD,
+            'method' => 'POST',
+            'action' => function ($id) {
+                if ($r = Router::denied()) {
+                    return $r;
+                }
+
+                kart()->wishlist()->add(
+                    page('page://'.get('product'))
+                );
+
+                // TODO: add htmx and data-star
+                return go($id); // prg
+            },
+        ],
+        [
+            'pattern' => '(:all)/'.Router::WISHLIST_REMOVE,
+            'method' => 'POST',
+            'action' => function ($id) {
+                if ($r = Router::denied()) {
+                    return $r;
+                }
+
+                kart()->wishlist()->remove(
+                    page('page://'.get('product'))
+                );
+
+                // TODO: add htmx and data-star
+                return go($id); // prg
             },
         ],
     ];

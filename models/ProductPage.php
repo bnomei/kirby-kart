@@ -1,5 +1,6 @@
 <?php
 
+use Bnomei\Kart\Router;
 use Kirby\Cms\Page;
 
 /**
@@ -139,5 +140,25 @@ class ProductPage extends Page
             $this->price()->toFloat() *
             (1.0 + $this->tax()->toFloat() / 100.0)
         );
+    }
+
+    public function add(): string
+    {
+        return Router::cart_add($this);
+    }
+
+    public function remove(): string
+    {
+        return Router::cart_remove($this);
+    }
+
+    public function wish(): string
+    {
+        return Router::wishlist_add($this);
+    }
+
+    public function forget(): string
+    {
+        return Router::wishlist_remove($this);
     }
 }
