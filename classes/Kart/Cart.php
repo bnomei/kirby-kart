@@ -123,6 +123,12 @@ class Cart
         ]);
     }
 
+    public function delete(): void
+    {
+        // alias for Merx compatibility
+        $this->clear();
+    }
+
     public function lines(): Collection
     {
         return $this->lines;
