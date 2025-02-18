@@ -2,6 +2,7 @@
 
 namespace Bnomei\Kart;
 
+use Kirby\Cms\App;
 use Kirby\Cms\Collection;
 use Kirby\Cms\User;
 use Kirby\Session\Session;
@@ -17,11 +18,13 @@ class Cart
     private ?User $user = null;
 
     private string $id; // this will match the field on the user content (cart, wishlist)
+    private App $kirby;
 
     public function __construct(string $id, array $items = [])
     {
         $this->id = $id;
-        $this->session = kirby()->session();
+        $this->kirby = kirby();
+        $this->session = $this->kirby->session();
 
         if (empty($items)) {
             $items = $this->session->get($this->id, []);
@@ -31,16 +34,20 @@ class Cart
         foreach ($items as $id => $line) {
             $this->add(page('page://'.$id), A::get($line, 'quantity'));
         }
+
+        kirby()->trigger('kart.'.$this->id.'.created', [
+            'cart' => $this,
+        ]);
     }
 
     public function save(): void
     {
         $this->session->set($this->id, $this->lines->toArray());
-        if ($user = kirby()->user()) {
+        if ($user = $this->kirby->user()) {
             $this->user = $user;
         }
         if ($this->user) {
-            kirby()->impersonate('kirby', function () {
+            $this->kirby->impersonate('kirby', function () {
                 $this->user->update([
                     $this->id => $this->lines->toArray(),
                 ]);
@@ -67,6 +74,13 @@ class Cart
 
         $this->save();
 
+        $this->kirby->trigger('kart.'.$this->id.'.add', [
+            'user' => $this->user,
+            'item' => $item,
+            'product' => $product,
+            'count' => $this->lines->count(),
+        ]);
+
         return $item->quantity();
     }
 
@@ -89,6 +103,13 @@ class Cart
         }
         $this->save();
 
+        $this->kirby->trigger('kart.'.$this->id.'.remove', [
+            'user' => $this->user,
+            'item' => $item,
+            'product' => $product,
+            'count' => $this->lines->count(),
+        ]);
+
         return $item?->quantity() ?? 0;
     }
 
@@ -96,6 +117,10 @@ class Cart
     {
         $this->lines = new Collection;
         $this->save();
+
+        $this->kirby->trigger('kart.'.$this->id.'.clear', [
+            'user' => $this->user,
+        ]);
     }
 
     public function lines(): Collection
