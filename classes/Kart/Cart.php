@@ -173,11 +173,23 @@ class Cart
         ));
     }
 
+    public function getSum(): float
+    {
+        // Merx compatiblity
+        return $this->sum();
+    }
+
     public function tax(): float
     {
         return array_sum($this->lines->values(
             fn (CartLine $item) => $item->quantity() * $item->product()->price()->toFloat() * $item->product()->tax()->toFloat() / 100.0
         ));
+    }
+
+    public function getTax(): float
+    {
+        // Merx compatiblity
+        return $this->tax();
     }
 
     public function sumtax(): float
