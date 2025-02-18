@@ -53,7 +53,7 @@ class CartLine
     public function toArray(): array
     {
         return [
-            'id' => $this->id(),
+            // 'id' => $this->id(),
             'quantity' => $this->quantity(),
         ];
     }

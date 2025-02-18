@@ -3,7 +3,9 @@
 namespace Bnomei\Kart;
 
 use Kirby\Cms\Collection;
+use Kirby\Cms\User;
 use Kirby\Session\Session;
+use Kirby\Toolkit\A;
 use ProductPage;
 
 class Cart
@@ -12,23 +14,38 @@ class Cart
 
     private Session $session;
 
-    public function __construct(private string $id, array $items = [])
+    private ?User $user = null;
+
+    private string $id; // this will match the field on the user content (cart, wishlist)
+
+    public function __construct(string $id, array $items = [])
     {
+        $this->id = $id;
         $this->session = kirby()->session();
 
         if (empty($items)) {
             $items = $this->session->get($this->id, []);
         }
 
-        $this->lines = new Collection(array_map(
-            fn ($i) => new CartLine($i['id'], $i['quantity']),
-            $items
-        ));
+        $this->lines = new Collection;
+        foreach ($items as $id => $line) {
+            $this->add(page('page://'.$id), A::get($line, 'quantity'));
+        }
     }
 
     public function save(): void
     {
         $this->session->set($this->id, $this->lines->toArray());
+        if ($user = kirby()->user()) {
+            $this->user = $user;
+        }
+        if ($this->user) {
+            kirby()->impersonate('kirby', function () {
+                $this->user->update([
+                    $this->id => $this->lines->toArray(),
+                ]);
+            });
+        }
     }
 
     public function add(?ProductPage $product, int $amount = 1): int
@@ -73,6 +90,12 @@ class Cart
         $this->save();
 
         return $item?->quantity() ?? 0;
+    }
+
+    public function clear(): void
+    {
+        $this->lines = new Collection;
+        $this->save();
     }
 
     public function lines(): Collection
@@ -122,5 +145,26 @@ class Cart
         }
 
         return $this->lines->has($product);
+    }
+
+    public function merge(User $user): bool
+    {
+        $this->user = $user;
+
+        $cart = $user->cart();
+        if ($cart->isEmpty()) {
+            return true; // no plans to merge
+        }
+
+        $lines = $cart->yaml();
+        if (! is_array($lines)) {
+            return false; // failed to get array
+        }
+
+        foreach ($lines as $id => $line) {
+            $this->add(page('page://'.$id), A::get($line, 'quantity'));
+        }
+
+        return true;
     }
 }

@@ -1,1 +1,3 @@
-<?php snippet('layout', slots: true);
+<?php
+
+snippet('layout', slots: true);

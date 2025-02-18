@@ -16,4 +16,12 @@ return [
         'user' => true, // can update itself
         'users' => false,
     ],
+    'fields' => [
+        'cart' => [
+            'type' => 'hidden',
+        ],
+        'wishlist' => [
+            'type' => 'hidden',
+        ],
+    ],
 ];

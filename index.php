@@ -93,6 +93,14 @@ Kirby::plugin(
                 // make sure the kart singleton is ready in calling it once
                 kart();
             },
+            'user.login:after' => function (Kirby\Cms\User $user, Kirby\Session\Session $session) {
+                kart()->cart()->merge($user);
+                kart()->wishlist()->merge($user);
+            },
+            'user.logout:after' => function (Kirby\Cms\User $user, Kirby\Session\Session $session) {
+                kart()->cart()->clear();
+                kart()->wishlist()->clear();
+            },
             'page.create:after' => function (Page $page): void {
                 if ($page instanceof OrderPage) {
                     $page->updateInvoiceNumber();
