@@ -55,10 +55,20 @@ class Cart
         }
     }
 
-    public function add(?ProductPage $product, int $amount = 1): int
+    public function add(ProductPage|array|string|null $product, int $amount = 1): int
     {
         if (! $product) {
             return 0;
+        }
+
+        // Merx compatibility
+        if (is_array($product)) {
+            $product = page($product['id']);
+            $amount = A::get($product, 'quantity', $amount);
+        }
+
+        if (is_string($product)) {
+            $product = page($product);
         }
 
         /** @var CartLine $item */
@@ -84,10 +94,20 @@ class Cart
         return $item->quantity();
     }
 
-    public function remove(?ProductPage $product, int $amount = 1): int
+    public function remove(ProductPage|array|string|null $product, int $amount = 1): int
     {
         if (! $product) {
             return 0;
+        }
+
+        // Merx compatibility
+        if (is_array($product)) {
+            $product = page($product['id']);
+            $amount = A::get($product, 'quantity', $amount);
+        }
+
+        if (is_string($product)) {
+            $product = page($product);
         }
 
         /** @var CartLine $item */
