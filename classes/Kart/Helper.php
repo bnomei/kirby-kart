@@ -2,6 +2,8 @@
 
 namespace Bnomei\Kart;
 
+use Kirby\Toolkit\Str;
+use Kirby\Toolkit\SymmetricCrypto;
 use NumberFormatter;
 
 class Helper
@@ -64,5 +66,43 @@ class Helper
             ['0', '0', '1', '1', '1', '1', '8', '5', '5'],
             \Kirby\Uuid\Uuid::generate($length)
         );
+    }
+
+    public static function encrypt(mixed $data, ?string $password = null, bool $json = false): string
+    {
+        $password ??= option('crypto.password');
+        if ($password instanceof \Closure) {
+            $password = $password();
+        }
+        if ($password && SymmetricCrypto::isAvailable()) {
+            $encr = new SymmetricCrypto(password: $password);
+            if ($json || is_array($data)) {
+                $data = json_encode($data);
+            }
+            $data = $encr->encrypt($data);
+        }
+
+        return base64_encode($data);
+    }
+
+    public static function decrypt(string $data, ?string $password = null, bool $json = false): mixed
+    {
+        $data = base64_decode($data);
+
+        $password ??= option('crypto.password');
+        if ($password instanceof \Closure) {
+            $password = $password();
+        }
+        if ($password && SymmetricCrypto::isAvailable()) {
+            $encr = new SymmetricCrypto(password: $password);
+            if (is_string($data) && Str::contains($data, '"mode":"secretbox"')) {
+                $data = $encr->decrypt($data);
+            }
+            if ($json) {
+                $data = json_decode($data, true);
+            }
+        }
+
+        return $data;
     }
 }

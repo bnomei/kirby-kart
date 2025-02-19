@@ -8,4 +8,6 @@ return [
     ],
 
     'tests.frontend' => 'kart/html', // html htmx datastar
+
+    'bnomei.kart.router.encryption' => false,
 ];

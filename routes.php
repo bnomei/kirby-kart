@@ -30,7 +30,7 @@ return function (App $kirby) {
                     return Response::json([], 401);
                 }
 
-                go(get('redirect', $kirby->site()->url()));
+                go(Router::get('redirect', $kirby->site()->url()));
             },
         ],
         [
@@ -57,7 +57,7 @@ return function (App $kirby) {
                 }
 
                 kart()->cart()->add(
-                    page('page://'.get('product'))
+                    page('page://'.Router::get('product'))
                 );
 
                 // TODO: add htmx and data-star
@@ -73,7 +73,7 @@ return function (App $kirby) {
                 }
 
                 kart()->cart()->remove(
-                    page('page://'.get('product'))
+                    page('page://'.Router::get('product'))
                 );
 
                 // TODO: add htmx and data-star
@@ -89,7 +89,7 @@ return function (App $kirby) {
                 }
 
                 kart()->wishlist()->add(
-                    page('page://'.get('product'))
+                    page('page://'.Router::get('product'))
                 );
 
                 // TODO: add htmx and data-star
@@ -105,7 +105,7 @@ return function (App $kirby) {
                 }
 
                 kart()->wishlist()->remove(
-                    page('page://'.get('product'))
+                    page('page://'.Router::get('product'))
                 );
 
                 // TODO: add htmx and data-star

@@ -4,6 +4,7 @@ namespace Bnomei\Kart;
 
 use Kirby\Cms\Response;
 use Kirby\Http\Uri;
+use Kirby\Toolkit\A;
 
 class Router
 {
@@ -23,21 +24,29 @@ class Router
 
     public static function denied(): ?Response
     {
-        if (! Router::middleware([
-            'csrf',
-            'ratelimit',
-        ])) {
+        $middlewares = option('bnomei.kart.middlewares');
+
+        if ($middlewares instanceof \Closure) {
+            $middlewares = $middlewares();
+        }
+
+        if (! is_array($middlewares)) {
+            $middlewares = [];
+        }
+
+        if (! Router::middlewares($middlewares)) {
             return Response::json([], 401);
         }
 
         return null;
     }
 
-    public static function middleware(array $middleware = []): bool
+    public static function middlewares(array $middlewares = []): bool
     {
         $allowed = true;
-        foreach ($middleware as $m) {
-            $allowed = $allowed && self::$m();
+        foreach ($middlewares as $middleware) {
+            [$class, $method] = explode('::', $middleware);
+            $allowed = $allowed && $class::$method();
         }
 
         return $allowed;
@@ -58,7 +67,7 @@ class Router
             return true;
         }
 
-        return csrf(kirby()->request()->get('token'));
+        return csrf(self::get('token'));
     }
 
     protected static function queryCsrf(): array
@@ -72,11 +81,44 @@ class Router
         ];
     }
 
+    public static function encrypt(array $query): array
+    {
+        $password = option('bnomei.kart.router.encryption');
+        if ($password instanceof \Closure) {
+            $password = $password();
+        }
+
+        if (! $password) {
+            return $query;
+        }
+
+        return [
+            'q' => Helper::encrypt($query, $password, true),
+        ];
+    }
+
+    public static function decrypt(string $props): mixed
+    {
+        return Helper::decrypt($props, option('bnomei.kart.router.encryption'), true);
+    }
+
+    public static function get(string $key, mixed $default = null): mixed
+    {
+        $request = kirby()->request();
+        if ($q = $request->get('q')) {
+            $result = self::decrypt($q);
+
+            return is_array($result) ? A::get($result, $key, $default) : $request->get($key, $default);
+        }
+
+        return $request->get($key, $default);
+    }
+
     public static function checkout(): string
     {
         return Uri::index()->clone([
             'path' => self::CHECKOUT,
-            'query' => [] + static::queryCsrf(),
+            'query' => static::queryCsrf() + self::encrypt([]),
         ])->toString();
     }
 
@@ -84,7 +126,7 @@ class Router
     {
         return Uri::index()->clone([
             'path' => self::LOGIN,
-            'query' => [] + static::queryCsrf(),
+            'query' => static::queryCsrf(),
         ])->toString();
     }
 
@@ -92,7 +134,7 @@ class Router
     {
         return Uri::index()->clone([
             'path' => self::LOGOUT,
-            'query' => [] + static::queryCsrf(),
+            'query' => static::queryCsrf(),
         ])->toString();
     }
 
@@ -105,9 +147,9 @@ class Router
     {
         return Uri::index()->clone([
             'path' => self::current().'/'.self::CART_ADD,
-            'query' => [
+            'query' => static::queryCsrf() + self::encrypt([
                 'product' => $product->uuid()->id(),
-            ] + static::queryCsrf(),
+            ]),
         ])->toString();
     }
 
@@ -115,9 +157,9 @@ class Router
     {
         return Uri::index()->clone([
             'path' => self::current().'/'.self::CART_REMOVE,
-            'query' => [
+            'query' => static::queryCsrf() + self::encrypt([
                 'product' => $product->uuid()->id(),
-            ] + static::queryCsrf(),
+            ]),
         ])->toString();
     }
 
@@ -125,9 +167,9 @@ class Router
     {
         return Uri::index()->clone([
             'path' => self::current().'/'.self::WISHLIST_ADD,
-            'query' => [
+            'query' => static::queryCsrf() + self::encrypt([
                 'product' => $product->uuid()->id(),
-            ] + static::queryCsrf(),
+            ]),
         ])->toString();
     }
 
@@ -135,9 +177,9 @@ class Router
     {
         return Uri::index()->clone([
             'path' => self::current().'/'.self::WISHLIST_REMOVE,
-            'query' => [
+            'query' => static::queryCsrf() + self::encrypt([
                 'product' => $product->uuid()->id(),
-            ] + static::queryCsrf(),
+            ]),
         ])->toString();
     }
 }

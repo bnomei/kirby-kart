@@ -52,6 +52,16 @@ Kirby::plugin(
                 'enabled' => true,
                 'limit' => 30 * 60, // N requests in 60 seconds
             ],
+            'router' => [
+                'encryption' => fn () => sha1(__DIR__), // or false
+            ],
+            'middlewares' => function (): array {
+                // could do different stuff based on kirby()->request()
+                return [
+                    \Bnomei\Kart\Router::class.'::csrf',
+                    \Bnomei\Kart\Router::class.'::ratelimit',
+                ];
+            },
             'provider' => \Bnomei\Kart\Provider\Kirby::class, // stripe, mollie, paddle, ...
             'providers' => [
                 'stripe' => [
