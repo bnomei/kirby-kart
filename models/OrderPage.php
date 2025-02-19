@@ -9,6 +9,8 @@ use Kirby\Content\Field;
  * @method Field paidDate()
  * @method Field customer()
  * @method Field items()
+ * @method Field paymentComplete()
+ * @method Field paymentMethod()
  */
 class OrderPage extends Page
 {

@@ -4,6 +4,7 @@ use Bnomei\Kart\Helper;
 use Bnomei\Kart\Kart;
 use Bnomei\Kart\License;
 use Kirby\Cms\Page;
+use Kirby\Cms\Pages;
 use Kirby\Content\Field;
 use Kirby\Toolkit\A;
 
@@ -29,7 +30,7 @@ Kirby::plugin(
                 'paddle' => true,
             ],
             'expire' => 0, // 0 = forever, null to disable caching
-            'provider' => 'kirby', // stripe, mollie, paddle, ...
+
             'locale' => 'en_EN', // or current locale on multilanguage setups
             'currency' => 'EUR',
             'orders' => [
@@ -51,11 +52,14 @@ Kirby::plugin(
                 'enabled' => true,
                 'limit' => 30 * 60, // N requests in 60 seconds
             ],
-            'stripe' => [
-                'secret_key' => fn () => env('STRIPE_SECRET_KEY'),
+            'provider' => \Bnomei\Kart\Provider\Kirby::class, // stripe, mollie, paddle, ...
+            'providers' => [
+                'stripe' => [
+                    'secret_key' => fn () => env('STRIPE_SECRET_KEY'),
+                ],
+                'mollie' => [],
+                'paddle' => [],
             ],
-            'mollie' => [],
-            'paddle' => [],
         ],
         'blueprints' => [
             'users/customer' => require_once __DIR__.'/blueprints/users/customer.php',
@@ -122,6 +126,24 @@ Kirby::plugin(
         'siteMethods' => [
             'kart' => function (): Kart {
                 return kart();
+            },
+        ],
+        'userMethods' => [
+            'orders' => function (): ?Pages {
+                return kart()->page('orders')?->children()->filterBy(fn ($order) => $order->customer()->toUser()?->id() === $this->id());
+            },
+            'hasMadePaymentFor' => function (string $provider, ProductPage $productPage): bool {
+                if ($this->$provider()->isEmpty()) {
+                    return false;
+                }
+                // try finding a payment like KLUB would store it on fulfillment of one_time purchases
+                // which is stripe.payments[<array of price_ids>]
+                $data = $this->$provider()->yaml();
+
+                return count(array_intersect(
+                    $productPage->priceIds(),
+                    A::get($data, 'payments', [])
+                ));
             },
         ],
         'fieldMethods' => [

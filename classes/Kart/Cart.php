@@ -18,6 +18,7 @@ class Cart
     private ?User $user = null;
 
     private string $id; // this will match the field on the user content (cart, wishlist)
+
     private App $kirby;
 
     public function __construct(string $id, array $items = [])

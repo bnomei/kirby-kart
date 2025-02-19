@@ -161,4 +161,17 @@ class ProductPage extends Page
     {
         return Router::wishlist_remove($this);
     }
+
+    public function priceIds(): array
+    {
+        // TODO: return a list of all know priceIds for this product
+        // uses to find of the product was purchased with a given priceId
+        return [];
+    }
+
+    public static function findByPriceId(string $priceId): ?ProductPage
+    {
+        return kart()->page('products')->children()
+            ->filterBy(fn (ProductPage $p) => in_array($priceId, $p->priceIds()))->first();
+    }
 }

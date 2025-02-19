@@ -4,6 +4,7 @@ namespace Bnomei\Kart;
 
 use Closure;
 use Kirby\Cms\App;
+use Kirby\Cms\User;
 
 use function env;
 
@@ -41,5 +42,32 @@ abstract class Provider implements ProviderInterface
         }
 
         return $option;
+    }
+
+    public function ownsProduct(\ProductPage|string|null $product, ?User $user = null): bool
+    {
+        if (is_string($product)) {
+            $product = $this->kirby->page($product);
+        }
+
+        if (! $product) {
+            return false;
+        }
+
+        $user ??= $this->kirby->user();
+
+        if (! $user) {
+            return false;
+        }
+
+        // search the user account content (KLUB or other fulfillment)
+        if ($user->hasMadePaymentFor($this->name, $product)) {
+            return true;
+        }
+
+        // search orders
+        return $user->orders()
+            ->filterBy(fn ($order) => $order->paymentComplete()->toBool() && $order->has($product))
+            ->count() > 0;
     }
 }

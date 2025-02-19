@@ -3,9 +3,6 @@
 namespace Bnomei\Kart;
 
 use Bnomei\Kart\Provider\Kirby;
-use Bnomei\Kart\Provider\Mollie;
-use Bnomei\Kart\Provider\Paddle;
-use Bnomei\Kart\Provider\Stripe;
 use Exception;
 use Kirby\Cms\App;
 use Kirby\Cms\Collection;
@@ -38,12 +35,12 @@ class Kart
     public function provider(): Provider
     {
         if (! $this->provider) {
-            $this->provider = match ($this->kirby->option('bnomei.kart.provider')) {
-                'kirby' => new Kirby($this->kirby),
-                'mollie' => new Mollie($this->kirby),
-                'paypal' => new Paddle($this->kirby),
-                'stripe' => new Stripe($this->kirby),
-            };
+            $class = $this->kirby->option('bnomei.kart.provider');
+            if (class_exists($class)) {
+                $this->provider = new $class($this->kirby);
+            } else {
+                $this->provider = new Kirby($this->kirby);
+            }
         }
 
         return $this->provider;
