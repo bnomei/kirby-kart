@@ -56,6 +56,9 @@ class ProductsPage extends Page
                     'label' => t('kart.products', 'Products'),
                     'type' => 'pages',
                     'layout' => 'cards',
+                    'search' => true,
+                    'create' => false, // can not be created as they are virtual
+                    'sortable' => false, // can not be sorted as they are virtual
                     'template' => 'product', // maps to ProductPage model
                     'info' => '{{ page.formattedPrice }} + {{ page.tax }}%',
                     'image' => [

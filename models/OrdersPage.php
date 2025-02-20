@@ -50,7 +50,7 @@ class OrdersPage extends Page
                     'type' => 'fields',
                     'fields' => [
                         'invnumber' => [
-                            'label' => t('kart.latestinvoiceNumber', 'Lastest Invoice Number'),
+                            'label' => t('kart.latestinvoiceNumber', 'Latest Invoice Number'),
                             'type' => 'number',
                             'min' => 1,
                             'step' => 1,

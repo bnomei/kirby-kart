@@ -3,22 +3,24 @@
 namespace Bnomei\Kart;
 
 use Closure;
+use Kirby\Cache\Cache;
 use Kirby\Cms\App;
 use Kirby\Cms\User;
 use Kirby\Toolkit\Date;
 use ProductPage;
 
-use function env;
-
 abstract class Provider implements ProviderInterface
 {
     protected string $name;
 
-    private App $kirby;
+    protected App $kirby;
+
+    private array $options;
 
     public function __construct($kirby)
     {
         $this->kirby = $kirby;
+        $this->options = [];
     }
 
     public function title(): string
@@ -26,12 +28,17 @@ abstract class Provider implements ProviderInterface
         return ucfirst($this->name);
     }
 
-    public function option($key, bool $resolveCallables = true): mixed
+    public function option(string $key, bool $resolveCallables = true): mixed
     {
+        if (isset($this->options[$key])) {
+            return $this->options[$key];
+        }
+
         $option = $this->kirby->option("bnomei.kart.providers.{$this->name}.$key");
         if ($resolveCallables && $option instanceof Closure) {
-            return $option();
+            $option = $option();
         }
+        $this->options[$key] = $option;
 
         return $option;
     }
@@ -56,7 +63,8 @@ abstract class Provider implements ProviderInterface
         $t = microtime(true);
 
         foreach ($sync as $interface) {
-            $this->$interface(); // calling the interface will trigger a refresh if necessary
+            $this->cache()->remove($interface);
+            $this->$interface();
         }
 
         return intval(round(($t - microtime(true)) * 1000));
@@ -74,12 +82,12 @@ abstract class Provider implements ProviderInterface
         return $this->cache()->get($u, '?');
     }
 
-    public function cache(): \Kirby\Cache\Cache
+    public function cache(): Cache
     {
         return $this->kirby->cache('bnomei.kart.'.$this->name);
     }
 
-    public function fetch(string $interface): array
+    public function read(string $interface): array
     {
         if ($data = $this->cache()->get($interface)) {
             return $data;
@@ -90,7 +98,7 @@ abstract class Provider implements ProviderInterface
 
         $expire = $this->kirby->option('bnomei.kart.expire');
         if (! is_null($expire)) {
-            $this->cache()->set($interface, intval($expire));
+            $this->cache()->set($interface, $data, intval($expire));
         }
 
         // update timestamp
@@ -103,17 +111,17 @@ abstract class Provider implements ProviderInterface
 
     public function products(): array
     {
-        return $this->fetch('products');
+        return $this->read('products');
     }
 
     public function orders(): array
     {
-        return $this->fetch('orders');
+        return $this->read('orders');
     }
 
     public function stocks(): array
     {
-        return $this->fetch('stocks');
+        return $this->read('stocks');
     }
 
     public function ownsProduct(ProductPage|string|null $product, ?User $user = null): bool
@@ -141,10 +149,5 @@ abstract class Provider implements ProviderInterface
         return $user->completedOrders()
             ->filterBy(fn ($order) => $order->has($product))
             ->count() > 0;
-    }
-
-    protected function env(string $env, mixed $default = null): mixed
-    {
-        return env($env, $default);
     }
 }

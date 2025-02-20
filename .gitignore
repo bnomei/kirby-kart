@@ -4,6 +4,7 @@
 *.cache
 
 /tests/.env
+/tests/.env*
 /tests/.todo*
 /tests/kirby
 /tests/logs

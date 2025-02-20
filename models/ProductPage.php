@@ -6,12 +6,12 @@ use Bnomei\Kart\Router;
 use Kirby\Cms\Page;
 use Kirby\Cms\Pages;
 use Kirby\Content\Field;
+use Kirby\Toolkit\A;
 
 /**
  * @method Field description()
  * @method Field price()
  * @method Field tax()
- * @method Field availability()
  */
 class ProductPage extends Page
 {
@@ -33,6 +33,7 @@ class ProductPage extends Page
             'name' => 'product',
             'options' => [
                 'changeTemplate' => false,
+                'update' => false, // can not be updated as they are virtual
             ],
             'sections' => [
                 'stats' => [
@@ -101,36 +102,16 @@ class ProductPage extends Page
                             ],
                             'width' => '1/2',
                         ],
-                        'raw' => [
+                        '_dump' => [
                             'label' => t('kart.product.raw', 'Raw'),
                             'type' => 'info',
                             'theme' => 'info',
-                            'text' => '{< page.raw(82) >}',
+                            'text' => '{< page.dump("raw", 82) >}',
                         ],
                     ],
                 ],
             ],
         ];
-    }
-
-    public function raw(int $maxWidth = 140): string
-    {
-        $json = json_encode($this->content->toArray(), JSON_PRETTY_PRINT);
-        $lines = explode("\n", $json);
-        $wrappedLines = [];
-
-        foreach ($lines as $line) {
-            $indentation = strspn($line, ' ');
-            $content = trim($line);
-            $wrapped = wordwrap($content, $maxWidth - $indentation, "\n", true);
-            $wrapped = preg_replace('/^/m', str_repeat(' ', $indentation), $wrapped);
-            $wrappedLines[] = $wrapped;
-        }
-
-        $json = implode("\n", $wrappedLines);
-        $json = str_replace([' ', '&nbsp;&nbsp;'], ['&nbsp;', '&nbsp;'], $json);
-
-        return '<code style="overflow: hidden; width: 100%; display: block">'.$json.'</code>';
     }
 
     public function stock(): int|string

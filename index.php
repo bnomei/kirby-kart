@@ -40,7 +40,9 @@ App::plugin(
                 // TODO: add caches for each provider
             ],
             'expire' => 0, // 0 = forever, null to disable caching
-
+            'customers' => [
+                'roles' => ['customer', 'member'],
+            ],
             'locale' => 'en_EN', // or current locale on multilanguage setups
             'currency' => 'EUR',
             'orders' => [
@@ -199,7 +201,7 @@ App::plugin(
             'trendPercent' => function (string $field, string $compare): Field {
                 $current = $this->interval($field, '-30 days', 'now')->sum($compare);
                 $last = $this->interval($field, '-60 days', '-31 days')->sum($compare);
-                dump($current, $last);
+
                 if ($last == 0) {
                     $diff = ($current > 0) ? 100.0 : 0.0; // If last month was 0 and this month is positive, assume 100% increase
                 } else {
@@ -214,6 +216,35 @@ App::plugin(
                 $last = $this->interval($field, '-60 days', '-31 days')->sum($compare);
 
                 return $current >= $last ? 'positive' : 'negative';
+            },
+        ],
+        'pageMethods' => [
+            'dump' => function (?string $field = null, int $maxWidth = 140): string {
+                $content = $this->content->toArray();
+                if ($field) {
+                    $content = A::get($content, $field, []);
+                    try {
+                        $content = \Kirby\Data\Yaml::decode($content);
+                    } catch (\Throwable $th) {
+                        // ignore
+                    }
+                }
+                $json = json_encode($content, JSON_PRETTY_PRINT);
+                $lines = explode("\n", $json);
+                $wrappedLines = [];
+
+                foreach ($lines as $line) {
+                    $indentation = strspn($line, ' ');
+                    $content = trim($line);
+                    $wrapped = wordwrap($content, $maxWidth - $indentation, "\n", true);
+                    $wrapped = preg_replace('/^/m', str_repeat(' ', $indentation), $wrapped);
+                    $wrappedLines[] = $wrapped;
+                }
+
+                $json = implode("\n", $wrappedLines);
+                $json = str_replace([' ', '&nbsp;&nbsp;'], ['&nbsp;', '&nbsp;'], $json);
+
+                return '<code>'.$json.'</code>';
             },
         ],
         'siteMethods' => [
