@@ -25,25 +25,35 @@ Kirby::plugin(
             'license' => '', // set your license from https://buy-kart.bnomei.com code in the config `bnomei.kart.license`
             'cache' => [
                 'ratelimit' => true,
+
+                // providers
+                'kirby' => true,
                 'stripe' => true,
                 'mollie' => true,
                 'paddle' => true,
+                // TODO: add caches for each provider
             ],
             'expire' => 0, // 0 = forever, null to disable caching
 
             'locale' => 'en_EN', // or current locale on multilanguage setups
             'currency' => 'EUR',
             'orders' => [
-                'enabled' => true, // true|false, 'dreamform'
-                'page' => 'orders', // 'orders' or point to root of dreamform
-                'slug' => fn (OrdersPage $orders, array $props) => Helper::nonAmbiguousUuid(5), // aka order id
+                'enabled' => true,
+                'page' => 'orders',
+                'model' => OrdersPage::class,
+                'order' => [
+                    'slug' => fn (OrdersPage $orders, array $props) => Helper::nonAmbiguousUuid(5), // aka order id
+                ],
             ],
             'products' => [
+                'enabled' => true,
                 'page' => 'products',
+                'model' => ProductsPage::class,
             ],
             'stocks' => [
                 'enabled' => true,
                 'page' => 'stocks',
+                'model' => StocksPage::class,
             ],
             'csrf' => [
                 'enabled' => true,
@@ -72,6 +82,15 @@ Kirby::plugin(
             ],
         ],
         'routes' => require_once __DIR__.'/routes.php',
+        'snippets' => [
+            'kart/json-ld/product' => __DIR__.'/snippets/kart/json-ld/product.php',
+            'kart/login' => __DIR__.'/snippets/kart/login.php',
+            'kart/logout' => __DIR__.'/snippets/kart/logout.php',
+            'kart/html/cart' => __DIR__.'/snippets/kart/html/cart.php',
+            'kart/html/add' => __DIR__.'/snippets/kart/html/add.php',
+            'kart/html/wishlist' => __DIR__.'/snippets/kart/html/wishlist.php',
+            'kart/html/wish-or-forget' => __DIR__.'/snippets/kart/html/wish-or-forget.php',
+        ],
         'blueprints' => [
             'users/customer' => require_once __DIR__.'/blueprints/users/customer.php',
             'pages/order' => OrderPage::phpBlueprint(),
@@ -86,15 +105,6 @@ Kirby::plugin(
             'product' => ProductPage::class,
             'products' => ProductsPage::class,
             'stocks' => StocksPage::class,
-        ],
-        'snippets' => [
-            'kart/json-ld/product' => __DIR__.'/snippets/kart/json-ld/product.php',
-            'kart/login' => __DIR__.'/snippets/kart/login.php',
-            'kart/logout' => __DIR__.'/snippets/kart/logout.php',
-            'kart/html/cart' => __DIR__.'/snippets/kart/html/cart.php',
-            'kart/html/add' => __DIR__.'/snippets/kart/html/add.php',
-            'kart/html/wishlist' => __DIR__.'/snippets/kart/html/wishlist.php',
-            'kart/html/wish-or-forget' => __DIR__.'/snippets/kart/html/wish-or-forget.php',
         ],
         'hooks' => [
             'system.loadPlugins:after' => function (): void {
@@ -158,13 +168,13 @@ Kirby::plugin(
             },
         ],
         'siteMethods' => [
-            'kart' => function (): Kart {
+            'kart' => function (): \Bnomei\Kart\Kart {
                 return kart();
             },
         ],
         'userMethods' => [
             'orders' => function (): ?Pages {
-                return kart()->page(ContentPageEnum::ORDERS)?->children()->filterBy(fn ($order) => $order->customer()->toUser()?->id() === $this->id());
+                return kart()->page(\Bnomei\Kart\ContentPageEnum::ORDERS)?->children()->filterBy(fn ($order) => $order->customer()->toUser()?->id() === $this->id());
             },
             'completedOrders' => function (): ?Pages {
                 return $this->orders()

@@ -61,7 +61,7 @@ return function (App $kirby) {
                 );
 
                 // TODO: add htmx and data-star
-                return go($id); // prg
+                go($id); // prg
             },
         ],
         [
@@ -77,7 +77,7 @@ return function (App $kirby) {
                 );
 
                 // TODO: add htmx and data-star
-                return go($id); // prg
+                go($id); // prg
             },
         ],
         [
@@ -93,7 +93,7 @@ return function (App $kirby) {
                 );
 
                 // TODO: add htmx and data-star
-                return go($id); // prg
+                go($id); // prg
             },
         ],
         [
@@ -109,7 +109,30 @@ return function (App $kirby) {
                 );
 
                 // TODO: add htmx and data-star
-                return go($id); // prg
+                go($id); // prg
+            },
+        ],
+
+        [
+            'pattern' => Router::SYNC,
+            'method' => 'GET',
+            'action' => function () {
+                if ($r = Router::denied()) {
+                    return $r;
+                }
+
+                $page = Router::get('page');
+                $url = page('page://'.$page)?->panel()->url();
+
+                $from = Router::get('user');
+                $user = kirby()->user();
+                if (! $user || $user->id() !== $from || $user->role()->name() !== 'admin') {
+                    go($url);
+                }
+
+                kart()->provider()->sync($page);
+
+                go($url); // prg
             },
         ],
     ];

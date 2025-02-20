@@ -2,8 +2,9 @@
 
 namespace Bnomei\Kart\Provider;
 
+use Bnomei\Kart\ContentPageEnum;
 use Bnomei\Kart\Provider;
-use ProviderEnum;
+use Bnomei\Kart\ProviderEnum;
 
 class Kirby extends Provider
 {
@@ -12,5 +13,10 @@ class Kirby extends Provider
     public function checkout(): string
     {
         return '';
+    }
+
+    public function updatedAt(ContentPageEnum|string|null $sync): string
+    {
+        return t('kart.now', 'Now');
     }
 }

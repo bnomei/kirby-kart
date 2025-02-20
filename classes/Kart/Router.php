@@ -3,6 +3,7 @@
 namespace Bnomei\Kart;
 
 use Closure;
+use Kirby\Cms\Page;
 use Kirby\Cms\Response;
 use Kirby\Http\Uri;
 use Kirby\Toolkit\A;
@@ -23,6 +24,8 @@ class Router
     const WISHLIST_ADD = 'kart/wishlist/add';
 
     const WISHLIST_REMOVE = 'kart/wishlist/remove';
+
+    const SYNC = 'kart/sync';
 
     public static function denied(): ?Response
     {
@@ -181,6 +184,25 @@ class Router
             'path' => self::current().'/'.self::WISHLIST_REMOVE,
             'query' => static::queryCsrf() + self::encrypt([
                 'product' => $product->uuid()->id(),
+            ]),
+        ])->toString();
+    }
+
+    public static function sync(Page|string|null $page): string
+    {
+        if (! $page) {
+            $page = kart()->page(ContentPageEnum::PRODUCTS);
+        }
+
+        if ($page instanceof Page) {
+            $page = $page->uuid()->id();
+        }
+
+        return Uri::index()->clone([
+            'path' => self::SYNC,
+            'query' => static::queryCsrf() + self::encrypt([
+                'page' => $page,
+                'user' => kirby()->user()?->id(),
             ]),
         ])->toString();
     }

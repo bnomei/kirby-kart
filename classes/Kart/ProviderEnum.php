@@ -1,5 +1,7 @@
 <?php
 
+namespace Bnomei\Kart;
+
 enum ProviderEnum: string
 {
     case KIRBY = 'kirby';

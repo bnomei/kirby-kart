@@ -1,5 +1,6 @@
 <?php
 
+use Bnomei\Kart\ContentPageEnum;
 use Bnomei\Kart\Router;
 use Kirby\Cms\Page;
 

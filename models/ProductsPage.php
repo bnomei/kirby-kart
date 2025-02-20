@@ -15,6 +15,15 @@ class ProductsPage extends Page
                 'duplicate' => false,
                 'move' => false,
             ],
+            'buttons' => [
+                'preview' => true,
+                'sync' => [
+                    'icon' => 'refresh',
+                    'text' => t('kart.syncprovider', 'Sync Provider'),
+                    'link' => '{< site.kart.sync("products") >}',
+                ],
+                'status' => true,
+            ],
             'sections' => [
                 'stats' => [
                     'label' => t('kart.summary', 'Summary'),
@@ -30,7 +39,7 @@ class ProductsPage extends Page
                         ],
                         [
                             'label' => t('kart.lastsync', 'Last Sync'),
-                            'value' => '{{ site.kart.provider.updatedAt }}',
+                            'value' => '{{ site.kart.provider.updatedAt("products") }}',
                         ],
                     ],
                 ],
@@ -46,7 +55,7 @@ class ProductsPage extends Page
                     'label' => t('kart.products', 'Products'),
                     'type' => 'pages',
                     'layout' => 'cards',
-                    'template' => 'product',
+                    'template' => 'product', // maps to ProductPage model
                     'info' => '{{ page.formattedPrice }} + {{ page.tax }}%',
                     'image' => [
                         'query' => 'page.gallery.first.toFile',

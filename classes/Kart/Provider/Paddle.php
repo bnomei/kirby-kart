@@ -3,7 +3,7 @@
 namespace Bnomei\Kart\Provider;
 
 use Bnomei\Kart\Provider;
-use ProviderEnum;
+use Bnomei\Kart\ProviderEnum;
 
 class Paddle extends Provider
 {

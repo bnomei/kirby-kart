@@ -17,9 +17,9 @@ class OrderPage extends Page
     public static function create(array $props): Page
     {
         // enforce unique but short slug with the option to overwrite it in a closure
-        $props['slug'] = kirby()->option('bnomei.kart.orders.slug', $props['slug']);
+        $props['slug'] = kirby()->option('bnomei.kart.orders.order.slug', $props['slug']);
         if ($props['slug'] instanceof Closure) {
-            $props['slug'] = $props['slug'](kart()->page('orders'), $props);
+            $props['slug'] = $props['slug'](kart()->page(\Bnomei\Kart\ContentPageEnum::ORDERS), $props);
             $props['content']['uuid'] = $props['slug'];
             $props['content']['title'] = strtoupper($props['slug']);
         }

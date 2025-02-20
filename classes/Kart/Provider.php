@@ -5,6 +5,7 @@ namespace Bnomei\Kart;
 use Closure;
 use Kirby\Cms\App;
 use Kirby\Cms\User;
+use Kirby\Toolkit\Date;
 use ProductPage;
 
 use function env;
@@ -25,11 +26,6 @@ abstract class Provider implements ProviderInterface
         return ucfirst($this->name);
     }
 
-    public function updatedAt(): string
-    {
-        return date('c'); // TODO
-    }
-
     public function option($key, bool $resolveCallables = true): mixed
     {
         $option = $this->kirby->option("bnomei.kart.providers.{$this->name}.$key");
@@ -38,6 +34,74 @@ abstract class Provider implements ProviderInterface
         }
 
         return $option;
+    }
+
+    public function sync(ContentPageEnum|string|null $sync): int
+    {
+        $all = array_map(fn ($c) => $c->value, ContentPageEnum::cases());
+
+        if (! $sync) {
+            $sync = $all;
+        }
+        if ($sync instanceof ContentPageEnum) {
+            $sync = [$sync->value];
+        }
+        if (is_string($sync)) {
+            $sync = [$sync];
+        }
+
+        // only allow valid interfaces
+        $sync = array_intersect($sync, $all);
+
+        $t = microtime(true);
+
+        foreach ($sync as $interface) {
+            $this->$interface(); // calling the interface will trigger a refresh if necessary
+        }
+
+        return intval(round(($t - microtime(true)) * 1000));
+    }
+
+    public function updatedAt(ContentPageEnum|string|null $sync): string
+    {
+        $u = 'updatedAt';
+        if ($sync instanceof ContentPageEnum) {
+            $u .= '-'.$sync->value;
+        } elseif (is_string($sync)) {
+            $u .= '-'.$sync;
+        }
+
+        return $this->cache()->get($u, '?');
+    }
+
+    public function cache(): \Kirby\Cache\Cache
+    {
+        return $this->kirby->cache('bnomei.kart.'.$this->name);
+    }
+
+    public function products(): array
+    {
+        // if has cache return that
+
+        // else refresh
+
+        // update timestamp
+
+        $t = str_replace('+00:00', '', Date::now()->toString());
+        $this->cache()->set('updatedAt', $t);
+        $this->cache()->set('updatedAt-products', $t);
+
+        return [];
+    }
+
+    public function orders(): array
+    {
+        return [];
+    }
+
+    public function stocks(): array
+    {
+        return [];
     }
 
     public function ownsProduct(ProductPage|string|null $product, ?User $user = null): bool

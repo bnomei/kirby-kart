@@ -5,7 +5,6 @@ namespace Bnomei\Kart;
 use Bnomei\Kart\Mixins\CartShortcuts;
 use Bnomei\Kart\Mixins\ContentPages;
 use Bnomei\Kart\Provider\Kirby;
-use ContentPageEnum;
 use Exception;
 use Kirby\Cms\App;
 use Kirby\Cms\Page;
@@ -127,5 +126,10 @@ class Kart
     public function logout(): string
     {
         return Router::logout();
+    }
+
+    public function sync(Page|string|null $page): string
+    {
+        return Router::sync($page);
     }
 }

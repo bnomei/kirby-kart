@@ -21,17 +21,6 @@ class OrdersPage extends Page
                 'move' => false,
                 'sort' => false,
             ],
-            'buttons' => [
-                'preview' => true,
-                // TODO: add a sync with provider button
-                'sync' => [
-                    // 'icon' => 'refresh',
-                    'text' => 'xxx', // t('kart.syncprovider', 'Sync Provider'),
-                    'link' => 'https://stats.io/{{ page.uuid.id }}',
-                    // 'theme' => '#7157FF',
-                ],
-                'status' => true,
-            ],
             'sections' => [
                 'stats' => [
                     'label' => t('kart.summary', 'Summary'),
@@ -72,7 +61,7 @@ class OrdersPage extends Page
                 'orders' => [
                     'label' => t('kart.orders', 'Orders'),
                     'type' => 'pages',
-                    'template' => 'order',
+                    'template' => 'order', // maps to OrderPage model
                     'sortBy' => 'paidDate desc',
                     'text' => '#{{ page.invoiceNumber }}',
                     'info' => '{{ page.formattedSum }} + {{ page.formattedTax }} ・ {{ page.paidDate }}',
