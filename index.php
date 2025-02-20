@@ -9,7 +9,9 @@ use Bnomei\Kart\Router;
 use Kirby\Cms\App;
 use Kirby\Cms\Page;
 use Kirby\Cms\Pages;
+use Kirby\Cms\User;
 use Kirby\Content\Field;
+use Kirby\Session\Session;
 use Kirby\Toolkit\A;
 use Kirby\Uuid\Uuid;
 
@@ -123,11 +125,11 @@ App::plugin(
                 // make sure the kart singleton is ready in calling it once
                 kart();
             },
-            'user.login:after' => function (Kirby\Cms\User $user, Kirby\Session\Session $session) {
+            'user.login:after' => function (User $user, Session $session) {
                 kart()->cart()->merge($user);
                 kart()->wishlist()->merge($user);
             },
-            'user.logout:after' => function (Kirby\Cms\User $user, Kirby\Session\Session $session) {
+            'user.logout:after' => function (User $user, Session $session) {
                 kart()->cart()->clear();
                 kart()->wishlist()->clear();
             },
