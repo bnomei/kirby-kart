@@ -79,29 +79,41 @@ abstract class Provider implements ProviderInterface
         return $this->kirby->cache('bnomei.kart.'.$this->name);
     }
 
-    public function products(): array
+    public function fetch(string $interface): array
     {
-        // if has cache return that
+        if ($data = $this->cache()->get($interface)) {
+            return $data;
+        }
 
-        // else refresh
+        $method = 'fetch'.ucfirst($interface);
+        $data = $this->$method(); // concrete implementation
+
+        $expire = $this->kirby->option('bnomei.kart.expire');
+        if (! is_null($expire)) {
+            $this->cache()->set($interface, intval($expire));
+        }
 
         // update timestamp
-
         $t = str_replace('+00:00', '', Date::now()->toString());
         $this->cache()->set('updatedAt', $t);
-        $this->cache()->set('updatedAt-products', $t);
+        $this->cache()->set('updatedAt-'.$interface, $t);
 
-        return [];
+        return $data;
+    }
+
+    public function products(): array
+    {
+        return $this->fetch('products');
     }
 
     public function orders(): array
     {
-        return [];
+        return $this->fetch('orders');
     }
 
     public function stocks(): array
     {
-        return [];
+        return $this->fetch('stocks');
     }
 
     public function ownsProduct(ProductPage|string|null $product, ?User $user = null): bool
