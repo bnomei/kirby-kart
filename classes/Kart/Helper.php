@@ -35,9 +35,15 @@ class Helper
         return $data;
     }
 
-    public static function formatNumber(float $number): string
+    public static function formatNumber(float $number, bool $prefix = false): string
     {
-        return self::formatter(NumberFormatter::DECIMAL)->format($number);
+        if ($prefix) {
+            $prefix = $number > 0 ? '+' : ''; // - will be in format anyway
+        } else {
+            $prefix = '';
+        }
+
+        return $prefix.self::formatter(NumberFormatter::DECIMAL)->format($number);
     }
 
     private static function formatter($style): NumberFormatter

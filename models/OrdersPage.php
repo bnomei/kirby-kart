@@ -28,17 +28,21 @@ class OrdersPage extends Page
                     'type' => 'stats',
                     'reports' => [
                         [
-                            'label' => t('kart.latest', 'Latest'),
-                            'value' => '{{ page.children.sortBy("paidDate", "desc").first.paidDate }}',
+                            'label' => t('kart.latest', 'Latest Order'),
+                            'value' => '#{{ page.children.sortBy("paidDate", "desc").first.invoiceNumber }} ・ {{ page.children.sortBy("paidDate", "desc").first.customer.toUser.email }}',
+                            'info' => '{{ page.children.sortBy("paidDate", "desc").first.paidDate }}',
+                            'link' => '{{ page.children.sortBy("paidDate", "desc").first.panel.url }}',
                         ],
                         [
-                            // 'label' => t('kart.sum', 'Sum'),
-                            'value' => '{{ page.children.sumField("sum").toFormattedCurrency }}',
-                            'info' => '+ {{ page.children.sumField("tax").toFormattedCurrency }}',
+                            'label' => t('kart.sum', 'Revenue (30 days)'),
+                            'value' => '{{ page.children.trend("paidDate", "sum").toFormattedCurrency }}',
+                            'info' => '{{ page.children.trendPercent("paidDate", "sum").toFormattedNumber(true) }}%',
+                            'theme' => '{{ page.children.trendTheme("paidDate", "sum") }}',
                         ],
                         [
-                            'label' => t('kart.orders', 'Orders'),
-                            'value' => '{{ page.children.count }}',
+                            'label' => t('kart.orders', 'Orders (30 days)'),
+                            'value' => '{{ page.children.interval("paidDate", "-30 days", "now").count }}',
+                            'info' => '{{ page.children.interval("paidDate", "-60 days", "-31 days").count }}',
                         ],
                     ],
                 ],

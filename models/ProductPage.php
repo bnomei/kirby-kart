@@ -1,14 +1,17 @@
 <?php
 
 use Bnomei\Kart\ContentPageEnum;
+use Bnomei\Kart\Helper;
 use Bnomei\Kart\Router;
 use Kirby\Cms\Page;
+use Kirby\Cms\Pages;
+use Kirby\Content\Field;
 
 /**
- * @method \Kirby\Content\Field description()
- * @method \Kirby\Content\Field price()
- * @method \Kirby\Content\Field tax()
- * @method \Kirby\Content\Field availability()
+ * @method Field description()
+ * @method Field price()
+ * @method Field tax()
+ * @method Field availability()
  */
 class ProductPage extends Page
 {
@@ -17,7 +20,7 @@ class ProductPage extends Page
         // enforce unique but short slug with the option to overwrite it in a closure
         $uuid = kirby()->option('bnomei.kart.products.product.uuid');
         if ($uuid instanceof Closure) {
-            $uuid = $uuid(kart()->page(\Bnomei\Kart\ContentPageEnum::PRODUCTS), $props);
+            $uuid = $uuid(kart()->page(ContentPageEnum::PRODUCTS), $props);
             $props['content']['uuid'] = $uuid;
         }
 
@@ -43,10 +46,12 @@ class ProductPage extends Page
                         [
                             'label' => t('kart.sold', 'Sold'),
                             'value' => '{{ page.sold }}',
+                            'link' => '{{ site.kart.page("orders").url }}',
                         ],
                         [
                             'label' => t('kart.stock', 'Stock'),
                             'value' => '{{ page.stock }}',
+                            'link' => '{{ page.stockUrl }}',
                         ],
                     ],
                 ],
@@ -130,10 +135,26 @@ class ProductPage extends Page
 
     public function stock(): int|string
     {
-        /** @var \StocksPage $stocks */
+        /** @var StocksPage $stocks */
         $stocks = kart()->page(ContentPageEnum::STOCKS);
 
         return $stocks->stock($this->uuid()->toString()) ?? '?';
+    }
+
+    public function stockUrl(): ?string
+    {
+        /** @var StocksPage $stocks */
+        $stocks = kart()->page(ContentPageEnum::STOCKS);
+
+        return $stocks
+            ->children()
+            ->filterBy(fn ($page) => $page->page()->toPage()?->uuid()->id() === $this->uuid()->id())
+            ->first()?->panel()->url() ?? $stocks->panel()->url();
+    }
+
+    public function withoutStocks(): Pages
+    {
+        return $this->children()->filterBy(fn (ProductPage $page) => ! is_numeric($page->stock()));
     }
 
     public function sold(): ?int
@@ -145,7 +166,7 @@ class ProductPage extends Page
 
     public function formattedPrice(): string
     {
-        return \Bnomei\Kart\Helper::formatCurrency($this->price()->toFloat());
+        return Helper::formatCurrency($this->price()->toFloat());
     }
 
     public function formattedSum(): string
@@ -155,7 +176,7 @@ class ProductPage extends Page
 
     public function formattedTax(): string
     {
-        return \Bnomei\Kart\Helper::formatCurrency(
+        return Helper::formatCurrency(
             $this->price()->toFloat() *
             $this->tax()->toFloat() / 100.0
         );
@@ -163,7 +184,7 @@ class ProductPage extends Page
 
     public function formattedSumTax(): string
     {
-        return \Bnomei\Kart\Helper::formatCurrency(
+        return Helper::formatCurrency(
             $this->price()->toFloat() *
             (1.0 + $this->tax()->toFloat() / 100.0)
         );

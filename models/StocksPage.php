@@ -27,6 +27,7 @@ class StocksPage extends Page
                         [
                             'label' => t('kart.products', 'Products'),
                             'value' => '{{ page.children.count }}',
+                            'link' => '{{ site.kart.page("products").panel.url }}',
                         ],
                         [
                             'label' => t('kart.stocks', 'Stocks'),

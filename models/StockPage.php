@@ -45,7 +45,7 @@ class StockPage extends Page
                 'page' => [
                     'label' => t('kart.product', 'Product'),
                     'type' => 'pages',
-                    'query' => 'site.kart.page("products")',
+                    'query' => 'site.kart.page("products")', // TODO: .withoutStocks does not work
                     // 'required' => true,
                     'multiple' => false,
                     'subpages' => false,

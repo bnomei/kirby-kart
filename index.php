@@ -150,8 +150,8 @@ App::plugin(
             },
         ],
         'fieldMethods' => [
-            'toFormattedNumber' => function ($field): string {
-                $field->value = Helper::formatNumber(floatval($field->value));
+            'toFormattedNumber' => function ($field, bool $prefix = false): string {
+                $field->value = Helper::formatNumber(floatval($field->value), $prefix);
 
                 return $field;
             },
@@ -169,6 +169,10 @@ App::plugin(
                         return $page->$field;
                     }
 
+                    if (method_exists($page, $field)) {
+                        return $page->$field();
+                    }
+
                     if ($page->$field() instanceof Field) {
                         return $page->$field()->toFloat();
                     }
@@ -178,6 +182,38 @@ App::plugin(
             },
             'sumField' => function (string $field): Field {
                 return new Field(null, $field, $this->sum($field));
+            },
+            'interval' => function (string $field, string $from, ?string $until = null): Pages {
+                $from = strtotime($from);
+                $until = $until ? strtotime($until) : null;
+
+                return $this->filterBy(function ($page) use ($field, $from, $until) {
+                    $ts = intval($page->$field()->toDate('U'));
+
+                    return $ts >= $from && (! $until || $ts <= $until);
+                });
+            },
+            'trend' => function (string $field, string $compare): Field {
+                return $this->interval($field, '-30 days', 'now')->sumField($compare);
+            },
+            'trendPercent' => function (string $field, string $compare): Field {
+                $current = $this->interval($field, '-30 days', 'now')->sum($compare);
+                $last = $this->interval($field, '-60 days', '-31 days')->sum($compare);
+                dump($current, $last);
+                if ($last == 0) {
+                    $diff = ($current > 0) ? 100.0 : 0.0; // If last month was 0 and this month is positive, assume 100% increase
+                } else {
+                    $diff = (($current - $last) / $last) * 100.0;
+                }
+
+                return new Field(null, $field, $diff);
+            },
+            'trendTheme' => function (string $field, string $compare): string {
+
+                $current = $this->interval($field, '-30 days', 'now')->sum($compare);
+                $last = $this->interval($field, '-60 days', '-31 days')->sum($compare);
+
+                return $current >= $last ? 'positive' : 'negative';
             },
         ],
         'siteMethods' => [
