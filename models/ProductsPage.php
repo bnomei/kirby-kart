@@ -1,6 +1,7 @@
 <?php
 
 use Kirby\Cms\Page;
+use Kirby\Cms\Pages;
 
 class ProductsPage extends Page
 {
@@ -71,5 +72,16 @@ class ProductsPage extends Page
                 ],
             ],
         ];
+    }
+
+    public function children(): Pages
+    {
+        if ($this->children instanceof Pages) {
+            return $this->children;
+        }
+
+        return $this->children = parent::children()->merge(
+            Pages::factory(kart()->provider()->products(), $this)
+        );
     }
 }

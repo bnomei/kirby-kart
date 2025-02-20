@@ -3,6 +3,7 @@
 use Bnomei\Kart\Helper;
 use Kirby\Cms\Page;
 use Kirby\Content\Field;
+use Kirby\Toolkit\Str;
 
 /**
  * @method Field invnumber()
@@ -17,14 +18,19 @@ class OrderPage extends Page
     public static function create(array $props): Page
     {
         // enforce unique but short slug with the option to overwrite it in a closure
-        $props['slug'] = kirby()->option('bnomei.kart.orders.order.slug', $props['slug']);
-        if ($props['slug'] instanceof Closure) {
-            $props['slug'] = $props['slug'](kart()->page(\Bnomei\Kart\ContentPageEnum::ORDERS), $props);
-            $props['content']['uuid'] = $props['slug'];
-            $props['content']['title'] = strtoupper($props['slug']);
+        $uuid = kirby()->option('bnomei.kart.orders.order.uuid');
+        if ($uuid instanceof Closure) {
+            $uuid = $uuid(kart()->page(\Bnomei\Kart\ContentPageEnum::ORDERS), $props);
+            $props['slug'] = Str::slug(str_replace('or_', '', $uuid));
+            $props['content']['uuid'] = $uuid;
+            $props['content']['title'] = strtoupper($uuid);
         }
 
-        return parent::create($props);
+        /** @var OrderPage $p */
+        $p = parent::create($props);
+        $p = $p->updateInvoiceNumber();
+
+        return $p->changeStatus('unlisted');
     }
 
     public static function phpBlueprint(): array
@@ -35,6 +41,10 @@ class OrderPage extends Page
                 'changeSlug' => false,
                 'changeTitle' => false,
                 'changeTemplate' => false,
+            ],
+            'create' => [
+                'title' => 'auto',
+                'slug' => 'auto',
             ],
             'sections' => [
                 'stats' => [
@@ -65,7 +75,7 @@ class OrderPage extends Page
                             'label' => t('kart.customer', 'Customer'),
                             'type' => 'users',
                             'multiple' => false,
-                            'query' => 'kirby.users.filterBy("role", "customer")',
+                            // 'query' => 'kirby.users.filterBy("role", "customer")',
                             'translate' => false,
                             'width' => '1/2',
                         ],
@@ -74,7 +84,7 @@ class OrderPage extends Page
                             'type' => 'number',
                             'min' => 1,
                             'step' => 1,
-                            'default' => 1,
+                            // 'default' => 1, // Do not do this. Messes with auto-incrementing.
                             // 'required' => true,
                             'translate' => false,
                             'width' => '1/2',
@@ -212,9 +222,9 @@ class OrderPage extends Page
 
     public function invoiceNumber(): string
     {
-        $page = $this->updateInvoiceNumber();
+        // $page = $this->updateInvoiceNumber(); // this would auto-fix Merx pages but it's not needed otherwise
 
-        return str_pad($page->invnumber()->value(), 5, 0, STR_PAD_LEFT);
+        return str_pad($this->invnumber()->value(), 5, 0, STR_PAD_LEFT);
     }
 
     /*
@@ -224,32 +234,35 @@ class OrderPage extends Page
     public function updateInvoiceNumber(): Page
     {
         $page = $this;
-        if ($this->invnumber()->isEmpty()) {
-            $page = $this->kirby()->impersonate('kirby', function () {
-                $current = $this->num();
-                if ($this->parent()->invnumber()->toInt() < $current) {
-                    $this->parent()->update([
+        $current = $page->invnumber()->isEmpty() ? null : $page->invnumber()->toInt();
+
+        // if this order does have a num (from Merx) use that
+        if ($page->num() !== null) {
+            $current = $page->num();
+            if ($this->invnumber()->toInt() !== $current) {
+                $page = $this->kirby()->impersonate('kirby', function () use ($page, $current) {
+                    return $page->update([
                         'invnumber' => $current,
                     ]);
-                }
+                });
+            }
+        }
 
-                return $this->update([
+        // if the current is higher than the tracker in the parent then update the parent with current
+        if ($current && $page->parent()->invnumber()->toInt() <= $current) {
+            $this->kirby()->impersonate('kirby', function () use ($page, $current) {
+                $page->parent()->update([
                     'invnumber' => $current,
                 ]);
             });
         }
 
-        return $page;
-    }
+        // if the order does not have an invoice number increment and fetch from parent
+        if ($page->invnumber()->isEmpty()) {
+            $page = $this->kirby()->impersonate('kirby', function () use ($page) {
+                $next = $page->parent()->increment('invnumber', 1)->invnumber()->toInt();
 
-    public function incrementInvoiceNumber(): Page
-    {
-        $page = $this;
-        if ($this->invnumber()->isEmpty()) {
-            $page = $this->kirby()->impersonate('kirby', function () {
-                $next = $this->parent()->increment('invnumber')->invnumber()->toInt();
-
-                return $this->update([
+                return $page->update([
                     'invnumber' => $next,
                 ]);
             });

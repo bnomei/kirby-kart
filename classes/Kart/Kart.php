@@ -37,6 +37,7 @@ class Kart
     public function page(ContentPageEnum|string $key): ?Page
     {
         if ($key instanceof ContentPageEnum) {
+            $key = $key->value;
             $key = $this->kirby->option("bnomei.kart.{$key}.page");
         }
 

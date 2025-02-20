@@ -12,7 +12,22 @@ class Kirby extends Provider
 
     public function checkout(): string
     {
-        return '';
+        return kirby()->site()->url();
+    }
+
+    public function fetchProducts(): array
+    {
+        return [];
+    }
+
+    public function fetchOrders(): array
+    {
+        return [];
+    }
+
+    public function fetchStocks(): array
+    {
+        return [];
     }
 
     public function updatedAt(ContentPageEnum|string|null $sync): string

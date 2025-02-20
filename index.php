@@ -1,12 +1,17 @@
 <?php
 
+use Bnomei\Kart\ContentPageEnum;
 use Bnomei\Kart\Helper;
 use Bnomei\Kart\Kart;
 use Bnomei\Kart\License;
+use Bnomei\Kart\Provider\Kirby;
+use Bnomei\Kart\Router;
+use Kirby\Cms\App;
 use Kirby\Cms\Page;
 use Kirby\Cms\Pages;
 use Kirby\Content\Field;
 use Kirby\Toolkit\A;
+use Kirby\Uuid\Uuid;
 
 @include_once __DIR__.'/vendor/autoload.php';
 
@@ -17,9 +22,8 @@ if (! function_exists('kart')) {
     }
 }
 
-Kirby::plugin(
+App::plugin(
     name: 'bnomei/kart',
-    license: fn ($plugin) => new License($plugin, License::NAME),
     extends: [
         'options' => [
             'license' => '', // set your license from https://buy-kart.bnomei.com code in the config `bnomei.kart.license`
@@ -42,18 +46,24 @@ Kirby::plugin(
                 'page' => 'orders',
                 'model' => OrdersPage::class,
                 'order' => [
-                    'slug' => fn (OrdersPage $orders, array $props) => Helper::nonAmbiguousUuid(5), // aka order id
+                    'uuid' => fn (OrdersPage $orders, array $props) => 'or_'.Helper::nonAmbiguousUuid(7), // aka order id
                 ],
             ],
             'products' => [
                 'enabled' => true,
                 'page' => 'products',
                 'model' => ProductsPage::class,
+                'product' => [
+                    'uuid' => fn (ProductsPage $stocks, array $props) => 'pr_'.Uuid::generate(13),
+                ],
             ],
             'stocks' => [
                 'enabled' => true,
                 'page' => 'stocks',
                 'model' => StocksPage::class,
+                'stock' => [
+                    'uuid' => fn (StocksPage $stocks, array $props) => 'st_'.Uuid::generate(13),
+                ],
             ],
             'csrf' => [
                 'enabled' => true,
@@ -68,11 +78,11 @@ Kirby::plugin(
             'middlewares' => function (): array {
                 // could do different stuff based on kirby()->request()
                 return [
-                    \Bnomei\Kart\Router::class.'::csrf',
-                    \Bnomei\Kart\Router::class.'::ratelimit',
+                    Router::class.'::csrf',
+                    Router::class.'::ratelimit',
                 ];
             },
-            'provider' => \Bnomei\Kart\Provider\Kirby::class, // stripe, mollie, paddle, ...
+            'provider' => Kirby::class, // stripe, mollie, paddle, ...
             'providers' => [
                 'stripe' => [
                     'secret_key' => fn () => env('STRIPE_SECRET_KEY'),
@@ -97,6 +107,7 @@ Kirby::plugin(
             'pages/orders' => OrdersPage::phpBlueprint(),
             'pages/product' => ProductPage::phpBlueprint(),
             'pages/products' => ProductsPage::phpBlueprint(),
+            'pages/stock' => StockPage::phpBlueprint(),
             'pages/stocks' => StocksPage::phpBlueprint(),
         ],
         'pageModels' => [
@@ -104,6 +115,7 @@ Kirby::plugin(
             'orders' => OrdersPage::class,
             'product' => ProductPage::class,
             'products' => ProductsPage::class,
+            'stock' => StockPage::class,
             'stocks' => StocksPage::class,
         ],
         'hooks' => [
@@ -119,22 +131,20 @@ Kirby::plugin(
                 kart()->cart()->clear();
                 kart()->wishlist()->clear();
             },
-            'page.create:after' => function (Page $page): void {
-                if ($page instanceof OrderPage) {
-                    $page->updateInvoiceNumber();
-                }
-            },
             'page.update:before' => function (Page $page, array $values, array $strings): void {
-                if ($page instanceof StocksPage) {
-                    if (! $page->onlyUniqueProducts(A::get($values, 'stocks', []))) {
-                        throw new Exception(t('kart.stocks.exception.uniqueness', 'Stocks must contain unique products'));
+                if ($page instanceof StockPage) {
+                    if (! $page->onlyOneStockPagePerProduct($values)) {
+                        throw new Exception(t('kart.stocks.exception.uniqueness', 'Stocks for Product already exist.'));
                     }
                 }
             },
             'page.update:after' => function (Page $newPage, Page $oldPage): void {
-                //                if ($newPage instanceof OrderPage) {
-                //                    $newPage->updateInvoiceNumber();
-                //                }
+                if ($newPage instanceof OrderPage) {
+                    // update the max orders invnumber with current
+                    // to allow for manual pushing of the number to
+                    // higher values. like start with #12345
+                    $newPage->updateInvoiceNumber();
+                }
             },
         ],
         'fieldMethods' => [
@@ -151,16 +161,17 @@ Kirby::plugin(
         ],
         'pagesMethods' => [
             'sum' => function (string $field): float|int {
-                return array_sum($this->toArray(function ($i) use ($field) {
-                    if (property_exists($i, $field)) {
-                        return $i;
-                    }
-                    $f = $i->$field();
-                    if ($f instanceof Field) {
-                        return $i->toFloat();
+                /** @var Pages $this */
+                return array_sum($this->values(function (Page $page) use ($field) {
+                    if (property_exists($page, $field)) {
+                        return $page->$field;
                     }
 
-                    return is_numeric($f) ? $f : 0;
+                    if ($page->$field() instanceof Field) {
+                        return $page->$field()->toFloat();
+                    }
+
+                    return 0;
                 }));
             },
             'sumField' => function (string $field): Field {
@@ -168,13 +179,13 @@ Kirby::plugin(
             },
         ],
         'siteMethods' => [
-            'kart' => function (): \Bnomei\Kart\Kart {
+            'kart' => function (): Kart {
                 return kart();
             },
         ],
         'userMethods' => [
             'orders' => function (): ?Pages {
-                return kart()->page(\Bnomei\Kart\ContentPageEnum::ORDERS)?->children()->filterBy(fn ($order) => $order->customer()->toUser()?->id() === $this->id());
+                return kart()->page(ContentPageEnum::ORDERS)?->children()->filterBy(fn ($order) => $order->customer()->toUser()?->id() === $this->id());
             },
             'completedOrders' => function (): ?Pages {
                 return $this->orders()
@@ -227,4 +238,5 @@ Kirby::plugin(
                 },
             ],
         ],
-    ]);
+    ],
+    license: fn ($plugin) => new License($plugin, License::NAME));

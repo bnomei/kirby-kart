@@ -42,6 +42,7 @@
       "models/OrdersPage.php",
       "models/ProductPage.php",
       "models/ProductsPage.php",
+      "models/StockPage.php",
       "models/StocksPage.php"
     ]
   },

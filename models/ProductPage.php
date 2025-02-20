@@ -12,6 +12,18 @@ use Kirby\Cms\Page;
  */
 class ProductPage extends Page
 {
+    public static function create(array $props): Page
+    {
+        // enforce unique but short slug with the option to overwrite it in a closure
+        $uuid = kirby()->option('bnomei.kart.products.product.uuid');
+        if ($uuid instanceof Closure) {
+            $uuid = $uuid(kart()->page(\Bnomei\Kart\ContentPageEnum::PRODUCTS), $props);
+            $props['content']['uuid'] = $uuid;
+        }
+
+        return parent::create($props);
+    }
+
     public static function phpBlueprint(): array
     {
         return [
@@ -88,8 +100,7 @@ class ProductPage extends Page
                             'label' => t('kart.product.raw', 'Raw'),
                             'type' => 'info',
                             'theme' => 'info',
-                            'text' => '{< page.raw >}',
-                            'width' => '1/2',
+                            'text' => '{< page.raw(82) >}',
                         ],
                     ],
                 ],
@@ -97,9 +108,24 @@ class ProductPage extends Page
         ];
     }
 
-    public function raw(): string
+    public function raw(int $maxWidth = 140): string
     {
-        return '<code>'.str_replace([' ', '&nbsp;&nbsp;'], ['&nbsp;', '&nbsp;'], json_encode([$this->content->toArray()], JSON_PRETTY_PRINT)).'</code>';
+        $json = json_encode($this->content->toArray(), JSON_PRETTY_PRINT);
+        $lines = explode("\n", $json);
+        $wrappedLines = [];
+
+        foreach ($lines as $line) {
+            $indentation = strspn($line, ' ');
+            $content = trim($line);
+            $wrapped = wordwrap($content, $maxWidth - $indentation, "\n", true);
+            $wrapped = preg_replace('/^/m', str_repeat(' ', $indentation), $wrapped);
+            $wrappedLines[] = $wrapped;
+        }
+
+        $json = implode("\n", $wrappedLines);
+        $json = str_replace([' ', '&nbsp;&nbsp;'], ['&nbsp;', '&nbsp;'], $json);
+
+        return '<code style="overflow: hidden; width: 100%; display: block">'.$json.'</code>';
     }
 
     public function stock(): int|string

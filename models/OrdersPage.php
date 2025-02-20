@@ -1,6 +1,7 @@
 <?php
 
 use Kirby\Cms\Page;
+use Kirby\Cms\Pages;
 
 /**
  * @method \Kirby\Content\Field invnumber()
@@ -45,7 +46,7 @@ class OrdersPage extends Page
                     'type' => 'fields',
                     'fields' => [
                         'invnumber' => [
-                            'label' => t('kart.invoiceNumber', 'Invoice Number'),
+                            'label' => t('kart.latestinvoiceNumber', 'Lastest Invoice Number'),
                             'type' => 'number',
                             'min' => 1,
                             'step' => 1,
@@ -61,12 +62,24 @@ class OrdersPage extends Page
                 'orders' => [
                     'label' => t('kart.orders', 'Orders'),
                     'type' => 'pages',
+                    'search' => true,
                     'template' => 'order', // maps to OrderPage model
-                    'sortBy' => 'paidDate desc',
-                    'text' => '#{{ page.invoiceNumber }}',
-                    'info' => '{{ page.formattedSum }} + {{ page.formattedTax }} ・ {{ page.paidDate }}',
+                    'sortBy' => 'invnumber desc',
+                    'text' => '[#{{ page.invoiceNumber }}] {{ page.customer.toUser.email }} ・ {{ page.formattedSum }} + {{ page.formattedTax }}',
+                    'info' => '{{ page.title }} ・ {{ page.paidDate }}',
                 ],
             ],
         ];
+    }
+
+    public function children(): Pages
+    {
+        if ($this->children instanceof Pages) {
+            return $this->children;
+        }
+
+        return $this->children = parent::children()->merge(
+            Pages::factory(kart()->provider()->orders(), $this)
+        );
     }
 }
