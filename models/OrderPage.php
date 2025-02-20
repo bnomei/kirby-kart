@@ -163,6 +163,11 @@ class OrderPage extends Page
         ];
     }
 
+    public function hasProduct(string|ProductPage $key): bool
+    {
+        return $this->productsCount($key) > 0;
+    }
+
     public function productsCount(string|ProductPage|null $key = null): int
     {
         if ($key instanceof ProductPage) {
