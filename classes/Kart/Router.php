@@ -2,9 +2,11 @@
 
 namespace Bnomei\Kart;
 
+use Closure;
 use Kirby\Cms\Response;
 use Kirby\Http\Uri;
 use Kirby\Toolkit\A;
+use ProductPage;
 
 class Router
 {
@@ -26,7 +28,7 @@ class Router
     {
         $middlewares = option('bnomei.kart.middlewares');
 
-        if ($middlewares instanceof \Closure) {
+        if ($middlewares instanceof Closure) {
             $middlewares = $middlewares();
         }
 
@@ -70,6 +72,31 @@ class Router
         return csrf(self::get('token'));
     }
 
+    public static function get(string $key, mixed $default = null): mixed
+    {
+        $request = kirby()->request();
+        if ($q = $request->get('q')) {
+            $result = self::decrypt($q);
+
+            return is_array($result) ? A::get($result, $key, $default) : $request->get($key, $default);
+        }
+
+        return $request->get($key, $default);
+    }
+
+    public static function decrypt(string $props): mixed
+    {
+        return Helper::decrypt($props, option('bnomei.kart.router.encryption'), true);
+    }
+
+    public static function checkout(): string
+    {
+        return Uri::index()->clone([
+            'path' => self::CHECKOUT,
+            'query' => static::queryCsrf() + self::encrypt([]),
+        ])->toString();
+    }
+
     protected static function queryCsrf(): array
     {
         if (! kirby()->option('bnomei.kart.csrf.enabled')) {
@@ -84,7 +111,7 @@ class Router
     public static function encrypt(array $query): array
     {
         $password = option('bnomei.kart.router.encryption');
-        if ($password instanceof \Closure) {
+        if ($password instanceof Closure) {
             $password = $password();
         }
 
@@ -95,31 +122,6 @@ class Router
         return [
             'q' => Helper::encrypt($query, $password, true),
         ];
-    }
-
-    public static function decrypt(string $props): mixed
-    {
-        return Helper::decrypt($props, option('bnomei.kart.router.encryption'), true);
-    }
-
-    public static function get(string $key, mixed $default = null): mixed
-    {
-        $request = kirby()->request();
-        if ($q = $request->get('q')) {
-            $result = self::decrypt($q);
-
-            return is_array($result) ? A::get($result, $key, $default) : $request->get($key, $default);
-        }
-
-        return $request->get($key, $default);
-    }
-
-    public static function checkout(): string
-    {
-        return Uri::index()->clone([
-            'path' => self::CHECKOUT,
-            'query' => static::queryCsrf() + self::encrypt([]),
-        ])->toString();
     }
 
     public static function login(): string
@@ -138,12 +140,7 @@ class Router
         ])->toString();
     }
 
-    public static function current(): string
-    {
-        return kirby()->request()->path();
-    }
-
-    public static function cart_add(\ProductPage $product): string
+    public static function cart_add(ProductPage $product): string
     {
         return Uri::index()->clone([
             'path' => self::current().'/'.self::CART_ADD,
@@ -153,7 +150,12 @@ class Router
         ])->toString();
     }
 
-    public static function cart_remove(\ProductPage $product): string
+    public static function current(): string
+    {
+        return kirby()->request()->path();
+    }
+
+    public static function cart_remove(ProductPage $product): string
     {
         return Uri::index()->clone([
             'path' => self::current().'/'.self::CART_REMOVE,
@@ -163,7 +165,7 @@ class Router
         ])->toString();
     }
 
-    public static function wishlist_add(\ProductPage $product): string
+    public static function wishlist_add(ProductPage $product): string
     {
         return Uri::index()->clone([
             'path' => self::current().'/'.self::WISHLIST_ADD,
@@ -173,7 +175,7 @@ class Router
         ])->toString();
     }
 
-    public static function wishlist_remove(\ProductPage $product): string
+    public static function wishlist_remove(ProductPage $product): string
     {
         return Uri::index()->clone([
             'path' => self::current().'/'.self::WISHLIST_REMOVE,

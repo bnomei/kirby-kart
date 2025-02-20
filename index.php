@@ -36,7 +36,7 @@ Kirby::plugin(
             'orders' => [
                 'enabled' => true, // true|false, 'dreamform'
                 'page' => 'orders', // 'orders' or point to root of dreamform
-                'slug' => fn (OrdersPage $orders, array $props) => Helper::uuid(5), // aka order id
+                'slug' => fn (OrdersPage $orders, array $props) => Helper::nonAmbiguousUuid(5), // aka order id
             ],
             'products' => [
                 'page' => 'products',
@@ -71,6 +71,7 @@ Kirby::plugin(
                 'paddle' => [],
             ],
         ],
+        'routes' => require_once __DIR__.'/routes.php',
         'blueprints' => [
             'users/customer' => require_once __DIR__.'/blueprints/users/customer.php',
             'pages/order' => OrderPage::phpBlueprint(),
@@ -94,13 +95,6 @@ Kirby::plugin(
             'kart/html/add' => __DIR__.'/snippets/kart/html/add.php',
             'kart/html/wishlist' => __DIR__.'/snippets/kart/html/wishlist.php',
             'kart/html/wish-or-forget' => __DIR__.'/snippets/kart/html/wish-or-forget.php',
-        ],
-        'routes' => require_once __DIR__.'/routes.php',
-        'translations' => [
-            'de' => require_once __DIR__.'/translations/de.php',
-            'en' => require_once __DIR__.'/translations/en.php',
-            'fr' => require_once __DIR__.'/translations/fr.php',
-            'it' => require_once __DIR__.'/translations/it.php',
         ],
         'hooks' => [
             'system.loadPlugins:after' => function (): void {
@@ -133,29 +127,6 @@ Kirby::plugin(
                 //                }
             },
         ],
-        'siteMethods' => [
-            'kart' => function (): Kart {
-                return kart();
-            },
-        ],
-        'userMethods' => [
-            'orders' => function (): ?Pages {
-                return kart()->page('orders')?->children()->filterBy(fn ($order) => $order->customer()->toUser()?->id() === $this->id());
-            },
-            'hasMadePaymentFor' => function (string $provider, ProductPage $productPage): bool {
-                if ($this->$provider()->isEmpty()) {
-                    return false;
-                }
-                // try finding a payment like KLUB would store it on fulfillment of one_time purchases
-                // which is stripe.payments[<array of price_ids>]
-                $data = $this->$provider()->yaml();
-
-                return count(array_intersect(
-                    $productPage->priceIds(),
-                    A::get($data, 'payments', [])
-                ));
-            },
-        ],
         'fieldMethods' => [
             'toFormattedNumber' => function ($field): string {
                 $field->value = Helper::formatNumber(floatval($field->value));
@@ -185,6 +156,39 @@ Kirby::plugin(
             'sumField' => function (string $field): Field {
                 return new Field(null, $field, $this->sum($field));
             },
+        ],
+        'siteMethods' => [
+            'kart' => function (): Kart {
+                return kart();
+            },
+        ],
+        'userMethods' => [
+            'orders' => function (): ?Pages {
+                return kart()->page(ContentPageEnum::ORDERS)?->children()->filterBy(fn ($order) => $order->customer()->toUser()?->id() === $this->id());
+            },
+            'completedOrders' => function (): ?Pages {
+                return $this->orders()
+                    ->filterBy(fn ($order) => $order->paymentComplete()->toBool());
+            },
+            'hasMadePaymentFor' => function (string $provider, ProductPage $productPage): bool {
+                if ($this->$provider()->isEmpty()) {
+                    return false;
+                }
+                // try finding a payment like KLUB would store it on fulfillment of one_time purchases
+                // which is stripe.payments[<array of price_ids>]
+                $data = $this->$provider()->yaml();
+
+                return count(array_intersect(
+                    $productPage->priceIds(),
+                    A::get($data, 'payments', [])
+                ));
+            },
+        ],
+        'translations' => [
+            'de' => require_once __DIR__.'/translations/de.php',
+            'en' => require_once __DIR__.'/translations/en.php',
+            'fr' => require_once __DIR__.'/translations/fr.php',
+            'it' => require_once __DIR__.'/translations/it.php',
         ],
         'commands' => [
             'kart:flush' => [

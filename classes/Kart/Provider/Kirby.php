@@ -3,10 +3,11 @@
 namespace Bnomei\Kart\Provider;
 
 use Bnomei\Kart\Provider;
+use ProviderEnum;
 
 class Kirby extends Provider
 {
-    protected string $name = 'kirby';
+    protected string $name = ProviderEnum::KIRBY->value;
 
     public function checkout(): string
     {

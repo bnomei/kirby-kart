@@ -3,8 +3,9 @@
 namespace Bnomei\Kart\Provider;
 
 use Bnomei\Kart\Provider;
+use ProviderEnum;
 
 class Stripe extends Provider
 {
-    protected string $name = 'stripe';
+    protected string $name = ProviderEnum::STRIPE->value;
 }

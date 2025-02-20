@@ -2,16 +2,19 @@
 
 namespace Bnomei\Kart;
 
+use Bnomei\Kart\Mixins\CartShortcuts;
+use Bnomei\Kart\Mixins\ContentPages;
 use Bnomei\Kart\Provider\Kirby;
+use ContentPageEnum;
 use Exception;
 use Kirby\Cms\App;
-use Kirby\Cms\Collection;
 use Kirby\Cms\Page;
-use Kirby\Filesystem\Dir;
-use Kirby\Toolkit\Str;
 
 class Kart
 {
+    use CartShortcuts;
+    use ContentPages;
+
     private static ?Kart $singleton = null;
 
     private ?Provider $provider;
@@ -29,7 +32,49 @@ class Kart
         $this->cart = null;
         $this->wishlist = null;
 
-        $this->makeContentPages();
+        $this->makeContentPages($this->kirby);
+    }
+
+    public function page(ContentPageEnum|string $key): ?Page
+    {
+        if ($key instanceof ContentPageEnum) {
+            $key = $this->kirby->option("bnomei.kart.{$key}.page");
+        }
+
+        return $this->kirby->page($key);
+    }
+
+    public static function singleton(): Kart
+    {
+        if (self::$singleton === null) {
+            self::$singleton = new self;
+        }
+
+        return self::$singleton;
+    }
+
+    public static function flush(string $cache = 'all'): bool
+    {
+        if (kirby()->option('bnomei.kart.expire') === null) {
+            return false;
+        }
+
+        try {
+            $caches = [];
+            if (empty($cache) || $cache === '*' || $cache === 'all') {
+                $caches = array_keys(kirby()->option('bnomei.kart.cache'));
+            } else {
+                $caches[] = $cache;
+            }
+            foreach ($caches as $c) {
+                kirby()->cache('bnomei.kart.'.$c)->flush();
+            }
+
+            return true;
+        } catch (Exception $e) {
+            // if given a cache that does not exist or is not flushable
+            return false;
+        }
     }
 
     public function provider(): Provider
@@ -64,6 +109,11 @@ class Kart
         return $this->wishlist;
     }
 
+    public function currency(): string
+    {
+        return $this->kirby->option('bnomei.kart.currency');
+    }
+
     public function checkout(): string
     {
         return Router::checkout();
@@ -77,108 +127,5 @@ class Kart
     public function logout(): string
     {
         return Router::logout();
-    }
-
-    public function lines(): Collection
-    {
-        return $this->cart->lines();
-    }
-
-    public function count(): int
-    {
-        return $this->cart->count();
-    }
-
-    public function quantity(): int
-    {
-        return $this->cart->quantity();
-    }
-
-    public function sum(): string
-    {
-        return Helper::formatCurrency($this->cart->sum());
-    }
-
-    public function tax(): string
-    {
-        return Helper::formatCurrency($this->cart->tax());
-    }
-
-    public function sumtax(): string
-    {
-        return Helper::formatCurrency($this->cart->sumtax());
-    }
-
-    public static function singleton(): Kart
-    {
-        if (self::$singleton === null) {
-            self::$singleton = new self;
-        }
-
-        return self::$singleton;
-    }
-
-    public static function flush(string $cache = 'all'): bool
-    {
-        if (kirby()->option('bnomei.kart.expire') === null) {
-            return false;
-        }
-
-        try {
-            $caches = [];
-            if (empty($cache) || $cache === '*' || $cache === 'all') {
-                $caches = array_keys(kirby()->option('bnomei.turbo.cache'));
-            } else {
-                $caches[] = $cache;
-            }
-            foreach ($caches as $c) {
-                kirby()->cache('bnomei.kart.'.$c)->flush();
-            }
-
-            return true;
-        } catch (Exception $e) {
-            // if given a cache that does not exist or is not flushable
-            return false;
-        }
-    }
-
-    public function page(string $key): ?Page
-    {
-        $id = $this->kirby->option("bnomei.kart.{$key}.page");
-
-        return $this->kirby->page($id);
-    }
-
-    public function makeContentPages(): void
-    {
-        $pages = array_filter([
-            'orders' => $this->kirby->option('bnomei.kart.orders.enabled') === true ? \OrdersPage::class : null,
-            'products' => \ProductsPage::class,
-            'stocks' => $this->kirby->option('bnomei.kart.stocks.enabled') === true ? \StocksPage::class : null,
-        ]);
-
-        $this->kirby->impersonate('kirby', function () use ($pages) {
-            foreach ($pages as $key => $class) {
-                if (! $this->page($key)) {
-                    $title = str_replace('Page', '', $class);
-                    $page = site()->createChild([
-                        'id' => $this->kirby->option("bnomei.kart.{$key}.page"),
-                        'template' => Str::lower($title),
-                        'content' => [
-                            'title' => $title,
-                            'uuid' => Str::lower($title),
-                        ],
-                    ]);
-                    // force unlisted
-                    Dir::move($page->root(), str_replace('_drafts/', '', $page->root()));
-                }
-            }
-        });
-
-    }
-
-    public function currency(): string
-    {
-        return $this->kirby->option('bnomei.kart.currency');
     }
 }

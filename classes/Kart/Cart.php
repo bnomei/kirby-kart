@@ -5,15 +5,13 @@ namespace Bnomei\Kart;
 use Kirby\Cms\App;
 use Kirby\Cms\Collection;
 use Kirby\Cms\User;
-use Kirby\Session\Session;
+use Kirby\Content\Field;
 use Kirby\Toolkit\A;
 use ProductPage;
 
 class Cart
 {
     private Collection $lines;
-
-    private Session $session;
 
     private ?User $user = null;
 
@@ -25,35 +23,22 @@ class Cart
     {
         $this->id = $id;
         $this->kirby = kirby();
-        $this->session = $this->kirby->session();
 
         if (empty($items)) {
-            $items = $this->session->get($this->id, []);
+            $items = $this->kirby->session()->get($this->id, []);
         }
 
         $this->lines = new Collection;
-        foreach ($items as $id => $line) {
-            $this->add(page('page://'.$id), A::get($line, 'quantity'));
+        foreach ($items as $uuid => $line) {
+            $this->add(
+                $this->kirby->page('page://'.$uuid),
+                A::get($line, 'quantity')
+            );
         }
 
         kirby()->trigger('kart.'.$this->id.'.created', [
-            'cart' => $this,
+            $this->id => $this,
         ]);
-    }
-
-    public function save(): void
-    {
-        $this->session->set($this->id, $this->lines->toArray());
-        if ($user = $this->kirby->user()) {
-            $this->user = $user;
-        }
-        if ($this->user) {
-            $this->kirby->impersonate('kirby', function () {
-                $this->user->update([
-                    $this->id => $this->lines->toArray(),
-                ]);
-            });
-        }
     }
 
     public function add(ProductPage|array|string|null $product, int $amount = 1): int
@@ -64,12 +49,12 @@ class Cart
 
         // Merx compatibility
         if (is_array($product)) {
-            $product = page($product['id']);
+            $product = $this->kirby->page($product['id']);
             $amount = A::get($product, 'quantity', $amount);
         }
 
         if (is_string($product)) {
-            $product = page($product);
+            $product = $this->kirby->page($product);
         }
 
         /** @var CartLine $item */
@@ -95,6 +80,38 @@ class Cart
         return $item->quantity();
     }
 
+    public function save(): void
+    {
+        $this->kirby->session()->set($this->id, $this->lines->toArray());
+        if ($user = $this->kirby->user()) {
+            $this->user = $user;
+        }
+        if ($this->user) {
+            $this->kirby->impersonate('kirby', function () {
+                $this->user->update([
+                    $this->id => $this->lines->toArray(),
+                ]);
+            });
+        }
+    }
+
+    public function count(): int
+    {
+        return $this->lines()->count();
+    }
+
+    public function lines(): Collection
+    {
+        return $this->lines;
+    }
+
+    public function quantity(): int
+    {
+        return (int) array_sum($this->lines->values(
+            fn (CartLine $item) => $item->quantity()
+        ));
+    }
+
     public function remove(ProductPage|array|string|null $product, int $amount = 1): int
     {
         if (! $product) {
@@ -103,18 +120,17 @@ class Cart
 
         // Merx compatibility
         if (is_array($product)) {
-            $product = page($product['id']);
+            $product = $this->kirby->page($product['id']);
             $amount = A::get($product, 'quantity', $amount);
         }
 
         if (is_string($product)) {
-            $product = page($product);
+            $product = $this->kirby->page($product);
         }
 
         /** @var CartLine $item */
         $item = $this->lines->get($product->uuid()->id());
         if (! $item) {
-
             return 0;
         }
 
@@ -122,6 +138,7 @@ class Cart
             $this->lines->remove($item);
             $item = null;
         }
+
         $this->save();
 
         $this->kirby->trigger('kart.'.$this->id.'.remove', [
@@ -134,6 +151,12 @@ class Cart
         return $item?->quantity() ?? 0;
     }
 
+    public function delete(): void
+    {
+        // alias for Merx compatibility
+        $this->clear();
+    }
+
     public function clear(): void
     {
         $this->lines = new Collection;
@@ -144,46 +167,17 @@ class Cart
         ]);
     }
 
-    public function delete(): void
-    {
-        // alias for Merx compatibility
-        $this->clear();
-    }
-
-    public function lines(): Collection
-    {
-        return $this->lines;
-    }
-
-    public function count(): int
-    {
-        return $this->lines()->count();
-    }
-
-    public function quantity(): int
-    {
-        return (int) array_sum($this->lines->values(
-            fn (CartLine $item) => $item->quantity()
-        ));
-    }
-
-    public function sum(): float
-    {
-        return array_sum($this->lines->values(
-            fn (CartLine $item) => $item->quantity() * $item->product()->price()->toFloat()
-        ));
-    }
-
     public function getSum(): float
     {
         // Merx compatiblity
         return $this->sum();
     }
 
-    public function tax(): float
+    public function sum(): float
     {
         return array_sum($this->lines->values(
-            fn (CartLine $item) => $item->quantity() * $item->product()->price()->toFloat() * $item->product()->tax()->toFloat() / 100.0
+            fn (CartLine $item) => $item->quantity() *
+                $item->product()->price()->toFloat()
         ));
     }
 
@@ -191,6 +185,16 @@ class Cart
     {
         // Merx compatiblity
         return $this->tax();
+    }
+
+    public function tax(): float
+    {
+        return array_sum($this->lines->values(
+            fn (CartLine $item) => $item->quantity() *
+                $item->product()->price()->toFloat() *
+                $item->product()->tax()->toFloat() /
+                100.0
+        ));
     }
 
     public function sumtax(): float
@@ -215,6 +219,7 @@ class Cart
     {
         $this->user = $user;
 
+        /** @var Field $cart */
         $cart = $user->cart();
         if ($cart->isEmpty()) {
             return true; // no plans to merge
@@ -225,8 +230,11 @@ class Cart
             return false; // failed to get array
         }
 
-        foreach ($lines as $id => $line) {
-            $this->add(page('page://'.$id), A::get($line, 'quantity'));
+        foreach ($lines as $uuid => $line) {
+            $this->add(
+                $this->kirby->page('page://'.$uuid),
+                A::get($line, 'quantity')
+            );
         }
 
         return true;

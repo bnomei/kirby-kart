@@ -6,18 +6,13 @@ use ProductPage;
 
 class CartLine
 {
-    private ?\ProductPage $product;
+    private ?ProductPage $product;
 
     public function __construct(
-        private string $id,
+        private string $id, // need to be named `id` for Collections to use it as key
         private int $quantity = 1,
     ) {
-        $this->product = page('page://'.$this->id);
-    }
-
-    public function quantity(): int
-    {
-        return $this->quantity;
+        $this->product = page('page://'.$this->id); // id is expected to be the uuid in all cases!
     }
 
     public function increment(int $amount = 1): int
@@ -53,8 +48,13 @@ class CartLine
     public function toArray(): array
     {
         return [
-            // 'id' => $this->id(),
+            // 'id' => $this->id(), // can be inferred from key of array
             'quantity' => $this->quantity(),
         ];
+    }
+
+    public function quantity(): int
+    {
+        return $this->quantity;
     }
 }

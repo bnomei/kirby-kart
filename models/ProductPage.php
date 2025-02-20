@@ -104,14 +104,14 @@ class ProductPage extends Page
     public function stock(): int|string
     {
         /** @var \StocksPage $stocks */
-        $stocks = kart()->page('stocks');
+        $stocks = kart()->page(ContentPageEnum::STOCKS);
 
         return $stocks->stock($this->uuid()->toString()) ?? '?';
     }
 
     public function sold(): ?int
     {
-        return array_sum(kart()->page('orders')->children()->toArray(
+        return array_sum(kart()->page(ContentPageEnum::ORDERS)->children()->toArray(
             fn (OrderPage $order) => $order->productsCount($this)
         ));
     }
@@ -171,7 +171,7 @@ class ProductPage extends Page
 
     public static function findByPriceId(string $priceId): ?ProductPage
     {
-        return kart()->page('products')->children()
+        return kart()->page(ContentPageEnum::PRODUCTS)->children()
             ->filterBy(fn (ProductPage $p) => in_array($priceId, $p->priceIds()))->first();
     }
 }

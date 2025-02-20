@@ -2,8 +2,10 @@
 
 namespace Bnomei\Kart;
 
+use Closure;
 use Kirby\Toolkit\Str;
 use Kirby\Toolkit\SymmetricCrypto;
+use Kirby\Uuid\Uuid;
 use NumberFormatter;
 
 class Helper
@@ -33,6 +35,11 @@ class Helper
         return $data;
     }
 
+    public static function formatNumber(float $number): string
+    {
+        return self::formatter(NumberFormatter::DECIMAL)->format($number);
+    }
+
     private static function formatter($style): NumberFormatter
     {
         $kirby = kirby();
@@ -47,11 +54,6 @@ class Helper
         return new NumberFormatter($locale, $style ?? NumberFormatter::DECIMAL);
     }
 
-    public static function formatNumber(float $number): string
-    {
-        return self::formatter(NumberFormatter::DECIMAL)->format($number);
-    }
-
     public static function formatCurrency(float $number): string
     {
         $currency = kirby()->option('bnomei.kart.currency', 'EUR');
@@ -59,19 +61,19 @@ class Helper
         return self::formatter(NumberFormatter::CURRENCY)->formatCurrency($number, $currency);
     }
 
-    public static function uuid(int $length): string
+    public static function nonAmbiguousUuid(int $length): string
     {
         return str_replace(
             ['o', 'O', 'l', 'L', 'I', 'i', 'B', 'S', 's'],
             ['0', '0', '1', '1', '1', '1', '8', '5', '5'],
-            \Kirby\Uuid\Uuid::generate($length)
+            Uuid::generate($length)
         );
     }
 
     public static function encrypt(mixed $data, ?string $password = null, bool $json = false): string
     {
         $password ??= option('crypto.password');
-        if ($password instanceof \Closure) {
+        if ($password instanceof Closure) {
             $password = $password();
         }
         if ($password && SymmetricCrypto::isAvailable()) {
@@ -90,7 +92,7 @@ class Helper
         $data = base64_decode($data);
 
         $password ??= option('crypto.password');
-        if ($password instanceof \Closure) {
+        if ($password instanceof Closure) {
             $password = $password();
         }
         if ($password && SymmetricCrypto::isAvailable()) {

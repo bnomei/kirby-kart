@@ -5,6 +5,7 @@ namespace Bnomei\Kart;
 use Closure;
 use Kirby\Cms\App;
 use Kirby\Cms\User;
+use ProductPage;
 
 use function env;
 
@@ -29,14 +30,9 @@ abstract class Provider implements ProviderInterface
         return date('c'); // TODO
     }
 
-    protected function env(string $env, mixed $default = null): mixed
-    {
-        return env($env, $default);
-    }
-
     public function option($key, bool $resolveCallables = true): mixed
     {
-        $option = $this->kirby->option("bnomei.kart.{$this->name}.$key");
+        $option = $this->kirby->option("bnomei.kart.providers.{$this->name}.$key");
         if ($resolveCallables && $option instanceof Closure) {
             return $option();
         }
@@ -44,7 +40,7 @@ abstract class Provider implements ProviderInterface
         return $option;
     }
 
-    public function ownsProduct(\ProductPage|string|null $product, ?User $user = null): bool
+    public function ownsProduct(ProductPage|string|null $product, ?User $user = null): bool
     {
         if (is_string($product)) {
             $product = $this->kirby->page($product);
@@ -66,8 +62,13 @@ abstract class Provider implements ProviderInterface
         }
 
         // search orders
-        return $user->orders()
-            ->filterBy(fn ($order) => $order->paymentComplete()->toBool() && $order->has($product))
+        return $user->completedOrders()
+            ->filterBy(fn ($order) => $order->has($product))
             ->count() > 0;
+    }
+
+    protected function env(string $env, mixed $default = null): mixed
+    {
+        return env($env, $default);
     }
 }
