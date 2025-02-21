@@ -26,7 +26,8 @@
         <div class="text-sm">Tax: <?= kart()->tax() ?></div>
         <div class="font-bold border-t mt-2 pt-1">Total: <?= kart()->sumtax() ?></div>
         <div class="h-4"><!-- spacer --></div>
-        <form method="GET" action="<?= kart()->checkout() ?>">
+        <form method="POST" action="<?= kart()->checkout() ?>">
+            <input type="hidden" name="redirect" value="<?= $page->url() ?>">
             <button type="submit" class="cursor-pointer px-3 py-1 bg-kart text-white rounded-md">Checkout</button>
         </form>
     </div>

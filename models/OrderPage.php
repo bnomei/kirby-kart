@@ -130,14 +130,6 @@ class OrderPage extends Page
                                     'multiple' => false,
                                     'subpages' => false,
                                 ],
-                                'quantity' => [
-                                    'label' => t('kart.quantity', 'Quantity'),
-                                    'type' => 'number',
-                                    'required' => true,
-                                    'min' => 1,
-                                    'step' => 1,
-                                    'default' => 1,
-                                ],
                                 'price' => [
                                     'label' => t('kart.price', 'Price'),
                                     'type' => 'number',
@@ -146,12 +138,43 @@ class OrderPage extends Page
                                     'step' => 0.01,
                                     'default' => 0,
                                 ],
-                                'tax' => [ // aka taxrate
+                                'quantity' => [
+                                    'label' => t('kart.quantity', 'Quantity'),
+                                    'type' => 'number',
+                                    'required' => true,
+                                    'min' => 1,
+                                    'step' => 1,
+                                    'default' => 1,
+                                ],
+                                'total' => [ // merx compat would be price
+                                    'label' => t('kart.total', 'Total'),
+                                    'type' => 'number',
+                                    'required' => true,
+                                    'min' => 0,
+                                    'step' => 0.01,
+                                    'default' => 0,
+                                ],
+                                'subtotal' => [
+                                    'label' => t('kart.subtotal', 'Subtotal'),
+                                    'type' => 'number',
+                                    'required' => true,
+                                    'min' => 0,
+                                    'step' => 0.01,
+                                    'default' => 0,
+                                ],
+                                'tax' => [
                                     'label' => t('kart.tax', 'Tax'),
                                     'type' => 'number',
                                     'required' => true,
                                     'min' => 0,
-                                    'max' => 100,
+                                    'step' => 0.01,
+                                    'default' => 0,
+                                ],
+                                'discount' => [
+                                    'label' => t('kart.discount', 'Discount'),
+                                    'type' => 'number',
+                                    'required' => true,
+                                    'min' => 0,
                                     'step' => 0.01,
                                     'default' => 0,
                                 ],
@@ -185,6 +208,7 @@ class OrderPage extends Page
         return $sum;
     }
 
+    // TODO: this does not match STRIPE aka the TOTAL. it would be the SUBTOTAL
     public function sum(): float
     {
         $sum = 0.0;
@@ -195,6 +219,7 @@ class OrderPage extends Page
         return (float) $sum;
     }
 
+    // TODO: this does not match STRIPE
     public function tax(): float
     {
         $tax = 0;

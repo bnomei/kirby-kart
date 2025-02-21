@@ -7,12 +7,14 @@ use Kirby\Cms\Response;
 return function (App $kirby) {
     return [
         [
-            'pattern' => Router::CHECKOUT,
+            'pattern' => Router::CART_CHECKOUT,
             'method' => 'POST',
-            'action' => function () {
+            'action' => function () use ($kirby) {
                 if ($r = Router::denied()) {
                     return $r;
                 }
+
+                $kirby->session()->set('redirect', Router::get('redirect'));
 
                 go(kart()->provider()->checkout());
             },
@@ -30,7 +32,7 @@ return function (App $kirby) {
                     return Response::json([], 401);
                 }
 
-                go(Router::get('redirect', $kirby->site()->url()));
+                go(get('redirect', $kirby->site()->url()));
             },
         ],
         [
@@ -78,6 +80,39 @@ return function (App $kirby) {
 
                 // TODO: add htmx and data-star
                 go($id); // prg
+            },
+        ],
+        [
+            'pattern' => Router::CART_SUCCESS,
+            'method' => 'GET',
+            'action' => function () use ($kirby) {
+
+                $kirby->trigger('kart.cart.success:before', [
+                    'user' => $kirby->user(),
+                    'cart' => kart()->cart(),
+                ]);
+
+                kart()->cart()->complete();
+
+                $kirby->trigger('kart.cart.success:after', [
+                    'user' => $kirby->user(),
+                    'cart' => kart()->cart(),
+                ]);
+
+                go($kirby->session()->pull('redirect', $kirby->site()->url()));
+            },
+        ],
+        [
+            'pattern' => Router::CART_CANCEL,
+            'method' => 'GET',
+            'action' => function () use ($kirby) {
+
+                kirby()->trigger('kart.cart.canceled', [
+                    'user' => kirby()->user(),
+                    'kart' => kart(),
+                ]);
+
+                go($kirby->session()->pull('redirect', $kirby->site()->url()));
             },
         ],
         [
@@ -132,7 +167,7 @@ return function (App $kirby) {
 
                 kart()->provider()->sync($page);
 
-                go($url); // prg
+                go($url);
             },
         ],
     ];

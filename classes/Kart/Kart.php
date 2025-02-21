@@ -116,7 +116,7 @@ class Kart
 
     public function checkout(): string
     {
-        return Router::checkout();
+        return Router::cart_checkout();
     }
 
     public function login(): string

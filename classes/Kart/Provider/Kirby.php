@@ -34,4 +34,9 @@ class Kirby extends Provider
     {
         return t('kart.now', 'Now');
     }
+
+    public function complete(): array
+    {
+        return [];
+    }
 }

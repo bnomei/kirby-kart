@@ -57,8 +57,8 @@ class ProductsPage extends Page
                     'type' => 'pages',
                     'layout' => 'cards',
                     'search' => true,
-                    'create' => false, // can not be created as they are virtual
-                    'sortable' => false, // can not be sorted as they are virtual
+                    'create' => defined('KART_PRODUCTS_UPDATE') && constant('KART_PRODUCTS_UPDATE') === true,
+                    'sortable' => defined('KART_PRODUCTS_UPDATE') && constant('KART_PRODUCTS_UPDATE') === true,
                     'template' => 'product', // maps to ProductPage model
                     'info' => '{{ page.formattedPrice }} + {{ page.tax }}%',
                     'image' => [

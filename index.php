@@ -90,6 +90,11 @@ App::plugin(
             'providers' => [
                 'stripe' => [
                     'secret_key' => fn () => env('STRIPE_SECRET_KEY'),
+                    'checkout_options' => function (Kart $kart) {
+                        // configure the checkout based on current kart instance
+                        // https://docs.stripe.com/api/checkout/sessions/create
+                        return [];
+                    },
                 ],
                 'mollie' => [],
                 'paddle' => [],

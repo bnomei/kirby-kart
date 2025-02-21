@@ -11,8 +11,6 @@ use ProductPage;
 
 class Router
 {
-    const CHECKOUT = 'kart/checkout';
-
     const LOGIN = 'kart/login';
 
     const LOGOUT = 'kart/logout';
@@ -20,6 +18,12 @@ class Router
     const CART_ADD = 'kart/cart/add';
 
     const CART_REMOVE = 'kart/cart/remove';
+
+    const CART_CHECKOUT = 'kart/cart/checkout';
+
+    const CART_SUCCESS = 'kart/cart/success';
+
+    const CART_CANCEL = 'kart/cart/cancel';
 
     const WISHLIST_ADD = 'kart/wishlist/add';
 
@@ -92,14 +96,6 @@ class Router
         return Helper::decrypt($props, option('bnomei.kart.router.encryption'), true);
     }
 
-    public static function checkout(): string
-    {
-        return Uri::index()->clone([
-            'path' => self::CHECKOUT,
-            'query' => static::queryCsrf() + self::encrypt([]),
-        ])->toString();
-    }
-
     protected static function queryCsrf(): array
     {
         if (! kirby()->option('bnomei.kart.csrf.enabled')) {
@@ -140,6 +136,14 @@ class Router
         return Uri::index()->clone([
             'path' => self::LOGOUT,
             'query' => static::queryCsrf(),
+        ])->toString();
+    }
+
+    public static function cart_checkout(): string
+    {
+        return Uri::index()->clone([
+            'path' => self::CART_CHECKOUT,
+            'query' => static::queryCsrf() + self::encrypt([]),
         ])->toString();
     }
 

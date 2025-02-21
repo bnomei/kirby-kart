@@ -19,10 +19,13 @@ class Cart
 
     private App $kirby;
 
+    private Kart $kart;
+
     public function __construct(string $id, array $items = [])
     {
         $this->id = $id;
         $this->kirby = kirby();
+        $this->kart = kirby()->site()->kart();
 
         if (empty($items)) {
             $items = $this->kirby->session()->get($this->id, []);
@@ -238,5 +241,24 @@ class Cart
         }
 
         return true;
+    }
+
+    public function complete(): void
+    {
+        $data = $this->kart->provider()->complete();
+
+        // TODO: create user for email from session (if allowed)
+        // do NOT log in the user but store as $customer
+        // TODO: create order and complete it with payment method, line items etc
+        // TODO: link user to order
+        // TODO: manage stock
+
+        $this->kirby->trigger('kart.cart.complete', [
+            'user' => kirby()->user(),
+            'customer' => $customer ?? null,
+            'cart' => $this,
+        ]);
+
+        $this->clear();
     }
 }

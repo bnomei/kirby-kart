@@ -15,11 +15,14 @@ abstract class Provider implements ProviderInterface
 
     protected App $kirby;
 
+    protected Kart $kart;
+
     private array $options;
 
     public function __construct($kirby)
     {
         $this->kirby = $kirby;
+        $this->kart = $kirby->site()->kart();
         $this->options = [];
     }
 

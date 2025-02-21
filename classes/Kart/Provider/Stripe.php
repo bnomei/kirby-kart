@@ -2,9 +2,11 @@
 
 namespace Bnomei\Kart\Provider;
 
+use Bnomei\Kart\CartLine;
 use Bnomei\Kart\ContentPageEnum;
 use Bnomei\Kart\Provider;
 use Bnomei\Kart\ProviderEnum;
+use Bnomei\Kart\Router;
 use Bnomei\Kart\VirtualPage;
 use Kirby\Filesystem\F;
 use Kirby\Http\Remote;
@@ -16,7 +18,83 @@ class Stripe extends Provider
 
     public function checkout(): string
     {
-        return ''; // TODO: init checkout for current cart
+        $options = $this->option('checkout_options', false);
+        if ($options instanceof \Closure) {
+            $options = $options($this->kart);
+        }
+
+        // https://docs.stripe.com/api/checkout/sessions/create?lang=curl
+        $remote = Remote::post('https://api.stripe.com/v1/checkout/sessions', [
+            'headers' => [
+                'Content-Type' => 'application/x-www-form-urlencoded',
+                'Authorization' => 'Bearer '.$this->option('secret_key'),
+            ],
+            'data' => array_filter(array_merge([
+                'mode' => 'payment',
+                'payment_method_types' => ['card'],
+                'currency' => strtolower($this->kart->currency()),
+                'customer_email' => $this->kirby->user()?->email(),
+                'success_url' => $this->kirby->url().'/'.Router::CART_SUCCESS.'?session_id={CHECKOUT_SESSION_ID}',
+                'cancel_url' => $this->kirby->url().'/'.Router::CART_CANCEL,
+                'line_items' => $this->kart->cart()->lines()->values(fn (CartLine $l) => [
+                    'price' => A::get($l->product()->raw()->yaml(), 'default_price.id'),
+                    'quantity' => $l->quantity(),
+                ]),
+            ], $options)),
+        ]);
+
+        return $remote->code() === 200 ? $remote->json()['url'] : '';
+    }
+
+    public function complete(): array
+    {
+        // get session from current session id param
+        $sessionId = get('session_id');
+        if (! $sessionId) {
+            return [];
+        }
+
+        $remote = Remote::get('https://api.stripe.com/v1/checkout/sessions/'.$sessionId, [
+            'headers' => [
+                'Content-Type' => 'application/json',
+                'Authorization' => 'Bearer '.$this->option('secret_key'),
+            ]]);
+        if ($remote->code() !== 200) {
+            return [];
+        }
+
+        $json = $remote->json();
+
+        $data = array_filter([
+            // 'session_id' => $sessionId,
+            'email' => A::get($json, 'customer_email'),
+            'paidDate' => date('Y-m-d H:i:s', A::get($json, 'created', time())),
+            'paymentMethod' => implode(',', A::get($json, 'payment_method_types', [])),
+            'paymentComplete' => A::get($json, 'payment_status') === 'paid',
+        ]);
+
+        $remote = Remote::get('https://api.stripe.com/v1/checkout/sessions/'.$sessionId.'/line_items', [
+            'headers' => [
+                'Content-Type' => 'application/json',
+                'Authorization' => 'Bearer '.$this->option('secret_key'),
+            ], [
+                'limit' => $this->kart->lines()->count(),
+            ]]);
+
+        if ($remote->code() !== 200) {
+            return $data;
+        }
+
+        $json = $remote->json();
+        foreach (A::get($json, 'data') as $line) {
+            $data['items'][] = [
+                'key' => A::get($line, 'price.product'),
+                'quantity' => A::get($line, 'quantity'),
+                'price' => A::get($line, 'price.unit_amount', 0) / 100.0,
+            ];
+        }
+
+        return $data;
     }
 
     public function fetchProducts(): array

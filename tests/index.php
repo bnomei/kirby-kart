@@ -2,6 +2,7 @@
 
 const KIRBY_HELPER_DUMP = false;
 const KIRBY_HELPER_E = false;
+// const KART_PRODUCTS_UPDATE = true;
 
 // require 'kirby/bootstrap.php';
 require __DIR__.'/../vendor/autoload.php';

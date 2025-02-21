@@ -33,7 +33,7 @@ class ProductPage extends Page
             'name' => 'product',
             'options' => [
                 'changeTemplate' => false,
-                'update' => false, // can not be updated as they are virtual
+                'update' => defined('KART_PRODUCTS_UPDATE') && constant('KART_PRODUCTS_UPDATE') === true,
             ],
             'sections' => [
                 'stats' => [
