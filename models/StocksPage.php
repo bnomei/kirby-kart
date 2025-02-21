@@ -71,10 +71,14 @@ class StocksPage extends Page
         );
     }
 
-    public function stock(?string $id = null): int
+    public function stockPages(?string $id = null): Pages
     {
         return $this->children()
-            ->filterBy(fn ($page) => $page->page()->toPage()?->uuid()->toString() === $id)
-            ->sumField('stock')->toInt();
+            ->filterBy(fn ($page) => $page->page()->toPage()?->uuid()->toString() === $id);
+    }
+
+    public function stock(?string $id = null): int
+    {
+        return $this->stockPages($id)->sumField('stock')->toInt();
     }
 }

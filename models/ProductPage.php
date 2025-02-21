@@ -203,4 +203,14 @@ class ProductPage extends Page
         return kart()->page(ContentPageEnum::PRODUCTS)->children()
             ->filterBy(fn (ProductPage $p) => in_array($priceId, $p->priceIds()))->first();
     }
+
+    public function updateStock(int $quantity): ?int
+    {
+        $stockPage = kart()->page(ContentPageEnum::STOCKS)->stockPages($this->uuid()->toString())->first();
+        if ($stockPage) {
+            return $stockPage->updateStock($quantity);
+        }
+
+        return null;
+    }
 }

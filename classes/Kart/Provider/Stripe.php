@@ -34,8 +34,8 @@ class Stripe extends Provider
                 'payment_method_types' => ['card'],
                 'currency' => strtolower($this->kart->currency()),
                 'customer_email' => $this->kirby->user()?->email(),
-                'success_url' => $this->kirby->url().'/'.Router::CART_SUCCESS.'?session_id={CHECKOUT_SESSION_ID}',
-                'cancel_url' => $this->kirby->url().'/'.Router::CART_CANCEL,
+                'success_url' => $this->kirby->url().'/'.Router::PROVIDER_SUCCESS.'?session_id={CHECKOUT_SESSION_ID}',
+                'cancel_url' => $this->kirby->url().'/'.Router::PROVIDER_CANCEL,
                 'line_items' => $this->kart->cart()->lines()->values(fn (CartLine $l) => [
                     'price' => A::get($l->product()->raw()->yaml(), 'default_price.id'),
                     'quantity' => $l->quantity(),
@@ -46,7 +46,7 @@ class Stripe extends Provider
         return $remote->code() === 200 ? $remote->json()['url'] : '';
     }
 
-    public function complete(): array
+    public function completed(array $data = []): array
     {
         // get session from current session id param
         $sessionId = get('session_id');
@@ -65,13 +65,13 @@ class Stripe extends Provider
 
         $json = $remote->json();
 
-        $data = array_filter([
+        $data = array_merge($data, array_filter([
             // 'session_id' => $sessionId,
             'email' => A::get($json, 'customer_email'),
             'paidDate' => date('Y-m-d H:i:s', A::get($json, 'created', time())),
             'paymentMethod' => implode(',', A::get($json, 'payment_method_types', [])),
             'paymentComplete' => A::get($json, 'payment_status') === 'paid',
-        ]);
+        ]));
 
         $remote = Remote::get('https://api.stripe.com/v1/checkout/sessions/'.$sessionId.'/line_items', [
             'headers' => [
@@ -82,7 +82,7 @@ class Stripe extends Provider
             ]]);
 
         if ($remote->code() !== 200) {
-            return $data;
+            return [];
         }
 
         $json = $remote->json();
@@ -94,7 +94,7 @@ class Stripe extends Provider
             ];
         }
 
-        return $data;
+        return parent::completed($data);
     }
 
     public function fetchProducts(): array
@@ -161,15 +161,5 @@ class Stripe extends Provider
 
             return $page->toArray();
         }, $products);
-    }
-
-    public function fetchOrders(): array
-    {
-        return [];
-    }
-
-    public function fetchStocks(): array
-    {
-        return [];
     }
 }

@@ -7,19 +7,6 @@ use Kirby\Cms\Response;
 return function (App $kirby) {
     return [
         [
-            'pattern' => Router::CART_CHECKOUT,
-            'method' => 'POST',
-            'action' => function () use ($kirby) {
-                if ($r = Router::denied()) {
-                    return $r;
-                }
-
-                $kirby->session()->set('redirect', Router::get('redirect'));
-
-                go(kart()->provider()->checkout());
-            },
-        ],
-        [
             'pattern' => Router::LOGIN,
             'method' => 'POST',
             'action' => function () use ($kirby) {
@@ -28,7 +15,7 @@ return function (App $kirby) {
                 }
 
                 $user = $kirby->user(get('email'));
-                if (! $user || ! $user->login(get('password'))) {
+                if (! $user?->login(get('password'))) {
                     return Response::json([], 401);
                 }
 
@@ -48,6 +35,38 @@ return function (App $kirby) {
                 }
 
                 go(get('redirect', $kirby->site()->url()));
+            },
+        ],
+        [
+            'pattern' => '(:all)/'.Router::WISHLIST_ADD,
+            'method' => 'POST',
+            'action' => function ($id) {
+                if ($r = Router::denied()) {
+                    return $r;
+                }
+
+                kart()->wishlist()->add(
+                    page('page://'.Router::get('product'))
+                );
+
+                // TODO: add htmx and data-star
+                go($id); // prg
+            },
+        ],
+        [
+            'pattern' => '(:all)/'.Router::WISHLIST_REMOVE,
+            'method' => 'POST',
+            'action' => function ($id) {
+                if ($r = Router::denied()) {
+                    return $r;
+                }
+
+                kart()->wishlist()->remove(
+                    page('page://'.Router::get('product'))
+                );
+
+                // TODO: add htmx and data-star
+                go($id); // prg
             },
         ],
         [
@@ -83,71 +102,38 @@ return function (App $kirby) {
             },
         ],
         [
-            'pattern' => Router::CART_SUCCESS,
+            'pattern' => Router::CART_CHECKOUT,
+            'method' => 'POST',
+            'action' => function () use ($kirby) {
+                if ($r = Router::denied()) {
+                    return $r;
+                }
+
+                $kirby->session()->set('redirect', Router::get('redirect'));
+
+                go(kart()->provider()->checkout());
+            },
+        ],
+        [
+            'pattern' => Router::PROVIDER_SUCCESS,
             'method' => 'GET',
             'action' => function () use ($kirby) {
-
-                $kirby->trigger('kart.cart.success:before', [
-                    'user' => $kirby->user(),
-                    'cart' => kart()->cart(),
-                ]);
 
                 kart()->cart()->complete();
 
-                $kirby->trigger('kart.cart.success:after', [
-                    'user' => $kirby->user(),
-                    'cart' => kart()->cart(),
-                ]);
-
                 go($kirby->session()->pull('redirect', $kirby->site()->url()));
             },
         ],
         [
-            'pattern' => Router::CART_CANCEL,
+            'pattern' => Router::PROVIDER_CANCEL,
             'method' => 'GET',
             'action' => function () use ($kirby) {
 
-                kirby()->trigger('kart.cart.canceled', [
-                    'user' => kirby()->user(),
-                    'kart' => kart(),
-                ]);
+                kart()->provider()->canceled();
 
                 go($kirby->session()->pull('redirect', $kirby->site()->url()));
             },
         ],
-        [
-            'pattern' => '(:all)/'.Router::WISHLIST_ADD,
-            'method' => 'POST',
-            'action' => function ($id) {
-                if ($r = Router::denied()) {
-                    return $r;
-                }
-
-                kart()->wishlist()->add(
-                    page('page://'.Router::get('product'))
-                );
-
-                // TODO: add htmx and data-star
-                go($id); // prg
-            },
-        ],
-        [
-            'pattern' => '(:all)/'.Router::WISHLIST_REMOVE,
-            'method' => 'POST',
-            'action' => function ($id) {
-                if ($r = Router::denied()) {
-                    return $r;
-                }
-
-                kart()->wishlist()->remove(
-                    page('page://'.Router::get('product'))
-                );
-
-                // TODO: add htmx and data-star
-                go($id); // prg
-            },
-        ],
-
         [
             'pattern' => Router::SYNC,
             'method' => 'GET',

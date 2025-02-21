@@ -9,7 +9,7 @@ use Kirby\Cms\User;
 use Kirby\Toolkit\Date;
 use ProductPage;
 
-abstract class Provider implements ProviderInterface
+abstract class Provider
 {
     protected string $name;
 
@@ -152,5 +152,32 @@ abstract class Provider implements ProviderInterface
         return $user->completedOrders()
             ->filterBy(fn ($order) => $order->has($product))
             ->count() > 0;
+    }
+
+    public function canceled(): void
+    {
+        kirby()->trigger('kart.'.$this->name.'.canceled');
+    }
+
+    public function completed(array $data = []): array
+    {
+        kirby()->trigger('kart.'.$this->name.'.completed');
+
+        return $data;
+    }
+
+    public function fetchProducts(): array
+    {
+        return [];
+    }
+
+    public function fetchOrders(): array
+    {
+        return [];
+    }
+
+    public function fetchStocks(): array
+    {
+        return [];
     }
 }

@@ -21,9 +21,9 @@ class Router
 
     const CART_CHECKOUT = 'kart/cart/checkout';
 
-    const CART_SUCCESS = 'kart/cart/success';
+    const PROVIDER_SUCCESS = 'kart/cart/success';
 
-    const CART_CANCEL = 'kart/cart/cancel';
+    const PROVIDER_CANCEL = 'kart/cart/cancel';
 
     const WISHLIST_ADD = 'kart/wishlist/add';
 

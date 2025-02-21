@@ -15,28 +15,8 @@ class Kirby extends Provider
         return kirby()->site()->url();
     }
 
-    public function fetchProducts(): array
-    {
-        return [];
-    }
-
-    public function fetchOrders(): array
-    {
-        return [];
-    }
-
-    public function fetchStocks(): array
-    {
-        return [];
-    }
-
     public function updatedAt(ContentPageEnum|string|null $sync): string
     {
         return t('kart.now', 'Now');
-    }
-
-    public function complete(): array
-    {
-        return [];
     }
 }

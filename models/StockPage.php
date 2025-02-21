@@ -88,4 +88,15 @@ class StockPage extends Page
     {
         return str_pad($this->stock()->value(), $length, '0', STR_PAD_LEFT);
     }
+
+    public function updateStock(int $amount = 0): Page
+    {
+        if ($amount === 0) {
+            return $this;
+        }
+
+        return $this->kirby()->impersonate('kirby', function () use ($amount) {
+            return $this->increment('stock', $amount);
+        });
+    }
 }

@@ -41,6 +41,7 @@ App::plugin(
             ],
             'expire' => 0, // 0 = forever, null to disable caching
             'customers' => [
+                'enabled' => true,
                 'roles' => ['customer', 'member'],
             ],
             'locale' => 'en_EN', // or current locale on multilanguage setups

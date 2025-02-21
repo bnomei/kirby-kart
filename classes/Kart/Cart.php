@@ -7,6 +7,8 @@ use Kirby\Cms\Collection;
 use Kirby\Cms\User;
 use Kirby\Content\Field;
 use Kirby\Toolkit\A;
+use Kirby\Toolkit\Str;
+use Kirby\Toolkit\V;
 use ProductPage;
 
 class Cart
@@ -245,20 +247,70 @@ class Cart
 
     public function complete(): void
     {
-        $data = $this->kart->provider()->complete();
+        $data = $this->kart->provider()->completed();
 
-        // TODO: create user for email from session (if allowed)
-        // do NOT log in the user but store as $customer
-        // TODO: create order and complete it with payment method, line items etc
-        // TODO: link user to order
-        // TODO: manage stock
+        $customer = $this->createCustomer($data);
+        $order = $this->createOrder($data, $customer);
+        $stocksChanged = $this->updateStock($data);
 
         $this->kirby->trigger('kart.cart.complete', [
-            'user' => kirby()->user(),
-            'customer' => $customer ?? null,
-            'cart' => $this,
+            'customer' => $customer,
+            'order' => $order,
+            'stocksChanged' => $stocksChanged, // boolean
         ]);
 
         $this->clear();
+    }
+
+    public function createCustomer(array $credentials): ?User
+    {
+        $email = A::get($credentials, 'email');
+        $customer = $this->kirby->users()->findBy('email', $credentials);
+        if (! $customer && V::email($email) && $this->kirby->option('bnomei.kart.customers.enabled')) {
+            $customer = $this->kirby->impersonate('kirby', function () use ($credentials, $email) {
+                return $this->kirby->users()->create([
+                    'email' => $email,
+                    'name' => A::get($credentials, 'name', ''),
+                    'password' => Str::random(16),
+                    'role' => $this->kirby->option('bnomei.kart.customers.roles')[0],
+                ]);
+            });
+            $this->kirby->trigger('kart.user.created', ['user' => $customer]);
+        }
+
+        return $customer;
+    }
+
+    public function createOrder(array $data, ?User $customer): ?\OrderPage
+    {
+        if (! $this->kirby->option('bnomei.kart.orders.enabled')) {
+            return null;
+        }
+
+        return $this->kart->page(ContentPageEnum::ORDERS)->createChild([
+            // title, slug and uuid are automatically generated
+            'content' => A::get($data, [
+                'paidDate',
+                'paymentMethod',
+                'paymentComplete',
+                'items',
+            ]) + [
+                'customer' => [$customer->uuid()->toString()], // kirby user field expects an array
+            ],
+        ]);
+    }
+
+    public function updateStock(array $data): bool
+    {
+        $count = 0;
+        foreach (A::get($data, 'items', []) as $item) {
+            /** @var ?ProductPage $product */
+            $product = $this->kirby->page('page://'.$item['key']); // kart maps uuids to keys
+            if ($product && $product->updateStock(intval($item['quantity']) * -1) !== null) {
+                $count++;
+            }
+        }
+
+        return $count > 0;
     }
 }
