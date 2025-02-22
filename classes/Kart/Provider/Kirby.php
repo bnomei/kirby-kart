@@ -20,14 +20,14 @@ class Kirby extends Provider
         return strval(t('bnomei.kart.now'));
     }
 
-    public function checkout(): ?string
+    public function checkout(): string
     {
         $session_id = sha1(Uuid::generate());
         $this->kirby->session()->set('bnomei.kart.'.$this->name.'.session_id', $session_id);
 
         return parent::checkout() ? Router::provider_success([
             'session_id' => $session_id,
-        ]) : null;
+        ]) : '/';
     }
 
     public function completed(array $data = []): array

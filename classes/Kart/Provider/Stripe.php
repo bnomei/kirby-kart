@@ -16,7 +16,7 @@ class Stripe extends Provider
 {
     protected string $name = ProviderEnum::STRIPE->value;
 
-    public function checkout(): ?string
+    public function checkout(): string
     {
         $options = $this->option('checkout_options', false);
         if ($options instanceof \Closure) {
@@ -44,7 +44,7 @@ class Stripe extends Provider
         ]);
 
         return parent::checkout() && $remote->code() === 200 ?
-            $remote->json()['url'] : null;
+            $remote->json()['url'] : '/';
     }
 
     public function completed(array $data = []): array
