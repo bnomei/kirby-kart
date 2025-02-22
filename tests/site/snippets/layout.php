@@ -23,13 +23,16 @@ header("Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-e
 <body class="max-w-screen-lg mx-auto bg-gray-100">
     <section class="min-h-screen bg-white">
         <header class="border-b-2 border-gray-100 px-6 py-4">
-            <nav>
+            <nav class="flex justify-between">
                 <ul class="text-kart flex">
                 <?php foreach (site()->breadcrumb() as $crumb) { ?>
                     <li><a class="hover:underline <?= $crumb->isActive() ? 'font-bold' : '' ?>" href="<?= $crumb->url() ?>"><?= $crumb->title() ?></a></li>
                     <li class="last:hidden px-1">»</li>
                 <?php } ?>
                 </ul>
+                <div>
+                    <a href="/cart" class="group font-bold"><span class="group-hover:underline ">Cart</span> <small>(<?= kart()->cart()->lines()->count() ?>)</small></a>
+                </div>
             </nav>
         </header>
         <main class="px-6 py-4">

@@ -41,9 +41,12 @@ return function (App $kirby) {
             },
         ],
         [
-            'pattern' => '(:all)/'.Router::WISHLIST_ADD,
+            'pattern' => [
+                Router::WISHLIST_ADD,
+                '(:all)/'.Router::WISHLIST_ADD,
+            ],
             'method' => 'POST',
-            'action' => function ($id) {
+            'action' => function (?string $id = null) {
                 if ($r = Router::denied()) {
                     return $r;
                 }
@@ -53,13 +56,16 @@ return function (App $kirby) {
                 );
 
                 // TODO: add htmx and data-star
-                go($id); // prg
+                go(Router::get('redirect', $id ?? '/')); // prg
             },
         ],
         [
-            'pattern' => '(:all)/'.Router::WISHLIST_REMOVE,
+            'pattern' => [
+                Router::WISHLIST_REMOVE,
+                '(:all)/'.Router::WISHLIST_REMOVE,
+            ],
             'method' => 'POST',
-            'action' => function ($id) {
+            'action' => function (?string $id = null) {
                 if ($r = Router::denied()) {
                     return $r;
                 }
@@ -69,13 +75,16 @@ return function (App $kirby) {
                 );
 
                 // TODO: add htmx and data-star
-                go($id); // prg
+                go(Router::get('redirect', $id ?? '/')); // prg
             },
         ],
         [
-            'pattern' => '(:all)/'.Router::CART_ADD,
+            'pattern' => [
+                Router::CART_ADD,
+                '(:all)/'.Router::CART_ADD,
+            ],
             'method' => 'POST',
-            'action' => function ($id) {
+            'action' => function (?string $id = null) {
                 if ($r = Router::denied()) {
                     return $r;
                 }
@@ -85,13 +94,16 @@ return function (App $kirby) {
                 );
 
                 // TODO: add htmx and data-star
-                go($id); // prg
+                go(Router::get('redirect', $id ?? '/')); // prg
             },
         ],
         [
-            'pattern' => '(:all)/'.Router::CART_REMOVE,
+            'pattern' => [
+                Router::CART_REMOVE,
+                '(:all)/'.Router::CART_REMOVE,
+            ],
             'method' => 'POST',
-            'action' => function ($id) {
+            'action' => function (?string $id = null) {
                 if ($r = Router::denied()) {
                     return $r;
                 }
@@ -101,7 +113,7 @@ return function (App $kirby) {
                 );
 
                 // TODO: add htmx and data-star
-                go($id); // prg
+                go(Router::get('redirect', $id ?? '/')); // prg
             },
         ],
         [
