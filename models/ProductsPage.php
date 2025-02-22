@@ -20,26 +20,26 @@ class ProductsPage extends Page
                 'preview' => true,
                 'sync' => [
                     'icon' => 'refresh',
-                    'text' => t('kart.syncprovider', 'Sync Provider'),
+                    'text' => t('bnomei.kart.sync-provider'),
                     'link' => '{< site.kart.sync("products") >}',
                 ],
                 'status' => true,
             ],
             'sections' => [
                 'stats' => [
-                    'label' => t('kart.summary', 'Summary'),
+                    'label' => t('bnomei.kart.summary'),
                     'type' => 'stats',
                     'reports' => [
                         [
-                            'label' => t('kart.products', 'Products'),
+                            'label' => t('bnomei.kart.products'),
                             'value' => '{{ page.children.count }}',
                         ],
                         [
-                            'label' => t('kart.provider', 'Provider'),
+                            'label' => t('bnomei.kart.provider'),
                             'value' => '{{ site.kart.provider.title }}',
                         ],
                         [
-                            'label' => t('kart.lastsync', 'Last Sync'),
+                            'label' => t('bnomei.kart.last-sync'),
                             'value' => '{{ site.kart.provider.updatedAt("products") }}',
                         ],
                     ],
@@ -53,7 +53,7 @@ class ProductsPage extends Page
                     ],
                 ],
                 'products' => [
-                    'label' => t('kart.products', 'Products'),
+                    'label' => t('bnomei.kart.products'),
                     'type' => 'pages',
                     'layout' => 'cards',
                     'search' => true,

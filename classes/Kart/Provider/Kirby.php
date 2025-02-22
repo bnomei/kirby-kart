@@ -17,13 +17,13 @@ class Kirby extends Provider
 
     public function updatedAt(ContentPageEnum|string|null $sync): string
     {
-        return t('kart.now', 'Now');
+        return t('bnomei.kart.now');
     }
 
     public function checkout(): ?string
     {
         $session_id = sha1(Uuid::generate());
-        $this->kirby->session()->set('kart.'.$this->name.'.session_id', $session_id);
+        $this->kirby->session()->set('bnomei.kart.'.$this->name.'.session_id', $session_id);
 
         return parent::checkout() ? Router::provider_success([
             'session_id' => $session_id,
@@ -33,7 +33,7 @@ class Kirby extends Provider
     public function completed(array $data = []): array
     {
         $sessionId = get('session_id');
-        if (! $sessionId || $sessionId !== $this->kirby->session()->get('kart.'.$this->name.'.session_id')) {
+        if (! $sessionId || $sessionId !== $this->kirby->session()->get('bnomei.kart.'.$this->name.'.session_id')) {
             return [];
         }
 

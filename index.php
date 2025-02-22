@@ -143,7 +143,7 @@ App::plugin(
             'page.update:before' => function (Page $page, array $values, array $strings): void {
                 if ($page instanceof StockPage) {
                     if (! $page->onlyOneStockPagePerProduct($values)) {
-                        throw new Exception(t('kart.stocks.exception.uniqueness', 'Stocks for Product already exist.'));
+                        throw new Exception(t('bnomei.kart.stocks.exception-uniqueness'));
                     }
                 }
             },
@@ -282,8 +282,6 @@ App::plugin(
         'translations' => [
             'de' => require_once __DIR__.'/translations/de.php',
             'en' => require_once __DIR__.'/translations/en.php',
-            'fr' => require_once __DIR__.'/translations/fr.php',
-            'it' => require_once __DIR__.'/translations/it.php',
         ],
         'commands' => [
             'kart:flush' => [
