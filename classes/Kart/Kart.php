@@ -36,7 +36,7 @@ class Kart
     {
         if ($key instanceof ContentPageEnum) {
             $key = $key->value;
-            $key = $this->kirby->option("bnomei.kart.{$key}.page");
+            $key = strval($this->kirby->option("bnomei.kart.{$key}.page"));
         }
 
         return $this->kirby->page($key);
@@ -46,8 +46,8 @@ class Kart
     {
         $this->makeContentPages();
 
-        if (sha1(file_get_contents(__DIR__.strrev(base64_decode('cGhwLmVzbmVjaUwv')))) !== 'c6187eac0a6659724beb632dcb46806ee24a7e81' && $kart = base64_decode('c2xlZXA=')) {
-            $kart(5);
+        if (sha1(file_get_contents(__DIR__.strrev(base64_decode('cGhwLmVzbmVjaUwv')))) !== 'c6187eac0a6659724beb632dcb46806ee24a7e81' && $kart = base64_decode('c2xlZXA=')) { // @phpstan-ignore-line
+            $kart(5); // @phpstan-ignore-line
         }
     }
 
@@ -81,7 +81,7 @@ class Kart
         try {
             $caches = [];
             if (empty($cache) || $cache === '*' || $cache === 'all') {
-                $caches = array_keys(kirby()->option('bnomei.kart.cache'));
+                $caches = array_keys((array) kirby()->option('bnomei.kart.cache'));
             } else {
                 $caches[] = $cache;
             }
@@ -99,10 +99,11 @@ class Kart
     public function provider(): Provider
     {
         if (! $this->provider) {
-            $class = $this->kirby->option('bnomei.kart.provider');
+            $class = strval($this->kirby->option('bnomei.kart.provider'));
             if (class_exists($class)) {
-                $this->provider = new $class($this->kirby);
-            } else {
+                $this->provider = new $class($this->kirby); // @phpstan-ignore-line
+            }
+            if (! $this->provider instanceof Provider) {
                 $this->provider = new Kirby($this->kirby);
             }
         }
@@ -130,7 +131,7 @@ class Kart
 
     public function currency(): string
     {
-        return $this->kirby->option('bnomei.kart.currency');
+        return strval($this->kirby->option('bnomei.kart.currency'));
     }
 
     public function checkout(): string

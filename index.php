@@ -143,7 +143,7 @@ App::plugin(
             'page.update:before' => function (Page $page, array $values, array $strings): void {
                 if ($page instanceof StockPage) {
                     if (! $page->onlyOneStockPagePerProduct($values)) {
-                        throw new Exception(t('bnomei.kart.stocks.exception-uniqueness'));
+                        throw new Exception(strval(t('bnomei.kart.stocks.exception-uniqueness')));
                     }
                 }
             },
@@ -170,8 +170,10 @@ App::plugin(
         ],
         'pagesMethods' => [
             'sum' => function (string $field): float|int {
-                /** @var Pages $this */
-                return array_sum($this->values(function (Page $page) use ($field) {
+                /** @var Pages $pages */
+                $pages = $this;
+
+                return array_sum($pages->values(function (Page $page) use ($field) {
                     if (property_exists($page, $field)) {
                         return $page->$field;
                     }
@@ -234,7 +236,7 @@ App::plugin(
                         // ignore
                     }
                 }
-                $json = json_encode($content, JSON_PRETTY_PRINT);
+                $json = json_encode($content, JSON_PRETTY_PRINT) ?: '';
                 $lines = explode("\n", $json);
                 $wrappedLines = [];
 
@@ -276,7 +278,7 @@ App::plugin(
                 return count(array_intersect(
                     $productPage->priceIds(),
                     A::get($data, 'payments', [])
-                ));
+                )) > 0;
             },
         ],
         'translations' => [

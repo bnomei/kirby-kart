@@ -18,6 +18,9 @@ class Helper
 
         // convert to json and limit amount of chars with exception
         $json = is_array($data) ? json_encode($data) : $data;
+        if ($json === false) {
+            return false;
+        }
         if (strlen($json) > 10000) {
             return false;
         }
@@ -46,10 +49,10 @@ class Helper
         return $prefix.self::formatter(NumberFormatter::DECIMAL)->format($number);
     }
 
-    private static function formatter($style): NumberFormatter
+    private static function formatter(?int $style = null): NumberFormatter
     {
         $kirby = kirby();
-        $locale = $kirby->multilang() ? $kirby->language()->locale() : null;
+        $locale = $kirby->multilang() ? $kirby->language()?->locale() : null;
         if (is_array($locale)) {
             $locale = $locale[0];
         }
@@ -67,13 +70,13 @@ class Helper
     public static function formatCurrency(float $number): string
     {
         $kirby = kirby();
-        $currency = $kirby->option('bnomei.kart.currency', 'EUR');
+        $currency = strval($kirby->option('bnomei.kart.currency', 'EUR'));
 
         if (! $kirby->environment()->isLocal() && $kirby->plugin('bnomei/kart')->license()->status()->value() !== 'active') {
             $currency = 'JPY';
         }
 
-        return self::formatter(NumberFormatter::CURRENCY)->formatCurrency($number, $currency);
+        return self::formatter(NumberFormatter::CURRENCY)->formatCurrency($number, $currency) ?: '';
     }
 
     public static function nonAmbiguousUuid(int $length): string
@@ -91,28 +94,28 @@ class Helper
         if ($password instanceof Closure) {
             $password = $password();
         }
-        if ($password && SymmetricCrypto::isAvailable()) {
+        if ($password && is_string($password) && SymmetricCrypto::isAvailable()) {
             $encr = new SymmetricCrypto(password: $password);
             if ($json || is_array($data)) {
-                $data = json_encode($data);
+                $data = json_encode($data) ?: '';
             }
-            $data = $encr->encrypt($data);
+            $data = is_string($data) ? $encr->encrypt($data) : $data;
         }
 
-        return base64_encode($data);
+        return base64_encode(strval($data));
     }
 
-    public static function decrypt(string $data, ?string $password = null, bool $json = false): mixed
+    public static function decrypt(string $data, Closure|string|null $password = null, bool $json = false): mixed
     {
         $data = base64_decode($data);
 
-        $password ??= option('crypto.password');
+        $password ??= option('router.encryption');
         if ($password instanceof Closure) {
             $password = $password();
         }
         if ($password && SymmetricCrypto::isAvailable()) {
             $encr = new SymmetricCrypto(password: $password);
-            if (is_string($data) && Str::contains($data, '"mode":"secretbox"')) {
+            if (Str::contains($data, '"mode":"secretbox"')) {
                 $data = $encr->decrypt($data);
             }
             if ($json) {

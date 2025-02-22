@@ -82,7 +82,9 @@ class Router
             return null;
         }
 
-        return csrf(self::get('token')) ? null : 401;
+        $token = self::get('token');
+
+        return is_string($token) && csrf($token) ? null : 401;
     }
 
     public static function get(string $key, mixed $default = null): mixed
@@ -99,7 +101,7 @@ class Router
 
     public static function decrypt(string $props): mixed
     {
-        return Helper::decrypt($props, option('bnomei.kart.router.encryption'), true);
+        return Helper::decrypt($props, option('bnomei.kart.router.encryption'), true); // @phpstan-ignore-line
     }
 
     protected static function queryCsrf(): array

@@ -19,7 +19,7 @@ abstract class Provider
 
     private array $options;
 
-    public function __construct($kirby)
+    public function __construct(App $kirby)
     {
         $this->kirby = $kirby;
         $this->kart = $kirby->site()->kart();

@@ -20,8 +20,8 @@ class Ratelimit
         $cacheDurationInMinutes = 60;
         $rateLimitResetIntervalInSeconds = 60;
 
-        $ip = $ip ?? $kirby->visitor()->ip();
-        $limit = $limit ?? $kirby->option('bnomei.kart.ratelimit.limit'); // 12 per minute within 1 hour
+        $ip = $ip ?? strval($kirby->visitor()->ip());
+        $limit = intval($kirby->option('bnomei.kart.ratelimit.limit')); // 12 per minute within 1 hour
         $key = sha1(__DIR__.$ip.date('Ymd'));
         [$expireAt, $count] = $kirby->cache('bnomei.kart.ratelimit')->get(
             $key,

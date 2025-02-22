@@ -17,7 +17,7 @@ class Kirby extends Provider
 
     public function updatedAt(ContentPageEnum|string|null $sync): string
     {
-        return t('bnomei.kart.now');
+        return strval(t('bnomei.kart.now'));
     }
 
     public function checkout(): ?string
@@ -38,9 +38,9 @@ class Kirby extends Provider
         }
 
         $input = Helper::sanitize(array_filter([
-            'email' => urldecode(get('email', $this->kirby->user()?->email())),
-            'payment_method' => urldecode(get('payment_method', '')),
-            'payment_status' => urldecode(get('payment_status', '')),
+            'email' => urldecode(strval(get('email', $this->kirby->user()?->email()))),
+            'payment_method' => urldecode(strval(get('payment_method', ''))),
+            'payment_status' => urldecode(strval(get('payment_status', ''))),
         ]));
 
         // build data for user, order and stock updates

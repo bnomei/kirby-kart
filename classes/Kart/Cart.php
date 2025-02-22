@@ -15,6 +15,7 @@ use ProductPage;
 
 class Cart
 {
+    /** @var Collection<CartLine> */
     private Collection $lines;
 
     private ?User $user = null;
@@ -50,10 +51,6 @@ class Cart
 
     public function add(ProductPage|array|string|null $product, int $amount = 1): int
     {
-        if (! $product) {
-            return 0;
-        }
-
         // Merx compatibility
         if (is_array($product)) {
             $product = $this->kirby->page($product['id']);
@@ -64,8 +61,12 @@ class Cart
             $product = $this->kirby->page($product);
         }
 
-        /** @var CartLine $item */
+        if (! $product) {
+            return 0;
+        }
+
         if ($item = $this->lines->get($product->uuid()->id())) {
+            /** @var CartLine $item */
             $item->increment($amount);
         } else {
             $item = new CartLine(
@@ -99,7 +100,7 @@ class Cart
         }
         if ($this->user) {
             $this->kirby->impersonate('kirby', function () {
-                $this->user->update([
+                $this->user?->update([
                     $this->id => $this->lines->toArray(),
                 ]);
             });
@@ -111,6 +112,9 @@ class Cart
         return $this->lines()->count();
     }
 
+    /**
+     * @return Collection<CartLine>
+     */
     public function lines(): Collection
     {
         return $this->lines;
@@ -125,10 +129,6 @@ class Cart
 
     public function remove(ProductPage|array|string|null $product, int $amount = 1): int
     {
-        if (! $product) {
-            return 0;
-        }
-
         // Merx compatibility
         if (is_array($product)) {
             $product = $this->kirby->page($product['id']);
@@ -139,9 +139,13 @@ class Cart
             $product = $this->kirby->page($product);
         }
 
-        /** @var CartLine $item */
+        if (! $product) {
+            return 0;
+        }
+
+        /** @var CartLine|null $item */
         $item = $this->lines->get($product->uuid()->id());
-        if (! $item) {
+        if (is_null($item)) {
             return 0;
         }
 
@@ -187,8 +191,8 @@ class Cart
     public function sum(): float
     {
         return array_sum($this->lines->values(
-            fn (CartLine $item) => $item->quantity() *
-                $item->product()->price()->toFloat()
+            fn (CartLine $item) => $item->product() ? ($item->quantity() *
+                $item->product()->price()->toFloat()) : 0
         ));
     }
 
@@ -201,10 +205,10 @@ class Cart
     public function tax(): float
     {
         return array_sum($this->lines->values(
-            fn (CartLine $item) => $item->quantity() *
+            fn (CartLine $item) => $item->product() ? ($item->quantity() *
                 $item->product()->price()->toFloat() *
                 $item->product()->tax()->toFloat() /
-                100.0
+                100.0) : 0
         ));
     }
 
@@ -220,18 +224,22 @@ class Cart
         }
 
         if ($product instanceof CartLine) {
-            $product = $product->product()->uuid()->id();
+            $product = $product->product()?->uuid()->id();
         }
 
-        return $this->lines->has($product);
+        return $product && $this->lines->has($product);
     }
 
     public function merge(User $user): bool
     {
+        if (in_array($user->role()->name(), (array) $this->kirby->option('bnomei.kart.customers.roles'))) {
+            return false; // no merging for customers
+        }
+
         $this->user = $user;
 
         /** @var Field $cart */
-        $cart = $user->cart();
+        $cart = $user->cart(); // @phpstan-ignore-line
         if ($cart->isEmpty()) {
             return true; // no plans to merge
         }
@@ -283,7 +291,7 @@ class Cart
                     'email' => $email,
                     'name' => A::get($credentials, 'name', ''),
                     'password' => Str::random(16),
-                    'role' => $this->kirby->option('bnomei.kart.customers.roles')[0],
+                    'role' => ((array) $this->kirby->option('bnomei.kart.customers.roles'))[0],
                 ]);
             });
             $this->kirby->trigger('kart.user.created', ['user' => $customer]);
@@ -320,7 +328,7 @@ class Cart
             }
 
             /** @var ?ProductPage $product */
-            $product = $this->kirby->page($item['key'][0]);
+            $product = $this->kirby->page(strval($item['key'][0]));
             if ($product && $product->updateStock(intval($item['quantity']) * -1) !== null) {
                 $count++;
             }

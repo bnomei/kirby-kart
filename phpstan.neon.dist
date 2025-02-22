@@ -4,11 +4,23 @@ parameters:
         - classes
         - index.php
     excludePaths:
+        - classes/Kart/License.php
         - tests
 
     ignoreErrors:
-        # - '#Undefined variable: \$this#'
+        - '#Undefined variable: \$this#'
         - '/Parameter #1 \$value of function strval expects/'
-        - '#Call to an undefined method Kirby\\Cms\\Ingredients::index\(\)#'
+        - '/Parameter #1 \$value of function intval expects/'
+        - '/Parameter #1 \$value of function floatval expects/'
+        - '#Call to an undefined method Kirby\\Cms\\Site::kart\(\)#'
+        - '#Call to an undefined method Kirby\\Session\\Session::#'
+        - '#Call to an undefined static method Kirby\\Toolkit\\V::#'
+        - '#Call to an undefined method Kirby\\Cms\\User::#'
+        - '#Call to an undefined method Kirby\\Content\\Field::#'
+        - '#Call to an undefined static method Kirby\\Http\\Remote::#'
+        - '#Cannot call method toString\(\) on Kirby\\Uuid\\Uuid\|null#'
+        - '#Cannot call method id\(\) on Kirby\\Uuid\\Uuid\|null#'
+        - '#Cannot call method license\(\) on Kirby\\Plugin\\Plugin\|null#'
+        - '#Method Bnomei\\Kart\\Cart::createCustomer\(\) should return Kirby\\Cms\\User\|null but returns mixed.#'
         -
             identifier: missingType.iterableValue

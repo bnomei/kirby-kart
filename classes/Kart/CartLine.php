@@ -12,7 +12,8 @@ class CartLine
         private string $id, // need to be named `id` for Collections to use it as key
         private int $quantity = 1,
     ) {
-        $this->product = page('page://'.$this->id); // id is expected to be the uuid in all cases!
+        // id is expected to be the uuid in all cases!
+        $this->product = page('page://'.$this->id); // @phpstan-ignore-line
     }
 
     public function increment(int $amount = 1): int

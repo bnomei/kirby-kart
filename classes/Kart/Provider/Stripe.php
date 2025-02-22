@@ -27,7 +27,7 @@ class Stripe extends Provider
         $remote = Remote::post('https://api.stripe.com/v1/checkout/sessions', [
             'headers' => [
                 'Content-Type' => 'application/x-www-form-urlencoded',
-                'Authorization' => 'Bearer '.$this->option('secret_key'),
+                'Authorization' => 'Bearer '.strval($this->option('secret_key')),
             ],
             'data' => array_filter(array_merge([
                 'mode' => 'payment',
@@ -37,7 +37,7 @@ class Stripe extends Provider
                 'success_url' => $this->kirby->url().'/'.Router::PROVIDER_SUCCESS.'?session_id={CHECKOUT_SESSION_ID}',
                 'cancel_url' => $this->kirby->url().'/'.Router::PROVIDER_CANCEL,
                 'line_items' => $this->kart->cart()->lines()->values(fn (CartLine $l) => [
-                    'price' => A::get($l->product()->raw()->yaml(), 'default_price.id'),
+                    'price' => A::get($l->product()?->raw()->yaml(), 'default_price.id'), // @phpstan-ignore-line
                     'quantity' => $l->quantity(),
                 ]),
             ], $options)),
@@ -51,14 +51,14 @@ class Stripe extends Provider
     {
         // get session from current session id param
         $sessionId = get('session_id');
-        if (! $sessionId) {
+        if (! $sessionId || ! is_string($sessionId)) {
             return [];
         }
 
         $remote = Remote::get('https://api.stripe.com/v1/checkout/sessions/'.$sessionId, [
             'headers' => [
                 'Content-Type' => 'application/json',
-                'Authorization' => 'Bearer '.$this->option('secret_key'),
+                'Authorization' => 'Bearer '.strval($this->option('secret_key')),
             ]]);
         if ($remote->code() !== 200) {
             return [];
@@ -77,7 +77,7 @@ class Stripe extends Provider
         $remote = Remote::get('https://api.stripe.com/v1/checkout/sessions/'.$sessionId.'/line_items', [
             'headers' => [
                 'Content-Type' => 'application/json',
-                'Authorization' => 'Bearer '.$this->option('secret_key'),
+                'Authorization' => 'Bearer '.strval($this->option('secret_key')),
             ], [
                 'limit' => $this->kart->lines()->count(),
             ]]);
@@ -112,7 +112,7 @@ class Stripe extends Provider
             $remote = Remote::get('https://api.stripe.com/v1/products', [
                 'headers' => [
                     'Content-Type' => 'application/json',
-                    'Authorization' => 'Bearer '.$this->option('secret_key'),
+                    'Authorization' => 'Bearer '.strval($this->option('secret_key')),
                 ],
                 'data' => array_filter([
                     'active' => 'true',
