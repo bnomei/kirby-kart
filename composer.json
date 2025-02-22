@@ -65,11 +65,7 @@
     "laravel/pint": "^1.13",
     "pestphp/pest": "^v3.5.1",
     "spatie/ray": "^1.39",
-    "getkirby/cli": "^1.5",
-    "stripe/stripe-php":"^v16.5.1",
-    "mollie/mollie-api-php":"^v2.78.0",
-    "paddlehq/paddle-php-sdk": "^1.9.0",
-    "php-http/guzzle7-adapter": "^1.1"
+    "getkirby/cli": "^1.5"
   },
   "scripts": {
     "stan": "./vendor/bin/phpstan",
