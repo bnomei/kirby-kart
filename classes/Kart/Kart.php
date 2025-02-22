@@ -153,4 +153,23 @@ class Kart
     {
         return Router::sync($page);
     }
+
+    public function canCheckout(): bool
+    {
+        if ($this->cart()->lines()->count() === 0) {
+            return false;
+        }
+
+        /**
+         * @var CartLine $line
+         */
+        foreach ($this->cart()->lines() as $line) {
+            $stock = $line->product()?->stock();
+            if (is_int($stock) && $stock < $line->quantity()) {
+                return false;
+            }
+        }
+
+        return true;
+    }
 }

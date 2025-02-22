@@ -128,6 +128,10 @@ return function (App $kirby) {
                     return $r;
                 }
 
+                if (! kart()->canCheckout()) {
+                    go('/');
+                }
+
                 go(kart()->provider()->checkout());
             },
         ],

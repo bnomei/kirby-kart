@@ -209,6 +209,7 @@ class ProductPage extends Page
 
     public function updateStock(int $quantity): ?int
     {
+        /** @var StockPage $stockPage */
         $stockPage = kart()->page(ContentPageEnum::STOCKS)->stockPages($this->uuid()->toString())->first();
         if ($stockPage) {
             return $stockPage->updateStock($quantity);

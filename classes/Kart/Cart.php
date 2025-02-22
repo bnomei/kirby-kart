@@ -265,12 +265,11 @@ class Cart
 
         $customer = $this->createCustomer($data);
         $order = $this->createOrder($data, $customer);
-        $stocksChanged = $this->updateStock($data);
+        $this->updateStock($data);
 
         $this->kirby->trigger('kart.cart.completed', [
             'customer' => $customer,
             'order' => $order,
-            'stocksChanged' => $stocksChanged, // boolean
         ]);
 
         $this->clear();
@@ -319,7 +318,7 @@ class Cart
         ]);
     }
 
-    public function updateStock(array $data): bool
+    public function updateStock(array $data): ?int
     {
         $count = 0;
         foreach (A::get($data, 'items', []) as $item) {
