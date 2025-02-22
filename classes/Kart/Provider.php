@@ -154,9 +154,21 @@ abstract class Provider
             ->count() > 0;
     }
 
-    public function canceled(): void
+    public function checkout(): string
+    {
+        $this->kirby->session()->set(
+            'kart.redirect',
+            $this->kirby->option('bnomei.kart.successPage', Router::get('redirect'))
+        );
+
+        return '';
+    }
+
+    public function canceled(): string
     {
         kirby()->trigger('kart.'.$this->name.'.canceled');
+
+        return $this->kirby->session()->pull('redirect', $this->kirby->site()->url());
     }
 
     public function completed(array $data = []): array

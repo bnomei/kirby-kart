@@ -4,11 +4,13 @@ namespace Bnomei\Kart;
 
 use Kirby\Cms\App;
 use Kirby\Cms\Collection;
+use Kirby\Cms\Page;
 use Kirby\Cms\User;
 use Kirby\Content\Field;
 use Kirby\Toolkit\A;
 use Kirby\Toolkit\Str;
 use Kirby\Toolkit\V;
+use OrderPage;
 use ProductPage;
 
 class Cart
@@ -245,7 +247,7 @@ class Cart
         return true;
     }
 
-    public function complete(): void
+    public function complete(): string
     {
         $data = $this->kart->provider()->completed();
 
@@ -253,19 +255,24 @@ class Cart
         $order = $this->createOrder($data, $customer);
         $stocksChanged = $this->updateStock($data);
 
-        $this->kirby->trigger('kart.cart.complete', [
+        $this->kirby->trigger('kart.cart.completed', [
             'customer' => $customer,
             'order' => $order,
             'stocksChanged' => $stocksChanged, // boolean
         ]);
 
         $this->clear();
+
+        return $this->kirby->session()->pull(
+            'kart.redirect',
+            $order ? $order->url() : $this->kirby->site()->url()
+        );
     }
 
     public function createCustomer(array $credentials): ?User
     {
         $email = A::get($credentials, 'email');
-        $customer = $this->kirby->users()->findBy('email', $credentials);
+        $customer = $this->kirby->users()->findBy('email', $email);
         if (! $customer && V::email($email) && $this->kirby->option('bnomei.kart.customers.enabled')) {
             $customer = $this->kirby->impersonate('kirby', function () use ($credentials, $email) {
                 return $this->kirby->users()->create([
@@ -281,21 +288,21 @@ class Cart
         return $customer;
     }
 
-    public function createOrder(array $data, ?User $customer): ?\OrderPage
+    public function createOrder(array $data, ?User $customer): ?Page
     {
         if (! $this->kirby->option('bnomei.kart.orders.enabled')) {
             return null;
         }
 
-        return $this->kart->page(ContentPageEnum::ORDERS)->createChild([
-            // title, slug and uuid are automatically generated
+        return OrderPage::create([
+            // id, title, slug and uuid are automatically generated
             'content' => A::get($data, [
                 'paidDate',
                 'paymentMethod',
                 'paymentComplete',
                 'items',
             ]) + [
-                'customer' => [$customer->uuid()->toString()], // kirby user field expects an array
+                'customer' => [$customer?->uuid()->toString()], // kirby user field expects an array
             ],
         ]);
     }
@@ -304,8 +311,12 @@ class Cart
     {
         $count = 0;
         foreach (A::get($data, 'items', []) as $item) {
+            if (! is_array($item['key']) || count($item['key']) !== 1) {
+                continue;
+            }
+
             /** @var ?ProductPage $product */
-            $product = $this->kirby->page('page://'.$item['key']); // kart maps uuids to keys
+            $product = $this->kirby->page($item['key'][0]);
             if ($product && $product->updateStock(intval($item['quantity']) * -1) !== null) {
                 $count++;
             }

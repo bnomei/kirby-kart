@@ -17,20 +17,26 @@ class OrderPage extends Page
 {
     public static function create(array $props): Page
     {
+        $orders = kart()->page(\Bnomei\Kart\ContentPageEnum::ORDERS);
+
         // enforce unique but short slug with the option to overwrite it in a closure
         $uuid = kirby()->option('bnomei.kart.orders.order.uuid');
         if ($uuid instanceof Closure) {
-            $uuid = $uuid(kart()->page(\Bnomei\Kart\ContentPageEnum::ORDERS), $props);
+            $uuid = $uuid($orders, $props);
             $props['slug'] = Str::slug(str_replace('or_', '', $uuid));
             $props['content']['uuid'] = $uuid;
             $props['content']['title'] = strtoupper($uuid);
         }
 
+        $props['parent'] = $orders;
+        $props['isDraft'] = false;
+        $props['template'] = kirby()->option('bnomei.kart.orders.order.template', 'order');
+        $props['model'] = kirby()->option('bnomei.kart.orders.order.model', 'order');
+
         /** @var OrderPage $p */
         $p = parent::create($props);
-        $p = $p->updateInvoiceNumber();
 
-        return $p->changeStatus('unlisted');
+        return $p->updateInvoiceNumber();
     }
 
     public static function phpBlueprint(): array
@@ -126,14 +132,12 @@ class OrderPage extends Page
                                     'label' => t('kart.product', 'Product'),
                                     'type' => 'pages',
                                     'query' => 'site.kart.page("products")',
-                                    // 'required' => true, // dont require in case Merx import fails
                                     'multiple' => false,
                                     'subpages' => false,
                                 ],
                                 'price' => [
                                     'label' => t('kart.price', 'Price'),
                                     'type' => 'number',
-                                    'required' => true,
                                     'min' => 0,
                                     'step' => 0.01,
                                     'default' => 0,
@@ -141,7 +145,6 @@ class OrderPage extends Page
                                 'quantity' => [
                                     'label' => t('kart.quantity', 'Quantity'),
                                     'type' => 'number',
-                                    'required' => true,
                                     'min' => 1,
                                     'step' => 1,
                                     'default' => 1,
@@ -149,7 +152,6 @@ class OrderPage extends Page
                                 'total' => [ // merx compat would be price
                                     'label' => t('kart.total', 'Total'),
                                     'type' => 'number',
-                                    'required' => true,
                                     'min' => 0,
                                     'step' => 0.01,
                                     'default' => 0,
@@ -157,7 +159,6 @@ class OrderPage extends Page
                                 'subtotal' => [
                                     'label' => t('kart.subtotal', 'Subtotal'),
                                     'type' => 'number',
-                                    'required' => true,
                                     'min' => 0,
                                     'step' => 0.01,
                                     'default' => 0,
@@ -165,7 +166,6 @@ class OrderPage extends Page
                                 'tax' => [
                                     'label' => t('kart.tax', 'Tax'),
                                     'type' => 'number',
-                                    'required' => true,
                                     'min' => 0,
                                     'step' => 0.01,
                                     'default' => 0,
@@ -173,7 +173,6 @@ class OrderPage extends Page
                                 'discount' => [
                                     'label' => t('kart.discount', 'Discount'),
                                     'type' => 'number',
-                                    'required' => true,
                                     'min' => 0,
                                     'step' => 0.01,
                                     'default' => 0,

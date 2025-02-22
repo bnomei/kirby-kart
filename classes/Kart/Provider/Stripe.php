@@ -91,6 +91,10 @@ class Stripe extends Provider
                 'key' => A::get($line, 'price.product'),
                 'quantity' => A::get($line, 'quantity'),
                 'price' => A::get($line, 'price.unit_amount', 0) / 100.0,
+                'total' => 0, // TODO:
+                'subtotal' => 0, // TODO:
+                'tax' => 0, // TODO:
+                'discount' => 0, // TODO:
             ];
         }
 
@@ -154,8 +158,8 @@ class Stripe extends Provider
                 ],
             ]));
             $page->num(1); // make listed
-            $page->template('product');
-            $page->model('product');
+            //            $page->template('product');
+            //            $page->model('product');
             $page->raw($data);
             $page->content['tax'] = 0;
 

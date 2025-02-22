@@ -42,14 +42,14 @@ App::plugin(
             'expire' => 0, // 0 = forever, null to disable caching
             'customers' => [
                 'enabled' => true,
-                'roles' => ['customer', 'member'],
+                'roles' => ['customer', 'member', 'admin'],
             ],
             'locale' => 'en_EN', // or current locale on multilanguage setups
-            'currency' => 'EUR',
+            'currency' => 'EUR', // uppercase 3-letter code
+            'successPage' => null, // id of the page to redirect to after checkout flow, defaults to page of order
             'orders' => [
                 'enabled' => true,
                 'page' => 'orders',
-                'model' => OrdersPage::class,
                 'order' => [
                     'uuid' => fn (OrdersPage $orders, array $props) => 'or_'.Helper::nonAmbiguousUuid(7), // aka order id
                 ],
@@ -57,7 +57,6 @@ App::plugin(
             'products' => [
                 'enabled' => true,
                 'page' => 'products',
-                'model' => ProductsPage::class,
                 'product' => [
                     'uuid' => fn (ProductsPage $stocks, array $props) => 'pr_'.Uuid::generate(13),
                 ],
@@ -65,7 +64,6 @@ App::plugin(
             'stocks' => [
                 'enabled' => true,
                 'page' => 'stocks',
-                'model' => StocksPage::class,
                 'stock' => [
                     'uuid' => fn (StocksPage $stocks, array $props) => 'st_'.Uuid::generate(13),
                 ],
@@ -89,6 +87,7 @@ App::plugin(
             },
             'provider' => Kirby::class, // stripe, mollie, paddle, ...
             'providers' => [
+                'kirby' => [],
                 'stripe' => [
                     'secret_key' => fn () => env('STRIPE_SECRET_KEY'),
                     'checkout_options' => function (Kart $kart) {

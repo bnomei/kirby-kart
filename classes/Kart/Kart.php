@@ -30,8 +30,6 @@ class Kart
         $this->provider = null;
         $this->cart = null;
         $this->wishlist = null;
-
-        $this->makeContentPages($this->kirby);
     }
 
     public function page(ContentPageEnum|string $key): ?Page
@@ -44,10 +42,16 @@ class Kart
         return $this->kirby->page($key);
     }
 
+    public function ready(): void
+    {
+        $this->makeContentPages();
+    }
+
     public static function singleton(): Kart
     {
         if (self::$singleton === null) {
             self::$singleton = new self;
+            self::$singleton->ready();
         }
 
         return self::$singleton;

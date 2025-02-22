@@ -23,9 +23,11 @@ class StockPage extends Page
             $props['content']['title'] = strtoupper($uuid);
         }
 
-        $p = parent::create($props);
+        $props['isDraft'] = false;
+        $props['template'] = kirby()->option('bnomei.kart.stocks.stock.template', 'stock');
+        $props['model'] = kirby()->option('bnomei.kart.stocks.stock.model', 'stock');
 
-        return $p->changeStatus('unlisted');
+        return parent::create($props);
     }
 
     public static function phpBlueprint(): array

@@ -24,6 +24,9 @@ class ProductPage extends Page
             $props['content']['uuid'] = $uuid;
         }
 
+        $props['template'] = kirby()->option('bnomei.kart.products.product.template', 'product');
+        $props['model'] = kirby()->option('bnomei.kart.products.product.model', 'product');
+
         return parent::create($props);
     }
 

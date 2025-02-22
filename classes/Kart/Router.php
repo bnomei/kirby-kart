@@ -43,40 +43,42 @@ class Router
             $middlewares = [];
         }
 
-        if (! Router::middlewares($middlewares)) {
-            return Response::json([], 401);
+        if ($code = Router::middlewares($middlewares)) {
+            return Response::json([], $code);
         }
 
         return null;
     }
 
-    public static function middlewares(array $middlewares = []): bool
+    public static function middlewares(array $middlewares = []): ?int
     {
-        $allowed = true;
         foreach ($middlewares as $middleware) {
             [$class, $method] = explode('::', $middleware);
-            $allowed = $allowed && $class::$method();
+            $code = $class::$method();
+            if (! is_null($code)) {
+                return $code;
+            }
         }
 
-        return $allowed;
+        return null;
     }
 
-    public static function ratelimit(): bool
+    public static function ratelimit(): ?int
     {
         if (! kirby()->option('bnomei.kart.ratelimit.enabled')) {
-            return true;
+            return null;
         }
 
-        return Ratelimit::check(kirby()->visitor()->ip());
+        return Ratelimit::check(kirby()->visitor()->ip()) ? null : 429;
     }
 
-    public static function csrf(): bool
+    public static function csrf(): ?int
     {
         if (! kirby()->option('bnomei.kart.csrf.enabled')) {
-            return true;
+            return null;
         }
 
-        return csrf(self::get('token'));
+        return csrf(self::get('token')) ? null : 401;
     }
 
     public static function get(string $key, mixed $default = null): mixed
@@ -144,6 +146,14 @@ class Router
         return Uri::index()->clone([
             'path' => self::CART_CHECKOUT,
             'query' => static::queryCsrf() + self::encrypt([]),
+        ])->toString();
+    }
+
+    public static function provider_success(array $params = []): string
+    {
+        return Uri::index()->clone([
+            'path' => self::PROVIDER_SUCCESS,
+            'query' => static::queryCsrf() + $params, // not encrypted since it is supposed to be stateless only params
         ])->toString();
     }
 

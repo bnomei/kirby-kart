@@ -14,7 +14,10 @@ return function (App $kirby) {
                     return $r;
                 }
 
-                $user = $kirby->user(get('email'));
+                $email = trim(strip_tags(urldecode(get('email', ''))));
+                $user = $kirby->users()
+                    ->filterBy('role', 'in', $kirby->option('bnomei.kart.customers.roles'))
+                    ->findBy('email', $email);
                 if (! $user?->login(get('password'))) {
                     return Response::json([], 401);
                 }
@@ -104,12 +107,10 @@ return function (App $kirby) {
         [
             'pattern' => Router::CART_CHECKOUT,
             'method' => 'POST',
-            'action' => function () use ($kirby) {
+            'action' => function () {
                 if ($r = Router::denied()) {
                     return $r;
                 }
-
-                $kirby->session()->set('redirect', Router::get('redirect'));
 
                 go(kart()->provider()->checkout());
             },
@@ -117,21 +118,15 @@ return function (App $kirby) {
         [
             'pattern' => Router::PROVIDER_SUCCESS,
             'method' => 'GET',
-            'action' => function () use ($kirby) {
-
-                kart()->cart()->complete();
-
-                go($kirby->session()->pull('redirect', $kirby->site()->url()));
+            'action' => function () {
+                go(kart()->cart()->complete());
             },
         ],
         [
             'pattern' => Router::PROVIDER_CANCEL,
             'method' => 'GET',
-            'action' => function () use ($kirby) {
-
-                kart()->provider()->canceled();
-
-                go($kirby->session()->pull('redirect', $kirby->site()->url()));
+            'action' => function () {
+                go(kart()->provider()->canceled());
             },
         ],
         [

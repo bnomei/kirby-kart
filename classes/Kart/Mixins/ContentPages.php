@@ -2,38 +2,33 @@
 
 namespace Bnomei\Kart\Mixins;
 
-use Kirby\Cms\App;
-use Kirby\Filesystem\Dir;
-use Kirby\Toolkit\Str;
+use Bnomei\Kart\ContentPageEnum;
+use Kirby\Cms\Page;
 
 trait ContentPages
 {
-    public function makeContentPages(App $kirby): void
+    public function makeContentPages(): void
     {
-        $pages = array_filter([
-            'orders' => $kirby->option('bnomei.kart.orders.enabled') === true ? $kirby->option('bnomei.kart.orders.model') : null,
-            'products' => $kirby->option('bnomei.kart.products.enabled') === true ? $kirby->option('bnomei.kart.products.model') : null,
-            'stocks' => $kirby->option('bnomei.kart.stocks.enabled') === true ? $kirby->option('bnomei.kart.stocks.model') : null,
-        ]);
+        $pages = [];
+        foreach (ContentPageEnum::cases() as $enum) {
+            $pages[$enum->value] = $this->kirby->option("bnomei.kart.{$enum->value}.enabled") ?
+                $this->kirby->option("bnomei.kart.{$enum->value}.page") : null;
+        }
+        $pages = array_filter($pages, fn ($id) => ! empty($id) && $this->page($id) === null);
 
-        $kirby->impersonate('kirby', function () use ($kirby, $pages) {
-            foreach ($pages as $key => $class) {
-                if (! $this->page($key)) {
-                    $title = str_replace('Page', '', $class);
-                    $page = site()->createChild([
-                        'id' => $kirby->option("bnomei.kart.{$key}.page"),
-                        'template' => Str::lower($title),
-                        'model' => $class,
-                        'content' => [
-                            'title' => $title,
-                            'uuid' => $key, // must match key to make them easier to find by kart
-                        ],
-                    ]);
-                    // force unlisted
-                    Dir::move($page->root(), str_replace('_drafts/', '', $page->root()));
-                }
+        $this->kirby->impersonate('kirby', function () use ($pages) {
+            foreach ($pages as $key => $id) {
+                Page::create([
+                    'id' => $id,
+                    'isDraft' => false,
+                    'template' => $this->kirby->option("bnomei.kart.{$key}.template", $key),
+                    'model' => $this->kirby->option("bnomei.kart.{$key}.model", $key),
+                    'content' => [
+                        'title' => t("kart.{$key}", ucfirst($key)),
+                        'uuid' => $key, // match key to make them easier to find
+                    ],
+                ]);
             }
         });
-
     }
 }
