@@ -169,7 +169,7 @@ abstract class Provider
             return null;
         }
 
-        return '';
+        return '/';
     }
 
     public function canceled(): string
