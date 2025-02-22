@@ -13,6 +13,10 @@ class Ratelimit
             return true;
         }
 
+        if (! $kirby->environment()->isLocal() && $kirby->plugin('bnomei/kart')->license()->status()->value() !== 'active') {
+            return true;
+        }
+
         $cacheDurationInMinutes = 60;
         $rateLimitResetIntervalInSeconds = 60;
 

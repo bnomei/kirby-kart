@@ -99,6 +99,10 @@ abstract class Provider
         $method = 'fetch'.ucfirst($interface);
         $data = $this->$method(); // concrete implementation
 
+        if (! $this->kirby->environment()->isLocal() && $this->kirby->plugin('bnomei/kart')->license()->status()->value() !== 'active') {
+            $data = array_slice($data, 0, 10);
+        }
+
         $expire = $this->kirby->option('bnomei.kart.expire');
         if (! is_null($expire)) {
             $this->cache()->set($interface, $data, intval($expire));
@@ -154,12 +158,16 @@ abstract class Provider
             ->count() > 0;
     }
 
-    public function checkout(): string
+    public function checkout(): ?string
     {
         $this->kirby->session()->set(
             'kart.redirect',
             $this->kirby->option('bnomei.kart.successPage', Router::get('redirect'))
         );
+
+        if (! $this->kirby->environment()->isLocal() && $this->kirby->plugin('bnomei/kart')->license()->status()->value() !== 'active') {
+            return null;
+        }
 
         return '';
     }

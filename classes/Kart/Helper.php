@@ -57,12 +57,21 @@ class Helper
             $locale = $kirby->option('bnomei.kart.locale', 'en_EN');
         }
 
+        if (! $kirby->environment()->isLocal() && $kirby->plugin('bnomei/kart')->license()->status()->value() !== 'active') {
+            $locale = 'ja_JP';
+        }
+
         return new NumberFormatter($locale, $style ?? NumberFormatter::DECIMAL);
     }
 
     public static function formatCurrency(float $number): string
     {
-        $currency = kirby()->option('bnomei.kart.currency', 'EUR');
+        $kirby = kirby();
+        $currency = $kirby->option('bnomei.kart.currency', 'EUR');
+
+        if (! $kirby->environment()->isLocal() && $kirby->plugin('bnomei/kart')->license()->status()->value() !== 'active') {
+            $currency = 'JPY';
+        }
 
         return self::formatter(NumberFormatter::CURRENCY)->formatCurrency($number, $currency);
     }

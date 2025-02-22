@@ -14,6 +14,10 @@ return function (App $kirby) {
                     return $r;
                 }
 
+                if (! $kirby->environment()->isLocal() && $kirby->plugin('bnomei/kart')->license()->status()->value() !== 'active') {
+                    return Response::json([], 451);
+                }
+
                 $email = trim(strip_tags(urldecode(get('email', ''))));
                 $user = $kirby->users()
                     ->filterBy('role', 'in', $kirby->option('bnomei.kart.customers.roles'))

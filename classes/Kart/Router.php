@@ -52,6 +52,10 @@ class Router
 
     public static function middlewares(array $middlewares = []): ?int
     {
+        if (! kirby()->environment()->isLocal() && kirby()->plugin('bnomei/kart')->license()->status()->value() !== 'active') {
+            return null;
+        }
+
         foreach ($middlewares as $middleware) {
             [$class, $method] = explode('::', $middleware);
             $code = $class::$method();

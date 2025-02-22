@@ -75,6 +75,10 @@ class Cart
             $this->lines->add($item);
         }
 
+        if (! $this->kirby->environment()->isLocal() && $this->kirby->plugin('bnomei/kart')->license()->status()->value() !== 'active') {
+            $this->lines = $this->lines->flip()->slice(0, 1);
+        }
+
         $this->save();
 
         $this->kirby->trigger('kart.'.$this->id.'.add', [

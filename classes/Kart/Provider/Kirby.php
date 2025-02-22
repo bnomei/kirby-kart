@@ -20,16 +20,14 @@ class Kirby extends Provider
         return t('kart.now', 'Now');
     }
 
-    public function checkout(): string
+    public function checkout(): ?string
     {
-        parent::checkout();
-
         $session_id = sha1(Uuid::generate());
         $this->kirby->session()->set('kart.'.$this->name.'.session_id', $session_id);
 
-        return Router::provider_success([
+        return parent::checkout() ? Router::provider_success([
             'session_id' => $session_id,
-        ]);
+        ]) : null;
     }
 
     public function completed(array $data = []): array

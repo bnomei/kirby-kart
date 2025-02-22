@@ -74,7 +74,8 @@
     "dist": [
       "composer fix",
       "composer install --no-dev --optimize-autoloader",
-      "git rm -rf --cached .; git add .;"
+      "git rm -rf --cached .; git add .;",
+      "echo -n 'Li9jbGFzc2VzL0thcnQvTGljZW5zZS5waHA=' | base64 -D | xargs -I {} shasum -a 1 {} | awk '{print $1}'"
     ],
     "kirby": [
       "composer install",

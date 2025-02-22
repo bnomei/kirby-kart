@@ -16,6 +16,10 @@ trait ContentPages
         }
         $pages = array_filter($pages, fn ($id) => ! empty($id) && $this->page($id) === null);
 
+        if (! $this->kirby->environment()->isLocal() && $this->kirby->plugin('bnomei/kart')->license()->status()->value() !== 'active') {
+            $pages = [];
+        }
+
         $this->kirby->impersonate('kirby', function () use ($pages) {
             foreach ($pages as $key => $id) {
                 Page::create([
