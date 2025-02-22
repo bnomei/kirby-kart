@@ -11,6 +11,6 @@ class Paddle extends Provider
 
     public function checkout(): string
     {
-        return '';
+        return '/';
     }
 }

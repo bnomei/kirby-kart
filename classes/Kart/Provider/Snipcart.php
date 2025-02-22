@@ -11,6 +11,6 @@ class Snipcart extends Provider
 
     public function checkout(): string
     {
-        return '';
+        return '/';
     }
 }

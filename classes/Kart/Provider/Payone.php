@@ -11,6 +11,6 @@ class Payone extends Provider
 
     public function checkout(): string
     {
-        return '';
+        return '/';
     }
 }

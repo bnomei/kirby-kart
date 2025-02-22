@@ -11,6 +11,6 @@ class Mollie extends Provider
 
     public function checkout(): string
     {
-        return '';
+        return '/';
     }
 }

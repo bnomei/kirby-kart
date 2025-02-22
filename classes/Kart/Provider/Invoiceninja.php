@@ -11,6 +11,6 @@ class Invoiceninja extends Provider
 
     public function checkout(): string
     {
-        return '';
+        return '/';
     }
 }

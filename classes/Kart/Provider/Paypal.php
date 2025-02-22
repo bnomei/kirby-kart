@@ -11,6 +11,6 @@ class Paypal extends Provider
 
     public function checkout(): string
     {
-        return '';
+        return '/';
     }
 }

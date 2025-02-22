@@ -11,6 +11,6 @@ class Gumroad extends Provider
 
     public function checkout(): string
     {
-        return '';
+        return '/';
     }
 }
