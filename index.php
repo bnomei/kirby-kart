@@ -33,11 +33,16 @@ App::plugin(
                 'ratelimit' => true,
 
                 // providers
+                'fastspring' => true,
+                'gumroad' => true,
+                'invoiceninja' => true,
                 'kirby' => true,
-                'stripe' => true,
+                'lemonsqueeze' => true,
                 'mollie' => true,
                 'paddle' => true,
-                // TODO: add caches for each provider
+                'payone' => true,
+                'paypal' => true,
+                'snipcart' => true,
             ],
             'expire' => 0, // 0 = forever, null to disable caching
             'customers' => [
@@ -87,7 +92,16 @@ App::plugin(
             },
             'provider' => Kirby::class, // stripe, mollie, paddle, ...
             'providers' => [
+                'fastspring' => [],
+                'gumroad' => [],
+                'invoiceninja' => [],
                 'kirby' => [],
+                'lemonsqueeze' => [],
+                'mollie' => [],
+                'paddle' => [],
+                'payone' => [],
+                'paypal' => [],
+                'snipcart' => [],
                 'stripe' => [
                     'secret_key' => fn () => env('STRIPE_SECRET_KEY'),
                     'checkout_options' => function (Kart $kart) {
@@ -96,8 +110,6 @@ App::plugin(
                         return [];
                     },
                 ],
-                'mollie' => [],
-                'paddle' => [],
             ],
         ],
         'routes' => require_once __DIR__.'/routes.php',
