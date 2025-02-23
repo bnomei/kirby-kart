@@ -7,7 +7,7 @@ return [
     'bnomei.kart.gallery' => 'Gallery',
     'bnomei.kart.invoiceNumber' => 'Invoice Number',
     'bnomei.kart.items' => 'Items',
-    'bnomei.kart.last-sync-provider' => 'Last Sync',
+    'bnomei.kart.last-sync' => 'Last Sync',
     'bnomei.kart.latest' => 'Latest',
     'bnomei.kart.latest-invoice-number' => 'Latest Invoice Number',
     'bnomei.kart.latest-order' => 'Latest Order',

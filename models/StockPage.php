@@ -45,7 +45,7 @@ class StockPage extends Page
             ],
             'fields' => [
                 'page' => [
-                    'label' => t('bnomei.kart.product'),
+                    'label' => 'bnomei.kart.product',
                     'type' => 'pages',
                     'query' => 'site.kart.page("products")', // TODO: .withoutStocks does not work
                     // 'required' => true,
@@ -53,7 +53,7 @@ class StockPage extends Page
                     'subpages' => false,
                 ],
                 'stock' => [
-                    'label' => t('bnomei.kart.stock'),
+                    'label' => 'bnomei.kart.stock',
                     'type' => 'number',
                     'required' => true,
                     'min' => 0,
@@ -61,7 +61,7 @@ class StockPage extends Page
                     'default' => 0,
                 ],
                 'timestamp' => [
-                    'label' => t('bnomei.kart.timestamp'),
+                    'label' => 'bnomei.kart.timestamp',
                     'type' => 'date',
                     'required' => true,
                     'time' => true,

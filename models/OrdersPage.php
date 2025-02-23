@@ -28,19 +28,19 @@ class OrdersPage extends Page
                     'type' => 'stats',
                     'reports' => [
                         [
-                            'label' => t('bnomei.kart.latest-order'),
+                            'label' => 'bnomei.kart.latest-order',
                             'value' => '#{{ page.children.sortBy("paidDate", "desc").first.invoiceNumber }} ・ {{ page.children.sortBy("paidDate", "desc").first.customer.toUser.email }}',
                             'info' => '{{ page.children.sortBy("paidDate", "desc").first.paidDate }}',
                             'link' => '{{ page.children.sortBy("paidDate", "desc").first.panel.url }}',
                         ],
                         [
-                            'label' => t('bnomei.kart.revenue-30days'),
+                            'label' => 'bnomei.kart.revenue-30',
                             'value' => '{{ page.children.trend("paidDate", "sum").toFormattedCurrency }}',
                             'info' => '{{ page.children.trendPercent("paidDate", "sum").toFormattedNumber(true) }}%',
                             'theme' => '{{ page.children.trendTheme("paidDate", "sum") }}',
                         ],
                         [
-                            'label' => t('bnomei.kart.orders-30days'),
+                            'label' => 'bnomei.kart.orders-30',
                             'value' => '{{ page.children.interval("paidDate", "-30 days", "now").count }}',
                             'info' => '{{ page.children.interval("paidDate", "-60 days", "-31 days").count }}',
                         ],
@@ -50,7 +50,7 @@ class OrdersPage extends Page
                     'type' => 'fields',
                     'fields' => [
                         'invnumber' => [
-                            'label' => t('bnomei.kart.latest-invoice-number'),
+                            'label' => 'bnomei.kart.latest-invoice-number',
                             'type' => 'number',
                             'min' => 1,
                             'step' => 1,
@@ -64,7 +64,7 @@ class OrdersPage extends Page
                     ],
                 ],
                 'orders' => [
-                    'label' => t('bnomei.kart.orders'),
+                    'label' => 'bnomei.kart.orders',
                     'type' => 'pages',
                     'search' => true,
                     'template' => 'order', // maps to OrderPage model

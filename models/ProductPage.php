@@ -40,7 +40,7 @@ class ProductPage extends Page
             ],
             'sections' => [
                 'stats' => [
-                    'label' => t('bnomei.kart.summary'),
+                    'label' => 'bnomei.kart.summary',
                     'type' => 'stats',
                     'reports' => [
                         [
@@ -48,12 +48,12 @@ class ProductPage extends Page
                             'info' => '+ {{ page.formattedTax() }}',
                         ],
                         [
-                            'label' => t('bnomei.kart.sold'),
+                            'label' => 'bnomei.kart.sold',
                             'value' => '{{ page.sold }}',
                             'link' => '{{ site.kart.page("orders").url }}',
                         ],
                         [
-                            'label' => t('bnomei.kart.stock'),
+                            'label' => 'bnomei.kart.stock',
                             'value' => '{{ page.stock }}',
                             'link' => '{{ page.stockUrl }}',
                         ],
@@ -66,7 +66,7 @@ class ProductPage extends Page
                             'type' => 'line',
                         ],
                         'price' => [
-                            'label' => t('bnomei.kart.price'),
+                            'label' => 'bnomei.kart.price',
                             'type' => 'number',
                             'min' => 0,
                             'step' => 0.01,
@@ -76,7 +76,7 @@ class ProductPage extends Page
                             'width' => '1/4',
                         ],
                         'tax' => [
-                            'label' => t('bnomei.kart.tax'),
+                            'label' => 'bnomei.kart.tax',
                             'type' => 'number',
                             'min' => 0,
                             'max' => 100,
@@ -91,12 +91,12 @@ class ProductPage extends Page
                             'width' => '1/2',
                         ],
                         'description' => [
-                            'label' => t('bnomei.kart.description'),
+                            'label' => 'bnomei.kart.description',
                             'type' => 'textarea',
                             'width' => '1/2',
                         ],
                         'gallery' => [
-                            'label' => t('bnomei.kart.gallery'),
+                            'label' => 'bnomei.kart.gallery',
                             'type' => 'files',
                             'query' => 'page.parent.images',
                             'uploads' => [
@@ -106,7 +106,7 @@ class ProductPage extends Page
                             'width' => '1/2',
                         ],
                         '_dump' => [
-                            'label' => t('bnomei.kart.raw-values'),
+                            'label' => 'bnomei.kart.raw-value',
                             'type' => 'info',
                             'theme' => 'info',
                             'text' => '{< page.dump("raw", 82) >}',

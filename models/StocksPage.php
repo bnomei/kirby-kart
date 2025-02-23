@@ -21,20 +21,20 @@ class StocksPage extends Page
             ],
             'sections' => [
                 'stats' => [
-                    'label' => t('bnomei.kart.summary'),
+                    'label' => 'bnomei.kart.summary',
                     'type' => 'stats',
                     'reports' => [
                         [
-                            'label' => t('bnomei.kart.products'),
+                            'label' => 'bnomei.kart.products',
                             'value' => '{{ page.children.count }}',
                             'link' => '{{ site.kart.page("products").panel.url }}',
                         ],
                         [
-                            'label' => t('bnomei.kart.stocks'),
+                            'label' => 'bnomei.kart.stocks',
                             'value' => '{{ page.children.sumField("stock").toInt }}',
                         ],
                         [
-                            'label' => t('bnomei.kart.latest'),
+                            'label' => 'bnomei.kart.latest',
                             'value' => '{{ page.children.sortBy("timestamp", "desc").first.timestamp }}',
                         ],
                     ],
@@ -48,7 +48,7 @@ class StocksPage extends Page
                     ],
                 ],
                 'stocks' => [
-                    'label' => t('bnomei.kart.stocks'),
+                    'label' => 'bnomei.kart.stocks',
                     'type' => 'pages',
                     'search' => true,
                     'template' => 'stock', // maps to StockPage model

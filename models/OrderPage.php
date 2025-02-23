@@ -54,22 +54,22 @@ class OrderPage extends Page
             ],
             'sections' => [
                 'stats' => [
-                    'label' => t('bnomei.kart.summary'),
+                    'label' => 'bnomei.kart.summary',
                     'size' => 'huge',
                     'type' => 'stats',
                     'reports' => [
                         [
-                            // 'label' => t('bnomei.kart.invoiceNumber', 'Invoice Number'),
+                            // 'label' => 'bnomei.kart.invoiceNumber', Invoice Number'),
                             'value' => '#{{ page.invoiceNumber }}',
                             'info' => '{{ page.paidDate }}',
                         ],
                         [
-                            // 'label' => t('bnomei.kart.sum', 'Sum'),
+                            // 'label' => 'bnomei.kart.sum', Sum'),
                             'value' => '{{ page.formattedSum }}',
                             'info' => '+ {{ page.formattedTax }}',
                         ],
                         [
-                            'label' => t('bnomei.kart.items'),
+                            'label' => 'bnomei.kart.items',
                             'value' => '{{ page.items.toStructure.count }}',
                         ],
                     ],
@@ -78,7 +78,7 @@ class OrderPage extends Page
                     'type' => 'fields',
                     'fields' => [
                         'customer' => [
-                            'label' => t('bnomei.kart.customer'),
+                            'label' => 'bnomei.kart.customer',
                             'type' => 'users',
                             'multiple' => false,
                             // 'query' => 'kirby.users.filterBy("role", "customer")',
@@ -86,7 +86,7 @@ class OrderPage extends Page
                             'width' => '1/2',
                         ],
                         'invnumber' => [
-                            'label' => t('bnomei.kart.invoiceNumber'),
+                            'label' => 'bnomei.kart.invoiceNumber',
                             'type' => 'number',
                             'min' => 1,
                             'step' => 1,
@@ -96,7 +96,7 @@ class OrderPage extends Page
                             'width' => '1/2',
                         ],
                         'paymentComplete' => [
-                            'label' => t('bnomei.kart.paymentcomplete'),
+                            'label' => 'bnomei.kart.paymentcomplete',
                             'type' => 'toggle',
                             'width' => '1/3',
                             'text' => [
@@ -106,13 +106,13 @@ class OrderPage extends Page
                             'translate' => false,
                         ],
                         'paymentMethod' => [
-                            'label' => t('bnomei.kart.paymentmethod'),
+                            'label' => 'bnomei.kart.paymentmethod',
                             'type' => 'text',
                             'width' => '1/3',
                             'translate' => false,
                         ],
                         'paidDate' => [ // Merx 1.7+ https://github.com/wagnerwagner/merx/blob/8cadc64a0c4e98144c33b476094601560f204191/models/orderPageAbstract.php#L76C25-L76C33
-                            'label' => t('bnomei.kart.paidDate'),
+                            'label' => 'bnomei.kart.paidDate',
                             'type' => 'date',
                             'required' => true,
                             'time' => true,
@@ -124,54 +124,54 @@ class OrderPage extends Page
                             'type' => 'line',
                         ],
                         'items' => [ // use `items` for Merx compatibility
-                            'label' => t('bnomei.kart.products'),
+                            'label' => 'bnomei.kart.items',
                             'type' => 'structure',
                             'translate' => false,
                             'fields' => [
                                 'key' => [ // use `key` for Merx compatibility, `id` breaks Structures
-                                    'label' => t('bnomei.kart.product'),
+                                    'label' => 'bnomei.kart.product',
                                     'type' => 'pages',
                                     'query' => 'site.kart.page("products")',
                                     'multiple' => false,
                                     'subpages' => false,
                                 ],
                                 'price' => [
-                                    'label' => t('bnomei.kart.price'),
+                                    'label' => 'bnomei.kart.price',
                                     'type' => 'number',
                                     'min' => 0,
                                     'step' => 0.01,
                                     'default' => 0,
                                 ],
                                 'quantity' => [
-                                    'label' => t('bnomei.kart.quantity'),
+                                    'label' => 'bnomei.kart.quantity',
                                     'type' => 'number',
                                     'min' => 1,
                                     'step' => 1,
                                     'default' => 1,
                                 ],
                                 'total' => [ // merx compat would be price
-                                    'label' => t('bnomei.kart.total'),
+                                    'label' => 'bnomei.kart.total',
                                     'type' => 'number',
                                     'min' => 0,
                                     'step' => 0.01,
                                     'default' => 0,
                                 ],
                                 'subtotal' => [
-                                    'label' => t('bnomei.kart.subtotal'),
+                                    'label' => 'bnomei.kart.subtotal',
                                     'type' => 'number',
                                     'min' => 0,
                                     'step' => 0.01,
                                     'default' => 0,
                                 ],
                                 'tax' => [
-                                    'label' => t('bnomei.kart.tax'),
+                                    'label' => 'bnomei.kart.tax',
                                     'type' => 'number',
                                     'min' => 0,
                                     'step' => 0.01,
                                     'default' => 0,
                                 ],
                                 'discount' => [
-                                    'label' => t('bnomei.kart.discount'),
+                                    'label' => 'bnomei.kart.discount',
                                     'type' => 'number',
                                     'min' => 0,
                                     'step' => 0.01,
