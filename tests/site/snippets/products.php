@@ -8,7 +8,7 @@
             <div class="px-2 py-1 flex justify-between">
                 <div>
                     <h2 class="text-xl mt-1"><?= $product->title() ?></h2>
-                    <span><?= $product->formattedSum() ?></span>
+                    <span><?= $product->formattedPrice() ?></span>
                 </div>
 
                 <div>

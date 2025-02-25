@@ -6,6 +6,7 @@ use Closure;
 use Kirby\Cache\Cache;
 use Kirby\Cms\App;
 use Kirby\Cms\User;
+use Kirby\Filesystem\F;
 use Kirby\Toolkit\Date;
 use ProductPage;
 
@@ -26,6 +27,11 @@ abstract class Provider
         $this->options = [];
     }
 
+    public function kirby(): App
+    {
+        return $this->kirby;
+    }
+
     public function title(): string
     {
         return ucfirst($this->name);
@@ -37,7 +43,7 @@ abstract class Provider
             return $this->options[$key];
         }
 
-        $option = $this->kirby->option("bnomei.kart.providers.{$this->name}.$key");
+        $option = $this->kirby()->option("bnomei.kart.providers.{$this->name}.$key");
         if ($resolveCallables && $option instanceof Closure) {
             $option = $option();
         }
@@ -87,7 +93,19 @@ abstract class Provider
 
     public function cache(): Cache
     {
-        return $this->kirby->cache('bnomei.kart.'.$this->name);
+        return $this->kirby()->cache('bnomei.kart.'.$this->name);
+    }
+
+    public function findImagesFromUrls(array $urls): array
+    {
+        // media pool in the products page
+        $images = $this->kirby()->site()->kart()->page(ContentPageEnum::PRODUCTS)->images();
+
+        return array_filter(array_map(
+            // fn ($url) => $this->kirby()->option('bnomei.kart.products.page').'/'.F::filename($url), // simple but does not resolve change in extension
+            fn ($url) => $images->filter('name', F::name($url))->first()?->uuid()->toString(), // slower but better results
+            $urls
+        ));
     }
 
     public function read(string $interface): array
@@ -99,11 +117,11 @@ abstract class Provider
         $method = 'fetch'.ucfirst($interface);
         $data = $this->$method(); // concrete implementation
 
-        if (! $this->kirby->environment()->isLocal() && $this->kirby->plugin('bnomei/kart')->license()->status()->value() !== 'active') {
+        if (! $this->kirby()->environment()->isLocal() && $this->kirby()->plugin('bnomei/kart')->license()->status()->value() !== 'active') {
             $data = array_slice($data, 0, 10);
         }
 
-        $expire = $this->kirby->option('bnomei.kart.expire');
+        $expire = $this->kirby()->option('bnomei.kart.expire');
         if (! is_null($expire)) {
             $this->cache()->set($interface, $data, intval($expire));
         }
@@ -134,14 +152,14 @@ abstract class Provider
     public function ownsProduct(ProductPage|string|null $product, ?User $user = null): bool
     {
         if (is_string($product)) {
-            $product = $this->kirby->page($product);
+            $product = $this->kirby()->page($product);
         }
 
         if (! $product) {
             return false;
         }
 
-        $user ??= $this->kirby->user();
+        $user ??= $this->kirby()->user();
 
         if (! $user) {
             return false;
@@ -160,12 +178,12 @@ abstract class Provider
 
     public function checkout(): ?string
     {
-        $this->kirby->session()->set(
+        $this->kirby()->session()->set(
             'kart.redirect',
-            $this->kirby->option('bnomei.kart.successPage', Router::get('redirect'))
+            $this->kirby()->option('bnomei.kart.successPage', Router::get('redirect'))
         );
 
-        if (! $this->kirby->environment()->isLocal() && $this->kirby->plugin('bnomei/kart')->license()->status()->value() !== 'active') {
+        if (! $this->kirby()->environment()->isLocal() && $this->kirby()->plugin('bnomei/kart')->license()->status()->value() !== 'active') {
             return null;
         }
 
@@ -176,7 +194,7 @@ abstract class Provider
     {
         kirby()->trigger('kart.'.$this->name.'.canceled');
 
-        return $this->kirby->session()->pull('redirect', $this->kirby->site()->url());
+        return $this->kirby()->session()->pull('redirect', $this->kirby()->site()->url());
     }
 
     public function completed(array $data = []): array

@@ -2,9 +2,12 @@
 
 use Kirby\Cms\Page;
 use Kirby\Cms\Pages;
+use Kirby\Cms\User;
+use Kirby\Content\Field;
+use Kirby\Toolkit\A;
 
 /**
- * @method \Kirby\Content\Field invnumber()
+ * @method Field invnumber()
  */
 class OrdersPage extends Page
 {
@@ -69,7 +72,7 @@ class OrdersPage extends Page
                     'search' => true,
                     'template' => 'order', // maps to OrderPage model
                     'sortBy' => 'invnumber desc',
-                    'text' => '[#{{ page.invoiceNumber }}] {{ page.customer.toUser.email }} ・ {{ page.formattedSum }} + {{ page.formattedTax }}',
+                    'text' => '[#{{ page.invoiceNumber }}] {{ page.customer.toUser.email }} ・ {{ page.formattedSubtotal }}',
                     'info' => '{{ page.title }} ・ {{ page.paidDate }}',
                 ],
             ],
@@ -85,5 +88,53 @@ class OrdersPage extends Page
         return $this->children = parent::children()->merge(
             Pages::factory(kart()->provider()->orders(), $this)
         );
+    }
+
+    public function withProduct(ProductPage|string|null $product): Pages
+    {
+        return $this->children()->filterBy(
+            fn (OrderPage $orderPage) => $orderPage->hasProduct($product)
+        );
+    }
+
+    public function withCustomer(User|string|null $user): Pages
+    {
+        if (is_string($user)) {
+            $user = $this->kirby()->users()->findBy('email', $user);
+        }
+
+        return $this->children()->filterBy(
+            fn (OrderPage $orderPage) => $user && $orderPage->customer()->toUser()?->is($user)
+        );
+    }
+
+    public function withInvoiceNumber(int|string $invoiceNumber): ?Page
+    {
+        if (is_string($invoiceNumber)) {
+            $invoiceNumber = ltrim($invoiceNumber, '0');
+        }
+
+        return $this->children()->filterBy(
+            fn (OrderPage $orderPage) => $orderPage->invnumber()->toInt() === $invoiceNumber
+        )->first();
+    }
+
+    public function createOrder(array $data, ?User $customer): ?Page
+    {
+        if (! $this->kirby()->option('bnomei.kart.orders.enabled')) {
+            return null;
+        }
+
+        return OrderPage::create([
+            // id, title, slug and uuid are automatically generated
+            'content' => A::get($data, [
+                'paidDate',
+                'paymentMethod',
+                'paymentComplete',
+                'items',
+            ]) + [
+                'customer' => [$customer?->uuid()->toString()], // kirby user field expects an array
+            ],
+        ]);
     }
 }

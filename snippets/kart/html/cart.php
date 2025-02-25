@@ -4,7 +4,8 @@
     <ol>
         <?php
         /** @var \Bnomei\Kart\CartLine $line */
-        foreach (kart()->lines() as $line) {
+        foreach (kart()->cart()->lines() as $line) {
+            /** @var ProductPage $product */
             $product = $line->product(); ?>
             <li class="flex space-x-1 py-1 items-center">
                 <a class="hover:underline" href="<?= $product->url() ?>"><?= $product->title() ?></a>
@@ -22,9 +23,7 @@
     </ol>
 
     <div class="border-t border-black flex flex-col items-end py-2">
-        <div class="text-sm">Subtotal: <?= kart()->sum() ?></div>
-        <div class="text-sm">Tax: <?= kart()->tax() ?></div>
-        <div class="font-bold border-t mt-2 pt-1">Total: <?= kart()->sumtax() ?></div>
+        <div><span class="font-bold"><?= kart()->cart()->formattedSubtotal() ?></span>&nbsp;<span class="text-sm">+tax</span></div>
         <div class="h-4"><!-- spacer --></div>
         <form method="POST" action="<?= kart()->checkout() ?>">
             <button type="submit" class="cursor-pointer px-6 py-2 bg-kart text-white rounded-md text-xl font-semibold">Checkout</button>

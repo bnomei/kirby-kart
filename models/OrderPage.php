@@ -65,7 +65,7 @@ class OrderPage extends Page
                         ],
                         [
                             // 'label' => 'bnomei.kart.sum', Sum'),
-                            'value' => '{{ page.formattedSum }}',
+                            'value' => '{{ page.formattedSubtotal }}',
                             'info' => '+ {{ page.formattedTax }}',
                         ],
                         [
@@ -135,42 +135,42 @@ class OrderPage extends Page
                                     'multiple' => false,
                                     'subpages' => false,
                                 ],
-                                'price' => [
+                                'price' => [ // Merx
                                     'label' => 'bnomei.kart.price',
                                     'type' => 'number',
                                     'min' => 0,
                                     'step' => 0.01,
                                     'default' => 0,
                                 ],
-                                'quantity' => [
+                                'quantity' => [ // Merx
                                     'label' => 'bnomei.kart.quantity',
                                     'type' => 'number',
                                     'min' => 1,
                                     'step' => 1,
                                     'default' => 1,
                                 ],
-                                'total' => [ // merx compat would be price
+                                'total' => [ // (price * quantity - discount) * tax
                                     'label' => 'bnomei.kart.total',
                                     'type' => 'number',
                                     'min' => 0,
                                     'step' => 0.01,
                                     'default' => 0,
                                 ],
-                                'subtotal' => [
+                                'subtotal' => [ // (price * quantity - discount)
                                     'label' => 'bnomei.kart.subtotal',
                                     'type' => 'number',
                                     'min' => 0,
                                     'step' => 0.01,
                                     'default' => 0,
                                 ],
-                                'tax' => [
+                                'tax' => [ // plain tax value (not taxrate)
                                     'label' => 'bnomei.kart.tax',
                                     'type' => 'number',
                                     'min' => 0,
                                     'step' => 0.01,
                                     'default' => 0,
                                 ],
-                                'discount' => [
+                                'discount' => [ // total discount applied to price * quantity
                                     'label' => 'bnomei.kart.discount',
                                     'type' => 'number',
                                     'min' => 0,
@@ -187,10 +187,10 @@ class OrderPage extends Page
 
     public function hasProduct(string|ProductPage $key): bool
     {
-        return $this->productsCount($key) > 0;
+        return $this->productsCount($key, true) > 0;
     }
 
-    public function productsCount(string|ProductPage|null $key = null): int
+    public function productsCount(string|ProductPage|null $key = null, bool $oneIsEnough = false): int
     {
         if ($key instanceof ProductPage) {
             $key = $key->id();
@@ -201,37 +201,68 @@ class OrderPage extends Page
             // it does not matter if id or uuid is stored with this query
             if (! $key || $item->key()->toPage()?->id() === $key || $item->key()->toPage()?->uuid()->toString() === $key) {
                 $sum += $item->quantity()->toInt();
+                if ($oneIsEnough) {
+                    return $sum;
+                }
             }
         }
 
         return $sum;
     }
 
-    // TODO: this does not match STRIPE aka the TOTAL. it would be the SUBTOTAL
-    public function sum(): float
+    public function itemsSum(string $field): float
     {
         $sum = 0.0;
         foreach ($this->items()->toStructure() as $item) {
-            $sum += $item->price()->toFloat() * $item->quantity()->toFloat();
+            $sum += $item->$field()->toFloat();
         }
 
         return (float) $sum;
     }
 
-    // TODO: this does not match STRIPE
-    public function tax(): float
+    public function total(): float
     {
-        $tax = 0;
-        foreach ($this->items()->toStructure() as $item) {
-            $tax += ($item->price()->toFloat() * $item->tax()->toFloat() / 100.0) * $item->quantity()->toFloat();
-        }
-
-        return (float) $tax;
+        return $this->itemsSum('total');
     }
 
-    public function sumtax(): float
+    public function sumtax(): float // Merx
     {
-        return $this->sum() + $this->tax();
+        return $this->itemsSum('total');
+    }
+
+    public function discount(): float
+    {
+        return $this->itemsSum('discount');
+    }
+
+    public function subtotal(): float
+    {
+        return $this->itemsSum('subtotal');
+    }
+
+    public function sum(): float // Merx
+    {
+        return $this->itemsSum('subtotal');
+    }
+
+    public function tax(): float
+    {
+        return $this->itemsSum('tax'); // this in NOT Merx compatible, which stored taxrate
+    }
+
+    public function formattedDiscount(): string
+    {
+        return Helper::formatCurrency($this->discount());
+    }
+
+    public function formattedTotal(): string
+    {
+        return Helper::formatCurrency($this->total());
+    }
+
+    public function formattedSubtotal(): string
+    {
+        return Helper::formatCurrency($this->subtotal());
     }
 
     public function formattedSum(): string

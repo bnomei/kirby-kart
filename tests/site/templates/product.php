@@ -1,4 +1,5 @@
 <?php snippet('layout', slots: true) ?>
+<?php /** @var ProductPage $page */ ?>
 
 <section class="flex flex-col md:flex-row">
     <article class="md:w-2/3 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
@@ -11,8 +12,7 @@
             <h1 class="text-4xl pt-8 pb-4"><?= $page->title() ?></h1>
             <p class="text-gray-500 pb-4"><?= $page->description()->excerpt(140) ?></p>
             <p>
-                <span class="text-xl"><?= $page->formattedSumTax() ?></span><br>
-                (incl. <?= $page->tax() ?>% tax)
+                <span class="text-xl"><?= $page->formattedPrice() ?></span>
             </p>
             <div class="mt-4 flex space-x-2 mt-2">
                 <?php snippet(option('tests.frontend').'/add') ?>

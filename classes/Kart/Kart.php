@@ -2,16 +2,18 @@
 
 namespace Bnomei\Kart;
 
-use Bnomei\Kart\Mixins\CartShortcuts;
 use Bnomei\Kart\Mixins\ContentPages;
 use Bnomei\Kart\Provider\Kirby;
 use Exception;
 use Kirby\Cms\App;
 use Kirby\Cms\Page;
+use Kirby\Cms\User;
+use Kirby\Toolkit\A;
+use Kirby\Toolkit\Str;
+use Kirby\Toolkit\V;
 
 class Kart
 {
-    use CartShortcuts;
     use ContentPages;
 
     private static ?Kart $singleton = null;
@@ -32,14 +34,19 @@ class Kart
         $this->wishlist = null;
     }
 
+    public function kirby(): App
+    {
+        return $this->kirby;
+    }
+
     public function page(ContentPageEnum|string $key): ?Page
     {
         if ($key instanceof ContentPageEnum) {
             $key = $key->value;
-            $key = strval($this->kirby->option("bnomei.kart.{$key}.page"));
+            $key = strval($this->kirby()->option("bnomei.kart.{$key}.page"));
         }
 
-        return $this->kirby->page($key);
+        return $this->kirby()->page($key);
     }
 
     public function ready(): void
@@ -54,10 +61,10 @@ class Kart
     public function message(?string $message = null, string $key = 'default'): ?string
     {
         if ($message === null) {
-            return $this->kirby->session()->pull('bnomei.kart.message-'.$key);
+            return $this->kirby()->session()->pull('bnomei.kart.message-'.$key);
         }
 
-        $this->kirby->session()->set('bnomei.kart.message-'.$key, $message);
+        $this->kirby()->session()->set('bnomei.kart.message-'.$key, $message);
 
         return null;
     }
@@ -99,12 +106,12 @@ class Kart
     public function provider(): Provider
     {
         if (! $this->provider) {
-            $class = strval($this->kirby->option('bnomei.kart.provider'));
+            $class = strval($this->kirby()->option('bnomei.kart.provider'));
             if (class_exists($class)) {
-                $this->provider = new $class($this->kirby); // @phpstan-ignore-line
+                $this->provider = new $class($this->kirby()); // @phpstan-ignore-line
             }
             if (! $this->provider instanceof Provider) {
-                $this->provider = new Kirby($this->kirby);
+                $this->provider = new Kirby($this->kirby());
             }
         }
 
@@ -131,7 +138,7 @@ class Kart
 
     public function currency(): string
     {
-        return strval($this->kirby->option('bnomei.kart.currency'));
+        return strval($this->kirby()->option('bnomei.kart.currency'));
     }
 
     public function checkout(): string
@@ -171,5 +178,24 @@ class Kart
         }
 
         return true;
+    }
+
+    public function createCustomer(array $credentials): ?User
+    {
+        $email = A::get($credentials, 'email');
+        $customer = $this->kirby()->users()->findBy('email', $email);
+        if (! $customer && V::email($email) && $this->kirby()->option('bnomei.kart.customers.enabled')) {
+            $customer = $this->kirby()->impersonate('kirby', function () use ($credentials, $email) {
+                return $this->kirby()->users()->create([
+                    'email' => $email,
+                    'name' => A::get($credentials, 'name', ''),
+                    'password' => Str::random(16),
+                    'role' => ((array) $this->kirby()->option('bnomei.kart.customers.roles'))[0],
+                ]);
+            });
+            $this->kirby()->trigger('kart.user.created', ['user' => $customer]);
+        }
+
+        return $customer;
     }
 }

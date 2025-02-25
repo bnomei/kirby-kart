@@ -179,6 +179,9 @@ App::plugin(
 
                 return $field;
             },
+            'highlightJson' => function (Field $field): string {
+                return Helper::highlightJson($field->value);
+            },
         ],
         'pagesMethods' => [
             'sum' => function (string $field): float|int {

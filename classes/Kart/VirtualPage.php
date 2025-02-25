@@ -138,4 +138,19 @@ class VirtualPage extends Obj
 
         return $result;
     }
+
+    public function mixinProduct($data): self
+    {
+        // make listed
+        $this->num(1);
+
+        // set template and model for products
+        $this->template('product');
+        $this->model('product');
+
+        // store raw data blob
+        $this->raw($data);
+
+        return $this;
+    }
 }

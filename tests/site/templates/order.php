@@ -1,9 +1,5 @@
-<?php
-
-snippet('layout', slots: true);
-
-/** @var OrderPage $page */
-?>
+<?php snippet('layout', slots: true) ?>
+<?php /** @var OrderPage $page */ ?>
 
 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
 
@@ -27,7 +23,7 @@ snippet('layout', slots: true);
             </tr>
             <tr>
                 <td class="text-gray-500 text-xs text-right pr-4">Order Total</td>
-                <td><?= $page->formattedSumTax() ?></td>
+                <td><?= $page->formattedTotal() ?></td>
             </tr>
         </table>
     </article>
@@ -47,7 +43,7 @@ snippet('layout', slots: true);
                         <span class="grow"><!-- spacer --></span>
                         <span class="text-gray-500"><?= $item->quantity() ?>x</span>
                         <span class="w-4"><!-- spacer --></span>
-                        <span><?= \Bnomei\Kart\Helper::formatCurrency($item->price()->toFloat()) ?></span>
+                        <span><?= $item->price()->toFormattedCurrency() ?></span>
                     </div>
                 </div>
             </li>

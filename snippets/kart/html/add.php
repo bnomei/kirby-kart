@@ -1,4 +1,5 @@
 <?php
+/** @var ProductPage $page */
 $product ??= $page;
 ?><form method="POST" action="<?= $product->add() ?>">
     <input type="hidden" name="redirect" value="<?= $redirect ?? $page->url() ?>">

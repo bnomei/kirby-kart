@@ -3,12 +3,10 @@
 namespace Bnomei\Kart\Provider;
 
 use Bnomei\Kart\CartLine;
-use Bnomei\Kart\ContentPageEnum;
 use Bnomei\Kart\Provider;
 use Bnomei\Kart\ProviderEnum;
 use Bnomei\Kart\Router;
 use Bnomei\Kart\VirtualPage;
-use Kirby\Filesystem\F;
 use Kirby\Http\Remote;
 use Kirby\Toolkit\A;
 
@@ -91,11 +89,12 @@ class Stripe extends Provider
             $data['items'][] = [
                 'key' => A::get($line, 'price.product'),
                 'quantity' => A::get($line, 'quantity'),
-                'price' => A::get($line, 'price.unit_amount', 0) / 100.0,
-                'total' => 0, // TODO:
-                'subtotal' => 0, // TODO:
-                'tax' => 0, // TODO:
-                'discount' => 0, // TODO:
+                'price' => round(A::get($line, 'price.unit_amount', 0) / 100.0, 2),
+                // these values include the multiplication with quantity
+                'total' => round(A::get($line, 'amount_total', 0) / 100.0, 2),
+                'subtotal' => round(A::get($line, 'amount_subtotal', 0) / 100.0, 2),
+                'tax' => round(A::get($line, 'amount_tax', 0) / 100.0, 2),
+                'discount' => round(A::get($line, 'amount_discount', 0) / 100.0, 2),
             ];
         }
 
@@ -141,10 +140,8 @@ class Stripe extends Provider
             }
         }
 
-        $images = $this->kirby->site()->kart()->page(ContentPageEnum::PRODUCTS)->images();
-
-        return array_map(function ($data) use ($images) {
-            $page = (new VirtualPage($data, [
+        return array_map(function ($data) {
+            return (new VirtualPage($data, [
                 // MAP: kirby <=> stripe
                 'id' => 'id',
                 'uuid' => 'id',
@@ -152,19 +149,11 @@ class Stripe extends Provider
                 'content' => [
                     'description' => 'description',
                     'price' => fn ($i) => A::get($i, 'default_price.unit_amount', 0) / 100.0,
-                    'gallery' => fn ($i) => array_map(
-                        // fn ($url) => $this->kirby->option('bnomei.kart.products.page').'/'.F::filename($url), // simple but does not resolve change in extension
-                        fn ($url) => $images->filter('name', F::name($url))->first()?->uuid()->toString(), // slower but better results
-                        A::get($i, 'images', [])),
+                    'gallery' => fn ($i) => $this->findImagesFromUrls(
+                        A::get($i, 'images', [])
+                    ),
                 ],
-            ]));
-            $page->num(1); // make listed
-            //            $page->template('product');
-            //            $page->model('product');
-            $page->raw($data);
-            $page->content['tax'] = 0;
-
-            return $page->toArray();
+            ]))->mixinProduct($data)->toArray();
         }, $products);
     }
 }

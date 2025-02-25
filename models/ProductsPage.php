@@ -27,7 +27,7 @@ class ProductsPage extends Page
             ],
             'sections' => [
                 'stats' => [
-                    'label' => t('bnomei.kart.summary'),
+                    'label' => 'bnomei.kart.summary',
                     'type' => 'stats',
                     'reports' => [
                         [
@@ -57,10 +57,10 @@ class ProductsPage extends Page
                     'type' => 'pages',
                     'layout' => 'cards',
                     'search' => true,
-                    'create' => defined('KART_PRODUCTS_UPDATE') && constant('KART_PRODUCTS_UPDATE') === true,
-                    'sortable' => defined('KART_PRODUCTS_UPDATE') && constant('KART_PRODUCTS_UPDATE') === true,
+                    'create' => ! defined('KART_PRODUCTS_UPDATE') || constant('KART_PRODUCTS_UPDATE') === false,
+                    'sortable' => ! defined('KART_PRODUCTS_UPDATE') || constant('KART_PRODUCTS_UPDATE') === false,
                     'template' => 'product', // maps to ProductPage model
-                    'info' => '{{ page.formattedPrice }} + {{ page.tax }}%',
+                    'info' => '{{ page.formattedPrice }}',
                     'image' => [
                         'query' => 'page.gallery.first.toFile',
                     ],
@@ -86,5 +86,14 @@ class ProductsPage extends Page
         return $this->children = parent::children()->merge(
             Pages::factory(kart()->provider()->products(), $this)
         );
+    }
+
+    /**
+     * @todo Not implemented
+     */
+    public function withPriceId(string $priceId): ?ProductPage
+    {
+        return $this->children()
+            ->filterBy(fn (ProductPage $p) => in_array($priceId, $p->priceIds()))->first();
     }
 }

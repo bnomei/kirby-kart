@@ -2,6 +2,7 @@
 
 use Kirby\Cms\Page;
 use Kirby\Cms\Pages;
+use Kirby\Toolkit\A;
 
 class StocksPage extends Page
 {
@@ -80,5 +81,38 @@ class StocksPage extends Page
     public function stock(?string $id = null): int
     {
         return $this->stockPages($id)->sumField('stock')->toInt();
+    }
+
+    public function updateStocks(array $data): ?int
+    {
+        $count = 0;
+        foreach (A::get($data, 'items', []) as $item) {
+            if (! is_array($item['key']) || count($item['key']) !== 1) {
+                continue;
+            }
+
+            /** @var ?ProductPage $product */
+            $product = $this->kirby()->page(strval($item['key'][0]));
+            if (! $product) {
+                continue;
+            }
+
+            if ($this->updateStock($product, intval($item['quantity']) * -1) !== null) {
+                $count++;
+            }
+        }
+
+        return $count > 0;
+    }
+
+    public function updateStock(ProductPage $product, int $quantity): ?int
+    {
+        /** @var StockPage $stockPage */
+        $stockPage = $this->stockPages($product->uuid()->toString())->first();
+        if (! $stockPage) {
+            return null;
+        }
+
+        return $stockPage->updateStock($quantity);
     }
 }

@@ -15,6 +15,7 @@ return [
 
     // 'bnomei.kart.expire' => null, // disable caching
 
+    //    'bnomei.kart.provider' => \Bnomei\Kart\Provider\Stripe::class,
     'bnomei.kart.provider' => \Bnomei\Kart\Provider\Kirby::class,
 
     'bnomei.kart.providers.stripe.secret_key' => fn () => trim(file_get_contents(__DIR__.'/../../.env.stripe.secret_key')),

@@ -4,13 +4,9 @@ namespace Bnomei\Kart;
 
 use Kirby\Cms\App;
 use Kirby\Cms\Collection;
-use Kirby\Cms\Page;
 use Kirby\Cms\User;
 use Kirby\Content\Field;
 use Kirby\Toolkit\A;
-use Kirby\Toolkit\Str;
-use Kirby\Toolkit\V;
-use OrderPage;
 use ProductPage;
 
 class Cart
@@ -107,11 +103,6 @@ class Cart
         }
     }
 
-    public function count(): int
-    {
-        return $this->lines()->count();
-    }
-
     /**
      * @return Collection<CartLine>
      */
@@ -125,6 +116,24 @@ class Cart
         return (int) array_sum($this->lines->values(
             fn (CartLine $item) => $item->quantity()
         ));
+    }
+
+    public function count(): int
+    {
+        return $this->lines()->count();
+    }
+
+    public function subtotal(): float
+    {
+        return array_sum($this->lines->values(
+            fn (CartLine $item) => $item->product() ? ($item->quantity() *
+                $item->product()->price()->toFloat()) : 0
+        ));
+    }
+
+    public function formattedSubtotal(): string
+    {
+        return Helper::formatCurrency($this->subtotal());
     }
 
     public function remove(ProductPage|array|string|null $product, int $amount = 1): int
@@ -182,41 +191,6 @@ class Cart
         ]);
     }
 
-    public function getSum(): float
-    {
-        // Merx compatiblity
-        return $this->sum();
-    }
-
-    public function sum(): float
-    {
-        return array_sum($this->lines->values(
-            fn (CartLine $item) => $item->product() ? ($item->quantity() *
-                $item->product()->price()->toFloat()) : 0
-        ));
-    }
-
-    public function getTax(): float
-    {
-        // Merx compatiblity
-        return $this->tax();
-    }
-
-    public function tax(): float
-    {
-        return array_sum($this->lines->values(
-            fn (CartLine $item) => $item->product() ? ($item->quantity() *
-                $item->product()->price()->toFloat() *
-                $item->product()->tax()->toFloat() /
-                100.0) : 0
-        ));
-    }
-
-    public function sumtax(): float
-    {
-        return $this->sum() + $this->tax();
-    }
-
     public function has(ProductPage|CartLine|string $product): bool
     {
         if ($product instanceof ProductPage) {
@@ -263,9 +237,9 @@ class Cart
     {
         $data = $this->kart->provider()->completed();
 
-        $customer = $this->createCustomer($data);
-        $order = $this->createOrder($data, $customer);
-        $this->updateStock($data);
+        $customer = $this->kart->createCustomer($data);
+        $order = $this->kart->page(ContentPageEnum::ORDERS)->createOrder($data, $customer);
+        $this->kart->page(ContentPageEnum::STOCKS)->updateStocks($data);
 
         $this->kirby->trigger('kart.cart.completed', [
             'customer' => $customer,
@@ -278,61 +252,5 @@ class Cart
             'kart.redirect',
             $order ? $order->url() : $this->kirby->site()->url()
         );
-    }
-
-    public function createCustomer(array $credentials): ?User
-    {
-        $email = A::get($credentials, 'email');
-        $customer = $this->kirby->users()->findBy('email', $email);
-        if (! $customer && V::email($email) && $this->kirby->option('bnomei.kart.customers.enabled')) {
-            $customer = $this->kirby->impersonate('kirby', function () use ($credentials, $email) {
-                return $this->kirby->users()->create([
-                    'email' => $email,
-                    'name' => A::get($credentials, 'name', ''),
-                    'password' => Str::random(16),
-                    'role' => ((array) $this->kirby->option('bnomei.kart.customers.roles'))[0],
-                ]);
-            });
-            $this->kirby->trigger('kart.user.created', ['user' => $customer]);
-        }
-
-        return $customer;
-    }
-
-    public function createOrder(array $data, ?User $customer): ?Page
-    {
-        if (! $this->kirby->option('bnomei.kart.orders.enabled')) {
-            return null;
-        }
-
-        return OrderPage::create([
-            // id, title, slug and uuid are automatically generated
-            'content' => A::get($data, [
-                'paidDate',
-                'paymentMethod',
-                'paymentComplete',
-                'items',
-            ]) + [
-                'customer' => [$customer?->uuid()->toString()], // kirby user field expects an array
-            ],
-        ]);
-    }
-
-    public function updateStock(array $data): ?int
-    {
-        $count = 0;
-        foreach (A::get($data, 'items', []) as $item) {
-            if (! is_array($item['key']) || count($item['key']) !== 1) {
-                continue;
-            }
-
-            /** @var ?ProductPage $product */
-            $product = $this->kirby->page(strval($item['key'][0]));
-            if ($product && $product->updateStock(intval($item['quantity']) * -1) !== null) {
-                $count++;
-            }
-        }
-
-        return $count > 0;
     }
 }

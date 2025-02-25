@@ -36,7 +36,7 @@ class ProductPage extends Page
             'name' => 'product',
             'options' => [
                 'changeTemplate' => false,
-                'update' => defined('KART_PRODUCTS_UPDATE') && constant('KART_PRODUCTS_UPDATE') === true,
+                'update' => ! defined('KART_PRODUCTS_UPDATE') || constant('KART_PRODUCTS_UPDATE') === false,
             ],
             'sections' => [
                 'stats' => [
@@ -73,10 +73,11 @@ class ProductPage extends Page
                             'default' => 0,
                             'required' => true,
                             'after' => '{{ kirby.option("bnomei.kart.currency") }}',
-                            'width' => '1/4',
+                            'width' => '1/2',
                         ],
-                        'tax' => [
-                            'label' => 'bnomei.kart.tax',
+                        /* tax and taxrate are better of handles by the checkout flow
+                        'taxrate' => [
+                            'label' => 'bnomei.kart.taxrate',
                             'type' => 'number',
                             'min' => 0,
                             'max' => 100,
@@ -86,6 +87,7 @@ class ProductPage extends Page
                             'after' => '%',
                             'width' => '1/4',
                         ],
+                        */
                         'gap' => [
                             'type' => 'gap',
                             'width' => '1/2',
@@ -153,27 +155,6 @@ class ProductPage extends Page
         return Helper::formatCurrency($this->price()->toFloat());
     }
 
-    public function formattedSum(): string
-    {
-        return $this->formattedPrice();
-    }
-
-    public function formattedTax(): string
-    {
-        return Helper::formatCurrency(
-            $this->price()->toFloat() *
-            $this->tax()->toFloat() / 100.0
-        );
-    }
-
-    public function formattedSumTax(): string
-    {
-        return Helper::formatCurrency(
-            $this->price()->toFloat() *
-            (1.0 + $this->tax()->toFloat() / 100.0)
-        );
-    }
-
     public function add(): string
     {
         return Router::cart_add($this);
@@ -194,27 +175,13 @@ class ProductPage extends Page
         return Router::wishlist_remove($this);
     }
 
+    /**
+     * @todo Not implemented
+     */
     public function priceIds(): array
     {
         // TODO: return a list of all know priceIds for this product
         // uses to find of the product was purchased with a given priceId
         return [];
-    }
-
-    public static function findByPriceId(string $priceId): ?ProductPage
-    {
-        return kart()->page(ContentPageEnum::PRODUCTS)->children()
-            ->filterBy(fn (ProductPage $p) => in_array($priceId, $p->priceIds()))->first();
-    }
-
-    public function updateStock(int $quantity): ?int
-    {
-        /** @var StockPage $stockPage */
-        $stockPage = kart()->page(ContentPageEnum::STOCKS)->stockPages($this->uuid()->toString())->first();
-        if ($stockPage) {
-            return $stockPage->updateStock($quantity);
-        }
-
-        return null;
     }
 }
