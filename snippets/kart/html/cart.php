@@ -13,9 +13,9 @@
                 <span class="text-gray-500"><?= $line->quantity() ?>x</span>
                 <span class="w-4"><!-- spacer --></span>
                 <form method="POST" action="<?= $product->add() ?>">
-                    <button type="submit" class="flex pb-px justify-center items-center cursor-pointer w-5 h-5 bg-kart text-white rounded-xs">+</button>
+                    <button type="submit" onclick="this.disabled=true;this.form.submit();" class="flex pb-px justify-center items-center cursor-pointer w-5 h-5 bg-kart text-white rounded-xs">+</button>
                 </form>
-                <form method="POST" action="<?= $product->remove() ?>">
+                <form method="POST" onclick="this.disabled=true;this.form.submit();" action="<?= $product->remove() ?>">
                     <button type="submit" class="flex pb-px justify-center items-center cursor-pointer w-5 h-5 bg-kart text-white rounded-xs">-</button>
                 </form>
             </li>

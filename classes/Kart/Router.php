@@ -37,7 +37,7 @@ class Router
 
     public static function denied(): ?Response
     {
-        $middlewares = option('bnomei.kart.middlewares');
+        $middlewares = option('bnomei.kart.middlewares.enabled');
 
         if ($middlewares instanceof Closure) {
             $middlewares = $middlewares();
@@ -56,11 +56,18 @@ class Router
 
     public static function middlewares(array $middlewares = []): ?int
     {
+        if (count($middlewares) === 0) {
+            return null;
+        }
+
         if (! kirby()->environment()->isLocal() && kirby()->plugin('bnomei/kart')->license()->status()->value() !== 'active') {
             return null;
         }
 
         foreach ($middlewares as $middleware) {
+            if ($middleware instanceof Closure) {
+                return $middleware();
+            }
             [$class, $method] = explode('::', $middleware);
             $code = $class::$method();
             if (! is_null($code)) {
@@ -101,7 +108,7 @@ class Router
 
         if ($mode === 'go') {
             $url = strval(Router::get('redirect', $url ?? '/'));
-            // Response::go($url, $code ?? 302);
+            Response::go($url, $code ?? 302);
         }
 
         if ($mode === 'json') {
@@ -128,28 +135,34 @@ class Router
     public static function get(string $key, mixed $default = null): mixed
     {
         $request = kirby()->request();
-        if ($q = $request->get(self::ENCRYPTED_QUERY)) {
-            $result = self::decrypt($q);
+        $value = $request->get($key, $default);
 
-            return is_array($result) ? A::get($result, $key, $default) : $request->get($key, $default);
+        $decrypted = self::decrypt($request->get(self::ENCRYPTED_QUERY));
+        if (is_array($decrypted)) {
+            $value = A::get($decrypted, $key, $value);
         }
 
-        return $request->get($key, $default);
+        return $value;
     }
 
-    public static function decrypt(string $props): mixed
+    public static function decrypt(?string $props = null): mixed
     {
+        if (empty($props)) {
+            return null;
+        }
+
         return Helper::decrypt($props, option('bnomei.kart.router.encryption'), true); // @phpstan-ignore-line
     }
 
     protected static function queryCsrf(): array
     {
-        if (! kirby()->option('bnomei.kart.csrf.enabled')) {
+        $csrf = kirby()->option('bnomei.kart.router.csrf');
+        if (! $csrf) {
             return [];
         }
 
         return [
-            'token' => csrf(),
+            strval($csrf) => csrf(),
         ];
     }
 

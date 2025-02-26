@@ -107,6 +107,11 @@ class Kart
     {
         if (! $this->provider) {
             $class = strval($this->kirby()->option('bnomei.kart.provider'));
+            // try finding provider from string if it's not a class yet
+            if (in_array(strtolower($class), ProviderEnum::cases())) {
+                $c = ucfirst(strtolower($class));
+                $class = "\\Bnomei\\Kart\\Provider\\{$c}";
+            }
             if (class_exists($class)) {
                 $this->provider = new $class($this->kirby()); // @phpstan-ignore-line
             }

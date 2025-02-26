@@ -1,5 +1,5 @@
 <?php
-header("Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-eval' https://cdn.jsdelivr.net https://unpkg.com; style-src 'self' 'unsafe-inline'; img-src 'self' https://www.gravatar.com;");
+header("Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline' https://cdn.jsdelivr.net https://unpkg.com; style-src 'self' 'unsafe-inline'; img-src 'self' https://www.gravatar.com;");
 ?><!doctype html>
 <html lang="en">
 <head>

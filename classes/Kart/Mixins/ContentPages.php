@@ -14,7 +14,7 @@ trait ContentPages
             $pages[$enum->value] = $this->kirby->option("bnomei.kart.{$enum->value}.enabled") ?
                 $this->kirby->option("bnomei.kart.{$enum->value}.page") : null;
         }
-        $pages = array_filter($pages, fn ($id) => ! empty($id) && is_string($id) && $this->page($id) === null);
+        $pages = array_filter($pages, fn ($id) => ! empty($id) && is_string($id) && $this->kirby()->page($id) === null);
 
         if (! $this->kirby->environment()->isLocal() && $this->kirby->plugin('bnomei/kart')->license()->status()->value() !== 'active') {
             $pages = [];

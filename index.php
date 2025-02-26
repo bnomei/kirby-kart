@@ -4,7 +4,6 @@ use Bnomei\Kart\ContentPageEnum;
 use Bnomei\Kart\Helper;
 use Bnomei\Kart\Kart;
 use Bnomei\Kart\License;
-use Bnomei\Kart\Provider\Kirby;
 use Bnomei\Kart\Router;
 use Kirby\Cms\App;
 use Kirby\Cms\Page;
@@ -43,6 +42,7 @@ App::plugin(
                 'payone' => true,
                 'paypal' => true,
                 'snipcart' => true,
+                'stripe' => true,
             ],
             'expire' => 0, // 0 = forever, null to disable caching
             'customers' => [
@@ -73,25 +73,27 @@ App::plugin(
                     'uuid' => fn (StocksPage $stocks, array $props) => 'st_'.Uuid::generate(13),
                 ],
             ],
-            'csrf' => [
-                'enabled' => true,
-            ],
-            'ratelimit' => [
-                'enabled' => true,
-                'limit' => 30 * 60, // N requests in 60 seconds
-            ],
             'router' => [
                 'mode' => 'go', // go/json/html
                 'encryption' => fn () => sha1(__DIR__), // or false
+                'csrf' => 'token', // null|false or name of form data
             ],
-            'middlewares' => function (): array {
-                // could do different stuff based on kirby()->request()
-                return [
-                    Router::class.'::csrf',
-                    Router::class.'::ratelimit',
-                ];
-            },
-            'provider' => Kirby::class, // stripe, mollie, paddle, ...
+            'middlewares' => [
+                'csrf' => 'token', // null|false or name of form data
+                'ratelimit' => [
+                    'enabled' => true,
+                    'limit' => 30 * 60, // N requests in 60 seconds
+                ],
+                'enabled' => function (): array {
+                    // could do different stuff based on kirby()->request()
+                    return [
+                        Router::class.'::csrf',
+                        Router::class.'::ratelimit',
+                        // ... static class::method or closures
+                    ];
+                },
+            ],
+            'provider' => 'kirby', // see ProviderEnum (kirby, stripe, mollie, paddle, ...) or use \Kart\Provider\Kirby::class etc.
             'providers' => [
                 'fastspring' => [],
                 'gumroad' => [],
