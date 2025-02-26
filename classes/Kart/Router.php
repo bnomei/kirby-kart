@@ -31,6 +31,10 @@ class Router
 
     const SYNC = 'kart/sync';
 
+    const CSRF_TOKEN = 'kart/csrf';
+
+    const ENCRYPTED_QUERY = 'keq'; // make it less likely to collide with others
+
     public static function denied(): ?Response
     {
         $middlewares = option('bnomei.kart.middlewares');
@@ -87,10 +91,44 @@ class Router
         return is_string($token) && csrf($token) ? null : 401;
     }
 
+    public static function go(
+        ?string $url = null,
+        string|array $json = [],
+        ?string $html = null,
+        ?int $code = null,
+    ): ?Response {
+        $mode = kirby()->option('bnomei.kart.router.mode');
+
+        if ($mode === 'go') {
+            $url = strval(Router::get('redirect', $url ?? '/'));
+            // Response::go($url, $code ?? 302);
+        }
+
+        if ($mode === 'json') {
+            $json = strval($json ?? []);
+
+            return Response::json($json, $code ?? 200);
+        }
+
+        if ($mode === 'html') {
+            if ($code) {
+                header('HTTP/1.1 '.$code.' '.$http_response_header[0]);
+            }
+            echo $html ?? snippet(
+                Router::get('snippet', ''),
+                data: kirby()->request()->data(),
+                return: true
+            );
+            exit;
+        }
+
+        return null;
+    }
+
     public static function get(string $key, mixed $default = null): mixed
     {
         $request = kirby()->request();
-        if ($q = $request->get('q')) {
+        if ($q = $request->get(self::ENCRYPTED_QUERY)) {
             $result = self::decrypt($q);
 
             return is_array($result) ? A::get($result, $key, $default) : $request->get($key, $default);
@@ -127,50 +165,8 @@ class Router
         }
 
         return [
-            'q' => Helper::encrypt($query, $password, true),
+            self::ENCRYPTED_QUERY => Helper::encrypt($query, $password, true),
         ];
-    }
-
-    public static function login(): string
-    {
-        return Uri::index()->clone([
-            'path' => self::LOGIN,
-            'query' => static::queryCsrf(),
-        ])->toString();
-    }
-
-    public static function logout(): string
-    {
-        return Uri::index()->clone([
-            'path' => self::LOGOUT,
-            'query' => static::queryCsrf(),
-        ])->toString();
-    }
-
-    public static function cart_checkout(): string
-    {
-        return Uri::index()->clone([
-            'path' => self::CART_CHECKOUT,
-            'query' => static::queryCsrf() + self::encrypt([]),
-        ])->toString();
-    }
-
-    public static function provider_success(array $params = []): string
-    {
-        return Uri::index()->clone([
-            'path' => self::PROVIDER_SUCCESS,
-            'query' => static::queryCsrf() + $params, // not encrypted since it is supposed to be stateless only params
-        ])->toString();
-    }
-
-    public static function cart_add(ProductPage $product): string
-    {
-        return Uri::index()->clone([
-            'path' => self::current().'/'.self::CART_ADD,
-            'query' => static::queryCsrf() + self::encrypt([
-                'product' => $product->uuid()->id(),
-            ]),
-        ])->toString();
     }
 
     public static function current(): string
@@ -178,34 +174,75 @@ class Router
         return kirby()->request()->path();
     }
 
-    public static function cart_remove(ProductPage $product): string
+    public static function factory(string $path, array $query = [], array $params = []): string
     {
         return Uri::index()->clone([
-            'path' => self::current().'/'.self::CART_REMOVE,
-            'query' => static::queryCsrf() + self::encrypt([
-                'product' => $product->uuid()->id(),
-            ]),
+            'path' => $path,
+            'query' => static::queryCsrf() + self::encrypt($query) + $params,
         ])->toString();
+    }
+
+    public static function login(): string
+    {
+        return self::factory(self::LOGIN);
+    }
+
+    public static function logout(): string
+    {
+        return self::factory(self::LOGOUT);
+    }
+
+    public static function cart_checkout(): string
+    {
+        return self::factory(self::CART_CHECKOUT);
+    }
+
+    public static function provider_success(array $params = []): string
+    {
+        return self::factory(
+            self::PROVIDER_SUCCESS,
+            params: $params // not encrypted since it is supposed to be stateless only params
+        );
+    }
+
+    public static function cart_add(ProductPage $product): string
+    {
+        return self::factory(
+            self::current().'/'.self::CART_ADD,
+            [
+                'product' => $product->uuid()->id(),
+            ]
+        );
+    }
+
+    public static function cart_remove(ProductPage $product): string
+    {
+        return self::factory(
+            self::current().'/'.self::CART_REMOVE,
+            [
+                'product' => $product->uuid()->id(),
+            ]
+        );
     }
 
     public static function wishlist_add(ProductPage $product): string
     {
-        return Uri::index()->clone([
-            'path' => self::current().'/'.self::WISHLIST_ADD,
-            'query' => static::queryCsrf() + self::encrypt([
+        return self::factory(
+            self::current().'/'.self::WISHLIST_ADD,
+            [
                 'product' => $product->uuid()->id(),
-            ]),
-        ])->toString();
+            ]
+        );
     }
 
     public static function wishlist_remove(ProductPage $product): string
     {
-        return Uri::index()->clone([
-            'path' => self::current().'/'.self::WISHLIST_REMOVE,
-            'query' => static::queryCsrf() + self::encrypt([
+        return self::factory(
+            self::current().'/'.self::WISHLIST_REMOVE,
+            [
                 'product' => $product->uuid()->id(),
-            ]),
-        ])->toString();
+            ]
+        );
     }
 
     public static function sync(Page|string|null $page): string
@@ -218,12 +255,12 @@ class Router
             $page = $page->uuid()->id();
         }
 
-        return Uri::index()->clone([
-            'path' => self::SYNC,
-            'query' => static::queryCsrf() + self::encrypt([
+        return self::factory(
+            self::SYNC,
+            [
                 'page' => $page,
                 'user' => kirby()->user()?->id(),
-            ]),
-        ])->toString();
+            ]
+        );
     }
 }

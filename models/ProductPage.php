@@ -4,7 +4,6 @@ use Bnomei\Kart\ContentPageEnum;
 use Bnomei\Kart\Helper;
 use Bnomei\Kart\Router;
 use Kirby\Cms\Page;
-use Kirby\Cms\Pages;
 use Kirby\Content\Field;
 use Kirby\Toolkit\A;
 
@@ -138,11 +137,9 @@ class ProductPage extends Page
             ->first()?->panel()->url() ?? $stocks->panel()->url();
     }
 
-    public function withoutStocks(): Pages
-    {
-        return $this->children()->filterBy(fn (ProductPage $page) => ! is_numeric($page->stock()));
-    }
-
+    /**
+     * @kql-allowed
+     */
     public function sold(): ?int
     {
         return array_sum(kart()->page(ContentPageEnum::ORDERS)->children()->toArray(
@@ -150,26 +147,41 @@ class ProductPage extends Page
         ));
     }
 
+    /**
+     * @kql-allowed
+     */
     public function formattedPrice(): string
     {
         return Helper::formatCurrency($this->price()->toFloat());
     }
 
+    /**
+     * @kql-allowed
+     */
     public function add(): string
     {
         return Router::cart_add($this);
     }
 
+    /**
+     * @kql-allowed
+     */
     public function remove(): string
     {
         return Router::cart_remove($this);
     }
 
+    /**
+     * @kql-allowed
+     */
     public function wish(): string
     {
         return Router::wishlist_add($this);
     }
 
+    /**
+     * @kql-allowed
+     */
     public function forget(): string
     {
         return Router::wishlist_remove($this);

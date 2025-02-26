@@ -96,4 +96,12 @@ class ProductsPage extends Page
         return $this->children()
             ->filterBy(fn (ProductPage $p) => in_array($priceId, $p->priceIds()))->first();
     }
+
+    /**
+     * @kql-allowed
+     */
+    public function withoutStocks(): Pages
+    {
+        return $this->children()->filterBy(fn (ProductPage $page) => ! is_numeric($page->stock()));
+    }
 }

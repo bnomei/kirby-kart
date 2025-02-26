@@ -12,6 +12,7 @@ return [
     'bnomei.kart.latest-invoice-number' => 'Aktuelle Rechnungsnummer',
     'bnomei.kart.latest-order' => 'Aktuelle Bestellung',
     'bnomei.kart.now' => 'Jetzt',
+    'bnomei.kart.orders' => 'Bestellungen',
     'bnomei.kart.orders-30' => 'Bestellungen (30 Tage)',
     'bnomei.kart.paidDate' => 'Zahlungsdatum',
     'bnomei.kart.paymentcomplete' => 'Zahlung war erfolgreich',

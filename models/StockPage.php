@@ -86,6 +86,9 @@ class StockPage extends Page
             )->count() === 0;
     }
 
+    /**
+     * @kql-allowed
+     */
     public function stockPad(int $length): string
     {
         return str_pad($this->stock()->value(), $length, '0', STR_PAD_LEFT);

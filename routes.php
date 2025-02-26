@@ -7,6 +7,15 @@ use Kirby\Cms\Response;
 return function (App $kirby) {
     return [
         [
+            'pattern' => Router::CSRF_TOKEN,
+            'method' => 'GET',
+            'action' => function () use ($kirby) {
+                return Response::json([
+                    'token' => $kirby->csrf(),
+                ], 201);
+            },
+        ],
+        [
             'pattern' => Router::LOGIN,
             'method' => 'POST',
             'action' => function () use ($kirby) {
@@ -26,7 +35,7 @@ return function (App $kirby) {
                     return Response::json([], 401);
                 }
 
-                go(get('redirect', $kirby->site()->url()));
+                return Router::go();
             },
         ],
         [
@@ -41,7 +50,7 @@ return function (App $kirby) {
                     $user->logout();
                 }
 
-                go(get('redirect', $kirby->site()->url()));
+                return Router::go();
             },
         ],
         [
@@ -59,8 +68,7 @@ return function (App $kirby) {
                     page('page://'.Router::get('product'))
                 );
 
-                // TODO: add htmx and data-star
-                go(Router::get('redirect', $id ?? '/')); // prg
+                return Router::go($id);
             },
         ],
         [
@@ -78,8 +86,7 @@ return function (App $kirby) {
                     page('page://'.Router::get('product'))
                 );
 
-                // TODO: add htmx and data-star
-                go(Router::get('redirect', $id ?? '/')); // prg
+                return Router::go($id);
             },
         ],
         [
@@ -97,8 +104,7 @@ return function (App $kirby) {
                     page('page://'.Router::get('product'))
                 );
 
-                // TODO: add htmx and data-star
-                go(Router::get('redirect', $id ?? '/')); // prg
+                return Router::go($id);
             },
         ],
         [
@@ -116,8 +122,7 @@ return function (App $kirby) {
                     page('page://'.Router::get('product'))
                 );
 
-                // TODO: add htmx and data-star
-                go(Router::get('redirect', $id ?? '/')); // prg
+                return Router::go($id);
             },
         ],
         [
@@ -132,21 +137,21 @@ return function (App $kirby) {
                     go('/');
                 }
 
-                go(kart()->provider()->checkout());
+                Response::go(kart()->provider()->checkout());
             },
         ],
         [
             'pattern' => Router::PROVIDER_SUCCESS,
             'method' => 'GET',
             'action' => function () {
-                go(kart()->cart()->complete());
+                Response::go(kart()->cart()->complete());
             },
         ],
         [
             'pattern' => Router::PROVIDER_CANCEL,
             'method' => 'GET',
             'action' => function () {
-                go(kart()->provider()->canceled());
+                Response::go(kart()->provider()->canceled());
             },
         ],
         [
@@ -168,7 +173,7 @@ return function (App $kirby) {
 
                 kart()->provider()->sync($page);
 
-                go($url);
+                Response::go($url);
             },
         ],
     ];

@@ -69,7 +69,7 @@ class OrderPage extends Page
                             'info' => '+ {{ page.formattedTax }}',
                         ],
                         [
-                            'label' => 'bnomei.kart.items',
+                            'label' => t('bnomei.kart.items'),
                             'value' => '{{ page.items.toStructure.count }}',
                         ],
                     ],
@@ -220,66 +220,105 @@ class OrderPage extends Page
         return (float) $sum;
     }
 
+    /**
+     * @kql-allowed
+     */
     public function total(): float
     {
         return $this->itemsSum('total');
     }
 
+    /**
+     * @kql-allowed
+     */
     public function sumtax(): float // Merx
     {
         return $this->itemsSum('total');
     }
 
+    /**
+     * @kql-allowed
+     */
     public function discount(): float
     {
         return $this->itemsSum('discount');
     }
 
+    /**
+     * @kql-allowed
+     */
     public function subtotal(): float
     {
         return $this->itemsSum('subtotal');
     }
 
+    /**
+     * @kql-allowed
+     */
     public function sum(): float // Merx
     {
         return $this->itemsSum('subtotal');
     }
 
+    /**
+     * @kql-allowed
+     */
     public function tax(): float
     {
         return $this->itemsSum('tax'); // this in NOT Merx compatible, which stored taxrate
     }
 
+    /**
+     * @kql-allowed
+     */
     public function formattedDiscount(): string
     {
         return Helper::formatCurrency($this->discount());
     }
 
+    /**
+     * @kql-allowed
+     */
     public function formattedTotal(): string
     {
         return Helper::formatCurrency($this->total());
     }
 
+    /**
+     * @kql-allowed
+     */
     public function formattedSubtotal(): string
     {
         return Helper::formatCurrency($this->subtotal());
     }
 
+    /**
+     * @kql-allowed
+     */
     public function formattedSum(): string
     {
         return Helper::formatCurrency($this->sum());
     }
 
+    /**
+     * @kql-allowed
+     */
     public function formattedTax(): string
     {
         return Helper::formatCurrency($this->tax());
     }
 
+    /**
+     * @kql-allowed
+     */
     public function formattedSumTax(): string
     {
         return Helper::formatCurrency($this->sumtax());
     }
 
+    /**
+     * @kql-allowed
+     */
     public function invoiceNumber(): string
     {
         // $page = $this->updateInvoiceNumber(); // this would auto-fix Merx pages but it's not needed otherwise

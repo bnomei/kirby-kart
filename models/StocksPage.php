@@ -72,12 +72,18 @@ class StocksPage extends Page
         );
     }
 
+    /**
+     * @kql-allowed
+     */
     public function stockPages(?string $id = null): Pages
     {
         return $this->children()
             ->filterBy(fn ($page) => $page->page()->toPage()?->uuid()->toString() === $id);
     }
 
+    /**
+     * @kql-allowed
+     */
     public function stock(?string $id = null): int
     {
         return $this->stockPages($id)->sumField('stock')->toInt();

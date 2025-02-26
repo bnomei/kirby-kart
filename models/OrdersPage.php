@@ -90,6 +90,9 @@ class OrdersPage extends Page
         );
     }
 
+    /**
+     * @kql-allowed
+     */
     public function withProduct(ProductPage|string|null $product): Pages
     {
         return $this->children()->filterBy(
@@ -97,6 +100,9 @@ class OrdersPage extends Page
         );
     }
 
+    /**
+     * @kql-allowed
+     */
     public function withCustomer(User|string|null $user): Pages
     {
         if (is_string($user)) {
@@ -108,6 +114,9 @@ class OrdersPage extends Page
         );
     }
 
+    /**
+     * @kql-allowed
+     */
     public function withInvoiceNumber(int|string $invoiceNumber): ?Page
     {
         if (is_string($invoiceNumber)) {

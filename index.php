@@ -81,6 +81,7 @@ App::plugin(
                 'limit' => 30 * 60, // N requests in 60 seconds
             ],
             'router' => [
+                'mode' => 'go', // go/json/html
                 'encryption' => fn () => sha1(__DIR__), // or false
             ],
             'middlewares' => function (): array {
@@ -114,6 +115,8 @@ App::plugin(
         ],
         'routes' => require_once __DIR__.'/routes.php',
         'snippets' => [
+            'kart/input/csrf' => __DIR__.'/snippets/kart/input/csrf.php',
+            'kart/input/csrf-defer' => __DIR__.'/snippets/kart/input/csrf-defer.php',
             'kart/json-ld/product' => __DIR__.'/snippets/kart/json-ld/product.php',
             'kart/login' => __DIR__.'/snippets/kart/login.php',
             'kart/logout' => __DIR__.'/snippets/kart/logout.php',
@@ -121,6 +124,10 @@ App::plugin(
             'kart/html/add' => __DIR__.'/snippets/kart/html/add.php',
             'kart/html/wishlist' => __DIR__.'/snippets/kart/html/wishlist.php',
             'kart/html/wish-or-forget' => __DIR__.'/snippets/kart/html/wish-or-forget.php',
+        ],
+        'translations' => [
+            'en' => require_once __DIR__.'/translations/en.php',
+            'de' => require_once __DIR__.'/translations/de.php',
         ],
         'blueprints' => [
             'users/customer' => require_once __DIR__.'/blueprints/users/customer.php',
@@ -169,11 +176,17 @@ App::plugin(
             },
         ],
         'fieldMethods' => [
+            /**
+             * @kql-allowed
+             */
             'toFormattedNumber' => function ($field, bool $prefix = false): string {
                 $field->value = Helper::formatNumber(floatval($field->value), $prefix);
 
                 return $field;
             },
+            /**
+             * @kql-allowed
+             */
             'toFormattedCurrency' => function (Field $field): string {
                 $field->value = Helper::formatCurrency(floatval($field->value));
 
@@ -184,6 +197,9 @@ App::plugin(
             },
         ],
         'pagesMethods' => [
+            /**
+             * @kql-allowed
+             */
             'sum' => function (string $field): float|int {
                 /** @var Pages $pages */
                 $pages = $this;
@@ -204,9 +220,15 @@ App::plugin(
                     return 0;
                 }));
             },
+            /**
+             * @kql-allowed
+             */
             'sumField' => function (string $field): Field {
                 return new Field(null, $field, $this->sum($field));
             },
+            /**
+             * @kql-allowed
+             */
             'interval' => function (string $field, string $from, ?string $until = null): Pages {
                 $from = strtotime($from);
                 $until = $until ? strtotime($until) : null;
@@ -217,9 +239,15 @@ App::plugin(
                     return $ts >= $from && (! $until || $ts <= $until);
                 });
             },
+            /**
+             * @kql-allowed
+             */
             'trend' => function (string $field, string $compare): Field {
                 return $this->interval($field, '-30 days', 'now')->sumField($compare);
             },
+            /**
+             * @kql-allowed
+             */
             'trendPercent' => function (string $field, string $compare): Field {
                 $current = $this->interval($field, '-30 days', 'now')->sum($compare);
                 $last = $this->interval($field, '-60 days', '-31 days')->sum($compare);
@@ -233,7 +261,6 @@ App::plugin(
                 return new Field(null, $field, $diff);
             },
             'trendTheme' => function (string $field, string $compare): string {
-
                 $current = $this->interval($field, '-30 days', 'now')->sum($compare);
                 $last = $this->interval($field, '-60 days', '-31 days')->sum($compare);
 
@@ -270,18 +297,30 @@ App::plugin(
             },
         ],
         'siteMethods' => [
+            /**
+             * @kql-allowed
+             */
             'kart' => function (): Kart {
                 return kart();
             },
         ],
         'userMethods' => [
+            /**
+             * @kql-allowed
+             */
             'orders' => function (): ?Pages {
                 return kart()->page(ContentPageEnum::ORDERS)?->children()->filterBy(fn ($order) => $order->customer()->toUser()?->id() === $this->id());
             },
+            /**
+             * @kql-allowed
+             */
             'completedOrders' => function (): ?Pages {
                 return $this->orders()
                     ->filterBy(fn ($order) => $order->paymentComplete()->toBool());
             },
+            /**
+             * @kql-allowed
+             */
             'hasMadePaymentFor' => function (string $provider, ProductPage $productPage): bool {
                 if ($this->$provider()->isEmpty()) {
                     return false;
@@ -295,10 +334,6 @@ App::plugin(
                     A::get($data, 'payments', [])
                 )) > 0;
             },
-        ],
-        'translations' => [
-            'de' => require_once __DIR__.'/translations/de.php',
-            'en' => require_once __DIR__.'/translations/en.php',
         ],
         'commands' => [
             'kart:flush' => [

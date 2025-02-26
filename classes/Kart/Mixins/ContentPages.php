@@ -22,16 +22,32 @@ trait ContentPages
 
         $this->kirby->impersonate('kirby', function () use ($pages) {
             foreach ($pages as $key => $id) {
-                Page::create([
+                $props = [
                     'id' => $id,
                     'isDraft' => false,
                     'template' => $this->kirby->option("bnomei.kart.{$key}.template", $key),
                     'model' => $this->kirby->option("bnomei.kart.{$key}.model", $key),
-                    'content' => [
-                        'title' => t("kart.{$key}", ucfirst($key)),
+                ];
+                if (kirby()->multilang()) {
+                    foreach (kirby()->languages() as $language) {
+                        $languageCode = $language->code();
+                        $props['translations'] = [
+                            $languageCode => [
+                                'code' => $languageCode,
+                                'content' => array_filter([
+                                    'title' => t("bnomei.kart.{$key}", ucfirst($key), $languageCode),
+                                    'uuid' => $languageCode === kirby()->defaultLanguage()->code() ? $key : null, // match key to make them easier to find
+                                ]),
+                            ],
+                        ];
+                    }
+                } else {
+                    $props['content'] = [
+                        'title' => t("bnomei.kart.{$key}", ucfirst($key)),
                         'uuid' => $key, // match key to make them easier to find
-                    ],
-                ]);
+                    ];
+                }
+                Page::create($props);
             }
         });
     }
