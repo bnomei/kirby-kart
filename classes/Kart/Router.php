@@ -121,6 +121,11 @@ class Router
                     return: true
                 );
             }
+            if (is_string($json)) {
+                $json = json_decode($json, true);
+                $json['token'] = csrf(); // return a new token for the next request
+            }
+
             return Response::json($json, $code ?? 200);
         }
 
@@ -263,6 +268,11 @@ class Router
                 'product' => $product->uuid()->id(),
             ]
         );
+    }
+
+    public static function csrf_token(): string
+    {
+        return self::factory(self::CSRF_TOKEN);
     }
 
     public static function sync(Page|string|null $page): string
