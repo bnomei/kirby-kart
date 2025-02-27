@@ -109,6 +109,31 @@ return function (App $kirby) {
         ],
         [
             'pattern' => [
+                Router::CART_BUY,
+                '(:all)/'.Router::CART_BUY,
+            ],
+            'method' => 'POST',
+            'action' => function (?string $id = null) {
+                if ($r = Router::denied()) {
+                    dump('denied');
+                    return $r;
+                }
+
+                kart()->cart()->add(
+                    page('page://'.Router::get('product'))
+                );
+
+                if (! kart()->canCheckout()) {
+                    Router::go($id);
+                }
+
+                dump('provider checkout');
+
+                Response::go(kart()->provider()->checkout());
+            },
+        ],
+        [
+            'pattern' => [
                 Router::CART_REMOVE,
                 '(:all)/'.Router::CART_REMOVE,
             ],
@@ -134,7 +159,7 @@ return function (App $kirby) {
                 }
 
                 if (! kart()->canCheckout()) {
-                    go('/');
+                    Response::go('/');
                 }
 
                 Response::go(kart()->provider()->checkout());

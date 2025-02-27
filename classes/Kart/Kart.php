@@ -178,6 +178,7 @@ class Kart
         foreach ($this->cart()->lines() as $line) {
             $stock = $line->product()?->stock();
             if (is_int($stock) && $stock < $line->quantity()) {
+                dump('cant');
                 return false;
             }
         }

@@ -17,6 +17,8 @@ class Router
 
     const CART_ADD = 'kart/cart/add';
 
+    const CART_BUY = 'kart/cart/buy';
+
     const CART_REMOVE = 'kart/cart/remove';
 
     const CART_CHECKOUT = 'kart/cart/checkout';
@@ -234,6 +236,16 @@ class Router
     {
         return self::factory(
             self::current().'/'.self::CART_ADD,
+            [
+                'product' => $product->uuid()->id(),
+            ]
+        );
+    }
+
+    public static function cart_buy(ProductPage $product): string
+    {
+        return self::factory(
+            self::current().'/'.self::CART_BUY,
             [
                 'product' => $product->uuid()->id(),
             ]

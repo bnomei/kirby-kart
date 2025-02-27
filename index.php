@@ -124,6 +124,7 @@ App::plugin(
             'kart/logout' => __DIR__.'/snippets/kart/logout.php',
             'kart/html/cart' => __DIR__.'/snippets/kart/html/cart.php',
             'kart/html/add' => __DIR__.'/snippets/kart/html/add.php',
+            'kart/html/buy' => __DIR__.'/snippets/kart/html/buy.php',
             'kart/html/wishlist' => __DIR__.'/snippets/kart/html/wishlist.php',
             'kart/html/wish-or-forget' => __DIR__.'/snippets/kart/html/wish-or-forget.php',
         ],

@@ -44,7 +44,6 @@ class ProductPage extends Page
                     'reports' => [
                         [
                             'value' => '{{ page.formattedPrice() }}',
-                            'info' => '+ {{ page.formattedTax() }}',
                         ],
                         [
                             'label' => 'bnomei.kart.sold',
@@ -161,6 +160,14 @@ class ProductPage extends Page
     public function add(): string
     {
         return Router::cart_add($this);
+    }
+
+    /**
+     * @kql-allowed
+     */
+    public function buy(): string
+    {
+        return Router::cart_buy($this);
     }
 
     /**
