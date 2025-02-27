@@ -107,7 +107,7 @@ class ProductPage extends Page
                             'width' => '1/2',
                         ],
                         '_dump' => [
-                            'label' => 'bnomei.kart.raw-value',
+                            'label' => 'bnomei.kart.raw-values',
                             'type' => 'info',
                             'theme' => 'info',
                             'text' => '{< page.dump("raw", 82) >}',

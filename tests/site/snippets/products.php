@@ -12,6 +12,10 @@
                 </div>
 
                 <div>
+                    <?php snippet(option('tests.frontend').'/buy', [
+                        'product' => $product,
+                        'redirect' => $product->url(),
+                    ]) ?>
                     <?php snippet(option('tests.frontend').'/add', [
                         'product' => $product,
                         'redirect' => $product->url(),
