@@ -139,7 +139,7 @@ class VirtualPage extends Obj
         return $result;
     }
 
-    public function mixinProduct($data): self
+    public function mixinProduct(array $data = []): self
     {
         // make listed
         $this->num(1);
@@ -148,7 +148,7 @@ class VirtualPage extends Obj
         $this->template('product');
         $this->model('product');
 
-        // store raw data blob
+        // store raw data as yaml encoded array
         $this->raw($data);
 
         return $this;

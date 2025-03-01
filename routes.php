@@ -116,6 +116,7 @@ return function (App $kirby) {
             'action' => function (?string $id = null) {
                 if ($r = Router::denied()) {
                     dump('denied');
+
                     return $r;
                 }
 

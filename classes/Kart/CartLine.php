@@ -46,6 +46,17 @@ class CartLine
         return $this->product;
     }
 
+    public function inStockForQuantity(): bool
+    {
+        $stock = $this->product()->stock();
+
+        if (is_string($stock)) { // unknown stock = unlimited
+            return true;
+        }
+
+        return is_numeric($stock) && $stock >= $this->quantity;
+    }
+
     public function toArray(): array
     {
         return [

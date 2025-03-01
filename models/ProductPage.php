@@ -11,6 +11,10 @@ use Kirby\Toolkit\A;
  * @method Field description()
  * @method Field price()
  * @method Field tax()
+ * @method Field gallery()
+ * @method Field raw()
+ * @method Field categories()
+ * @method Field tags()
  */
 class ProductPage extends Page
 {
@@ -105,6 +109,14 @@ class ProductPage extends Page
                             ],
                             'width' => '1/2',
                         ],
+                        'categories' => [
+                            'label' => 'bnomei.kart.categories',
+                            'type' => 'tags',
+                        ],
+                        'tags' => [
+                            'label' => 'bnomei.kart.tags',
+                            'type' => 'tags',
+                        ],
                         '_dump' => [
                             'label' => 'bnomei.kart.raw-values',
                             'type' => 'info',
@@ -115,6 +127,16 @@ class ProductPage extends Page
                 ],
             ],
         ];
+    }
+
+    public function inStock(): bool
+    {
+        $stock = $this->stock();
+        if (is_string($stock)) {
+            return true;
+        }
+
+        return is_numeric($stock) && $stock > 0;
     }
 
     public function stock(): int|string

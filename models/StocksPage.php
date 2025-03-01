@@ -84,9 +84,11 @@ class StocksPage extends Page
     /**
      * @kql-allowed
      */
-    public function stock(?string $id = null): int
+    public function stock(?string $id = null): ?int
     {
-        return $this->stockPages($id)->sumField('stock')->toInt();
+        $stocks = $this->stockPages($id);
+
+        return $stocks->count() ? $stocks->sumField('stock')->toInt() : null;
     }
 
     public function updateStocks(array $data): ?int

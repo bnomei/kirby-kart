@@ -1,5 +1,5 @@
 <?php $products = page('products')->children(); ?>
-<ul class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-4 gap-y-8 py-8">
+<ul class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-4 gap-y-8">
     <?php /** @var ProductPage $product */
     foreach ($products as $product) { ?>
         <li class="block border border-kart bg-kart text-white rounded-md overflow-hidden">

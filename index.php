@@ -10,6 +10,7 @@ use Kirby\Cms\Page;
 use Kirby\Cms\Pages;
 use Kirby\Cms\User;
 use Kirby\Content\Field;
+use Kirby\Data\Yaml;
 use Kirby\Session\Session;
 use Kirby\Toolkit\A;
 use Kirby\Uuid\Uuid;
@@ -195,9 +196,6 @@ App::plugin(
 
                 return $field;
             },
-            'highlightJson' => function (Field $field): string {
-                return Helper::highlightJson($field->value);
-            },
         ],
         'pagesMethods' => [
             /**
@@ -275,12 +273,15 @@ App::plugin(
                 $content = $this->content->toArray();
                 if ($field) {
                     $content = A::get($content, $field, []);
-                    try {
-                        $content = \Kirby\Data\Yaml::decode($content);
-                    } catch (\Throwable $th) {
+                    try { // if the field is a yaml/json content
+                        $content = is_string($content) ? Yaml::decode($content) : $content;
+                        $content = is_string($content) && json_decode($content) ? json_decode($content) : $content;
+                    } catch (Throwable $th) {
                         // ignore
                     }
                 }
+
+                // format a json for the dump
                 $json = json_encode($content, JSON_PRETTY_PRINT) ?: '';
                 $lines = explode("\n", $json);
                 $wrappedLines = [];

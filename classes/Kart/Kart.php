@@ -179,6 +179,7 @@ class Kart
             $stock = $line->product()?->stock();
             if (is_int($stock) && $stock < $line->quantity()) {
                 dump('cant');
+
                 return false;
             }
         }

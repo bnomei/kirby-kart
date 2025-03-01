@@ -140,7 +140,7 @@ class Stripe extends Provider
             }
         }
 
-        return array_map(function ($data) {
+        return array_map(function (array $data) {
             return (new VirtualPage($data, [
                 // MAP: kirby <=> stripe
                 'id' => 'id',
@@ -152,6 +152,8 @@ class Stripe extends Provider
                     'gallery' => fn ($i) => $this->findImagesFromUrls(
                         A::get($i, 'images', [])
                     ),
+                    'tags' => fn ($i) => A::get($i, 'metadata.tags', []),
+                    'categories' => fn ($i) => A::get($i, 'metadata.categories', []),
                 ],
             ]))->mixinProduct($data)->toArray();
         }, $products);

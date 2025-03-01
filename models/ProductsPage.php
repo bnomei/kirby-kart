@@ -104,4 +104,30 @@ class ProductsPage extends Page
     {
         return $this->children()->filterBy(fn (ProductPage $page) => ! is_numeric($page->stock()));
     }
+
+    /**
+     * @kql-allowed
+     */
+    public function withCategory(string|array $category, bool $any = true): Pages
+    {
+        if (is_string($category)) {
+            $category = [$category];
+        }
+
+        return $any ? $this->children()->filterBy('categories', 'in', $category, ',') :
+            $this->children()->filterBy(fn ($product) => count(array_diff($category, $product->categories()->split())) === 0);
+    }
+
+    /**
+     * @kql-allowed
+     */
+    public function withTag(string|array $tags, bool $any = true): Pages
+    {
+        if (is_string($tags)) {
+            $tags = [$tags];
+        }
+
+        return $any ? $this->children()->filterBy('tags', 'in', $tags, ',') :
+            $this->children()->filterBy(fn ($product) => count(array_diff($tags, $product->tags()->split())) === 0);
+    }
 }

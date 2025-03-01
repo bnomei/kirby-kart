@@ -1,6 +1,7 @@
 <?php
 
 return [
+    'bnomei.kart.categories' => 'Categories',
     'bnomei.kart.customer' => 'Customer',
     'bnomei.kart.description' => 'Description',
     'bnomei.kart.discount' => 'Discount',
@@ -32,6 +33,7 @@ return [
     'bnomei.kart.summary' => 'Summary',
     'bnomei.kart.sync-provider' => 'Sync Provider',
     'bnomei.kart.tax' => 'Tax',
+    'bnomei.kart.tags' => 'Tags',
     'bnomei.kart.tax-rate' => 'Tax rate',
     'bnomei.kart.timestamp' => 'Timestamp',
     'bnomei.kart.total' => 'Total',

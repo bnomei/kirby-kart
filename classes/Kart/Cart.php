@@ -118,6 +118,17 @@ class Cart
         ));
     }
 
+    public function allInStock(): bool
+    {
+        foreach ($this->lines as $line) {
+            if (! $line->inStockForQuantity()) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
     public function count(): int
     {
         return $this->lines()->count();
