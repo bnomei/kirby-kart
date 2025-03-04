@@ -274,7 +274,49 @@ class Kart
      */
     public function orders(): Pages
     {
-        return kart()->page(ContentPageEnum::ORDERS)->children();
+        return kart()->page(ContentPageEnum::ORDERS)?->children() ?: new Pages;
+    }
+
+    /**
+     * @kql-allowed
+     *
+     * @return Pages<string, OrderPage>
+     */
+    public function ordersWithProduct(ProductPage|string|null $product): Pages
+    {
+        return $this->orders()->filterBy(
+            fn (OrderPage $orderPage) => $orderPage->hasProduct($product)
+        );
+    }
+
+    /**
+     * @kql-allowed
+     *
+     * @return Pages<string, OrderPage>
+     */
+    public function ordersWithCustomer(User|string|null $user): Pages
+    {
+        if (is_string($user)) {
+            $user = $this->kirby()->users()->findBy('email', $user);
+        }
+
+        return $this->orders()->filterBy(
+            fn (OrderPage $orderPage) => $user && $orderPage->customer()->toUser()?->is($user)
+        );
+    }
+
+    /**
+     * @kql-allowed
+     */
+    public function ordersWithInvoiceNumber(int|string $invoiceNumber): OrderPage|Page|null
+    {
+        if (is_string($invoiceNumber)) {
+            $invoiceNumber = ltrim($invoiceNumber, '0');
+        }
+
+        return $this->orders()->filterBy(
+            fn (OrderPage $orderPage) => $orderPage->invnumber()->toInt() === $invoiceNumber
+        )->first();
     }
 
     /**
@@ -284,7 +326,7 @@ class Kart
      */
     public function products(): Pages
     {
-        return kart()->page(ContentPageEnum::PRODUCTS)->children();
+        return kart()->page(ContentPageEnum::PRODUCTS)?->children() ?: new Pages;
     }
 
     /**
@@ -359,6 +401,6 @@ class Kart
      */
     public function stocks(): Pages
     {
-        return kart()->page(ContentPageEnum::STOCKS)->children();
+        return kart()->page(ContentPageEnum::STOCKS)?->children() ?: new Pages;
     }
 }

@@ -90,44 +90,6 @@ class OrdersPage extends Page
         );
     }
 
-    /**
-     * @kql-allowed
-     */
-    public function withProduct(ProductPage|string|null $product): Pages
-    {
-        return $this->children()->filterBy(
-            fn (OrderPage $orderPage) => $orderPage->hasProduct($product)
-        );
-    }
-
-    /**
-     * @kql-allowed
-     */
-    public function withCustomer(User|string|null $user): Pages
-    {
-        if (is_string($user)) {
-            $user = $this->kirby()->users()->findBy('email', $user);
-        }
-
-        return $this->children()->filterBy(
-            fn (OrderPage $orderPage) => $user && $orderPage->customer()->toUser()?->is($user)
-        );
-    }
-
-    /**
-     * @kql-allowed
-     */
-    public function withInvoiceNumber(int|string $invoiceNumber): ?Page
-    {
-        if (is_string($invoiceNumber)) {
-            $invoiceNumber = ltrim($invoiceNumber, '0');
-        }
-
-        return $this->children()->filterBy(
-            fn (OrderPage $orderPage) => $orderPage->invnumber()->toInt() === $invoiceNumber
-        )->first();
-    }
-
     public function createOrder(array $data, ?User $customer): ?Page
     {
         if (! $this->kirby()->option('bnomei.kart.orders.enabled')) {

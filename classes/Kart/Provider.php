@@ -3,6 +3,7 @@
 namespace Bnomei\Kart;
 
 use Closure;
+use CustomerUser;
 use Kirby\Cache\Cache;
 use Kirby\Cms\App;
 use Kirby\Cms\User;
@@ -39,6 +40,11 @@ abstract class Provider
     public function title(): string
     {
         return ucfirst($this->name);
+    }
+
+    public function name(): string
+    {
+        return $this->name;
     }
 
     public function option(string $key, bool $resolveCallables = true): mixed
@@ -181,6 +187,8 @@ abstract class Provider
         if (! $user) {
             return false;
         }
+
+        /** @var CustomerUser $user */
 
         // search the user account content (KLUB or other fulfillment)
         if ($user->hasMadePaymentFor($this->name, $product)) {

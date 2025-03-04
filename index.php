@@ -1,6 +1,5 @@
 <?php
 
-use Bnomei\Kart\ContentPageEnum;
 use Bnomei\Kart\Helper;
 use Bnomei\Kart\Kart;
 use Bnomei\Kart\License;
@@ -35,7 +34,7 @@ App::plugin(
                 'fastspring' => true,
                 'gumroad' => true,
                 'invoiceninja' => true,
-                'kirby' => true,
+                'kirbycms' => true,
                 'lemonsqueeze' => true,
                 'mollie' => true,
                 'paddle' => true,
@@ -93,12 +92,12 @@ App::plugin(
                     ];
                 },
             ],
-            'provider' => 'kirby', // see ProviderEnum (kirby, stripe, mollie, paddle, ...) or use \Kart\Provider\Kirby::class etc.
+            'provider' => 'kirbycms', // see ProviderEnum (kirbycms, stripe, mollie, paddle, ...) or use \Kart\Provider\Kirby::class etc.
             'providers' => [
                 'fastspring' => [],
                 'gumroad' => [],
                 'invoiceninja' => [],
-                'kirby' => [
+                'kirbycms' => [
                     'virtual' => false,
                 ],
                 'lemonsqueeze' => [],
@@ -271,6 +270,12 @@ App::plugin(
             },
         ],
         'pageMethods' => [
+            /**
+             * @kql-allowed
+             */
+            'kart' => function (): Kart {
+                return kart();
+            },
             'dump' => function (?string $field = null, int $maxWidth = 140): string {
                 $content = $this->content->toArray();
                 if ($field) {
@@ -314,13 +319,21 @@ App::plugin(
             /**
              * @kql-allowed
              */
-            'orders' => function (): ?Pages {
-                return kart()->page(ContentPageEnum::ORDERS)?->children()->filterBy(fn ($order) => $order->customer()->toUser()?->id() === $this->id());
+            'kart' => function (): Kart {
+                return kart();
             },
             /**
              * @kql-allowed
              */
-            'completedOrders' => function (): ?Pages {
+            'orders' => function (): ?Pages {
+                return kart()->orders()
+                    ->filterBy(fn ($order) => $order->customer()->toUser()?->id() === $this->id());
+            },
+            /**
+             * @kql-allowed
+             */
+            'completedOrders' => function (): Pages {
+                /** @var CustomerUser $this */
                 return $this->orders()
                     ->filterBy(fn ($order) => $order->paymentComplete()->toBool());
             },
@@ -328,6 +341,7 @@ App::plugin(
              * @kql-allowed
              */
             'hasMadePaymentFor' => function (string $provider, ProductPage $productPage): bool {
+                /** @var CustomerUser $this */
                 if ($this->$provider()->isEmpty()) {
                     return false;
                 }

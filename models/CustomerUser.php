@@ -1,7 +1,25 @@
 <?php
 
+use Kirby\Cms\Pages;
 use Kirby\Cms\User;
+use Kirby\Content\Field;
 
+/**
+ * @method Field fastspring()
+ * @method Field gumroad()
+ * @method Field invoiceninja()
+ * @method Field kirbycms()
+ * @method Field lemonsqueeze()
+ * @method Field mollie()
+ * @method Field paddle()
+ * @method Field payone()
+ * @method Field paypal()
+ * @method Field snipcart()
+ * @method Field stripe()
+ * @method bool hasMadePaymentFor(string $provider, ProductPage $productPage)
+ * @method Pages<string, OrderPage> orders()
+ * @method Pages<string, OrderPage> completedOrders()
+ */
 class CustomerUser extends User
 {
     public static function phpBlueprint(): array
