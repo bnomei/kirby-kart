@@ -6,11 +6,16 @@ use Bnomei\Kart\Mixins\ContentPages;
 use Bnomei\Kart\Provider\Kirby;
 use Exception;
 use Kirby\Cms\App;
+use Kirby\Cms\Collection;
 use Kirby\Cms\Page;
+use Kirby\Cms\Pages;
 use Kirby\Cms\User;
 use Kirby\Toolkit\A;
 use Kirby\Toolkit\Str;
 use Kirby\Toolkit\V;
+use OrderPage;
+use ProductPage;
+use StockPage;
 
 class Kart
 {
@@ -58,13 +63,13 @@ class Kart
         }
     }
 
-    public function message(?string $message = null, string $key = 'default'): ?string
+    public function message(?string $message = null, string $channel = 'default'): ?string
     {
         if ($message === null) {
-            return $this->kirby()->session()->pull('bnomei.kart.message-'.$key);
+            return $this->kirby()->session()->pull('bnomei.kart.message-'.$channel);
         }
 
-        $this->kirby()->session()->set('bnomei.kart.message-'.$key, $message);
+        $this->kirby()->session()->set('bnomei.kart.message-'.$channel, $message);
 
         return null;
     }
@@ -178,7 +183,7 @@ class Kart
         foreach ($this->cart()->lines() as $line) {
             $stock = $line->product()?->stock();
             if (is_int($stock) && $stock < $line->quantity()) {
-                dump('cant');
+                kart()->message('bnomei.kart.out-of-stock', 'checkout');
 
                 return false;
             }
@@ -204,5 +209,156 @@ class Kart
         }
 
         return $customer;
+    }
+
+    /**
+     * @return Collection<string, Category>
+     */
+    public function categories(): Collection
+    {
+        $products = kart()->page(ContentPageEnum::PRODUCTS);
+        $categories = $products->children()->index()->pluck('categories', ',', true);
+        sort($categories);
+
+        $category = param('category');
+        $tag = param('tag');
+
+        return new Collection(array_map(fn ($c) => new Category([
+            'id' => $c,
+            'text' => t('category.'.$c, $c),
+            'value' => $c,
+            'isActive' => $c === $category,
+            'url' => $products->url().'?category='.$c,
+            'urlWithParams' => url(
+                kirby()->request()->path(),
+                ['params' => [
+                    'category' => $c === $category ? null : $c,
+                    'tag' => $tag,
+                ]]
+            ),
+        ]), $categories));
+    }
+
+    /**
+     * @return Collection<string, Tag>
+     */
+    public function tags(): Collection
+    {
+        $products = kart()->page(ContentPageEnum::PRODUCTS);
+        $tags = $products->children()->index()->pluck('tags', ',', true);
+        sort($tags);
+
+        $category = param('category');
+        $tag = param('tag');
+
+        return new Collection(array_map(fn ($t) => new Tag([
+            'id' => $t,
+            'text' => t('category.'.$t, $t),
+            'value' => $t,
+            'isActive' => $t === $tag,
+            'url' => $products->url().'?tag='.$t,
+            'urlWithParams' => url(
+                kirby()->request()->path(),
+                ['params' => [
+                    'category' => $category,
+                    'tag' => $t === $tag ? null : $t,
+                ]]
+            ),
+        ]), $tags));
+    }
+
+    /**
+     * @kql-allowed
+     *
+     * @return Pages<string, OrderPage>
+     */
+    public function orders(): Pages
+    {
+        return kart()->page(ContentPageEnum::ORDERS)->children();
+    }
+
+    /**
+     * @kql-allowed
+     *
+     * @return Pages<string, ProductPage>
+     */
+    public function products(): Pages
+    {
+        return kart()->page(ContentPageEnum::PRODUCTS)->children();
+    }
+
+    /**
+     * @kql-allowed
+     *
+     * @return Pages<string, ProductPage>
+     */
+    public function productsByParams(): Pages
+    {
+        $products = $this->products();
+
+        if ($category = param('category')) {
+            $products = $products->filterBy('categories', $category, ',');
+        }
+        if ($categories = param('categories')) {
+            $products = $products->filterBy('categories', 'in', explode(',', $categories), ',');
+        }
+        if ($tag = param('tag')) {
+            $products = $products->filterBy('tags', $tag, ',');
+        }
+        if ($tags = param('tags')) {
+            $products = $products->filterBy('tags', 'in', explode(',', $tags), ',');
+        }
+
+        return $products;
+    }
+
+    /**
+     * @kql-allowed
+     *
+     * @return Pages<string, ProductPage>
+     */
+    public function productsWithoutStocks(): Pages
+    {
+        return $this->products()->filterBy(fn (ProductPage $page) => ! is_numeric($page->stock()));
+    }
+
+    /**
+     * @kql-allowed
+     *
+     * @return Pages<string, ProductPage>
+     */
+    public function productsWithCategory(string|array $category, bool $any = true): Pages
+    {
+        if (is_string($category)) {
+            $category = [$category];
+        }
+
+        return $any ? $this->products()->filterBy('categories', 'in', $category, ',') :
+            $this->products()->filterBy(fn ($product) => count(array_diff($category, $product->categories()->split())) === 0);
+    }
+
+    /**
+     * @kql-allowed
+     *
+     * @return Pages<string, ProductPage>
+     */
+    public function productsWithTag(string|array $tags, bool $any = true): Pages
+    {
+        if (is_string($tags)) {
+            $tags = [$tags];
+        }
+
+        return $any ? $this->products()->filterBy('tags', 'in', $tags, ',') :
+            $this->products()->filterBy(fn ($product) => count(array_diff($tags, $product->tags()->split())) === 0);
+    }
+
+    /**
+     * @kql-allowed
+     *
+     * @return Pages<string, StockPage>
+     */
+    public function stocks(): Pages
+    {
+        return kart()->page(ContentPageEnum::STOCKS)->children();
     }
 }

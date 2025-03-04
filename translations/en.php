@@ -15,6 +15,7 @@ return [
     'bnomei.kart.latest-order' => 'Latest Order',
     'bnomei.kart.local-storage' => 'Local',
     'bnomei.kart.now' => 'Now',
+    'bnomei.kart.out-of-stock' => 'Item out of stock',
     'bnomei.kart.orders' => 'Orders',
     'bnomei.kart.orders-30' => 'Orders (30 days)',
     'bnomei.kart.paidDate' => 'Paid Date',

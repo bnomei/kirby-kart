@@ -145,12 +145,20 @@ class ProductPage extends Page
                                 'categories' => [
                                     'label' => 'bnomei.kart.categories',
                                     'type' => 'tags',
+                                    'options' => [
+                                        'type' => 'query',
+                                        'query' => 'page.siblings.pluck("categories", ",", true)',
+                                    ],
                                     'translate' => false,
                                     'virtual' => true,
                                 ],
                                 'tags' => [
                                     'label' => 'bnomei.kart.tags',
                                     'type' => 'tags',
+                                    'options' => [
+                                        'type' => 'query',
+                                        'query' => 'page.siblings.pluck("tags", ",", true)',
+                                    ],
                                     'translate' => false,
                                     'virtual' => true,
                                 ],

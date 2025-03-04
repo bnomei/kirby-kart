@@ -1,0 +1,21 @@
+<?php
+
+namespace Bnomei\Kart;
+
+use Kirby\Toolkit\Obj;
+
+/**
+ * @method string id()
+ * @method string text()
+ * @method string value()
+ * @method bool isActive()
+ * @method string url()
+ * @method string urlWithParams()
+ */
+class Tag extends Obj
+{
+    public function __toString(): string
+    {
+        return $this->text();
+    }
+}

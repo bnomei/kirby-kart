@@ -17,6 +17,7 @@ return [
     'bnomei.kart.now' => 'Jetzt',
     'bnomei.kart.orders' => 'Bestellungen',
     'bnomei.kart.orders-30' => 'Bestellungen (30 Tage)',
+    'bnomei.kart.out-of-stock' => 'Unzureichender Warenbestand',
     'bnomei.kart.paidDate' => 'Zahlungsdatum',
     'bnomei.kart.paymentcomplete' => 'Zahlung war erfolgreich',
     'bnomei.kart.paymentmethod' => 'Zahlungsart',
