@@ -57,8 +57,6 @@ class ProductsPage extends Page
                     'type' => 'pages',
                     'layout' => 'cards',
                     'search' => true,
-                    'create' => ! defined('KART_PRODUCTS_UPDATE') || constant('KART_PRODUCTS_UPDATE') === false,
-                    'sortable' => ! defined('KART_PRODUCTS_UPDATE') || constant('KART_PRODUCTS_UPDATE') === false,
                     'template' => 'product', // maps to ProductPage model
                     'info' => '{{ page.formattedPrice }}',
                     'image' => [
@@ -83,9 +81,19 @@ class ProductsPage extends Page
             return $this->children;
         }
 
-        return $this->children = parent::children()->merge(
-            Pages::factory(kart()->provider()->products(), $this)
-        );
+        $this->children = parent::children();
+
+        $this->kirby()->impersonate('kirby', function () {
+            $uuid = kirby()->option('bnomei.kart.products.product.uuid');
+            foreach (kart()->provider()->products() as $product) {
+                if ($this->children->find($uuid($this, $product))) {
+                    continue;
+                }
+                $this->createChild($product);
+            }
+        });
+
+        return $this->children;
     }
 
     /**

@@ -3,6 +3,7 @@
 return [
     'bnomei.kart.categories' => 'Categories',
     'bnomei.kart.customer' => 'Customer',
+    'bnomei.kart.created' => 'Created at',
     'bnomei.kart.description' => 'Description',
     'bnomei.kart.discount' => 'Discount',
     'bnomei.kart.gallery' => 'Gallery',
@@ -12,6 +13,7 @@ return [
     'bnomei.kart.latest' => 'Latest',
     'bnomei.kart.latest-invoice-number' => 'Latest Invoice Number',
     'bnomei.kart.latest-order' => 'Latest Order',
+    'bnomei.kart.local-storage' => 'Local',
     'bnomei.kart.now' => 'Now',
     'bnomei.kart.orders' => 'Orders',
     'bnomei.kart.orders-30' => 'Orders (30 days)',
@@ -22,6 +24,7 @@ return [
     'bnomei.kart.product' => 'Product',
     'bnomei.kart.products' => 'Products',
     'bnomei.kart.provider' => 'Provider',
+    'bnomei.kart.provider-storage' => 'Provider',
     'bnomei.kart.quantity' => 'Quantity',
     'bnomei.kart.raw-values' => 'Provider data',
     'bnomei.kart.revenue-30' => 'Revenue (30 days)',

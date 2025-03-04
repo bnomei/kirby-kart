@@ -3,6 +3,7 @@
 namespace Bnomei\Kart;
 
 use AllowDynamicProperties;
+use Closure;
 use Kirby\Data\Yaml;
 use Kirby\Toolkit\A;
 use Kirby\Toolkit\Obj;
@@ -46,7 +47,7 @@ class VirtualPage extends Obj
         $this->raw([]);
         $this->template('default'); // => model
         $this->title(''); // => slug & id
-        $this->uuid(Uuid::generate()); // => content.uuid
+        // $this->uuid(Uuid::generate()); // handled externally
 
         // load
         foreach ($map as $property => $path) {
@@ -54,7 +55,7 @@ class VirtualPage extends Obj
         }
     }
 
-    private function resolveMap(array $data, string|array|\Closure $path): mixed
+    private function resolveMap(array $data, string|array|Closure $path): mixed
     {
         if (is_string($path)) {
             return A::get($data, $path); // dot-notion support
@@ -65,7 +66,7 @@ class VirtualPage extends Obj
             }
 
             return $out;
-        } elseif ($path instanceof \Closure) {
+        } elseif ($path instanceof Closure) {
             return $path($data);
         }
 
@@ -141,9 +142,6 @@ class VirtualPage extends Obj
 
     public function mixinProduct(array $data = []): self
     {
-        // make listed
-        $this->num(1);
-
         // set template and model for products
         $this->template('product');
         $this->model('product');

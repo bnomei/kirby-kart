@@ -1,5 +1,6 @@
 <?php
 
+use Bnomei\Kart\ContentPageEnum;
 use Bnomei\Kart\Helper;
 use Kirby\Cms\Page;
 use Kirby\Content\Field;
@@ -17,18 +18,18 @@ class OrderPage extends Page
 {
     public static function create(array $props): Page
     {
-        $orders = kart()->page(\Bnomei\Kart\ContentPageEnum::ORDERS);
+        $parent = kart()->page(ContentPageEnum::ORDERS);
 
         // enforce unique but short slug with the option to overwrite it in a closure
         $uuid = kirby()->option('bnomei.kart.orders.order.uuid');
         if ($uuid instanceof Closure) {
-            $uuid = $uuid($orders, $props);
-            $props['slug'] = Str::slug(str_replace('or_', '', $uuid));
+            $uuid = $uuid($parent, $props);
+            $props['slug'] = Str::slug($uuid);
             $props['content']['uuid'] = $uuid;
             $props['content']['title'] = strtoupper($uuid);
         }
 
-        $props['parent'] = $orders;
+        $props['parent'] = $parent;
         $props['isDraft'] = false;
         $props['template'] = kirby()->option('bnomei.kart.orders.order.template', 'order');
         $props['model'] = kirby()->option('bnomei.kart.orders.order.model', 'order');

@@ -7,6 +7,7 @@ use Kirby\Cache\Cache;
 use Kirby\Cms\App;
 use Kirby\Cms\User;
 use Kirby\Filesystem\F;
+use Kirby\Toolkit\A;
 use Kirby\Toolkit\Date;
 use ProductPage;
 
@@ -20,10 +21,13 @@ abstract class Provider
 
     private array $options;
 
+    private array $cache;
+
     public function __construct(App $kirby)
     {
         $this->kirby = $kirby;
         $this->kart = $kirby->site()->kart();
+        $this->cache = [];
         $this->options = [];
     }
 
@@ -52,6 +56,11 @@ abstract class Provider
         return $option;
     }
 
+    public function virtual(): bool|string
+    {
+        return $this->kirby()->option("bnomei.kart.providers.{$this->name}.virtual", true);
+    }
+
     public function sync(ContentPageEnum|string|null $sync): int
     {
         $all = array_map(fn ($c) => $c->value, ContentPageEnum::cases());
@@ -72,6 +81,7 @@ abstract class Provider
         $t = microtime(true);
 
         foreach ($sync as $interface) {
+            $this->cache[$interface] = null;
             $this->cache()->remove($interface);
             $this->$interface();
         }
@@ -110,6 +120,12 @@ abstract class Provider
 
     public function read(string $interface): array
     {
+        // static per request cache
+        if ($data = A::get($this->cache, $interface)) {
+            return $data;
+        }
+
+        // file cache
         if ($data = $this->cache()->get($interface)) {
             return $data;
         }
@@ -127,6 +143,7 @@ abstract class Provider
         }
 
         // update timestamp
+        $this->cache[$interface] = $data;
         $t = str_replace('+00:00', '', Date::now()->toString());
         $this->cache()->set('updatedAt', $t);
         $this->cache()->set('updatedAt-'.$interface, $t);

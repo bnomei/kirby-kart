@@ -2,10 +2,13 @@
 
 use Bnomei\Kart\ContentPageEnum;
 use Bnomei\Kart\Helper;
+use Bnomei\Kart\ProductStorage;
 use Bnomei\Kart\Router;
 use Kirby\Cms\Page;
 use Kirby\Content\Field;
+use Kirby\Content\Storage;
 use Kirby\Toolkit\A;
+use Kirby\Toolkit\Str;
 
 /**
  * @method Field description()
@@ -20,110 +23,156 @@ class ProductPage extends Page
 {
     public static function create(array $props): Page
     {
+        $parent = kart()->page(ContentPageEnum::PRODUCTS);
+
         // enforce unique but short slug with the option to overwrite it in a closure
         $uuid = kirby()->option('bnomei.kart.products.product.uuid');
         if ($uuid instanceof Closure) {
-            $uuid = $uuid(kart()->page(ContentPageEnum::PRODUCTS), $props);
+            $uuid = $uuid($parent, $props);
+            $props['slug'] = Str::slug($uuid);
             $props['content']['uuid'] = $uuid;
         }
 
+        $props['parent'] = $parent;
+        $props['isDraft'] = false;
         $props['template'] = kirby()->option('bnomei.kart.products.product.template', 'product');
         $props['model'] = kirby()->option('bnomei.kart.products.product.model', 'product');
 
-        return parent::create($props);
+        /** @var ProductPage $p */
+        $p = parent::create($props);
+        $p = $p->changeStatus('listed');
+
+        return $p;
+    }
+
+    public function storage(): Storage
+    {
+        $this->storage ??= new ProductStorage(model: $this);
+
+        return $this->storage;
     }
 
     public static function phpBlueprint(): array
     {
         return [
             'name' => 'product',
+            'num' => '{{ page.created.toDate("YmdHis") }}',
             'options' => [
                 'changeTemplate' => false,
-                'update' => ! defined('KART_PRODUCTS_UPDATE') || constant('KART_PRODUCTS_UPDATE') === false,
             ],
-            'sections' => [
-                'stats' => [
-                    'label' => 'bnomei.kart.summary',
-                    'type' => 'stats',
-                    'reports' => [
-                        [
-                            'value' => '{{ page.formattedPrice() }}',
+            'tabs' => [
+                'provider' => [
+                    'label' => 'bnomei.kart.provider-storage',
+                    'icon' => 'globe',
+                    'sections' => [
+                        'stats' => [
+                            'label' => 'bnomei.kart.summary',
+                            'type' => 'stats',
+                            'reports' => [
+                                [
+                                    'value' => '{{ page.formattedPrice() }}',
+                                ],
+                                [
+                                    'label' => 'bnomei.kart.sold',
+                                    'value' => '{{ page.sold }}',
+                                    'link' => '{{ site.kart.page("orders").url }}',
+                                ],
+                                [
+                                    'label' => 'bnomei.kart.stock',
+                                    'value' => '{{ page.stock }}',
+                                    'link' => '{{ page.stockUrl }}',
+                                ],
+                            ],
                         ],
-                        [
-                            'label' => 'bnomei.kart.sold',
-                            'value' => '{{ page.sold }}',
-                            'link' => '{{ site.kart.page("orders").url }}',
-                        ],
-                        [
-                            'label' => 'bnomei.kart.stock',
-                            'value' => '{{ page.stock }}',
-                            'link' => '{{ page.stockUrl }}',
+                        'meta' => [
+                            'type' => 'fields',
+                            'fields' => [
+                                'line' => [
+                                    'type' => 'line',
+                                ],
+                                'price' => [
+                                    'label' => 'bnomei.kart.price',
+                                    'type' => 'number',
+                                    'min' => 0,
+                                    'step' => 0.01,
+                                    'default' => 0,
+                                    // 'required' => true, // does not work with pruning
+                                    'after' => '{{ kirby.option("bnomei.kart.currency") }}',
+                                    'width' => '1/2',
+                                    'translate' => false,
+                                    'virtual' => true,
+                                ],
+                                /* tax and taxrate are better of handles by the checkout flow
+                                'taxrate' => [
+                                    'label' => 'bnomei.kart.taxrate',
+                                    'type' => 'number',
+                                    'min' => 0,
+                                    'max' => 100,
+                                    'step' => 0.01,
+                                    'default' => 0,
+                                    'required' => true,
+                                    'after' => '%',
+                                    'width' => '1/4',
+                                ],
+                                */
+                                'created' => [
+                                    'label' => 'bnomei.kart.created',
+                                    'type' => 'date',
+                                    'time' => true,
+                                    'default' => 'now',
+                                    'translate' => false,
+                                    'width' => '1/2',
+                                    // 'virtual' => true, // needed for `num`
+                                ],
+                                'description' => [
+                                    'label' => 'bnomei.kart.description',
+                                    'type' => 'textarea',
+                                    'width' => '1/2',
+                                    'virtual' => true,
+                                ],
+                                'gallery' => [
+                                    'label' => 'bnomei.kart.gallery',
+                                    'type' => 'files',
+                                    'query' => 'page.parent.images',
+                                    'uploads' => [
+                                        'parent' => 'page.parent',
+                                        'template' => 'product-gallery',
+                                    ],
+                                    'width' => '1/2',
+                                    'translate' => false,
+                                    'virtual' => true,
+                                ],
+                                'categories' => [
+                                    'label' => 'bnomei.kart.categories',
+                                    'type' => 'tags',
+                                    'translate' => false,
+                                    'virtual' => true,
+                                ],
+                                'tags' => [
+                                    'label' => 'bnomei.kart.tags',
+                                    'type' => 'tags',
+                                    'translate' => false,
+                                    'virtual' => true,
+                                ],
+                                'raw' => [
+                                    'type' => 'hidden',
+                                    'translate' => false,
+                                    'virtual' => true,
+                                ],
+                                '_dump' => [
+                                    'label' => 'bnomei.kart.raw-values',
+                                    'type' => 'info',
+                                    'theme' => 'info',
+                                    'text' => '{< page.dump("raw", 82) >}',
+                                ],
+                            ],
                         ],
                     ],
                 ],
-                'meta' => [
-                    'type' => 'fields',
-                    'fields' => [
-                        'line' => [
-                            'type' => 'line',
-                        ],
-                        'price' => [
-                            'label' => 'bnomei.kart.price',
-                            'type' => 'number',
-                            'min' => 0,
-                            'step' => 0.01,
-                            'default' => 0,
-                            'required' => true,
-                            'after' => '{{ kirby.option("bnomei.kart.currency") }}',
-                            'width' => '1/2',
-                        ],
-                        /* tax and taxrate are better of handles by the checkout flow
-                        'taxrate' => [
-                            'label' => 'bnomei.kart.taxrate',
-                            'type' => 'number',
-                            'min' => 0,
-                            'max' => 100,
-                            'step' => 0.01,
-                            'default' => 0,
-                            'required' => true,
-                            'after' => '%',
-                            'width' => '1/4',
-                        ],
-                        */
-                        'gap' => [
-                            'type' => 'gap',
-                            'width' => '1/2',
-                        ],
-                        'description' => [
-                            'label' => 'bnomei.kart.description',
-                            'type' => 'textarea',
-                            'width' => '1/2',
-                        ],
-                        'gallery' => [
-                            'label' => 'bnomei.kart.gallery',
-                            'type' => 'files',
-                            'query' => 'page.parent.images',
-                            'uploads' => [
-                                'parent' => 'page.parent',
-                                'template' => 'product-gallery',
-                            ],
-                            'width' => '1/2',
-                        ],
-                        'categories' => [
-                            'label' => 'bnomei.kart.categories',
-                            'type' => 'tags',
-                        ],
-                        'tags' => [
-                            'label' => 'bnomei.kart.tags',
-                            'type' => 'tags',
-                        ],
-                        '_dump' => [
-                            'label' => 'bnomei.kart.raw-values',
-                            'type' => 'info',
-                            'theme' => 'info',
-                            'text' => '{< page.dump("raw", 82) >}',
-                        ],
-                    ],
+                'local' => [
+                    'label' => 'bnomei.kart.local-storage',
+                    'icon' => 'server',
+                    'extends' => 'tabs/product',
                 ],
             ],
         ];

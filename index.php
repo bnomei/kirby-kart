@@ -13,7 +13,6 @@ use Kirby\Content\Field;
 use Kirby\Data\Yaml;
 use Kirby\Session\Session;
 use Kirby\Toolkit\A;
-use Kirby\Uuid\Uuid;
 
 @include_once __DIR__.'/vendor/autoload.php';
 
@@ -57,21 +56,21 @@ App::plugin(
                 'enabled' => true,
                 'page' => 'orders',
                 'order' => [
-                    'uuid' => fn (OrdersPage $orders, array $props) => 'or_'.Helper::nonAmbiguousUuid(7), // aka order id
+                    'uuid' => fn (?OrdersPage $orders, array $props) => 'or-'.Helper::nonAmbiguousUuid(7), // aka order id
                 ],
             ],
             'products' => [
                 'enabled' => true,
                 'page' => 'products',
                 'product' => [
-                    'uuid' => fn (ProductsPage $stocks, array $props) => 'pr_'.Uuid::generate(13),
+                    'uuid' => fn (?ProductsPage $products, array $props) => 'pr-'.Helper::hash(A::get($props, 'id')),
                 ],
             ],
             'stocks' => [
                 'enabled' => true,
                 'page' => 'stocks',
                 'stock' => [
-                    'uuid' => fn (StocksPage $stocks, array $props) => 'st_'.Uuid::generate(13),
+                    'uuid' => fn (?StocksPage $stocks, array $props) => 'st-'.Helper::nonAmbiguousUuid(13),
                 ],
             ],
             'router' => [
@@ -99,7 +98,9 @@ App::plugin(
                 'fastspring' => [],
                 'gumroad' => [],
                 'invoiceninja' => [],
-                'kirby' => [],
+                'kirby' => [
+                    'virtual' => false,
+                ],
                 'lemonsqueeze' => [],
                 'mollie' => [],
                 'paddle' => [],
@@ -113,6 +114,7 @@ App::plugin(
                         // https://docs.stripe.com/api/checkout/sessions/create
                         return [];
                     },
+                    'virtual' => 'prune', // 'prune', // do not write virtual fields to file
                 ],
             ],
         ],
@@ -134,7 +136,7 @@ App::plugin(
             'de' => require_once __DIR__.'/translations/de.php',
         ],
         'blueprints' => [
-            'users/customer' => require_once __DIR__.'/blueprints/users/customer.php',
+            'users/customer' => CustomerUser::phpBlueprint(),
             'pages/order' => OrderPage::phpBlueprint(),
             'pages/orders' => OrdersPage::phpBlueprint(),
             'pages/product' => ProductPage::phpBlueprint(),
@@ -340,6 +342,21 @@ App::plugin(
             },
         ],
         'commands' => [
+            'kart:blueprints-publish' => [
+                'description' => 'Publish Kart Blueprints',
+                'command' => static function ($cli): void {
+                    foreach ([
+                        'users/customer' => CustomerUser::class,
+                        'pages/order' => OrderPage::class,
+                        'pages/orders' => OrdersPage::class,
+                        'pages/product' => ProductPage::class,
+                        'pages/products' => ProductsPage::class,
+                        'pages/stock' => StockPage::class,
+                    ] as $name => $class) {
+                        Yaml::write(__DIR__."/blueprints/{$name}.yml", $class::phpBlueprint()); // @phpstan-ignore-line
+                    }
+                },
+            ],
             'kart:flush' => [
                 'description' => 'Flush Kart Cache(s)',
                 'args' => [

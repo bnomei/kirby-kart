@@ -43,6 +43,7 @@
       "Bnomei\\Kart\\": "classes/Kart"
     },
     "files": [
+      "models/CustomerUser.php",
       "models/OrderPage.php",
       "models/OrdersPage.php",
       "models/ProductPage.php",
@@ -65,7 +66,7 @@
     "ext-intl": "*"
   },
   "require-dev": {
-    "getkirby/cms": "^5.0.0-beta.3",
+    "getkirby/cms": "dev-v5/develop as 5.0.0",
     "larastan/larastan": "^v3.0.0",
     "laravel/pint": "^1.13",
     "pestphp/pest": "^v3.5.1",
@@ -78,6 +79,7 @@
     "test": "./vendor/bin/pest --profile",
     "dist": [
       "composer fix",
+      "vendor/bin/kirby kart:blueprints-publish",
       "composer install --no-dev --optimize-autoloader",
       "git rm -rf --cached .; git add .;",
       "echo -n 'Li9jbGFzc2VzL0thcnQvTGljZW5zZS5waHA=' | base64 -D | xargs -I {} shasum -a 1 {} | awk '{print $1}'"

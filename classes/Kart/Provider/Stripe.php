@@ -3,6 +3,7 @@
 namespace Bnomei\Kart\Provider;
 
 use Bnomei\Kart\CartLine;
+use Bnomei\Kart\ContentPageEnum;
 use Bnomei\Kart\Provider;
 use Bnomei\Kart\ProviderEnum;
 use Bnomei\Kart\Router;
@@ -141,21 +142,26 @@ class Stripe extends Provider
         }
 
         return array_map(function (array $data) {
-            return (new VirtualPage($data, [
-                // MAP: kirby <=> stripe
-                'id' => 'id',
-                'uuid' => 'id',
-                'title' => 'name',
-                'content' => [
-                    'description' => 'description',
-                    'price' => fn ($i) => A::get($i, 'default_price.unit_amount', 0) / 100.0,
-                    'gallery' => fn ($i) => $this->findImagesFromUrls(
-                        A::get($i, 'images', [])
-                    ),
-                    'tags' => fn ($i) => A::get($i, 'metadata.tags', []),
-                    'categories' => fn ($i) => A::get($i, 'metadata.categories', []),
+            // NOTE: changes here require a cache flush to take effect
+            return (new VirtualPage(
+                $data,
+                [
+                    // MAP: kirby <=> stripe
+                    'id' => 'id', // id, uuid and slug will be hashed in ProductPage::create based on this `id`
+                    'title' => 'name',
+                    'content' => [
+                        'description' => 'description',
+                        'price' => fn ($i) => A::get($i, 'default_price.unit_amount', 0) / 100.0,
+                        'gallery' => fn ($i) => $this->findImagesFromUrls(
+                            A::get($i, 'images', [])
+                        ),
+                        'tags' => fn ($i) => A::get($i, 'metadata.tags', []),
+                        'categories' => fn ($i) => A::get($i, 'metadata.categories', []),
+                        'created' => fn ($i) => date('Y-m-d H:i:s', $i['created']),
+                    ],
                 ],
-            ]))->mixinProduct($data)->toArray();
+                $this->kart->page(ContentPageEnum::PRODUCTS))
+            )->mixinProduct($data)->toArray();
         }, $products);
     }
 }

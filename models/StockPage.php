@@ -1,5 +1,6 @@
 <?php
 
+use Bnomei\Kart\ContentPageEnum;
 use Kirby\Cms\Page;
 use Kirby\Content\Field;
 use Kirby\Toolkit\A;
@@ -14,15 +15,18 @@ class StockPage extends Page
 {
     public static function create(array $props): Page
     {
+        $parent = kart()->page(ContentPageEnum::STOCKS);
+
         // enforce unique but short slug with the option to overwrite it in a closure
         $uuid = kirby()->option('bnomei.kart.stocks.stock.uuid');
         if ($uuid instanceof Closure) {
-            $uuid = $uuid(kart()->page(\Bnomei\Kart\ContentPageEnum::STOCKS), $props);
-            $props['slug'] = Str::slug(str_replace('st_', '', $uuid));
+            $uuid = $uuid($parent, $props);
+            $props['slug'] = Str::slug($uuid);
             $props['content']['uuid'] = $uuid;
             $props['content']['title'] = strtoupper($uuid);
         }
 
+        $props['parent'] = $parent;
         $props['isDraft'] = false;
         $props['template'] = kirby()->option('bnomei.kart.stocks.stock.template', 'stock');
         $props['model'] = kirby()->option('bnomei.kart.stocks.stock.model', 'stock');
@@ -51,6 +55,7 @@ class StockPage extends Page
                     // 'required' => true,
                     'multiple' => false,
                     'subpages' => false,
+                    'translate' => false,
                 ],
                 'stock' => [
                     'label' => 'bnomei.kart.stock',
@@ -59,6 +64,7 @@ class StockPage extends Page
                     'min' => 0,
                     'step' => 1,
                     'default' => 0,
+                    'translate' => false,
                 ],
                 'timestamp' => [
                     'label' => 'bnomei.kart.timestamp',
@@ -66,6 +72,7 @@ class StockPage extends Page
                     'required' => true,
                     'time' => true,
                     'default' => 'now',
+                    'translate' => false,
                 ],
             ],
         ];

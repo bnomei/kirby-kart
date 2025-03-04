@@ -91,16 +91,13 @@ class Cart
     public function save(): void
     {
         $this->kirby->session()->set($this->id, $this->lines->toArray());
-        if ($user = $this->kirby->user()) {
+        $user = $this->kirby->user();
+        if (in_array($user?->role()->name(), (array) $this->kirby->option('bnomei.kart.customers.roles'))) {
             $this->user = $user;
         }
-        if ($this->user) {
-            $this->kirby->impersonate('kirby', function () {
-                $this->user?->update([
-                    $this->id => $this->lines->toArray(),
-                ]);
-            });
-        }
+        $this->user?->update([
+            $this->id => $this->lines->toArray(),
+        ]);
     }
 
     /**

@@ -125,4 +125,9 @@ class Helper
 
         return $data;
     }
+
+    public static function hash(string $value): string
+    {
+        return str_pad(hash('xxh3', $value), 16, '0', STR_PAD_LEFT);
+    }
 }

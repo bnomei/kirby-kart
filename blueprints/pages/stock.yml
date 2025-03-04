@@ -1,0 +1,31 @@
+name: stock
+options:
+  changeSlug: false
+  changeTitle: false
+  changeTemplate: false
+create:
+  title: auto
+  slug: auto
+fields:
+  page:
+    label: bnomei.kart.product
+    type: pages
+    query: site.kart.page("products")
+    multiple: false
+    subpages: false
+    translate: false
+  stock:
+    label: bnomei.kart.stock
+    type: number
+    required: true
+    min: 0
+    step: 1
+    default: 0
+    translate: false
+  timestamp:
+    label: bnomei.kart.timestamp
+    type: date
+    required: true
+    time: true
+    default: now
+    translate: false
