@@ -217,7 +217,7 @@ class Kart
     public function categories(): Collection
     {
         $products = kart()->page(ContentPageEnum::PRODUCTS);
-        $categories = $products->children()->index()->pluck('categories', ',', true);
+        $categories = $products->children()->pluck('categories', ',', true);
         sort($categories);
 
         $category = param('category');
@@ -227,6 +227,7 @@ class Kart
             'id' => $c,
             'text' => t('category.'.$c, $c),
             'value' => $c,
+            'count' => $products->children()->filterBy('categories', $c, ',')->count(),
             'isActive' => $c === $category,
             'url' => $products->url().'?category='.$c,
             'urlWithParams' => url(
@@ -245,7 +246,7 @@ class Kart
     public function tags(): Collection
     {
         $products = kart()->page(ContentPageEnum::PRODUCTS);
-        $tags = $products->children()->index()->pluck('tags', ',', true);
+        $tags = $products->children()->pluck('tags', ',', true);
         sort($tags);
 
         $category = param('category');
@@ -254,6 +255,7 @@ class Kart
         return new Collection(array_map(fn ($t) => new Tag([
             'id' => $t,
             'text' => t('category.'.$t, $t),
+            'count' => $products->children()->filterBy('tags', $t, ',')->count(),
             'value' => $t,
             'isActive' => $t === $tag,
             'url' => $products->url().'?tag='.$t,
