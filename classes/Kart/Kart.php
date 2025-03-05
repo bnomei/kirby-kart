@@ -225,13 +225,15 @@ class Kart
 
         return new Collection(array_map(fn ($c) => new Category([
             'id' => $c,
+            'label' => t('category.'.$c, $c),
+            'title' => t('category.'.$c, $c),
             'text' => t('category.'.$c, $c),
             'value' => $c,
             'count' => $products->children()->filterBy('categories', $c, ',')->count(),
             'isActive' => $c === $category,
             'url' => $products->url().'?category='.$c,
             'urlWithParams' => url(
-                kirby()->request()->path(),
+                $products->id(),
                 ['params' => [
                     'category' => $c === $category ? null : $c,
                     'tag' => $tag,
@@ -254,13 +256,15 @@ class Kart
 
         return new Collection(array_map(fn ($t) => new Tag([
             'id' => $t,
+            'label' => t('category.'.$t, $t),
+            'title' => t('category.'.$t, $t),
             'text' => t('category.'.$t, $t),
             'count' => $products->children()->filterBy('tags', $t, ',')->count(),
             'value' => $t,
             'isActive' => $t === $tag,
             'url' => $products->url().'?tag='.$t,
             'urlWithParams' => url(
-                kirby()->request()->path(),
+                $products->id(),
                 ['params' => [
                     'category' => $category,
                     'tag' => $t === $tag ? null : $t,

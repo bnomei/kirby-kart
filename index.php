@@ -5,6 +5,7 @@ use Bnomei\Kart\Kart;
 use Bnomei\Kart\License;
 use Bnomei\Kart\Router;
 use Kirby\Cms\App;
+use Kirby\Cms\Collection;
 use Kirby\Cms\Page;
 use Kirby\Cms\Pages;
 use Kirby\Cms\User;
@@ -196,6 +197,18 @@ App::plugin(
                 $field->value = Helper::formatCurrency(floatval($field->value));
 
                 return $field;
+            },
+            /**
+             * @kql-allowed
+             */
+            'toCategories' => function (Field $field): Collection {
+                return kart()->categories()->filterBy('value', $field->value);
+            },
+            /**
+             * @kql-allowed
+             */
+            'toTags' => function (Field $field): Collection {
+                return kart()->tags()->filterBy('value', $field->value);
             },
         ],
         'pagesMethods' => [
