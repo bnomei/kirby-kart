@@ -9,8 +9,6 @@ use Kirby\Filesystem\F;
 $zip = $page->downloads();
 
 if ($zip) {
-    // TODO: test this https://getkirby.com/docs/reference/objects/filesystem/file/download
-
     $filename = F::safeName($page->title().'.zip');
     if ($alt = Helper::sanitize(get('filename'))) {
         $filename = $alt;
