@@ -11,6 +11,7 @@ use Kirby\Cms\Pages;
 use Kirby\Cms\User;
 use Kirby\Content\Field;
 use Kirby\Data\Yaml;
+use Kirby\Http\Remote;
 use Kirby\Session\Session;
 use Kirby\Toolkit\A;
 
@@ -30,6 +31,7 @@ App::plugin(
             'license' => '', // set your license from https://buy-kart.bnomei.com code in the config `bnomei.kart.license`
             'cache' => [
                 'ratelimit' => true,
+                'gravatar' => true,
 
                 // providers
                 'fastspring' => true,
@@ -386,6 +388,32 @@ App::plugin(
                     $productPage->priceIds(),
                     A::get($data, 'payments', [])
                 )) > 0;
+            },
+            /**
+             * @kql-allowed
+             */
+            'gravatar' => function (int $size = 200): string {
+                $hash = md5(strtolower(trim($this->email())));
+                $url = "https://www.gravatar.com/avatar/{$hash}?s={$size}";
+
+                if ($cache = kirby()->cache('bnomei.kart.gravatar')->get(md5($url))) {
+                    return $cache;
+                }
+
+                $image = Remote::get($url);
+                if ($image->code() === 200) {
+                    $image = $image->content();
+                    $imageInfo = getimagesizefromstring($image) ?: [];
+                    $mimeType = A::get($imageInfo, 'mime', 'image/png');
+                    $base64 = base64_encode($image);
+                    $dataUrl = "data:{$mimeType};base64,{$base64}";
+
+                    kirby()->cache('bnomei.kart.gravatar')->set(md5($url), $dataUrl, 60 * 24);
+
+                    return $dataUrl;
+                }
+
+                return $url;
             },
         ],
         'commands' => [

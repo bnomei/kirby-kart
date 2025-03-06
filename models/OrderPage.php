@@ -199,7 +199,7 @@ class OrderPage extends Page
                 ],
                 'files' => [
                     'type' => 'files',
-                    'info' => '{{ file.niceSize }} ・ {{ file.modifiedAt }}'
+                    'info' => '{{ file.niceSize }} ・ {{ file.modifiedAt }}',
                 ],
                 'meta' => [
                     'type' => 'fields',
