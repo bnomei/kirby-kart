@@ -218,6 +218,7 @@ class Kart
     {
         $products = kart()->page(ContentPageEnum::PRODUCTS);
         $categories = $products->children()->pluck('categories', ',', true);
+        $tags = $products->children()->pluck('tags', ',', true);
         sort($categories);
 
         $category = param('category');
@@ -229,7 +230,7 @@ class Kart
             'title' => t('category.'.$c, $c),
             'text' => t('category.'.$c, $c),
             'value' => $c,
-            'count' => $products->children()->filterBy('categories', $c, ',')->count(),
+            'count' => $products->children()->filterBy('categories', $c, ',')->filterBy('tags', 'in', $tag ? [$tag] : $tags)->count(),
             'isActive' => $c === $category,
             'url' => ($path ? url($path) : $products->url()).'?category='.$c,
             'urlWithParams' => url(
@@ -248,6 +249,7 @@ class Kart
     public function tags(?string $path = null): Collection
     {
         $products = kart()->page(ContentPageEnum::PRODUCTS);
+        $categories = $products->children()->pluck('categories', ',', true);
         $tags = $products->children()->pluck('tags', ',', true);
         sort($tags);
 
@@ -259,7 +261,7 @@ class Kart
             'label' => t('category.'.$t, $t),
             'title' => t('category.'.$t, $t),
             'text' => t('category.'.$t, $t),
-            'count' => $products->children()->filterBy('tags', $t, ',')->count(),
+            'count' => $products->children()->filterBy('tags', $t, ',')->filterBy('categories', 'in', $category ? [$category] : $categories)->count(),
             'value' => $t,
             'isActive' => $t === $tag,
             'url' => ($path ? url($path) : $products->url()).'?tag='.$t,
