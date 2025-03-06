@@ -214,7 +214,7 @@ class Cart
 
     public function merge(User $user): bool
     {
-        if (in_array($user->role()->name(), (array) $this->kirby->option('bnomei.kart.customers.roles'))) {
+        if (! in_array($user->role()->name(), (array) $this->kirby->option('bnomei.kart.customers.roles'))) {
             return false; // no merging for customers
         }
 
