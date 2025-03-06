@@ -482,10 +482,13 @@ class OrderPage extends Page
             }
         }
 
-        $file = $this->createFile([
-            'filename' => $zipFilename ?? md5($tmpId).'.zip', // make unguessable
-            'source' => $zipFile,
-        ], move: true);
+
+        $file = kirby()->impersonate('kirby', function() use ($zipFile, $zipFilename, $tmpId) {
+            return $this->createFile([
+                'filename' => $zipFilename ?? md5($tmpId).'.zip', // make unguessable
+                'source' => $zipFile,
+            ], move: true);
+        });
 
         Dir::remove($tmpDir);
 
