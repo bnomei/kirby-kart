@@ -248,6 +248,7 @@ class Cart
         $customer = $this->kart->createCustomer($data);
         $order = $this->kart->page(ContentPageEnum::ORDERS)->createOrder($data, $customer);
         $this->kart->page(ContentPageEnum::STOCKS)->updateStocks($data);
+        $order->createZipWithFiles();
 
         $this->kirby->trigger('kart.cart.completed', [
             'customer' => $customer,

@@ -2,11 +2,17 @@
 
 use Bnomei\Kart\ContentPageEnum;
 use Bnomei\Kart\Helper;
+use Kirby\Cms\File;
+use Kirby\Cms\Files;
 use Kirby\Cms\Page;
 use Kirby\Content\Field;
+use Kirby\Filesystem\Dir;
+use Kirby\Filesystem\F;
 use Kirby\Toolkit\Str;
+use ZipArchive;
 
 /**
+ * @method Field invoiceurl()
  * @method Field invnumber()
  * @method Field paidDate()
  * @method Field customer()
@@ -120,6 +126,11 @@ class OrderPage extends Page
                             'default' => 'now',
                             'translate' => false,
                             'width' => '1/3',
+                        ],
+                        'invoiceurl' => [
+                            'label' => 'bnomei.kart.invoice',
+                            'type' => 'url',
+                            'translate' => false,
                         ],
                         'line' => [
                             'type' => 'line',
@@ -334,14 +345,15 @@ class OrderPage extends Page
     public function updateInvoiceNumber(): Page
     {
         $page = $this;
+        $pageId = $this->id();
         $current = $page->invnumber()->isEmpty() ? null : $page->invnumber()->toInt();
 
         // if this order does have a num (from Merx) use that
         if ($page->num() !== null) {
             $current = $page->num();
             if ($this->invnumber()->toInt() !== $current) {
-                $page = $this->kirby()->impersonate('kirby', function () use ($page, $current) {
-                    return $page->update([
+                $this->kirby()->impersonate('kirby', function () use ($pageId, $current) {
+                    return page($pageId)->update([
                         'invnumber' => $current,
                     ]);
                 });
@@ -350,8 +362,8 @@ class OrderPage extends Page
 
         // if the current is higher than the tracker in the parent then update the parent with current
         if ($current && $page->parent()->invnumber()->toInt() <= $current) {
-            $this->kirby()->impersonate('kirby', function () use ($page, $current) {
-                $page->parent()->update([
+            $this->kirby()->impersonate('kirby', function () use ($pageId, $current) {
+                page($pageId)->parent()->update([
                     'invnumber' => $current,
                 ]);
             });
@@ -359,15 +371,93 @@ class OrderPage extends Page
 
         // if the order does not have an invoice number increment and fetch from parent
         if ($page->invnumber()->isEmpty()) {
-            $page = $this->kirby()->impersonate('kirby', function () use ($page) {
-                $next = $page->parent()->increment('invnumber', 1)->invnumber()->toInt();
+            $page = $this->kirby()->impersonate('kirby', function () use ($pageId) {
+                $next = page($pageId)->parent()->increment('invnumber', 1)->invnumber()->toInt();
 
-                return $page->update([
+                return page($pageId)->update([
                     'invnumber' => $next,
                 ]);
             });
         }
 
         return $page;
+    }
+
+    public function invoice(): string
+    {
+        return $this->invoiceurl()->value();
+    }
+
+    public function download(): string
+    {
+        // append time to allow for easier tracking and cache busting
+        return $this->url().'.zip?token='.time();
+    }
+
+    public function downloads(): ?File
+    {
+        return $this->files()
+            ->filterBy('extension', 'zip')
+            ->sortBy('modified', 'desc')
+            ->first();
+    }
+
+    public function createZipWithFiles(Files|array $files = [], ?string $zipFilename = null): ?File
+    {
+        $tmpId = date('U-v');
+        $tmpDir = kirby()->roots()->cache().'/zips/'.$tmpId;
+        Dir::make($tmpDir);
+
+        if ($files instanceof Files) {
+            foreach ($files as $file) {
+                F::copy($file->root(), $tmpDir.'/'.$file->filename());
+            }
+        }
+
+        foreach ($this->items() as $item) {
+            foreach ($item->key()->toPage()?->downloads()->toFiles() as $file) {
+                F::copy($file->root(), $tmpDir.'/'.$file->filename());
+            }
+        }
+
+        if (is_array($files)) {
+            foreach ($files as $file) {
+                F::copy($file, $tmpDir.'/'.basename($file));
+            }
+        }
+
+        $existingFiles = Dir::read($tmpDir);
+
+        if (count($existingFiles) === 0) {
+            Dir::remove($tmpDir);
+
+            return null;
+        }
+
+        if (count($existingFiles) === 1 && pathinfo($existingFiles[0], PATHINFO_EXTENSION) === 'zip') {
+            $zipFile = $tmpDir.'/'.$existingFiles[0];
+        } else {
+            $zipFile = $tmpDir.'.zip';
+            $zip = new ZipArchive;
+            if ($zip->open($zipFile, ZipArchive::CREATE) === true) {
+                foreach (Dir::read($tmpDir) as $file) {
+                    $filePath = $tmpDir.'/'.$file;
+                    if (is_file($filePath)) {
+                        $zip->addFile($filePath, $file);
+                        $zip->setCompressionName($file, ZipArchive::CM_STORE); // store is quickest
+                    }
+                }
+                $zip->close();
+            }
+        }
+
+        $file = $this->createFile([
+            'filename' => $zipFilename ?? md5($tmpId).'.zip', // make unguessable
+            'source' => $zipFile,
+        ], move: true);
+
+        Dir::remove($tmpDir);
+
+        return $file;
     }
 }

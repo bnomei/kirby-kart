@@ -17,6 +17,6 @@ class Tag extends Obj
 {
     public function __toString(): string
     {
-        return $this->text() . ' (' . $this->count() . ')';
+        return $this->text().' ('.$this->count().')';
     }
 }

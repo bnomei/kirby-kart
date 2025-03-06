@@ -25,8 +25,8 @@ class Kirby extends Provider
         $session_id = sha1(Uuid::generate());
         $this->kirby->session()->set('bnomei.kart.'.$this->name.'.session_id', $session_id);
 
-        return parent::checkout() ? Router::provider_success([
-            'session_id' => $session_id,
+        return parent::checkout() ? Router::provider_payment([
+            'success_url' => url(Router::PROVIDER_SUCCESS).'?session_id='.$session_id,
         ]) : '/';
     }
 
@@ -41,6 +41,7 @@ class Kirby extends Provider
             'email' => urldecode(strval(get('email', $this->kirby->user()?->email()))),
             'payment_method' => urldecode(strval(get('payment_method', ''))),
             'payment_status' => urldecode(strval(get('payment_status', ''))),
+            'invoiceurl' => urldecode(strval(get('invoiceurl', ''))),
         ]));
 
         // build data for user, order and stock updates
@@ -49,14 +50,15 @@ class Kirby extends Provider
             'paidDate' => date('Y-m-d H:i:s'),
             'paymentMethod' => A::get($input, 'payment_method'),
             'paymentComplete' => A::get($input, 'payment_status', 'paid') === 'paid',
+            'invoiceurl' => A::get($input, 'invoiceurl'), // unknown at this point
             'items' => kart()->cart()->lines()->values(fn (CartLine $l) => [
                 'key' => [$l->product()?->uuid()->toString()], // pages field expect an array
                 'quantity' => $l->quantity(),
-                'price' => $l->product()?->price()->toInt(),
-                'total' => 0, // TODO:
-                'subtotal' => 0, // TODO:
-                'tax' => 0, // TODO:
-                'discount' => 0, // TODO:
+                'price' => $l->product()?->price()->toFloat(),
+                'total' => $l->product()?->price()->toFloat(),
+                'subtotal' => $l->quantity() * $l->product()?->price()->toFloat(),
+                'tax' => 0,
+                'discount' => 0,
             ]),
         ]));
 

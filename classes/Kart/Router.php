@@ -25,6 +25,8 @@ class Router
 
     const PROVIDER_SUCCESS = 'kart/cart/success';
 
+    const PROVIDER_PAYMENT = 'kart/cart/payment';
+
     const PROVIDER_CANCEL = 'kart/cart/cancel';
 
     const WISHLIST_ADD = 'kart/wishlist/add';
@@ -32,6 +34,7 @@ class Router
     const WISHLIST_REMOVE = 'kart/wishlist/remove';
 
     const CART_LATER = 'kart/cart/later';
+
     const WISHLIST_NOW = 'kart/wishlist/now';
 
     const SYNC = 'kart/sync';
@@ -232,6 +235,17 @@ class Router
         return self::factory(
             self::PROVIDER_SUCCESS,
             params: $params // not encrypted since it is supposed to be stateless only params
+        );
+    }
+
+    public static function provider_payment(array $query = []): string
+    {
+        return self::factory(
+            self::PROVIDER_PAYMENT,
+            array_merge([
+                'success_url' => url(Router::PROVIDER_SUCCESS).'?session_id={CHECKOUT_SESSION_ID}',
+                'cancel_url' => url(Router::PROVIDER_CANCEL),
+            ], $query)
         );
     }
 

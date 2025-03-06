@@ -2,11 +2,13 @@
 
 return [
     'bnomei.kart.categories' => 'Kategorien',
+    'bnomei.kart.created' => 'Erstellt am',
     'bnomei.kart.customer' => 'Kunde',
     'bnomei.kart.description' => 'Beschreibung',
-    'bnomei.kart.created' => 'Erstellt am',
     'bnomei.kart.discount' => 'Rabatt',
+    'bnomei.kart.dowloads' => 'Downloads',
     'bnomei.kart.gallery' => 'Galerie',
+    'bnomei.kart.invoice' => 'Rechnung',
     'bnomei.kart.invoiceNumber' => 'Rechnungsnummer',
     'bnomei.kart.items' => 'Einträge',
     'bnomei.kart.last-sync' => 'Letzte Synchronisation',
@@ -19,6 +21,7 @@ return [
     'bnomei.kart.orders-30' => 'Bestellungen (30 Tage)',
     'bnomei.kart.out-of-stock' => 'Unzureichender Warenbestand',
     'bnomei.kart.paidDate' => 'Zahlungsdatum',
+    'bnomei.kart.payment' => 'Bezahlung',
     'bnomei.kart.paymentcomplete' => 'Zahlung war erfolgreich',
     'bnomei.kart.paymentmethod' => 'Zahlungsart',
     'bnomei.kart.price' => 'Preis',

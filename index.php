@@ -144,6 +144,16 @@ App::plugin(
             'pages/stock' => StockPage::phpBlueprint(),
             'pages/stocks' => StocksPage::phpBlueprint(),
         ],
+        'templates' => [
+            'order' => __DIR__.'/templates/order.php',
+            'order.zip' => __DIR__.'/templates/order.zip.php',
+            'orders' => __DIR__.'/templates/orders.php',
+            'payment' => __DIR__.'/templates/payment.php',
+            'product' => __DIR__.'/templates/product.php',
+            'products' => __DIR__.'/templates/products.php',
+            'stock' => __DIR__.'/templates/stock.php',
+            'stocks' => __DIR__.'/templates/stocks.php',
+        ],
         'pageModels' => [
             'order' => OrderPage::class,
             'orders' => OrdersPage::class,

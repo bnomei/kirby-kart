@@ -15,6 +15,7 @@ use Kirby\Toolkit\Str;
  * @method Field price()
  * @method Field tax()
  * @method Field gallery()
+ * @method Field downloads()
  * @method Field raw()
  * @method Field categories()
  * @method Field tags()
@@ -127,7 +128,6 @@ class ProductPage extends Page
                                 'description' => [
                                     'label' => 'bnomei.kart.description',
                                     'type' => 'textarea',
-                                    'width' => '1/2',
                                     'virtual' => true,
                                 ],
                                 'gallery' => [
@@ -136,7 +136,19 @@ class ProductPage extends Page
                                     'query' => 'page.parent.images',
                                     'uploads' => [
                                         'parent' => 'page.parent',
-                                        'template' => 'product-gallery',
+                                        // 'template' => 'product-gallery',
+                                    ],
+                                    'width' => '1/2',
+                                    'translate' => false,
+                                    'virtual' => true,
+                                ],
+                                'downloads' => [
+                                    'label' => 'bnomei.kart.downloads',
+                                    'type' => 'files',
+                                    'query' => 'page.parent.files',
+                                    'uploads' => [
+                                        'parent' => 'page.parent',
+                                        // 'template' => 'product-downloads',
                                     ],
                                     'width' => '1/2',
                                     'translate' => false,

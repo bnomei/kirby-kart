@@ -2,6 +2,7 @@
 
 use Bnomei\Kart\Router;
 use Kirby\Cms\App;
+use Kirby\Cms\Page;
 use Kirby\Cms\Response;
 
 return function (App $kirby) {
@@ -136,8 +137,6 @@ return function (App $kirby) {
             'method' => 'POST',
             'action' => function (?string $id = null) {
                 if ($r = Router::denied()) {
-                    dump('denied');
-
                     return $r;
                 }
 
@@ -148,8 +147,6 @@ return function (App $kirby) {
                 if (! kart()->canCheckout()) {
                     Router::go($id);
                 }
-
-                dump('provider checkout');
 
                 Response::go(kart()->provider()->checkout());
             },
@@ -211,7 +208,7 @@ return function (App $kirby) {
         ],
         [
             'pattern' => Router::PROVIDER_SUCCESS,
-            'method' => 'GET',
+            'method' => 'GET|POST',
             'action' => function () {
                 Response::go(kart()->cart()->complete());
             },
@@ -221,6 +218,23 @@ return function (App $kirby) {
             'method' => 'GET',
             'action' => function () {
                 Response::go(kart()->provider()->canceled());
+            },
+        ],
+        [
+            'pattern' => Router::PROVIDER_PAYMENT,
+            'method' => 'GET|POST',
+            'action' => function () {
+                $payment = new Page([
+                    'id' => Router::PROVIDER_PAYMENT,
+                    'slug' => 'payment',
+                    'template' => 'payment',
+                    'model' => 'payment',
+                    'content' => [
+                        'title' => t('bnomei.kart.payment', 'Payment'),
+                    ],
+                ]);
+
+                return site()->visit($payment);
             },
         ],
         [

@@ -35,6 +35,7 @@ class Stripe extends Provider
                 'customer_email' => $this->kirby->user()?->email(),
                 'success_url' => $this->kirby->url().'/'.Router::PROVIDER_SUCCESS.'?session_id={CHECKOUT_SESSION_ID}',
                 'cancel_url' => $this->kirby->url().'/'.Router::PROVIDER_CANCEL,
+                'invoice_creation' => ['enabled' => true],
                 'line_items' => $this->kart->cart()->lines()->values(fn (CartLine $l) => [
                     'price' => A::get($l->product()?->raw()->yaml(), 'default_price.id'), // @phpstan-ignore-line
                     'quantity' => $l->quantity(),
@@ -71,6 +72,7 @@ class Stripe extends Provider
             'paidDate' => date('Y-m-d H:i:s', A::get($json, 'created', time())),
             'paymentMethod' => implode(',', A::get($json, 'payment_method_types', [])),
             'paymentComplete' => A::get($json, 'payment_status') === 'paid',
+            'invoiceurl' => A::get($json, 'invoice'),
         ]));
 
         $remote = Remote::get('https://api.stripe.com/v1/checkout/sessions/'.$sessionId.'/line_items', [
