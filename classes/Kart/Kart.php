@@ -340,20 +340,26 @@ class Kart
      *
      * @return Pages<string, ProductPage>
      */
-    public function productsByParams(): Pages
+    public function productsByParams(array $params = []): Pages
     {
+        $params = array_filter(array_merge($params, array_filter([
+            'category' => param('category'),
+            'categories' => param('categories'),
+            'tag' => param('tag'),
+            'tags' => param('tags'),
+        ])));
         $products = $this->products();
 
-        if ($category = param('category')) {
+        if ($category = A::get($params, 'category')) {
             $products = $products->filterBy('categories', $category, ',');
         }
-        if ($categories = param('categories')) {
+        if ($categories = A::get($params, 'categories')) {
             $products = $products->filterBy('categories', 'in', explode(',', $categories), ',');
         }
-        if ($tag = param('tag')) {
+        if ($tag = A::get($params, 'tag')) {
             $products = $products->filterBy('tags', $tag, ',');
         }
-        if ($tags = param('tags')) {
+        if ($tags = A::get($params, 'tags')) {
             $products = $products->filterBy('tags', 'in', explode(',', $tags), ',');
         }
 
@@ -398,6 +404,19 @@ class Kart
 
         return $any ? $this->products()->filterBy('tags', 'in', $tags, ',') :
             $this->products()->filterBy(fn ($product) => count(array_diff($tags, $product->tags()->split())) === 0);
+    }
+
+    /**
+     * @kql-allowed
+     *
+     * @return Pages<string, ProductPage>
+     */
+    public function productsRelated(ProductPage $product): Pages
+    {
+        $withCategory = $this->productsWithCategory($product->categories());
+        $withTag = $this->productsWithTag($product->tags());
+
+        return $withCategory->merge($withTag);
     }
 
     /**
