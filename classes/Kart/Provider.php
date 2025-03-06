@@ -208,6 +208,11 @@ abstract class Provider
             $this->kirby()->option('bnomei.kart.successPage', Router::get('redirect'))
         );
 
+        $this->kirby()->session()->set(
+            'kart.current',
+            Router::get('redirect')
+        );
+
         if (! $this->kirby()->environment()->isLocal() && $this->kirby()->plugin('bnomei/kart')->license()->status()->value() !== 'active') {
             return null;
         }
@@ -219,7 +224,7 @@ abstract class Provider
     {
         kirby()->trigger('kart.'.$this->name.'.canceled');
 
-        return $this->kirby()->session()->pull('redirect', $this->kirby()->site()->url());
+        return $this->kirby()->session()->pull('kart.current', $this->kirby()->site()->url());
     }
 
     public function completed(array $data = []): array

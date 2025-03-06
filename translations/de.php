@@ -16,6 +16,7 @@ return [
     'bnomei.kart.latest-invoice-number' => 'Aktuelle Rechnungsnummer',
     'bnomei.kart.latest-order' => 'Aktuelle Bestellung',
     'bnomei.kart.local-storage' => 'Lokal',
+    'bnomei.kart.note' => 'Notiz',
     'bnomei.kart.now' => 'Jetzt',
     'bnomei.kart.orders' => 'Bestellungen',
     'bnomei.kart.orders-30' => 'Bestellungen (30 Tage)',

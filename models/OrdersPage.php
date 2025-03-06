@@ -33,7 +33,7 @@ class OrdersPage extends Page
                         [
                             'label' => 'bnomei.kart.latest-order',
                             'value' => '#{{ page.children.sortBy("paidDate", "desc").first.invoiceNumber }} ・ {{ page.children.sortBy("paidDate", "desc").first.customer.toUser.email }}',
-                            'info' => '{{ page.children.sortBy("paidDate", "desc").first.paidDate }}',
+                            'info' => '{{ page.children.sortBy("paidDate", "desc").first.paidDate.toDate("Y-m-d H:i") }}',
                             'link' => '{{ page.children.sortBy("paidDate", "desc").first.panel.url }}',
                         ],
                         [
@@ -73,7 +73,7 @@ class OrdersPage extends Page
                     'template' => 'order', // maps to OrderPage model
                     'sortBy' => 'invnumber desc',
                     'text' => '[#{{ page.invoiceNumber }}] {{ page.customer.toUser.email }} ・ {{ page.formattedSubtotal }}',
-                    'info' => '{{ page.title }} ・ {{ page.paidDate }}',
+                    'info' => '{{ page.title }} ・ {{ page.paidDate.toDate("Y-m-d H:i") }}',
                 ],
             ],
         ];

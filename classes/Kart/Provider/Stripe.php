@@ -33,8 +33,8 @@ class Stripe extends Provider
                 'payment_method_types' => ['card'],
                 'currency' => strtolower($this->kart->currency()),
                 'customer_email' => $this->kirby->user()?->email(),
-                'success_url' => $this->kirby->url().'/'.Router::PROVIDER_SUCCESS.'?session_id={CHECKOUT_SESSION_ID}',
-                'cancel_url' => $this->kirby->url().'/'.Router::PROVIDER_CANCEL,
+                'success_url' => url(Router::PROVIDER_SUCCESS).'?session_id={CHECKOUT_SESSION_ID}',
+                'cancel_url' => url(Router::PROVIDER_CANCEL),
                 'invoice_creation' => ['enabled' => true],
                 'line_items' => $this->kart->cart()->lines()->values(fn (CartLine $l) => [
                     'price' => A::get($l->product()?->raw()->yaml(), 'default_price.id'), // @phpstan-ignore-line

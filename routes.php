@@ -84,7 +84,8 @@ return function (App $kirby) {
                 }
 
                 kart()->wishlist()->remove(
-                    page('page://'.Router::get('product'))
+                    page('page://'.Router::get('product')),
+                    999
                 );
 
                 return Router::go($id);
@@ -105,7 +106,8 @@ return function (App $kirby) {
                     page('page://'.Router::get('product'))
                 );
                 kart()->wishlist()->remove(
-                    page('page://'.Router::get('product'))
+                    page('page://'.Router::get('product')),
+                    999
                 );
 
                 return Router::go($id);

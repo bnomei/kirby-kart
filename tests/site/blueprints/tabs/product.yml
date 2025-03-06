@@ -1,0 +1,4 @@
+fields:
+  note:
+    type: textarea
+    buttons: false

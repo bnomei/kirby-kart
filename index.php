@@ -57,6 +57,7 @@ App::plugin(
                 'page' => 'orders',
                 'order' => [
                     'uuid' => fn (?OrdersPage $orders, array $props) => 'or-'.Helper::nonAmbiguousUuid(7), // aka order id
+                    'create-missing-zips' => true,
                 ],
             ],
             'products' => [
@@ -146,6 +147,7 @@ App::plugin(
         ],
         'templates' => [
             'order' => __DIR__.'/templates/order.php',
+            'order.pdf' => __DIR__.'/templates/order.pdf.php',
             'order.zip' => __DIR__.'/templates/order.zip.php',
             'orders' => __DIR__.'/templates/orders.php',
             'payment' => __DIR__.'/templates/payment.php',
@@ -290,6 +292,14 @@ App::plugin(
                 $last = $this->interval($field, '-60 days', '-31 days')->sum($compare);
 
                 return $current >= $last ? 'positive' : 'negative';
+            },
+        ],
+        'fileMethods' => [
+            'modifiedAt' => function (?string $format = null): string {
+                $format = $format ?: 'Y-m-d H:i'; // without seconds like kirbys time field
+                $modified = $this->modified();
+
+                return is_int($modified) ? date($format, $modified) : '?';
             },
         ],
         'pageMethods' => [

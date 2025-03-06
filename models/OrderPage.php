@@ -19,6 +19,7 @@ use ZipArchive;
  * @method Field items()
  * @method Field paymentComplete()
  * @method Field paymentMethod()
+ * @method Field notes()
  */
 class OrderPage extends Page
 {
@@ -68,7 +69,7 @@ class OrderPage extends Page
                         [
                             // 'label' => 'bnomei.kart.invoiceNumber', Invoice Number'),
                             'value' => '#{{ page.invoiceNumber }}',
-                            'info' => '{{ page.paidDate }}',
+                            'info' => '{{ page.paidDate.toDate("Y-m-d H:i") }}',
                         ],
                         [
                             // 'label' => 'bnomei.kart.sum', Sum'),
@@ -81,7 +82,7 @@ class OrderPage extends Page
                         ],
                     ],
                 ],
-                'meta' => [
+                'order' => [
                     'type' => 'fields',
                     'fields' => [
                         'customer' => [
@@ -190,6 +191,24 @@ class OrderPage extends Page
                                     'default' => 0,
                                 ],
                             ],
+                        ],
+                        'line2' => [
+                            'type' => 'line',
+                        ],
+                    ],
+                ],
+                'files' => [
+                    'type' => 'files',
+                    'info' => '{{ file.niceSize }} ・ {{ file.modifiedAt }}'
+                ],
+                'meta' => [
+                    'type' => 'fields',
+                    'fields' => [
+                        'note' => [
+                            'label' => 'bnomei.kart.note',
+                            'type' => 'textarea',
+                            'translate' => false,
+                            'buttons' => false,
                         ],
                     ],
                 ],
@@ -383,23 +402,35 @@ class OrderPage extends Page
         return $page;
     }
 
+    /**
+     * @kql-allowed
+     */
     public function invoice(): string
     {
-        return $this->invoiceurl()->value();
+        return $this->invoiceurl()->isNotEmpty() ? $this->invoiceurl()->value() : $this->url().'.pdf';
     }
 
-    public function download(): string
+    /**
+     * @kql-allowed
+     */
+    public function download(): ?string
     {
         // append time to allow for easier tracking and cache busting
-        return $this->url().'.zip?token='.time();
+        return $this->downloads() && $this->isPayed() ? $this->url().'.zip?token='.time() : null;
     }
 
     public function downloads(): ?File
     {
-        return $this->files()
+        $file = $this->files()
             ->filterBy('extension', 'zip')
             ->sortBy('modified', 'desc')
             ->first();
+
+        if (! $file && $this->kirby()->option('bnomei.kart.orders.order.create-missing-zips')) {
+            $file = $this->createZipWithFiles();
+        }
+
+        return $file;
     }
 
     public function createZipWithFiles(Files|array $files = [], ?string $zipFilename = null): ?File
@@ -414,7 +445,7 @@ class OrderPage extends Page
             }
         }
 
-        foreach ($this->items() as $item) {
+        foreach ($this->items()->toStructure() as $item) {
             foreach ($item->key()->toPage()?->downloads()->toFiles() as $file) {
                 F::copy($file->root(), $tmpDir.'/'.$file->filename());
             }
@@ -443,7 +474,7 @@ class OrderPage extends Page
                 foreach (Dir::read($tmpDir) as $file) {
                     $filePath = $tmpDir.'/'.$file;
                     if (is_file($filePath)) {
-                        $zip->addFile($filePath, $file);
+                        $zip->addFile($filePath, $this->slug().'/'.$file);
                         $zip->setCompressionName($file, ZipArchive::CM_STORE); // store is quickest
                     }
                 }
@@ -459,5 +490,13 @@ class OrderPage extends Page
         Dir::remove($tmpDir);
 
         return $file;
+    }
+
+    /**
+     * @kql-allowed
+     */
+    public function isPayed(): bool
+    {
+        return $this->paymentComplete()->toBool();
     }
 }

@@ -140,7 +140,7 @@ class ProductPage extends Page
                                     ],
                                     'width' => '1/2',
                                     'translate' => false,
-                                    'virtual' => true,
+                                    // 'virtual' => true,
                                 ],
                                 'downloads' => [
                                     'label' => 'bnomei.kart.downloads',
@@ -152,7 +152,7 @@ class ProductPage extends Page
                                     ],
                                     'width' => '1/2',
                                     'translate' => false,
-                                    'virtual' => true,
+                                    // 'virtual' => true,
                                 ],
                                 'categories' => [
                                     'label' => 'bnomei.kart.categories',
