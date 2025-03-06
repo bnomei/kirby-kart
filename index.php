@@ -362,7 +362,8 @@ App::plugin(
              */
             'orders' => function (): ?Pages {
                 return kart()->orders()
-                    ->filterBy(fn ($order) => $order->customer()->toUser()?->id() === $this->id());
+                    ->filterBy(fn (OrderPage $order) => $order->customer()->toUser()?->id() === $this->id())
+                    ->sortBy('paidDate', 'desc');
             },
             /**
              * @kql-allowed
@@ -370,7 +371,7 @@ App::plugin(
             'completedOrders' => function (): Pages {
                 /** @var CustomerUser $this */
                 return $this->orders()
-                    ->filterBy(fn ($order) => $order->paymentComplete()->toBool());
+                    ->filterBy(fn (OrderPage $order) => $order->paymentComplete()->toBool());
             },
             /**
              * @kql-allowed

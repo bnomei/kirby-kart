@@ -54,8 +54,8 @@ class Kirby extends Provider
             'items' => kart()->cart()->lines()->values(fn (CartLine $l) => [
                 'key' => [$l->product()?->uuid()->toString()], // pages field expect an array
                 'quantity' => $l->quantity(),
-                'price' => $l->product()?->price()->toFloat(),
-                'total' => $l->product()?->price()->toFloat(),
+                'price' => $l->product()?->price()->toFloat(), // per item
+                'total' => $l->quantity() * $l->product()?->price()->toFloat(), // -discount +tax
                 'subtotal' => $l->quantity() * $l->product()?->price()->toFloat(),
                 'tax' => 0,
                 'discount' => 0,

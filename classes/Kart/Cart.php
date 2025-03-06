@@ -258,7 +258,7 @@ class Cart
         $this->clear();
 
         return $this->kirby->session()->pull(
-            'kart.redirect',
+            'kart.redirect.success',
             $order ? $order->url() : $this->kirby->site()->url()
         );
     }

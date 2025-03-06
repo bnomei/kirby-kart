@@ -204,12 +204,12 @@ abstract class Provider
     public function checkout(): ?string
     {
         $this->kirby()->session()->set(
-            'kart.redirect',
-            $this->kirby()->option('bnomei.kart.successPage', Router::get('redirect'))
+            'kart.redirect.success',
+            $this->kirby()->option('bnomei.kart.successPage') // if null will use order page after creation
         );
 
         $this->kirby()->session()->set(
-            'kart.current',
+            'kart.redirect.canceled',
             Router::get('redirect')
         );
 
@@ -224,7 +224,7 @@ abstract class Provider
     {
         kirby()->trigger('kart.'.$this->name.'.canceled');
 
-        return $this->kirby()->session()->pull('kart.current', $this->kirby()->site()->url());
+        return $this->kirby()->session()->pull('kart.redirect.canceled', $this->kirby()->site()->url());
     }
 
     public function completed(array $data = []): array
