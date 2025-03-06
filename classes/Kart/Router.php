@@ -31,6 +31,9 @@ class Router
 
     const WISHLIST_REMOVE = 'kart/wishlist/remove';
 
+    const CART_LATER = 'kart/cart/later';
+    const WISHLIST_NOW = 'kart/wishlist/now';
+
     const SYNC = 'kart/sync';
 
     const CSRF_TOKEN = 'kart/csrf';
@@ -262,6 +265,16 @@ class Router
         );
     }
 
+    public static function cart_later(ProductPage $product): string
+    {
+        return self::factory(
+            self::current().'/'.self::CART_LATER,
+            [
+                'product' => $product->uuid()->id(),
+            ]
+        );
+    }
+
     public static function wishlist_add(ProductPage $product): string
     {
         return self::factory(
@@ -276,6 +289,16 @@ class Router
     {
         return self::factory(
             self::current().'/'.self::WISHLIST_REMOVE,
+            [
+                'product' => $product->uuid()->id(),
+            ]
+        );
+    }
+
+    public static function wishlist_now(ProductPage $product): string
+    {
+        return self::factory(
+            self::current().'/'.self::WISHLIST_NOW,
             [
                 'product' => $product->uuid()->id(),
             ]

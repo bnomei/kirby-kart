@@ -91,6 +91,27 @@ return function (App $kirby) {
         ],
         [
             'pattern' => [
+                Router::WISHLIST_NOW,
+                '(:all)/'.Router::WISHLIST_NOW,
+            ],
+            'method' => 'POST',
+            'action' => function (?string $id = null) {
+                if ($r = Router::denied()) {
+                    return $r;
+                }
+
+                kart()->cart()->add(
+                    page('page://'.Router::get('product'))
+                );
+                kart()->wishlist()->remove(
+                    page('page://'.Router::get('product'))
+                );
+
+                return Router::go($id);
+            },
+        ],
+        [
+            'pattern' => [
                 Router::CART_ADD,
                 '(:all)/'.Router::CART_ADD,
             ],
@@ -164,6 +185,28 @@ return function (App $kirby) {
                 }
 
                 Response::go(kart()->provider()->checkout());
+            },
+        ],
+        [
+            'pattern' => [
+                Router::CART_LATER,
+                '(:all)/'.Router::CART_LATER,
+            ],
+            'method' => 'POST',
+            'action' => function (?string $id = null) {
+                if ($r = Router::denied()) {
+                    return $r;
+                }
+
+                kart()->cart()->remove(
+                    page('page://'.Router::get('product')),
+                    999 // aka all
+                );
+                kart()->wishlist()->add(
+                    page('page://'.Router::get('product'))
+                );
+
+                return Router::go($id);
             },
         ],
         [

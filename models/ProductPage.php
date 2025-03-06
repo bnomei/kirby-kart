@@ -256,6 +256,14 @@ class ProductPage extends Page
     /**
      * @kql-allowed
      */
+    public function later(): string
+    {
+        return Router::cart_later($this);
+    }
+
+    /**
+     * @kql-allowed
+     */
     public function wish(): string
     {
         return Router::wishlist_add($this);
@@ -267,6 +275,14 @@ class ProductPage extends Page
     public function forget(): string
     {
         return Router::wishlist_remove($this);
+    }
+
+    /**
+     * @kql-allowed
+     */
+    public function now(): string
+    {
+        return Router::wishlist_now($this);
     }
 
     /**

@@ -214,7 +214,7 @@ class Kart
     /**
      * @return Collection<string, Category>
      */
-    public function categories(): Collection
+    public function categories(?string $path = null): Collection
     {
         $products = kart()->page(ContentPageEnum::PRODUCTS);
         $categories = $products->children()->pluck('categories', ',', true);
@@ -231,9 +231,9 @@ class Kart
             'value' => $c,
             'count' => $products->children()->filterBy('categories', $c, ',')->count(),
             'isActive' => $c === $category,
-            'url' => $products->url().'?category='.$c,
+            'url' => ($path ? url($path) : $products->url()).'?category='.$c,
             'urlWithParams' => url(
-                $products->id(),
+                $path ?? $products->id(),
                 ['params' => [
                     'category' => $c === $category ? null : $c,
                     'tag' => $tag,
@@ -245,7 +245,7 @@ class Kart
     /**
      * @return Collection<string, Tag>
      */
-    public function tags(): Collection
+    public function tags(?string $path = null): Collection
     {
         $products = kart()->page(ContentPageEnum::PRODUCTS);
         $tags = $products->children()->pluck('tags', ',', true);
@@ -262,9 +262,9 @@ class Kart
             'count' => $products->children()->filterBy('tags', $t, ',')->count(),
             'value' => $t,
             'isActive' => $t === $tag,
-            'url' => $products->url().'?tag='.$t,
+            'url' => ($path ? url($path) : $products->url()).'?tag='.$t,
             'urlWithParams' => url(
-                $products->id(),
+                $path ?? $products->id(),
                 ['params' => [
                     'category' => $category,
                     'tag' => $t === $tag ? null : $t,
