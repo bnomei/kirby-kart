@@ -1,7 +1,7 @@
 <?php
 
 use Bnomei\Kart\ContentPageEnum;
-use Bnomei\Kart\Helper;
+use Bnomei\Kart\Kart;
 use Bnomei\Kart\ProductStorage;
 use Bnomei\Kart\Router;
 use Kirby\Cms\Page;
@@ -238,7 +238,7 @@ class ProductPage extends Page
      */
     public function formattedPrice(): string
     {
-        return Helper::formatCurrency($this->price()->toFloat());
+        return Kart::formatCurrency($this->price()->toFloat());
     }
 
     /**

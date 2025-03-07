@@ -1,7 +1,7 @@
 <?php
 
 use Bnomei\Kart\ContentPageEnum;
-use Bnomei\Kart\Helper;
+use Bnomei\Kart\Kart;
 use Kirby\Cms\File;
 use Kirby\Cms\Files;
 use Kirby\Cms\Page;
@@ -304,7 +304,7 @@ class OrderPage extends Page
      */
     public function formattedDiscount(): string
     {
-        return Helper::formatCurrency($this->discount());
+        return Kart::formatCurrency($this->discount());
     }
 
     /**
@@ -312,7 +312,7 @@ class OrderPage extends Page
      */
     public function formattedTotal(): string
     {
-        return Helper::formatCurrency($this->total());
+        return Kart::formatCurrency($this->total());
     }
 
     /**
@@ -320,7 +320,7 @@ class OrderPage extends Page
      */
     public function formattedSubtotal(): string
     {
-        return Helper::formatCurrency($this->subtotal());
+        return Kart::formatCurrency($this->subtotal());
     }
 
     /**
@@ -328,7 +328,7 @@ class OrderPage extends Page
      */
     public function formattedSum(): string
     {
-        return Helper::formatCurrency($this->sum());
+        return Kart::formatCurrency($this->sum());
     }
 
     /**
@@ -336,7 +336,7 @@ class OrderPage extends Page
      */
     public function formattedTax(): string
     {
-        return Helper::formatCurrency($this->tax());
+        return Kart::formatCurrency($this->tax());
     }
 
     /**
@@ -344,7 +344,7 @@ class OrderPage extends Page
      */
     public function formattedSumTax(): string
     {
-        return Helper::formatCurrency($this->sumtax());
+        return Kart::formatCurrency($this->sumtax());
     }
 
     /**
@@ -500,5 +500,13 @@ class OrderPage extends Page
     public function isPayed(): bool
     {
         return $this->paymentComplete()->toBool();
+    }
+
+    /**
+     * @return \Kirby\Cms\Collection<string, \Bnomei\Kart\OrderLine>
+     */
+    public function orderLines(): \Kirby\Cms\Collection
+    {
+        return $this->items()->toOrderlines(); // @phpstan-ignore-line
     }
 }

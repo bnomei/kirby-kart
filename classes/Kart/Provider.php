@@ -3,14 +3,11 @@
 namespace Bnomei\Kart;
 
 use Closure;
-use CustomerUser;
 use Kirby\Cache\Cache;
 use Kirby\Cms\App;
-use Kirby\Cms\User;
 use Kirby\Filesystem\F;
 use Kirby\Toolkit\A;
 use Kirby\Toolkit\Date;
-use ProductPage;
 
 abstract class Provider
 {
@@ -39,7 +36,7 @@ abstract class Provider
 
     public function title(): string
     {
-        return ucfirst($this->name);
+        return implode(' ', array_map('ucfirst', (explode('_', $this->name))));
     }
 
     public function name(): string
@@ -170,35 +167,6 @@ abstract class Provider
     public function stocks(): array
     {
         return $this->read('stocks');
-    }
-
-    public function ownsProduct(ProductPage|string|null $product, ?User $user = null): bool
-    {
-        if (is_string($product)) {
-            $product = $this->kirby()->page($product);
-        }
-
-        if (! $product) {
-            return false;
-        }
-
-        $user ??= $this->kirby()->user();
-
-        if (! $user) {
-            return false;
-        }
-
-        /** @var CustomerUser $user */
-
-        // search the user account content (KLUB or other fulfillment)
-        if ($user->hasMadePaymentFor($this->name, $product)) {
-            return true;
-        }
-
-        // search orders
-        return $user->completedOrders()
-            ->filterBy(fn ($order) => $order->has($product))
-            ->count() > 0;
     }
 
     public function checkout(): ?string

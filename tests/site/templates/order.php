@@ -1,53 +1,39 @@
-<?php snippet('layout', slots: true) ?>
-<?php /** @var OrderPage $page */ ?>
+<?php use Bnomei\Kart\Kart;
 
-<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+snippet('layout', slots: true) ?>
 
-    <header class="col-span-1 md:col-span-2">
-        <h1 class="text-4xl py-8">Your Order <?= $page->title() ?></h1>
+<?php
+/** @var OrderPage $order */
+$order ??= $page;
+?>
+
+<section>
+    <header>
+        <h1>Your Order <?= $order->title() ?></h1>
     </header>
-
-    <article class="col-span-1 pb-12 border border-gcwhite bg-gray-50 p-4">
-        <table>
-            <tr>
-                <td class="text-gcgray text-xs text-right pr-4">Invoice Number</td>
-                <td>#<?= $page->invoiceNumber() ?></td>
-            </tr>
-            <tr>
-                <td class="text-gcgray text-xs text-right pr-4">Order Date</td>
-                <td><?= $page->paidDate()->toDate('Y-m-d H:i') ?></td>
-            </tr>
-            <tr>
-                <td class="text-gcgray text-xs text-right pr-4">Order Status</td>
-                <td><?= $page->paymentComplete()->toBool() ? 'paid' : 'open' ?></td>
-            </tr>
-            <tr>
-                <td class="text-gcgray text-xs text-right pr-4">Order Total</td>
-                <td><?= $page->formattedTotal() ?></td>
-            </tr>
-        </table>
-    </article>
-
-    <ul class="col-span-1 space-y-12">
-        <?php /** @var ProductPage $product */
-        foreach ($page->items()->toStructure() as $item) {
-            $product = $item->key()->toPage();
-            ?>
-            <li class="grid grid-cols-2 gap-4 border-t last:border-b border-gcwhite py-4">
-                <a class="block col-span-1" href="<?= $product->url() ?>">
-                    <img src="<?= $product->gallery()->toFile()?->url() ?>" alt="<?= $product->title() ?>">
-                </a>
-                <div class="col-span-1">
-                    <div class="px-2 py-1 flex justify-between">
+    <article>
+        <p>
+            Invoice Number: #<?= $order->invoiceNumber() ?><br>
+            Order Date: <?= $order->paidDate()->toDate('Y-m-d H:i') ?><br>
+            Order Status: <?= $order->paymentComplete()->toBool() ? 'paid' : 'open' ?><br>
+            Order Total: <?= $order->formattedTotal() ?>
+        </p>
+        <ol>
+            <?php foreach ($order->orderLines() as $line) {
+                /** @var \Bnomei\Kart\OrderLine $line */
+                /** @var ProductPage $product */
+                $product = $line->product();
+                ?>
+                <li>
+                    <a href="<?= $product->url() ?>">
+                        <img src="<?= $product->gallery()->toFile()?->url() ?>" alt="<?= $product->title() ?>">
                         <span><?= $product->title() ?></span>
-                        <span class="grow"><!-- spacer --></span>
-                        <span class="text-gcgray"><?= $item->quantity() ?>x</span>
-                        <span class="w-4"><!-- spacer --></span>
-                        <span><?= $item->price()->toFormattedCurrency() ?></span>
-                    </div>
-                </div>
-            </li>
-        <?php } ?>
-    </ul>
-</div>
+                    </a>
+                    <span><?= $line->quantity() ?>x</span>
+                    <span><?= Kart::formatCurrency($line->price()) ?></span>
+                </li>
+            <?php } ?>
+        </ol>
+    </article>
+</section>
 

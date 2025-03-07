@@ -1,6 +1,6 @@
 <?php
 
-use Bnomei\Kart\Helper;
+use Bnomei\Kart\Kart;
 use Kirby\Cms\File;
 use Kirby\Filesystem\F;
 
@@ -10,7 +10,7 @@ $zip = $page->downloads();
 
 if ($zip) {
     $filename = F::safeName($page->title().'.zip');
-    if ($alt = Helper::sanitize(get('filename'))) {
+    if ($alt = Kart::sanitize(get('filename'))) {
         $filename = $alt;
     }
 

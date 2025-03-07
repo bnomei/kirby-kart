@@ -1,9 +1,8 @@
-<?php
+<?php snippet('layout', slots: true) ?>
 
-snippet('layout', slots: true);
+<section>
+    <article>
+        <h1><?= $page->title() ?></h1>
+    </article>
+</section>
 
-?>
-
-<div>
-    <h1><?= $page->title()->html() ?></h1>
-</div>

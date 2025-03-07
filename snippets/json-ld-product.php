@@ -7,7 +7,7 @@ $product ??= $page;
         "@context": "https://schema.org/",
         "@type": "Product",
         "name": "<?= $product->title() ?>",
-        "image": "<?= $product->gallery()->toFiles()->first()?->url() ?>",
+        "image": "<?= $product->gallery()->toFile()?->url() ?>",
         "description": "<?= $product->description()->esc() ?>",
         "url": "<?= $product->url() ?>",
         "offers": {

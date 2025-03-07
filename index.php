@@ -1,8 +1,10 @@
 <?php
 
-use Bnomei\Kart\Helper;
+use Bnomei\Kart\Cart;
+use Bnomei\Kart\CartLine;
 use Bnomei\Kart\Kart;
 use Bnomei\Kart\License;
+use Bnomei\Kart\OrderLine;
 use Bnomei\Kart\Router;
 use Kirby\Cms\App;
 use Kirby\Cms\Collection;
@@ -58,7 +60,7 @@ App::plugin(
                 'enabled' => true,
                 'page' => 'orders',
                 'order' => [
-                    'uuid' => fn (?OrdersPage $orders, array $props) => 'or-'.Helper::nonAmbiguousUuid(7), // aka order id
+                    'uuid' => fn (?OrdersPage $orders, array $props) => 'or-'.Kart::nonAmbiguousUuid(7), // aka order id
                     'create-missing-zips' => true,
                 ],
             ],
@@ -66,14 +68,14 @@ App::plugin(
                 'enabled' => true,
                 'page' => 'products',
                 'product' => [
-                    'uuid' => fn (?ProductsPage $products, array $props) => 'pr-'.Helper::hash(A::get($props, 'id')),
+                    'uuid' => fn (?ProductsPage $products, array $props) => 'pr-'.Kart::hash(A::get($props, 'id')),
                 ],
             ],
             'stocks' => [
                 'enabled' => true,
                 'page' => 'stocks',
                 'stock' => [
-                    'uuid' => fn (?StocksPage $stocks, array $props) => 'st-'.Helper::nonAmbiguousUuid(13),
+                    'uuid' => fn (?StocksPage $stocks, array $props) => 'st-'.Kart::nonAmbiguousUuid(13),
                 ],
             ],
             'router' => [
@@ -123,16 +125,16 @@ App::plugin(
         ],
         'routes' => require_once __DIR__.'/routes.php',
         'snippets' => [
-            'kart/input/csrf' => __DIR__.'/snippets/kart/input/csrf.php',
-            'kart/input/csrf-defer' => __DIR__.'/snippets/kart/input/csrf-defer.php',
-            'kart/json-ld/product' => __DIR__.'/snippets/kart/json-ld/product.php',
-            'kart/login' => __DIR__.'/snippets/kart/login.php',
-            'kart/logout' => __DIR__.'/snippets/kart/logout.php',
-            'kart/html/cart' => __DIR__.'/snippets/kart/html/cart.php',
-            'kart/html/add' => __DIR__.'/snippets/kart/html/add.php',
-            'kart/html/buy' => __DIR__.'/snippets/kart/html/buy.php',
-            'kart/html/wishlist' => __DIR__.'/snippets/kart/html/wishlist.php',
-            'kart/html/wish-or-forget' => __DIR__.'/snippets/kart/html/wish-or-forget.php',
+            'kart/input/csrf' => __DIR__.'/snippets/input-csrf.php',
+            'kart/input/csrf-defer' => __DIR__.'/snippets/input-csrf-defer.php',
+            'kart/json-ld/product' => __DIR__.'/snippets/json-ld-product.php',
+            'kart/login' => __DIR__.'/snippets/login.php',
+            'kart/logout' => __DIR__.'/snippets/logout.php',
+            'kart/cart' => __DIR__.'/snippets/cart.php',
+            'kart/add' => __DIR__.'/snippets/add.php',
+            'kart/buy' => __DIR__.'/snippets/buy.php',
+            'kart/wishlist' => __DIR__.'/snippets/wishlist.php',
+            'kart/wish-or-forget' => __DIR__.'/snippets/wish-or-forget.php',
         ],
         'translations' => [
             'en' => require_once __DIR__.'/translations/en.php',
@@ -200,7 +202,7 @@ App::plugin(
              * @kql-allowed
              */
             'toFormattedNumber' => function ($field, bool $prefix = false): string {
-                $field->value = Helper::formatNumber(floatval($field->value), $prefix);
+                $field->value = Kart::formatNumber(floatval($field->value), $prefix);
 
                 return $field;
             },
@@ -208,7 +210,7 @@ App::plugin(
              * @kql-allowed
              */
             'toFormattedCurrency' => function (Field $field): string {
-                $field->value = Helper::formatCurrency(floatval($field->value));
+                $field->value = Kart::formatCurrency(floatval($field->value));
 
                 return $field;
             },
@@ -216,13 +218,43 @@ App::plugin(
              * @kql-allowed
              */
             'toCategories' => function (Field $field): Collection {
-                return kart()->categories()->filterBy('value', $field->value);
+                return kart()->categories()->filterBy('value', 'in', explode(',', $field->value));
             },
             /**
              * @kql-allowed
              */
             'toTags' => function (Field $field): Collection {
-                return kart()->tags()->filterBy('value', $field->value);
+                return kart()->tags()->filterBy('value', 'in', explode(',', $field->value));
+            },
+            /**
+             * @kql-allowed
+             */
+            'toCartLines' => function (Field $field): Collection {
+                $lines = [];
+                foreach ($field->toStructure() as $line) {
+                    $lines[] = new CartLine($line->id(), $line->quanity());
+                }
+
+                return new Collection($lines);
+            },
+            /**
+             * @kql-allowed
+             */
+            'toOrderLines' => function (Field $field): Collection {
+                $lines = [];
+                foreach ($field->toStructure() as $line) {
+                    $lines[] = new OrderLine(
+                        $line->id(),
+                        $line->price()->toFloat(),
+                        $line->quantity()->toInt(),
+                        $line->total()->toFloat(),
+                        $line->subtotal()->toFloat(),
+                        $line->tax()->toFloat(),
+                        $line->discount()->toFloat()
+                    );
+                }
+
+                return new Collection($lines);
             },
         ],
         'pagesMethods' => [
@@ -357,6 +389,12 @@ App::plugin(
             'kart' => function (): Kart {
                 return kart();
             },
+            /* DANGER: do not do this... this is a field
+            'cart' => function (): Cart { },
+            */
+            /* DANGER: do not do this... this is a field
+            'wishlist' => function (): Cart { },
+            */
             /**
              * @kql-allowed
              */
@@ -402,6 +440,13 @@ App::plugin(
                     $productPage->priceIds(),
                     A::get($data, 'payments', [])
                 )) > 0;
+            },
+            /**
+             * @kql-allowed
+             */
+            'owns' => function (ProductPage|string $product): bool {
+                return $this->hasPurchased($product) ||
+                    $this->hasMadePaymentFor(kart()->provider()->name(), $product);
             },
             /**
              * @kql-allowed

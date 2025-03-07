@@ -10,7 +10,7 @@
             <li class="flex space-x-1 py-1 items-center">
                 <a class="hover:underline" href="<?= $product->url() ?>"><?= $product->title() ?></a>
                 <span class="grow"><!-- spacer --></span>
-                <?php if (! $line->inStockForQuantity()) { ?>
+                <?php if (! $line->hasStockForQuantity()) { ?>
                     <span class="ml-1 text-sm px-2 rounded-sm bg-gcred text-white"><?= $product->stock() ?></span><span class="text-gcgray">of <?= $line->quantity() ?>x</span>
                 <?php } else { ?>
                     <span class="text-gcgray"><?= $line->quantity() ?>x</span>

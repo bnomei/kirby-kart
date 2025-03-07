@@ -141,7 +141,7 @@ class Cart
 
     public function formattedSubtotal(): string
     {
-        return Helper::formatCurrency($this->subtotal());
+        return Kart::formatCurrency($this->subtotal());
     }
 
     public function remove(ProductPage|array|string|null $product, int $amount = 1): int

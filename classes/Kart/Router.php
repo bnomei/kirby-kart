@@ -171,7 +171,7 @@ class Router
             return null;
         }
 
-        return Helper::decrypt($props, option('bnomei.kart.router.encryption'), true); // @phpstan-ignore-line
+        return Kart::decrypt($props, option('bnomei.kart.router.encryption'), true); // @phpstan-ignore-line
     }
 
     protected static function queryCsrf(): array
@@ -198,7 +198,7 @@ class Router
         }
 
         return [
-            self::ENCRYPTED_QUERY => Helper::encrypt($query, $password, true),
+            self::ENCRYPTED_QUERY => Kart::encrypt($query, $password, true),
         ];
     }
 

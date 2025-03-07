@@ -4,7 +4,7 @@ namespace Bnomei\Kart\Provider;
 
 use Bnomei\Kart\CartLine;
 use Bnomei\Kart\ContentPageEnum;
-use Bnomei\Kart\Helper;
+use Bnomei\Kart\Kart;
 use Bnomei\Kart\Provider;
 use Bnomei\Kart\ProviderEnum;
 use Bnomei\Kart\Router;
@@ -37,7 +37,7 @@ class Kirby extends Provider
             return [];
         }
 
-        $input = Helper::sanitize(array_filter([
+        $input = Kart::sanitize(array_filter([
             'email' => urldecode(strval(get('email', $this->kirby->user()?->email()))),
             'payment_method' => urldecode(strval(get('payment_method', ''))),
             'payment_status' => urldecode(strval(get('payment_status', ''))),

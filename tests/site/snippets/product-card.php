@@ -1,22 +1,18 @@
 <?php
 /** @var ProductPage $page */
 $product ??= $page;
-?><div class="border border-kart bg-kart text-white rounded-md overflow-hidden">
-    <a href="<?= $product->url() ?>"><img class="aspect-square object-cover w-full h-auto" src="<?= $product->gallery()->toFile()?->url() ?>" alt="<?= $product->title() ?>">
+?>
+<div>
+    <a href="<?= $product->url() ?>">
+        <img src="<?= $product->gallery()->toFile()?->url() ?>" alt="<?= $product->title() ?>">
+        <h2><?= $product->title() ?></h2>
     </a>
-    <div class="px-2 py-1 flex justify-between">
-        <div>
-            <h2 class="text-xl mt-1"><?= $product->title() ?></h2>
-            <span><?= $product->formattedPrice() ?></span>
-        </div>
-        <div>
-            <?php snippet(option('tests.frontend').'/buy', [
-                'product' => $product,
-                'redirect' => site()->url().'/cart', // ready for checkout
-            ]) ?>
-            <?php snippet(option('tests.frontend').'/wish-or-forget', [
-                'product' => $product,
-            ]) ?>
-        </div>
-    </div>
+    <div><?= $product->formattedPrice() ?></div>
+    <?php snippet('kart/buy', [
+        'product' => $product,
+        'redirect' => site()->url().'/cart', // ready for checkout
+    ]) ?>
+    <?php snippet('kart/wish-or-forget', [
+        'product' => $product,
+    ]) ?>
 </div>

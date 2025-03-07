@@ -7,7 +7,7 @@ use Bnomei\Kart\ProviderEnum;
 
 class Invoiceninja extends Provider
 {
-    protected string $name = ProviderEnum::INVOICENINJA->value;
+    protected string $name = ProviderEnum::INVOICE_NINJA->value;
 
     public function checkout(): string
     {

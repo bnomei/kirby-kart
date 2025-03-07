@@ -41,12 +41,17 @@ class CartLine
         return $this->product()?->uuid()->id() ?? $this->id;
     }
 
+    public function key(): string // Merx
+    {
+        return $this->id();
+    }
+
     public function product(): ?ProductPage
     {
         return $this->product;
     }
 
-    public function inStockForQuantity(): bool
+    public function hasStockForQuantity(): bool
     {
         $stock = $this->product()->stock();
 

@@ -95,10 +95,5 @@
   },
   "extra": {
     "kirby-cms-path": "tests/kirby"
-  },
-  "suggest": {
-    "stripe/stripe-php": "Stripe PHP SDK",
-    "mollie/mollie-api-php": "Mollie PHP SDK",
-    "paddlehq/paddle-php-sdk": "Paddle PHP SDK"
   }
 }

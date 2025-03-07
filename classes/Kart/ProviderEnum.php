@@ -6,8 +6,8 @@ enum ProviderEnum: string
 {
     case FASTSPRING = 'fastspring';
     case GUMROAD = 'gumroad';
-    case INVOICENINJA = 'invoiceninja';
-    case KIRBY = 'kirbycms';
+    case INVOICE_NINJA = 'invoice_ninja';
+    case KIRBY = 'kirby_cms';
     case LEMONSQUEEZE = 'lemonsqueeze';
     case MOLLIE = 'mollie';
     case PADDLE = 'paddle';

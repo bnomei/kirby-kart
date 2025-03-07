@@ -1,3 +1,4 @@
+# this is an overwritten tab for the product blueprint adding custom columns/sections/fields
 fields:
   note:
     type: textarea
