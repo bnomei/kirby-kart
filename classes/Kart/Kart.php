@@ -46,6 +46,15 @@ class Kart
 
     public function page(ContentPageEnum|string $key): ?Page
     {
+        if (is_string($key)) {
+            foreach (ContentPageEnum::cases() as $case) {
+                if ($case->value === $key) {
+                    $key = $case;
+                    break;
+                }
+            }
+        }
+
         if ($key instanceof ContentPageEnum) {
             $key = $key->value;
             $key = strval($this->kirby()->option("bnomei.kart.{$key}.page"));
@@ -282,7 +291,7 @@ class Kart
      */
     public function orders(): Pages
     {
-        return kart()->page(ContentPageEnum::ORDERS)?->children() ?: new Pages;
+        return kart()->page(ContentPageEnum::ORDERS)?->children()->sortBy('paidDate', 'desc') ?: new Pages;
     }
 
     /**

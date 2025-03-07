@@ -376,6 +376,19 @@ App::plugin(
             /**
              * @kql-allowed
              */
+            'hasPurchased' => function (ProductPage|string $product): bool {
+                /** @var OrderPage $order */
+                foreach ($this->orders() as $order) {
+                    if ($order->hasProduct($product)) {
+                        return true;
+                    }
+                }
+
+                return false;
+            },
+            /**
+             * @kql-allowed
+             */
             'hasMadePaymentFor' => function (string $provider, ProductPage $productPage): bool {
                 /** @var CustomerUser $this */
                 if ($this->$provider()->isEmpty()) {

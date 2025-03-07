@@ -130,4 +130,9 @@ class Helper
     {
         return str_pad(hash('xxh3', $value), 16, '0', STR_PAD_LEFT);
     }
+
+    public static function zeroPad(string $value, int $length = 3): string
+    {
+        return str_pad($value, $length, '0', STR_PAD_LEFT);
+    }
 }

@@ -213,7 +213,7 @@ class ProductPage extends Page
         /** @var StocksPage $stocks */
         $stocks = kart()->page(ContentPageEnum::STOCKS);
 
-        return $stocks->stock($this->uuid()->toString()) ?? '?';
+        return $stocks->stock($this->uuid()->toString()) ?? '∞';
     }
 
     public function stockUrl(): ?string

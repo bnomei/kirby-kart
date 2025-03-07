@@ -482,8 +482,7 @@ class OrderPage extends Page
             }
         }
 
-
-        $file = kirby()->impersonate('kirby', function() use ($zipFile, $zipFilename, $tmpId) {
+        $file = kirby()->impersonate('kirby', function () use ($zipFile, $zipFilename, $tmpId) {
             return $this->createFile([
                 'filename' => $zipFilename ?? md5($tmpId).'.zip', // make unguessable
                 'source' => $zipFile,
