@@ -46,7 +46,6 @@ tabs:
           description:
             label: bnomei.kart.description
             type: textarea
-            width: 1/2
             virtual: true
           gallery:
             label: bnomei.kart.gallery
@@ -54,18 +53,32 @@ tabs:
             query: page.parent.images
             uploads:
               parent: page.parent
-              template: product-gallery
             width: 1/2
             translate: false
-            virtual: true
+          downloads:
+            label: bnomei.kart.downloads
+            type: files
+            query: page.parent.files
+            uploads:
+              parent: page.parent
+            width: 1/2
+            translate: false
           categories:
             label: bnomei.kart.categories
             type: tags
+            options:
+              type: query
+              query: >
+                page.siblings.pluck("categories", ",",
+                true)
             translate: false
             virtual: true
           tags:
             label: bnomei.kart.tags
             type: tags
+            options:
+              type: query
+              query: page.siblings.pluck("tags", ",", true)
             translate: false
             virtual: true
           raw:

@@ -7,8 +7,8 @@ use Kirby\Content\Field;
 /**
  * @method Field fastspring()
  * @method Field gumroad()
- * @method Field invoiceninja()
- * @method Field kirbycms()
+ * @method Field invoice_ninja()
+ * @method Field kirby_cms()
  * @method Field lemonsqueeze()
  * @method Field mollie()
  * @method Field paddle()

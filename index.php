@@ -38,8 +38,8 @@ App::plugin(
                 // providers
                 'fastspring' => true,
                 'gumroad' => true,
-                'invoiceninja' => true,
-                'kirbycms' => true,
+                'invoice_ninja' => true,
+                'kirby_cms' => true,
                 'lemonsqueeze' => true,
                 'mollie' => true,
                 'paddle' => true,
@@ -98,12 +98,12 @@ App::plugin(
                     ];
                 },
             ],
-            'provider' => 'kirbycms', // see ProviderEnum (kirbycms, stripe, mollie, paddle, ...) or use \Kart\Provider\Kirby::class etc.
+            'provider' => 'kirby_cms', // see ProviderEnum (kirby_cms, stripe, mollie, paddle, ...) or use \Kart\Provider\Kirby::class etc.
             'providers' => [
                 'fastspring' => [],
                 'gumroad' => [],
-                'invoiceninja' => [],
-                'kirbycms' => [
+                'invoice_ninja' => [],
+                'kirby_cms' => [
                     'virtual' => false,
                 ],
                 'lemonsqueeze' => [],
@@ -125,16 +125,17 @@ App::plugin(
         ],
         'routes' => require_once __DIR__.'/routes.php',
         'snippets' => [
+            'kart/add' => __DIR__.'/snippets/add.php',
+            'kart/buy' => __DIR__.'/snippets/buy.php',
+            'kart/cart' => __DIR__.'/snippets/cart.php',
             'kart/input/csrf' => __DIR__.'/snippets/input-csrf.php',
             'kart/input/csrf-defer' => __DIR__.'/snippets/input-csrf-defer.php',
             'kart/json-ld/product' => __DIR__.'/snippets/json-ld-product.php',
             'kart/login' => __DIR__.'/snippets/login.php',
             'kart/logout' => __DIR__.'/snippets/logout.php',
-            'kart/cart' => __DIR__.'/snippets/cart.php',
-            'kart/add' => __DIR__.'/snippets/add.php',
-            'kart/buy' => __DIR__.'/snippets/buy.php',
-            'kart/wishlist' => __DIR__.'/snippets/wishlist.php',
+            'kart/profile' => __DIR__.'/snippets/profile.php',
             'kart/wish-or-forget' => __DIR__.'/snippets/wish-or-forget.php',
+            'kart/wishlist' => __DIR__.'/snippets/wishlist.php',
         ],
         'translations' => [
             'en' => require_once __DIR__.'/translations/en.php',
