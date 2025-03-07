@@ -118,7 +118,8 @@ class Cart
     public function allInStock(): bool
     {
         foreach ($this->lines as $line) {
-            if (! $line->inStockForQuantity()) {
+            /** @var CartLine $line */
+            if (! $line->hasStockForQuantity()) {
                 return false;
             }
         }

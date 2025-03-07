@@ -1,10 +1,8 @@
 <?php
 
 use Bnomei\Kart\Cart;
-use Bnomei\Kart\CartLine;
 use Bnomei\Kart\Kart;
 use Bnomei\Kart\License;
-use Bnomei\Kart\OrderLine;
 use Bnomei\Kart\Router;
 use Kirby\Cms\App;
 use Kirby\Cms\Collection;
@@ -226,36 +224,6 @@ App::plugin(
              */
             'toTags' => function (Field $field): Collection {
                 return kart()->tags()->filterBy('value', 'in', explode(',', $field->value));
-            },
-            /**
-             * @kql-allowed
-             */
-            'toCartLines' => function (Field $field): Collection {
-                $lines = [];
-                foreach ($field->toStructure() as $line) {
-                    $lines[] = new CartLine($line->id(), $line->quanity());
-                }
-
-                return new Collection($lines);
-            },
-            /**
-             * @kql-allowed
-             */
-            'toOrderLines' => function (Field $field): Collection {
-                $lines = [];
-                foreach ($field->toStructure() as $line) {
-                    $lines[] = new OrderLine(
-                        $line->id(),
-                        $line->price()->toFloat(),
-                        $line->quantity()->toInt(),
-                        $line->total()->toFloat(),
-                        $line->subtotal()->toFloat(),
-                        $line->tax()->toFloat(),
-                        $line->discount()->toFloat()
-                    );
-                }
-
-                return new Collection($lines);
             },
         ],
         'pagesMethods' => [

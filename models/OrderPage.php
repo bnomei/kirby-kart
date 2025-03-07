@@ -2,6 +2,8 @@
 
 use Bnomei\Kart\ContentPageEnum;
 use Bnomei\Kart\Kart;
+use Bnomei\Kart\OrderLine;
+use Kirby\Cms\Collection;
 use Kirby\Cms\File;
 use Kirby\Cms\Files;
 use Kirby\Cms\Page;
@@ -9,7 +11,6 @@ use Kirby\Content\Field;
 use Kirby\Filesystem\Dir;
 use Kirby\Filesystem\F;
 use Kirby\Toolkit\Str;
-use ZipArchive;
 
 /**
  * @method Field invoiceurl()
@@ -503,10 +504,23 @@ class OrderPage extends Page
     }
 
     /**
-     * @return \Kirby\Cms\Collection<string, \Bnomei\Kart\OrderLine>
+     * @return Collection<string, OrderLine>
      */
-    public function orderLines(): \Kirby\Cms\Collection
+    public function orderLines(): Collection
     {
-        return $this->items()->toOrderlines(); // @phpstan-ignore-line
+        $lines = [];
+        foreach ($this->items()->toStructure() as $line) {
+            $lines[] = new OrderLine(
+                $line->key()->toPage()?->uuid()->toString(),
+                $line->price()->toFloat(),
+                $line->quantity()->toInt(),
+                $line->total()->toFloat(),
+                $line->subtotal()->toFloat(),
+                $line->tax()->toFloat(),
+                $line->discount()->toFloat()
+            );
+        }
+
+        return new Collection($lines);
     }
 }

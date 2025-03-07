@@ -7,6 +7,9 @@
         $product = $line->product(); ?>
         <li>
             <a href="<?= $product->url() ?>"><?= $product->title() ?></a>
+            <form method="POST" onclick="this.disabled=true;this.form.submit();" action="<?= $product->now() ?>">
+                <button type="submit">Move to cart</button>
+            </form>
             <form method="POST" action="<?= $product->forget() ?>">
                 <button type="submit" onclick="this.disabled=true;this.form.submit();">Remove from wishlist</button>
             </form>

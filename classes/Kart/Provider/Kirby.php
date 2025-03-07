@@ -46,7 +46,7 @@ class Kirby extends Provider
 
         // build data for user, order and stock updates
         $data = array_merge($data, array_filter([
-            'email' => strtolower(A::get($input, 'email')),
+            'email' => strtolower(A::get($input, 'email', '')),
             'paidDate' => date('Y-m-d H:i:s'),
             'paymentMethod' => A::get($input, 'payment_method'),
             'paymentComplete' => A::get($input, 'payment_status', 'paid') === 'paid',

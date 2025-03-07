@@ -19,7 +19,7 @@
                     <button onclick="this.disabled=true;this.form.submit();" type="submit">-</button>
                 </form>
                 <form method="POST" action="<?= $product->later() ?>">
-                    <button onclick="this.disabled=true;this.form.submit();" type="submit">❤︎</button>
+                    <button onclick="this.disabled=true;this.form.submit();" type="submit">Move to wishlist</button>
                 </form>
             </li>
         <?php } ?>
