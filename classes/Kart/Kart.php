@@ -418,19 +418,8 @@ class Kart
         )->first();
     }
 
-    /**
-     * @kql-allowed
-     *
-     * @return Pages<string, ProductPage>
-     */
-    public function productsByParams(array $params = []): Pages
+    private function getProductsByParam(array $params = []): Pages
     {
-        $params = array_filter(array_merge($params, array_filter([
-            'category' => param('category'),
-            'categories' => param('categories'),
-            'tag' => param('tag'),
-            'tags' => param('tags'),
-        ])));
         $products = $this->products();
 
         if ($category = A::get($params, 'category')) {
@@ -447,6 +436,37 @@ class Kart
         }
 
         return $products;
+    }
+
+    /**
+     * @kql-allowed
+     *
+     * @return Pages<string, ProductPage>
+     */
+    public function productsByParams(array $params = []): Pages
+    {
+        $params = array_filter(array_merge($params, array_filter([
+            'category' => param('category'),
+            'categories' => param('categories'),
+            'tag' => param('tag'),
+            'tags' => param('tags'),
+        ])));
+
+        if (empty($params)) {
+            return $this->products();
+        }
+
+        $expire = kirby()->option('bnomei.kart.expire');
+        if (is_int($expire)) {
+            $key = Kart::hash(implode(',', array_filter($params)));
+            $products = kirby()->cache('bnomei.kart.products')->getOrSet('products-'.$key, function () use ($params) {
+                return array_values($this->getProductsByParam($params)->toArray(fn (ProductPage $product) => $product->uuid()->toString()));
+            });
+
+            return new Pages($products);
+        }
+
+        return $this->getProductsByParam($params);
     }
 
     /**
@@ -487,10 +507,24 @@ class Kart
      *
      * @return Pages<string, ProductPage>
      */
-    public function productsWithCategory(string|array $category, bool $any = true): Pages
+    public function productsWithCategory(string|array $categories, bool $any = true): Pages
     {
-        if (is_string($category)) {
-            $category = [$category];
+        if (is_string($categories)) {
+            $categories = [$categories];
+        }
+        sort($categories);
+        $categories = array_unique($categories);
+
+        $expire = kirby()->option('bnomei.kart.expire');
+        if (is_int($expire)) {
+            $key = 'categories-'.Kart::hash(implode(',', $categories)).($any ? '-any' : '-all');
+
+            return new Pages(kirby()->cache('bnomei.kart.products')->getOrSet($key, function () use ($categories, $any) {
+                $products = $any ? $this->products()->filterBy('categories', 'in', $categories, ',') :
+                    $this->products()->filterBy(fn ($product) => count(array_diff($categories, $product->tags()->split())) === 0);
+
+                return array_values($products->toArray(fn (ProductPage $product) => $product->uuid()->toString()));
+            }, $expire));
         }
 
         return $any ? $this->products()->filterBy('categories', 'in', $category, ',') :
@@ -533,7 +567,8 @@ class Kart
     {
         $expire = kirby()->option('bnomei.kart.expire');
         if (is_int($expire)) {
-            $categories = kirby()->cache('bnomei.kart.categories')->getOrSet('categories'.($path ? '-'.Kart::hash($path) : ''), function () use ($path) {
+            $key = Kart::hash(implode(',', array_filter([$path, param('category'), param('tag')])));
+            $categories = kirby()->cache('bnomei.kart.categories')->getOrSet('categories-'.$key, function () use ($path) {
                 return $this->getCategories($path);
             }, $expire);
         } else {
@@ -552,6 +587,20 @@ class Kart
     {
         if (is_string($tags)) {
             $tags = [$tags];
+        }
+        sort($tags);
+        $tags = array_unique($tags);
+
+        $expire = kirby()->option('bnomei.kart.expire');
+        if (is_int($expire)) {
+            $key = 'tags-'.Kart::hash(implode(',', $tags)).($any ? '-any' : '-all');
+
+            return new Pages(kirby()->cache('bnomei.kart.products')->getOrSet($key, function () use ($tags, $any) {
+                $products = $any ? $this->products()->filterBy('tags', 'in', $tags, ',') :
+                    $this->products()->filterBy(fn ($product) => count(array_diff($tags, $product->tags()->split())) === 0);
+
+                return array_values($products->toArray(fn (ProductPage $product) => $product->uuid()->toString()));
+            }, $expire));
         }
 
         return $any ? $this->products()->filterBy('tags', 'in', $tags, ',') :
@@ -594,7 +643,8 @@ class Kart
     {
         $expire = kirby()->option('bnomei.kart.expire');
         if (is_int($expire)) {
-            $tags = kirby()->cache('bnomei.kart.tags')->getOrSet('tags'.($path ? '-'.Kart::hash($path) : ''), function () use ($path) {
+            $key = Kart::hash(implode(',', array_filter([$path, param('category'), param('tag')])));
+            $tags = kirby()->cache('bnomei.kart.tags')->getOrSet('tags-'.$key, function () use ($path) {
                 return $this->getTags($path);
             }, $expire);
         } else {

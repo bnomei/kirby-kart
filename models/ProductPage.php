@@ -249,12 +249,22 @@ class ProductPage extends Page
         return Router::cart_add($this);
     }
 
+    public function addToCart(): string
+    {
+        return $this->add();
+    }
+
     /**
      * @kql-allowed
      */
     public function buy(): string
     {
         return Router::cart_buy($this);
+    }
+
+    public function buyNow(): string
+    {
+        return $this->buy();
     }
 
     /**
@@ -265,12 +275,22 @@ class ProductPage extends Page
         return Router::cart_remove($this);
     }
 
+    public function removeFromCart(): string
+    {
+        return $this->remove();
+    }
+
     /**
      * @kql-allowed
      */
     public function later(): string
     {
         return Router::cart_later($this);
+    }
+
+    public function moveFromCartToWishlist(): string
+    {
+        return $this->later();
     }
 
     /**
@@ -281,6 +301,11 @@ class ProductPage extends Page
         return Router::wishlist_add($this);
     }
 
+    public function addToWishlist(): string
+    {
+        return $this->wish();
+    }
+
     /**
      * @kql-allowed
      */
@@ -289,12 +314,22 @@ class ProductPage extends Page
         return Router::wishlist_remove($this);
     }
 
+    public function removeFromWishlist(): string
+    {
+        return $this->forget();
+    }
+
     /**
      * @kql-allowed
      */
     public function now(): string
     {
         return Router::wishlist_now($this);
+    }
+
+    public function moveFromWishlistToCart(): string
+    {
+        return $this->now();
     }
 
     /**
