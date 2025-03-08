@@ -4,6 +4,7 @@ return [
     'bnomei.kart.categories' => 'Kategorien',
     'bnomei.kart.created' => 'Erstellt am',
     'bnomei.kart.customer' => 'Kunde',
+    'bnomei.kart.customers' => 'Kunden',
     'bnomei.kart.description' => 'Beschreibung',
     'bnomei.kart.discount' => 'Rabatt',
     'bnomei.kart.dowloads' => 'Downloads',

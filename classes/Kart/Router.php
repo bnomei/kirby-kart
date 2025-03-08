@@ -14,6 +14,7 @@ class Router
     const LOGIN = 'kart/login';
 
     const LOGOUT = 'kart/logout';
+    const ACCOUNT_DELETE = 'kart/account/delete';
 
     const CART_ADD = 'kart/cart/add';
 

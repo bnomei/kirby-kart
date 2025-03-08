@@ -37,6 +37,7 @@ App::plugin(
                 'orders' => true,
                 'products' => true,
                 'ratelimit' => true,
+                'stats' => true,
                 'stocks' => true,
                 'tags' => true,
 
@@ -169,6 +170,8 @@ App::plugin(
             'kart/profile' => __DIR__.'/snippets/profile.php',
             'kart/wish-or-forget' => __DIR__.'/snippets/wish-or-forget.php',
             'kart/wishlist' => __DIR__.'/snippets/wishlist.php',
+            'kart/account/login-magic' => __DIR__.'/snippets/account-login-magic.php.php',
+            'kart/account/signup-magic' => __DIR__.'/snippets/account-signup-magic.php.php',
             'kart/turnstile/form' => __DIR__.'/snippets/turnstile-form.php.php',
             'kart/turnstile/widget' => __DIR__.'/snippets/turnstile-widget.php',
         ],
@@ -216,6 +219,15 @@ App::plugin(
             'user.logout:after' => function (User $user, Session $session) {
                 kart()->cart()->clear();
                 kart()->wishlist()->clear();
+            },
+            'user.create:after' => function (User $user) {
+                kirby()->cache('bnomei.kart.stats')->remove('customers');
+            },
+            'user.changeRole:after' => function (User $newUser, User $oldUser) {
+                kirby()->cache('bnomei.kart.stats')->remove('customers');
+            },
+            'user.delete:after' => function (bool $status, User $user) {
+                kirby()->cache('bnomei.kart.stats')->remove('customers');
             },
             'page.update:before' => function (Page $page, array $values, array $strings): void {
                 if ($page instanceof StockPage) {

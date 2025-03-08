@@ -71,6 +71,27 @@ return function (App $kirby) {
             },
         ],
         [
+            'pattern' => Router::ACCOUNT_DELETE,
+            'method' => 'POST',
+            'action' => function () {
+                if ($r = Router::denied()) {
+                    return $r;
+                }
+
+                $user = kirby()->user();
+                if (! $user) {
+                    return Response::json([], 404);
+                }
+                if ($user->isAdmin()) {
+                    return Response::json([], 401);
+                }
+
+                $user->logout();
+                $user->delete();
+                go(site()->url());
+            },
+        ],
+        [
             'pattern' => [
                 Router::WISHLIST_ADD,
                 '(:all)/'.Router::WISHLIST_ADD,
