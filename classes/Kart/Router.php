@@ -40,6 +40,7 @@ class Router
     const SYNC = 'kart/sync';
 
     const CSRF_TOKEN = 'kart/csrf';
+
     const CAPTCHA = 'kart/captcha';
 
     const ENCRYPTED_QUERY = 'keq'; // make it less likely to collide with others

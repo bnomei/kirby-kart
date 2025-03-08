@@ -237,7 +237,7 @@ class Kart
     public function provider(): Provider
     {
         if (! $this->provider) {
-            $class = strval($this->kart()->option('provider'));
+            $class = strval($this->option('provider'));
             // try finding provider from string if it's not a class yet
             if (in_array(strtolower($class), array_map(fn ($i) => $i->value, ProviderEnum::cases()))) {
                 $c = ucfirst(strtolower($class));
@@ -270,7 +270,7 @@ class Kart
 
     public function currency(): string
     {
-        return strval($this->kart()->option('currency'));
+        return strval($this->option('currency'));
     }
 
     public function checkout(): string
@@ -291,27 +291,6 @@ class Kart
     public function sync(Page|string|null $page): string
     {
         return Router::sync($page);
-    }
-
-    public function canCheckout(): bool
-    {
-        if ($this->cart()->lines()->count() === 0) {
-            return false;
-        }
-
-        /**
-         * @var CartLine $line
-         */
-        foreach ($this->cart()->lines() as $line) {
-            $stock = $line->product()?->stock();
-            if (is_int($stock) && $stock < $line->quantity()) {
-                kart()->message('bnomei.kart.out-of-stock', 'checkout');
-
-                return false;
-            }
-        }
-
-        return true;
     }
 
     public function cart(): Cart
@@ -338,13 +317,13 @@ class Kart
     {
         $email = A::get($credentials, 'email');
         $customer = $this->kirby()->users()->findBy('email', $email);
-        if (! $customer && V::email($email) && $this->kart()->option('customers.enabled')) {
+        if (! $customer && V::email($email) && $this->option('customers.enabled')) {
             $customer = $this->kirby()->impersonate('kirby', function () use ($credentials, $email) {
                 return $this->kirby()->users()->create([
                     'email' => $email,
                     'name' => A::get($credentials, 'name', ''),
                     'password' => Str::random(16),
-                    'role' => ((array) $this->kart()->option('customers.roles'))[0],
+                    'role' => ((array) $this->option('customers.roles'))[0],
                 ]);
             });
             $this->kirby()->trigger('kart.user.created', ['user' => $customer]);

@@ -8,15 +8,19 @@ trait Options
 {
     private array $options;
 
-    public function option(?string $key = null): mixed
+    public function option(?string $key = null, mixed $default = null): mixed
     {
+        if (! isset($this->options)) {
+            $this->options = [];
+        }
+
         if (! $key) {
             return $this->options;
         }
 
         $option = A::get($this->options, $key);
         if (! $option) {
-            $option = kart()->option(''.$key);
+            $option = kirby()->option('bnomei.kart.'.$key, $default);
             $this->options[$key] = $option;
         }
         if (! is_string($option) && is_callable($option) && ! in_array($key, [

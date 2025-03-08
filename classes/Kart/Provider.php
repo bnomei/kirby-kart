@@ -145,7 +145,7 @@ abstract class Provider
             $data = array_slice($data, 0, 10);
         }
 
-        $expire = $this->kart()->option('expire');
+        $expire = $this->kart->option('expire');
         if (! is_null($expire)) {
             $this->cache()->set($interface, $data, intval($expire));
         }
@@ -173,7 +173,7 @@ abstract class Provider
     {
         $this->kirby()->session()->set(
             'kart.redirect.success',
-            $this->kart()->option('successPage') // if null will use order page after creation
+            $this->kart->option('successPage') // if null will use order page after creation
         );
 
         $this->kirby()->session()->set(

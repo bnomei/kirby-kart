@@ -93,7 +93,17 @@ class StocksPage extends Page
         $expire = kart()->option('expire');
         if (is_int($expire)) {
             $stocks = kirby()->cache('bnomei.kart.stocks')->getOrSet('stocks', function () {
-                return $this->stockPages()->toArray(fn (StockPage $stock) => $stock->stock()->toInt());
+                $stocks = [];
+                /** @var StockPage $stockPage */
+                foreach ($this->stockPages() as $stockPage) {
+                    $page = $stockPage->page()->toPage();
+                    if (! $page) {
+                        continue;
+                    }
+                    $stocks[$page->uuid()->toString()] = $stockPage->stock()->toInt();
+                }
+
+                return $stocks;
             }, $expire);
 
             return A::get($stocks, $id);

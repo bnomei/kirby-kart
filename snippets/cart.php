@@ -27,9 +27,6 @@
     <div><?= kart()->cart()->formattedSubtotal() ?> +tax</div>
     <form method="POST" action="<?= kart()->checkout() ?>">
         <input type="hidden" name="redirect" value="<?= $page->url() ?>">
-        <button type="submit"
-                onclick="this.disabled=true;this.form.submit();"
-            <?php e(kart()->cart()->allInStock() === false, 'disabled') ?>
-        >Checkout</button>
+        <button type="submit" onclick="this.disabled=true;this.form.submit();" <?php e(kart()->cart()->canCheckout() === false, 'disabled') ?>>Checkout</button>
     </form>
 </div>

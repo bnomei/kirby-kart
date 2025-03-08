@@ -162,7 +162,7 @@ return function (App $kirby) {
                     page('page://'.Router::get('product'))
                 );
 
-                if (! kart()->canCheckout()) {
+                if (! kart()->cart()->canCheckout()) {
                     Router::go($id);
                 }
 
@@ -198,7 +198,7 @@ return function (App $kirby) {
                     return $r;
                 }
 
-                if (! kart()->canCheckout()) {
+                if (! kart()->cart()->canCheckout()) {
                     Response::go('/');
                 }
 

@@ -88,6 +88,27 @@ class Cart
         return $item->quantity();
     }
 
+    public function canCheckout(): bool
+    {
+        if ($this->lines()->count() === 0) {
+            return false;
+        }
+
+        /**
+         * @var CartLine $line
+         */
+        foreach ($this->lines() as $line) {
+            $stock = $line->product()?->stock();
+            if (is_int($stock) && $stock < $line->quantity()) {
+                kart()->message('bnomei.kart.out-of-stock', 'checkout');
+
+                return false;
+            }
+        }
+
+        return true;
+    }
+
     public function save(): void
     {
         $this->kirby->session()->set($this->id, $this->lines->toArray());
