@@ -100,6 +100,11 @@ class Cart
         ]);
     }
 
+    public function count(): int
+    {
+        return $this->lines()->count();
+    }
+
     /**
      * @return Collection<CartLine>
      */
@@ -127,9 +132,9 @@ class Cart
         return true;
     }
 
-    public function count(): int
+    public function formattedSubtotal(): string
     {
-        return $this->lines()->count();
+        return Kart::formatCurrency($this->subtotal());
     }
 
     public function subtotal(): float
@@ -138,11 +143,6 @@ class Cart
             fn (CartLine $item) => $item->product() ? ($item->quantity() *
                 $item->product()->price()->toFloat()) : 0
         ));
-    }
-
-    public function formattedSubtotal(): string
-    {
-        return Kart::formatCurrency($this->subtotal());
     }
 
     public function remove(ProductPage|array|string|null $product, int $amount = 1): int

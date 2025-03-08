@@ -8,7 +8,6 @@ use Kirby\Data\Yaml;
 use Kirby\Toolkit\A;
 use Kirby\Toolkit\Obj;
 use Kirby\Toolkit\Str;
-use Kirby\Uuid\Uuid;
 
 /**
  * @property string $id

@@ -33,17 +33,17 @@ class CartLine
         return $this->quantity;
     }
 
+    public function key(): string // Merx
+    {
+        return $this->id();
+    }
+
     /**
      * makes the product unique in the cart line collection
      */
     public function id(): string
     {
         return $this->product()?->uuid()->id() ?? $this->id;
-    }
-
-    public function key(): string // Merx
-    {
-        return $this->id();
     }
 
     public function product(): ?ProductPage

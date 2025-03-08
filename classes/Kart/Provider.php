@@ -29,19 +29,14 @@ abstract class Provider
         $this->options = [];
     }
 
-    public function kirby(): App
-    {
-        return $this->kirby;
-    }
-
     public function title(): string
     {
         return implode(' ', array_map('ucfirst', (explode('_', $this->name))));
     }
 
-    public function name(): string
+    public function virtual(): bool|string
     {
-        return $this->name;
+        return $this->kirby()->option("bnomei.kart.providers.{$this->name}.virtual", true);
     }
 
     public function option(string $key, bool $resolveCallables = true): mixed
@@ -59,9 +54,9 @@ abstract class Provider
         return $option;
     }
 
-    public function virtual(): bool|string
+    public function kirby(): App
     {
-        return $this->kirby()->option("bnomei.kart.providers.{$this->name}.virtual", true);
+        return $this->kirby;
     }
 
     public function sync(ContentPageEnum|string|null $sync): int
@@ -92,6 +87,11 @@ abstract class Provider
         return intval(round(($t - microtime(true)) * 1000));
     }
 
+    public function cache(): Cache
+    {
+        return $this->kirby()->cache('bnomei.kart.'.$this->name);
+    }
+
     public function updatedAt(ContentPageEnum|string|null $sync): string
     {
         $u = 'updatedAt';
@@ -104,11 +104,6 @@ abstract class Provider
         return $this->cache()->get($u, '?');
     }
 
-    public function cache(): Cache
-    {
-        return $this->kirby()->cache('bnomei.kart.'.$this->name);
-    }
-
     public function findImagesFromUrls(array $urls): array
     {
         // media pool in the products page
@@ -119,6 +114,16 @@ abstract class Provider
             fn ($url) => $images->filter('name', F::name($url))->first()?->uuid()->toString(), // slower but better results
             $urls
         ));
+    }
+
+    public function name(): string
+    {
+        return $this->name;
+    }
+
+    public function products(): array
+    {
+        return $this->read('products');
     }
 
     public function read(string $interface): array
@@ -152,11 +157,6 @@ abstract class Provider
         $this->cache()->set('updatedAt-'.$interface, $t);
 
         return $data;
-    }
-
-    public function products(): array
-    {
-        return $this->read('products');
     }
 
     public function orders(): array

@@ -77,8 +77,12 @@ class StocksPage extends Page
      */
     public function stockPages(?string $id = null): Pages
     {
-        return $this->children()
-            ->filterBy(fn ($page) => $page->page()->toPage()?->uuid()->toString() === $id);
+        $c = $this->children();
+        if ($id !== null) {
+            $c = $c->filterBy(fn ($page) => $page->page()->toPage()?->uuid()->toString() === $id);
+        }
+
+        return $c;
     }
 
     /**
@@ -86,6 +90,16 @@ class StocksPage extends Page
      */
     public function stock(?string $id = null): ?int
     {
+        $expire = kirby()->option('bnomei.kart.expire');
+        if (is_int($expire)) {
+            $stocks = kirby()->cache('bnomei.kart.stocks')->getOrSet('stocks', function () {
+                return $this->stockPages()->toArray(fn (StockPage $stock) => $stock->stock()->toInt());
+            }, $expire);
+
+            return A::get($stocks, $id);
+        }
+
+        // slowish...
         $stocks = $this->stockPages($id);
 
         return $stocks->count() ? $stocks->sumField('stock')->toInt() : null;

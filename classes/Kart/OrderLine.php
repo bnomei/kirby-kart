@@ -29,6 +29,18 @@ class OrderLine
         $this->product = page($this->id); // @phpstan-ignore-line
     }
 
+    public function __call(string $name, array $arguments): mixed
+    {
+        if ($name == 'key') { // Merx
+            return $this->id();
+        }
+        if (property_exists($this, $name)) {
+            return $this->$name;
+        }
+
+        return null;
+    }
+
     /**
      * makes the product unique in the cart line collection
      */
@@ -40,17 +52,5 @@ class OrderLine
     public function product(): ?ProductPage
     {
         return $this->product;
-    }
-
-    public function __call(string $name, array $arguments): mixed
-    {
-        if ($name == 'key') { // Merx
-            return $this->id();
-        }
-        if (property_exists($this, $name)) {
-            return $this->$name;
-        }
-
-        return null;
     }
 }

@@ -32,6 +32,8 @@ App::plugin(
             'cache' => [
                 'ratelimit' => true,
                 'gravatar' => true,
+                'crypto' => true,
+                'stocks' => true,
 
                 // providers
                 'fastspring' => true,
@@ -182,6 +184,7 @@ App::plugin(
             },
             'page.update:before' => function (Page $page, array $values, array $strings): void {
                 if ($page instanceof StockPage) {
+                    kirby()->cache('bnomei.kart.stocks')->flush();
                     if (! $page->onlyOneStockPagePerProduct($values)) {
                         throw new Exception(strval(t('bnomei.kart.stocks.exception-uniqueness')));
                     }
@@ -368,6 +371,7 @@ App::plugin(
              * @kql-allowed
              */
             'orders' => function (): ?Pages {
+                // TODO: slow on many orders, add a cache
                 return kart()->orders()
                     ->filterBy(fn (OrderPage $order) => $order->customer()->toUser()?->id() === $this->id())
                     ->sortBy('paidDate', 'desc');
@@ -436,6 +440,7 @@ App::plugin(
                     $base64 = base64_encode($image);
                     $dataUrl = "data:{$mimeType};base64,{$base64}";
 
+                    // using the bnomei.kart.expire does not make sense for the long-lived url
                     kirby()->cache('bnomei.kart.gravatar')->set(md5($url), $dataUrl, 60 * 24);
 
                     return $dataUrl;

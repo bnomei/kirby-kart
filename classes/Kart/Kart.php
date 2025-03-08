@@ -43,28 +43,14 @@ class Kart
         $this->wishlist = null;
     }
 
-    public function kirby(): App
+    public static function singleton(): Kart
     {
-        return $this->kirby;
-    }
-
-    public function page(ContentPageEnum|string $key): ?Page
-    {
-        if (is_string($key)) {
-            foreach (ContentPageEnum::cases() as $case) {
-                if ($case->value === $key) {
-                    $key = $case;
-                    break;
-                }
-            }
+        if (self::$singleton === null) {
+            self::$singleton = new self;
+            self::$singleton->ready();
         }
 
-        if ($key instanceof ContentPageEnum) {
-            $key = $key->value;
-            $key = strval($this->kirby()->option("bnomei.kart.{$key}.page"));
-        }
-
-        return $this->kirby()->page($key);
+        return self::$singleton;
     }
 
     public function ready(): void
@@ -74,27 +60,6 @@ class Kart
         if (sha1(file_get_contents(__DIR__.strrev(base64_decode('cGhwLmVzbmVjaUwv')))) !== 'c6187eac0a6659724beb632dcb46806ee24a7e81' && $kart = base64_decode('c2xlZXA=')) { // @phpstan-ignore-line
             $kart(5); // @phpstan-ignore-line
         }
-    }
-
-    public function message(?string $message = null, string $channel = 'default'): ?string
-    {
-        if ($message === null) {
-            return $this->kirby()->session()->pull('bnomei.kart.message-'.$channel);
-        }
-
-        $this->kirby()->session()->set('bnomei.kart.message-'.$channel, $message);
-
-        return null;
-    }
-
-    public static function singleton(): Kart
-    {
-        if (self::$singleton === null) {
-            self::$singleton = new self;
-            self::$singleton->ready();
-        }
-
-        return self::$singleton;
     }
 
     public static function flush(string $cache = 'all'): bool
@@ -121,6 +86,148 @@ class Kart
         }
     }
 
+    public static function encrypt(mixed $data, ?string $password = null, bool $json = false): string
+    {
+        $password ??= option('crypto.password');
+        if ($password instanceof Closure) {
+            $password = $password();
+        }
+        if ($password && is_string($password) && SymmetricCrypto::isAvailable()) {
+            if ($json || is_array($data)) {
+                $data = json_encode($data) ?: '';
+            }
+
+            // encryption is slowish thus using a cache
+            $expire = kirby()->option('bnomei.kart.expire');
+            if (is_int($expire)) {
+                $key = Kart::hash($data);
+                $data = kirby()->cache('bnomei.kart.crypto')->getOrSet($key, function () use ($data, $password) {
+                    return is_string($data) ? (new SymmetricCrypto(password: $password))->encrypt($data) : $data;
+                }, $expire);
+            } else {
+                $data = is_string($data) ? (new SymmetricCrypto(password: $password))->encrypt($data) : $data;
+            }
+        }
+
+        return base64_encode(strval($data));
+    }
+
+    public static function hash(string $value): string
+    {
+        return str_pad(hash('xxh3', $value), 16, '0', STR_PAD_LEFT);
+    }
+
+    public static function zeroPad(string $value, int $length = 3): string
+    {
+        return str_pad($value, $length, '0', STR_PAD_LEFT);
+    }
+
+    public static function decrypt(string $data, Closure|string|null $password = null, bool $json = false): mixed
+    {
+        $data = base64_decode($data);
+
+        $password ??= option('router.encryption');
+        if ($password instanceof Closure) {
+            $password = $password();
+        }
+        if ($password && SymmetricCrypto::isAvailable()) {
+            if (Str::contains($data, '"mode":"secretbox"')) {
+                $expire = kirby()->option('bnomei.kart.expire');
+                if (is_int($expire)) {
+                    $key = Kart::hash($data);
+                    $data = kirby()->cache('bnomei.kart.crypto')->getOrSet($key, function () use ($data, $password) {
+                        return (new SymmetricCrypto(password: $password))->decrypt($data);
+                    }, $expire);
+                } else {
+                    $data = (new SymmetricCrypto(password: $password))->decrypt($data);
+                }
+            }
+            if ($json) {
+                $data = json_decode($data, true);
+            }
+        }
+
+        return $data;
+    }
+
+    public static function formatNumber(float $number, bool $prefix = false): string
+    {
+        if ($prefix) {
+            $prefix = $number > 0 ? '+' : ''; // - will be in format anyway
+        } else {
+            $prefix = '';
+        }
+
+        return $prefix.self::formatter(NumberFormatter::DECIMAL)->format($number);
+    }
+
+    public static function formatter(?int $style = null): NumberFormatter
+    {
+        $kirby = kirby();
+        $locale = $kirby->multilang() ? $kirby->language()?->locale() : null;
+        if (is_array($locale)) {
+            $locale = $locale[0];
+        }
+        if (is_null($locale)) {
+            $locale = $kirby->option('bnomei.kart.locale', 'en_EN');
+        }
+
+        if (! $kirby->environment()->isLocal() && $kirby->plugin('bnomei/kart')->license()->status()->value() !== 'active') {
+            $locale = 'ja_JP';
+        }
+
+        return new NumberFormatter($locale, $style ?? NumberFormatter::DECIMAL);
+    }
+
+    public static function nonAmbiguousUuid(int $length): string
+    {
+        return str_replace(
+            ['o', 'O', 'l', 'L', 'I', 'i', 'B', 'S', 's'],
+            ['0', '0', '1', '1', '1', '1', '8', '5', '5'],
+            Uuid::generate($length)
+        );
+    }
+
+    public static function formatCurrency(float $number): string
+    {
+        $kirby = kirby();
+        $currency = strval($kirby->option('bnomei.kart.currency', 'EUR'));
+
+        if (! $kirby->environment()->isLocal() && $kirby->plugin('bnomei/kart')->license()->status()->value() !== 'active') {
+            $currency = 'JPY';
+        }
+
+        return self::formatter(NumberFormatter::CURRENCY)->formatCurrency($number, $currency) ?: '';
+    }
+
+    public static function sanitize(mixed $data, bool $checkLength = true): mixed
+    {
+        if (! is_string($data) && ! is_array($data)) {
+            return false;
+        }
+
+        // convert to json and limit amount of chars with exception
+        $json = is_array($data) ? json_encode($data) : $data;
+        if ($json === false) {
+            return false;
+        }
+        if (strlen($json) > 10000) {
+            return false;
+        }
+        $json = null; // free memory
+
+        if (is_array($data)) {
+            foreach ($data as $key => $value) {
+                // checkLength of total data was already done above
+                $data[$key] = Kart::sanitize($value, checkLength: false);
+            }
+        } elseif (is_string($data)) {
+            $data = strip_tags(trim(empty($data) ? '' : $data));
+        }
+
+        return $data;
+    }
+
     public function provider(): Provider
     {
         if (! $this->provider) {
@@ -141,13 +248,9 @@ class Kart
         return $this->provider;
     }
 
-    public function cart(): Cart
+    public function kirby(): App
     {
-        if (! $this->cart) {
-            $this->cart = new Cart('cart');
-        }
-
-        return $this->cart;
+        return $this->kirby;
     }
 
     public function wishlist(): Cart
@@ -205,6 +308,26 @@ class Kart
         return true;
     }
 
+    public function cart(): Cart
+    {
+        if (! $this->cart) {
+            $this->cart = new Cart('cart');
+        }
+
+        return $this->cart;
+    }
+
+    public function message(?string $message = null, string $channel = 'default'): ?string
+    {
+        if ($message === null) {
+            return $this->kirby()->session()->pull('bnomei.kart.message-'.$channel);
+        }
+
+        $this->kirby()->session()->set('bnomei.kart.message-'.$channel, $message);
+
+        return null;
+    }
+
     public function createCustomer(array $credentials): ?User
     {
         $email = A::get($credentials, 'email');
@@ -225,67 +348,15 @@ class Kart
     }
 
     /**
-     * @return Collection<string, Category>
+     * @kql-allowed
+     *
+     * @return Pages<string, OrderPage>
      */
-    public function categories(?string $path = null): Collection
+    public function ordersWithProduct(ProductPage|string|null $product): Pages
     {
-        $products = kart()->page(ContentPageEnum::PRODUCTS);
-        $categories = $products->children()->pluck('categories', ',', true);
-        $tags = $products->children()->pluck('tags', ',', true);
-        sort($categories);
-
-        $category = param('category');
-        $tag = param('tag');
-
-        return new Collection(array_map(fn ($c) => new Category([
-            'id' => $c,
-            'label' => t('category.'.$c, $c),
-            'title' => t('category.'.$c, $c),
-            'text' => t('category.'.$c, $c),
-            'value' => $c,
-            'count' => $products->children()->filterBy('categories', $c, ',')->filterBy('tags', 'in', $tag ? [$tag] : $tags)->count(),
-            'isActive' => $c === $category,
-            'url' => ($path ? url($path) : $products->url()).'?category='.$c,
-            'urlWithParams' => url(
-                $path ?? $products->id(),
-                ['params' => [
-                    'category' => $c === $category ? null : $c,
-                    'tag' => $tag,
-                ]]
-            ),
-        ]), $categories));
-    }
-
-    /**
-     * @return Collection<string, Tag>
-     */
-    public function tags(?string $path = null): Collection
-    {
-        $products = kart()->page(ContentPageEnum::PRODUCTS);
-        $categories = $products->children()->pluck('categories', ',', true);
-        $tags = $products->children()->pluck('tags', ',', true);
-        sort($tags);
-
-        $category = param('category');
-        $tag = param('tag');
-
-        return new Collection(array_map(fn ($t) => new Tag([
-            'id' => $t,
-            'label' => t('category.'.$t, $t),
-            'title' => t('category.'.$t, $t),
-            'text' => t('category.'.$t, $t),
-            'count' => $products->children()->filterBy('tags', $t, ',')->filterBy('categories', 'in', $category ? [$category] : $categories)->count(),
-            'value' => $t,
-            'isActive' => $t === $tag,
-            'url' => ($path ? url($path) : $products->url()).'?tag='.$t,
-            'urlWithParams' => url(
-                $path ?? $products->id(),
-                ['params' => [
-                    'category' => $category,
-                    'tag' => $t === $tag ? null : $t,
-                ]]
-            ),
-        ]), $tags));
+        return $this->orders()->filterBy(
+            fn (OrderPage $orderPage) => $orderPage->hasProduct($product)
+        );
     }
 
     /**
@@ -298,16 +369,23 @@ class Kart
         return kart()->page(ContentPageEnum::ORDERS)?->children()->sortBy('paidDate', 'desc') ?: new Pages;
     }
 
-    /**
-     * @kql-allowed
-     *
-     * @return Pages<string, OrderPage>
-     */
-    public function ordersWithProduct(ProductPage|string|null $product): Pages
+    public function page(ContentPageEnum|string $key): ?Page
     {
-        return $this->orders()->filterBy(
-            fn (OrderPage $orderPage) => $orderPage->hasProduct($product)
-        );
+        if (is_string($key)) {
+            foreach (ContentPageEnum::cases() as $case) {
+                if ($case->value === $key) {
+                    $key = $case;
+                    break;
+                }
+            }
+        }
+
+        if ($key instanceof ContentPageEnum) {
+            $key = $key->value;
+            $key = strval($this->kirby()->option("bnomei.kart.{$key}.page"));
+        }
+
+        return $this->kirby()->page($key);
     }
 
     /**
@@ -338,16 +416,6 @@ class Kart
         return $this->orders()->filterBy(
             fn (OrderPage $orderPage) => $orderPage->invnumber()->toInt() === $invoiceNumber
         )->first();
-    }
-
-    /**
-     * @kql-allowed
-     *
-     * @return Pages<string, ProductPage>
-     */
-    public function products(): Pages
-    {
-        return kart()->page(ContentPageEnum::PRODUCTS)?->children() ?: new Pages;
     }
 
     /**
@@ -386,39 +454,19 @@ class Kart
      *
      * @return Pages<string, ProductPage>
      */
+    public function products(): Pages
+    {
+        return kart()->page(ContentPageEnum::PRODUCTS)?->children() ?: new Pages;
+    }
+
+    /**
+     * @kql-allowed
+     *
+     * @return Pages<string, ProductPage>
+     */
     public function productsWithoutStocks(): Pages
     {
         return $this->products()->filterBy(fn (ProductPage $page) => ! is_numeric($page->stock()));
-    }
-
-    /**
-     * @kql-allowed
-     *
-     * @return Pages<string, ProductPage>
-     */
-    public function productsWithCategory(string|array $category, bool $any = true): Pages
-    {
-        if (is_string($category)) {
-            $category = [$category];
-        }
-
-        return $any ? $this->products()->filterBy('categories', 'in', $category, ',') :
-            $this->products()->filterBy(fn ($product) => count(array_diff($category, $product->categories()->split())) === 0);
-    }
-
-    /**
-     * @kql-allowed
-     *
-     * @return Pages<string, ProductPage>
-     */
-    public function productsWithTag(string|array $tags, bool $any = true): Pages
-    {
-        if (is_string($tags)) {
-            $tags = [$tags];
-        }
-
-        return $any ? $this->products()->filterBy('tags', 'in', $tags, ',') :
-            $this->products()->filterBy(fn ($product) => count(array_diff($tags, $product->tags()->split())) === 0);
     }
 
     /**
@@ -437,136 +485,104 @@ class Kart
     /**
      * @kql-allowed
      *
+     * @return Pages<string, ProductPage>
+     */
+    public function productsWithCategory(string|array $category, bool $any = true): Pages
+    {
+        if (is_string($category)) {
+            $category = [$category];
+        }
+
+        return $any ? $this->products()->filterBy('categories', 'in', $category, ',') :
+            $this->products()->filterBy(fn ($product) => count(array_diff($category, $product->categories()->split())) === 0);
+    }
+
+    /**
+     * @return Collection<string, Category>
+     */
+    public function categories(?string $path = null): Collection
+    {
+        $products = kart()->page(ContentPageEnum::PRODUCTS);
+        $categories = $products->children()->pluck('categories', ',', true);
+        $tags = $products->children()->pluck('tags', ',', true);
+        sort($categories);
+
+        $category = param('category');
+        $tag = param('tag');
+
+        return new Collection(array_map(fn ($c) => new Category([
+            'id' => $c,
+            'label' => t('category.'.$c, $c),
+            'title' => t('category.'.$c, $c),
+            'text' => t('category.'.$c, $c),
+            'value' => $c,
+            'count' => $products->children()->filterBy('categories', $c, ',')->filterBy('tags', 'in', $tag ? [$tag] : $tags)->count(),
+            'isActive' => $c === $category,
+            'url' => ($path ? url($path) : $products->url()).'?category='.$c,
+            'urlWithParams' => url(
+                $path ?? $products->id(),
+                ['params' => [
+                    'category' => $c === $category ? null : $c,
+                    'tag' => $tag,
+                ]]
+            ),
+        ]), $categories));
+    }
+
+    /**
+     * @kql-allowed
+     *
+     * @return Pages<string, ProductPage>
+     */
+    public function productsWithTag(string|array $tags, bool $any = true): Pages
+    {
+        if (is_string($tags)) {
+            $tags = [$tags];
+        }
+
+        return $any ? $this->products()->filterBy('tags', 'in', $tags, ',') :
+            $this->products()->filterBy(fn ($product) => count(array_diff($tags, $product->tags()->split())) === 0);
+    }
+
+    /**
+     * @return Collection<string, Tag>
+     */
+    public function tags(?string $path = null): Collection
+    {
+        $products = kart()->page(ContentPageEnum::PRODUCTS);
+        $categories = $products->children()->pluck('categories', ',', true);
+        $tags = $products->children()->pluck('tags', ',', true);
+        sort($tags);
+
+        $category = param('category');
+        $tag = param('tag');
+
+        return new Collection(array_map(fn ($t) => new Tag([
+            'id' => $t,
+            'label' => t('category.'.$t, $t),
+            'title' => t('category.'.$t, $t),
+            'text' => t('category.'.$t, $t),
+            'count' => $products->children()->filterBy('tags', $t, ',')->filterBy('categories', 'in', $category ? [$category] : $categories)->count(),
+            'value' => $t,
+            'isActive' => $t === $tag,
+            'url' => ($path ? url($path) : $products->url()).'?tag='.$t,
+            'urlWithParams' => url(
+                $path ?? $products->id(),
+                ['params' => [
+                    'category' => $category,
+                    'tag' => $t === $tag ? null : $t,
+                ]]
+            ),
+        ]), $tags));
+    }
+
+    /**
+     * @kql-allowed
+     *
      * @return Pages<string, StockPage>
      */
     public function stocks(): Pages
     {
         return kart()->page(ContentPageEnum::STOCKS)?->children() ?: new Pages;
-    }
-
-    public static function encrypt(mixed $data, ?string $password = null, bool $json = false): string
-    {
-        $password ??= option('crypto.password');
-        if ($password instanceof Closure) {
-            $password = $password();
-        }
-        if ($password && is_string($password) && SymmetricCrypto::isAvailable()) {
-            $encr = new SymmetricCrypto(password: $password);
-            if ($json || is_array($data)) {
-                $data = json_encode($data) ?: '';
-            }
-            $data = is_string($data) ? $encr->encrypt($data) : $data;
-        }
-
-        return base64_encode(strval($data));
-    }
-
-    public static function zeroPad(string $value, int $length = 3): string
-    {
-        return str_pad($value, $length, '0', STR_PAD_LEFT);
-    }
-
-    public static function decrypt(string $data, Closure|string|null $password = null, bool $json = false): mixed
-    {
-        $data = base64_decode($data);
-
-        $password ??= option('router.encryption');
-        if ($password instanceof Closure) {
-            $password = $password();
-        }
-        if ($password && SymmetricCrypto::isAvailable()) {
-            $encr = new SymmetricCrypto(password: $password);
-            if (Str::contains($data, '"mode":"secretbox"')) {
-                $data = $encr->decrypt($data);
-            }
-            if ($json) {
-                $data = json_decode($data, true);
-            }
-        }
-
-        return $data;
-    }
-
-    public static function formatNumber(float $number, bool $prefix = false): string
-    {
-        if ($prefix) {
-            $prefix = $number > 0 ? '+' : ''; // - will be in format anyway
-        } else {
-            $prefix = '';
-        }
-
-        return $prefix.self::formatter(NumberFormatter::DECIMAL)->format($number);
-    }
-
-    public static function nonAmbiguousUuid(int $length): string
-    {
-        return str_replace(
-            ['o', 'O', 'l', 'L', 'I', 'i', 'B', 'S', 's'],
-            ['0', '0', '1', '1', '1', '1', '8', '5', '5'],
-            Uuid::generate($length)
-        );
-    }
-
-    public static function formatCurrency(float $number): string
-    {
-        $kirby = kirby();
-        $currency = strval($kirby->option('bnomei.kart.currency', 'EUR'));
-
-        if (! $kirby->environment()->isLocal() && $kirby->plugin('bnomei/kart')->license()->status()->value() !== 'active') {
-            $currency = 'JPY';
-        }
-
-        return self::formatter(NumberFormatter::CURRENCY)->formatCurrency($number, $currency) ?: '';
-    }
-
-    public static function sanitize(mixed $data, bool $checkLength = true): mixed
-    {
-        if (! is_string($data) && ! is_array($data)) {
-            return false;
-        }
-
-        // convert to json and limit amount of chars with exception
-        $json = is_array($data) ? json_encode($data) : $data;
-        if ($json === false) {
-            return false;
-        }
-        if (strlen($json) > 10000) {
-            return false;
-        }
-        $json = null; // free memory
-
-        if (is_array($data)) {
-            foreach ($data as $key => $value) {
-                // checkLength of total data was already done above
-                $data[$key] = Kart::sanitize($value, checkLength: false);
-            }
-        } elseif (is_string($data)) {
-            $data = strip_tags(trim(empty($data) ? '' : $data));
-        }
-
-        return $data;
-    }
-
-    public static function formatter(?int $style = null): NumberFormatter
-    {
-        $kirby = kirby();
-        $locale = $kirby->multilang() ? $kirby->language()?->locale() : null;
-        if (is_array($locale)) {
-            $locale = $locale[0];
-        }
-        if (is_null($locale)) {
-            $locale = $kirby->option('bnomei.kart.locale', 'en_EN');
-        }
-
-        if (! $kirby->environment()->isLocal() && $kirby->plugin('bnomei/kart')->license()->status()->value() !== 'active') {
-            $locale = 'ja_JP';
-        }
-
-        return new NumberFormatter($locale, $style ?? NumberFormatter::DECIMAL);
-    }
-
-    public static function hash(string $value): string
-    {
-        return str_pad(hash('xxh3', $value), 16, '0', STR_PAD_LEFT);
     }
 }

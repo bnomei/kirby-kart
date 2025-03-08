@@ -106,6 +106,28 @@ class Router
         return is_string($token) && csrf($token) ? null : 401;
     }
 
+    public static function get(string $key, mixed $default = null): mixed
+    {
+        $request = kirby()->request();
+        $value = $request->get($key, $default);
+
+        $decrypted = self::decrypt($request->get(self::ENCRYPTED_QUERY));
+        if (is_array($decrypted)) {
+            $value = A::get($decrypted, $key, $value);
+        }
+
+        return $value;
+    }
+
+    public static function decrypt(?string $props = null): mixed
+    {
+        if (empty($props)) {
+            return null;
+        }
+
+        return Kart::decrypt($props, option('bnomei.kart.router.encryption'), true); // @phpstan-ignore-line
+    }
+
     public static function go(
         ?string $url = null,
         string|array $json = [],
@@ -152,26 +174,17 @@ class Router
         return null;
     }
 
-    public static function get(string $key, mixed $default = null): mixed
+    public static function login(): string
     {
-        $request = kirby()->request();
-        $value = $request->get($key, $default);
-
-        $decrypted = self::decrypt($request->get(self::ENCRYPTED_QUERY));
-        if (is_array($decrypted)) {
-            $value = A::get($decrypted, $key, $value);
-        }
-
-        return $value;
+        return self::factory(self::LOGIN);
     }
 
-    public static function decrypt(?string $props = null): mixed
+    public static function factory(string $path, array $query = [], array $params = []): string
     {
-        if (empty($props)) {
-            return null;
-        }
-
-        return Kart::decrypt($props, option('bnomei.kart.router.encryption'), true); // @phpstan-ignore-line
+        return Uri::index()->clone([
+            'path' => $path,
+            'query' => static::queryCsrf() + self::encrypt($query) + $params,
+        ])->toString();
     }
 
     protected static function queryCsrf(): array
@@ -200,24 +213,6 @@ class Router
         return [
             self::ENCRYPTED_QUERY => Kart::encrypt($query, $password, true),
         ];
-    }
-
-    public static function current(): string
-    {
-        return kirby()->request()->path();
-    }
-
-    public static function factory(string $path, array $query = [], array $params = []): string
-    {
-        return Uri::index()->clone([
-            'path' => $path,
-            'query' => static::queryCsrf() + self::encrypt($query) + $params,
-        ])->toString();
-    }
-
-    public static function login(): string
-    {
-        return self::factory(self::LOGIN);
     }
 
     public static function logout(): string
@@ -257,6 +252,11 @@ class Router
                 'product' => $product->uuid()->id(),
             ]
         );
+    }
+
+    public static function current(): string
+    {
+        return kirby()->request()->path();
     }
 
     public static function cart_buy(ProductPage $product): string
