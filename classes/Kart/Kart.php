@@ -2,7 +2,10 @@
 
 namespace Bnomei\Kart;
 
+use Bnomei\Kart\Mixins\Captcha;
 use Bnomei\Kart\Mixins\ContentPages;
+use Bnomei\Kart\Mixins\Options;
+use Bnomei\Kart\Mixins\Turnstile;
 use Bnomei\Kart\Provider\Kirby;
 use Closure;
 use Exception;
@@ -23,7 +26,10 @@ use StockPage;
 
 class Kart
 {
+    use Captcha;
     use ContentPages;
+    use Options;
+    use Turnstile;
 
     private static ?Kart $singleton = null;
 
@@ -64,14 +70,14 @@ class Kart
 
     public static function flush(string $cache = 'all'): bool
     {
-        if (kirby()->option('bnomei.kart.expire') === null) {
+        if (kart()->option('expire') === null) {
             return false;
         }
 
         try {
             $caches = [];
             if (empty($cache) || $cache === '*' || $cache === 'all') {
-                $caches = array_keys((array) kirby()->option('bnomei.kart.cache'));
+                $caches = array_keys((array) kart()->option('cache'));
             } else {
                 $caches[] = $cache;
             }
@@ -98,7 +104,7 @@ class Kart
             }
 
             // encryption is slowish thus using a cache
-            $expire = kirby()->option('bnomei.kart.expire');
+            $expire = kart()->option('expire');
             if (is_int($expire)) {
                 $key = Kart::hash($data);
                 $data = kirby()->cache('bnomei.kart.crypto')->getOrSet($key, function () use ($data, $password) {
@@ -132,7 +138,7 @@ class Kart
         }
         if ($password && SymmetricCrypto::isAvailable()) {
             if (Str::contains($data, '"mode":"secretbox"')) {
-                $expire = kirby()->option('bnomei.kart.expire');
+                $expire = kart()->option('expire');
                 if (is_int($expire)) {
                     $key = Kart::hash($data);
                     $data = kirby()->cache('bnomei.kart.crypto')->getOrSet($key, function () use ($data, $password) {
@@ -169,7 +175,7 @@ class Kart
             $locale = $locale[0];
         }
         if (is_null($locale)) {
-            $locale = $kirby->option('bnomei.kart.locale', 'en_EN');
+            $locale = kart()->option('locale', 'en_EN');
         }
 
         if (! $kirby->environment()->isLocal() && $kirby->plugin('bnomei/kart')->license()->status()->value() !== 'active') {
@@ -191,7 +197,7 @@ class Kart
     public static function formatCurrency(float $number): string
     {
         $kirby = kirby();
-        $currency = strval($kirby->option('bnomei.kart.currency', 'EUR'));
+        $currency = strval(kart()->option('currency', 'EUR'));
 
         if (! $kirby->environment()->isLocal() && $kirby->plugin('bnomei/kart')->license()->status()->value() !== 'active') {
             $currency = 'JPY';
@@ -231,7 +237,7 @@ class Kart
     public function provider(): Provider
     {
         if (! $this->provider) {
-            $class = strval($this->kirby()->option('bnomei.kart.provider'));
+            $class = strval($this->kart()->option('provider'));
             // try finding provider from string if it's not a class yet
             if (in_array(strtolower($class), array_map(fn ($i) => $i->value, ProviderEnum::cases()))) {
                 $c = ucfirst(strtolower($class));
@@ -264,7 +270,7 @@ class Kart
 
     public function currency(): string
     {
-        return strval($this->kirby()->option('bnomei.kart.currency'));
+        return strval($this->kart()->option('currency'));
     }
 
     public function checkout(): string
@@ -332,13 +338,13 @@ class Kart
     {
         $email = A::get($credentials, 'email');
         $customer = $this->kirby()->users()->findBy('email', $email);
-        if (! $customer && V::email($email) && $this->kirby()->option('bnomei.kart.customers.enabled')) {
+        if (! $customer && V::email($email) && $this->kart()->option('customers.enabled')) {
             $customer = $this->kirby()->impersonate('kirby', function () use ($credentials, $email) {
                 return $this->kirby()->users()->create([
                     'email' => $email,
                     'name' => A::get($credentials, 'name', ''),
                     'password' => Str::random(16),
-                    'role' => ((array) $this->kirby()->option('bnomei.kart.customers.roles'))[0],
+                    'role' => ((array) $this->kart()->option('customers.roles'))[0],
                 ]);
             });
             $this->kirby()->trigger('kart.user.created', ['user' => $customer]);
@@ -456,7 +462,7 @@ class Kart
             return $this->products();
         }
 
-        $expire = kirby()->option('bnomei.kart.expire');
+        $expire = kart()->option('expire');
         if (is_int($expire)) {
             $key = Kart::hash(implode(',', array_filter($params)));
             $products = kirby()->cache('bnomei.kart.products')->getOrSet('products-'.$key, function () use ($params) {
@@ -515,7 +521,7 @@ class Kart
         sort($categories);
         $categories = array_unique($categories);
 
-        $expire = kirby()->option('bnomei.kart.expire');
+        $expire = kart()->option('expire');
         if (is_int($expire)) {
             $key = 'categories-'.Kart::hash(implode(',', $categories)).($any ? '-any' : '-all');
 
@@ -565,7 +571,7 @@ class Kart
      */
     public function categories(?string $path = null): Collection
     {
-        $expire = kirby()->option('bnomei.kart.expire');
+        $expire = kart()->option('expire');
         if (is_int($expire)) {
             $key = Kart::hash(implode(',', array_filter([$path, param('category'), param('tag')])));
             $categories = kirby()->cache('bnomei.kart.categories')->getOrSet('categories-'.$key, function () use ($path) {
@@ -591,7 +597,7 @@ class Kart
         sort($tags);
         $tags = array_unique($tags);
 
-        $expire = kirby()->option('bnomei.kart.expire');
+        $expire = kart()->option('expire');
         if (is_int($expire)) {
             $key = 'tags-'.Kart::hash(implode(',', $tags)).($any ? '-any' : '-all');
 
@@ -641,7 +647,7 @@ class Kart
      */
     public function tags(?string $path = null): Collection
     {
-        $expire = kirby()->option('bnomei.kart.expire');
+        $expire = kart()->option('expire');
         if (is_int($expire)) {
             $key = Kart::hash(implode(',', array_filter([$path, param('category'), param('tag')])));
             $tags = kirby()->cache('bnomei.kart.tags')->getOrSet('tags-'.$key, function () use ($path) {

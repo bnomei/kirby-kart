@@ -92,7 +92,7 @@ class OrdersPage extends Page
 
     public function createOrder(array $data, ?User $customer): ?Page
     {
-        if (! $this->kirby()->option('bnomei.kart.orders.enabled')) {
+        if (! $this->kart()->option('orders.enabled')) {
             return null;
         }
 

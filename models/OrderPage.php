@@ -29,7 +29,7 @@ class OrderPage extends Page
         $parent = kart()->page(ContentPageEnum::ORDERS);
 
         // enforce unique but short slug with the option to overwrite it in a closure
-        $uuid = kirby()->option('bnomei.kart.orders.order.uuid');
+        $uuid = kart()->option('orders.order.uuid');
         if ($uuid instanceof Closure) {
             $uuid = $uuid($parent, $props);
             $props['slug'] = Str::slug($uuid);
@@ -39,8 +39,8 @@ class OrderPage extends Page
 
         $props['parent'] = $parent;
         $props['isDraft'] = false;
-        $props['template'] = kirby()->option('bnomei.kart.orders.order.template', 'order');
-        $props['model'] = kirby()->option('bnomei.kart.orders.order.model', 'order');
+        $props['template'] = kart()->option('orders.order.template', 'order');
+        $props['model'] = kart()->option('orders.order.model', 'order');
 
         /** @var OrderPage $p */
         $p = parent::create($props);
@@ -427,7 +427,7 @@ class OrderPage extends Page
             ->sortBy('modified', 'desc')
             ->first();
 
-        if (! $file && $this->kirby()->option('bnomei.kart.orders.order.create-missing-zips')) {
+        if (! $file && $this->kart()->option('orders.order.create-missing-zips')) {
             $file = $this->createZipWithFiles();
         }
 

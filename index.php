@@ -118,7 +118,7 @@ App::plugin(
                 'paypal' => [],
                 'snipcart' => [],
                 'stripe' => [
-                    'secret_key' => fn () => env('STRIPE_SECRET_KEY'),
+                    'secret_key' => fn () => function_exists('env') ? env('STRIPE_SECRET_KEY') : null,
                     'checkout_options' => function (Kart $kart) {
                         // configure the checkout based on current kart instance
                         // https://docs.stripe.com/api/checkout/sessions/create
@@ -126,6 +126,34 @@ App::plugin(
                     },
                     'virtual' => 'prune', // 'prune', // do not write virtual fields to file
                 ],
+            ],
+            'turnstile' => [
+                'endpoint' => 'https://challenges.cloudflare.com/turnstile/v0/siteverify',
+                'sitekey' => fn () => function_exists('env') ? env('TURNSTILE_SITE_KEY') : null,
+                'secretkey' => fn () => function_exists('env') ? env('TURNSTILE_SECRET_KEY') : null,
+            ],
+            'captcha' => [
+                'current' => function () {
+                    return get('captcha'); // in current request
+                },
+                'set' => function () {
+                    // https://github.com/S1SYPHOS/php-simple-captcha
+                    $builder = new \SimpleCaptcha\Builder;
+                    $builder->bgColor = '#FFFFFF';
+                    $builder->lineColor = '#FFFFFF';
+                    $builder->textColor = '#000000';
+                    $builder->applyEffects = false;
+                    $builder->build();
+                    kirby()->session()->set('captcha', $builder->phrase);
+
+                    return [
+                        'captcha' => $builder->inline(),
+                    ];
+                },
+                'get' => function () {
+                    // stored in session from captcha route
+                    return kirby()->session()->get('captcha');
+                },
             ],
         ],
         'routes' => require_once __DIR__.'/routes.php',
@@ -141,6 +169,8 @@ App::plugin(
             'kart/profile' => __DIR__.'/snippets/profile.php',
             'kart/wish-or-forget' => __DIR__.'/snippets/wish-or-forget.php',
             'kart/wishlist' => __DIR__.'/snippets/wishlist.php',
+            'kart/turnstile/form' => __DIR__.'/snippets/turnstile-form.php.php',
+            'kart/turnstile/widget' => __DIR__.'/snippets/turnstile-widget.php',
         ],
         'translations' => [
             'en' => require_once __DIR__.'/translations/en.php',
@@ -390,7 +420,7 @@ App::plugin(
              * @kql-allowed
              */
             'orders' => function (): Pages {
-                $expire = kirby()->option('bnomei.kart.expire');
+                $expire = kart()->option('expire');
                 if (is_int($expire)) {
                     return new Pages(kirby()->cache('bnomei.kart.orders')->getOrSet($this->id(), function () {
                         return array_values(kart()->orders()

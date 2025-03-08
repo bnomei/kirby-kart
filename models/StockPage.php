@@ -18,7 +18,7 @@ class StockPage extends Page
         $parent = kart()->page(ContentPageEnum::STOCKS);
 
         // enforce unique but short slug with the option to overwrite it in a closure
-        $uuid = kirby()->option('bnomei.kart.stocks.stock.uuid');
+        $uuid = kart()->option('stocks.stock.uuid');
         if ($uuid instanceof Closure) {
             $uuid = $uuid($parent, $props);
             $props['slug'] = Str::slug($uuid);
@@ -28,8 +28,8 @@ class StockPage extends Page
 
         $props['parent'] = $parent;
         $props['isDraft'] = false;
-        $props['template'] = kirby()->option('bnomei.kart.stocks.stock.template', 'stock');
-        $props['model'] = kirby()->option('bnomei.kart.stocks.stock.model', 'stock');
+        $props['template'] = kart()->option('stocks.stock.template', 'stock');
+        $props['model'] = kart()->option('stocks.stock.model', 'stock');
 
         return parent::create($props);
     }

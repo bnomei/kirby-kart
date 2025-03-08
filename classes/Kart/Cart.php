@@ -92,7 +92,7 @@ class Cart
     {
         $this->kirby->session()->set($this->id, $this->lines->toArray());
         $user = $this->kirby->user();
-        if (in_array($user?->role()->name(), (array) $this->kirby->option('bnomei.kart.customers.roles'))) {
+        if (in_array($user?->role()->name(), (array) $this->kart->option('customers.roles'))) {
             $this->user = $user;
         }
         $this->user?->update([
@@ -215,7 +215,7 @@ class Cart
 
     public function merge(User $user): bool
     {
-        if (! in_array($user->role()->name(), (array) $this->kirby->option('bnomei.kart.customers.roles'))) {
+        if (! in_array($user->role()->name(), (array) $this->kart->option('customers.roles'))) {
             return false; // no merging for customers
         }
 

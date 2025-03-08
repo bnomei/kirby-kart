@@ -16,7 +16,7 @@ class ProductStorage extends PlainTextStorage
 
         // hydrate with provider
         if (kart()->provider()->virtual()) {
-            $uuid = kirby()->option('bnomei.kart.products.product.uuid');
+            $uuid = kart()->option('products.product.uuid');
             foreach (kart()->provider()->products() as $product) {
                 if (A::get($content, 'uuid', time()) === $uuid(null, $product)) {
                     $content = A::merge($content, A::get($product, 'content', []));

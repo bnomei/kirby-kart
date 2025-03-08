@@ -40,12 +40,13 @@ class Router
     const SYNC = 'kart/sync';
 
     const CSRF_TOKEN = 'kart/csrf';
+    const CAPTCHA = 'kart/captcha';
 
     const ENCRYPTED_QUERY = 'keq'; // make it less likely to collide with others
 
-    public static function denied(): ?Response
+    public static function denied(array $check = []): ?Response
     {
-        $middlewares = option('bnomei.kart.middlewares.enabled');
+        $middlewares = kart()->option('middlewares.enabled');
 
         if ($middlewares instanceof Closure) {
             $middlewares = $middlewares();
@@ -55,7 +56,7 @@ class Router
             $middlewares = [];
         }
 
-        if ($code = Router::middlewares($middlewares)) {
+        if ($code = Router::middlewares($middlewares + $check)) {
             return Response::json([], $code);
         }
 
@@ -88,7 +89,7 @@ class Router
 
     public static function ratelimit(): ?int
     {
-        if (! kirby()->option('bnomei.kart.ratelimit.enabled')) {
+        if (! kart()->option('ratelimit.enabled')) {
             return null;
         }
 
@@ -97,7 +98,7 @@ class Router
 
     public static function csrf(): ?int
     {
-        if (! kirby()->option('bnomei.kart.csrf.enabled')) {
+        if (! kart()->option('csrf.enabled')) {
             return null;
         }
 
@@ -125,7 +126,7 @@ class Router
             return null;
         }
 
-        return Kart::decrypt($props, option('bnomei.kart.router.encryption'), true); // @phpstan-ignore-line
+        return Kart::decrypt($props, kart()->option('router.encryption'), true); // @phpstan-ignore-line
     }
 
     public static function go(
@@ -134,7 +135,7 @@ class Router
         ?string $html = null,
         ?int $code = null,
     ): ?Response {
-        $mode = kirby()->option('bnomei.kart.router.mode');
+        $mode = kart()->option('router.mode');
 
         if ($mode === 'go') {
             $url = strval(Router::get('redirect', $url ?? '/'));
@@ -189,7 +190,7 @@ class Router
 
     protected static function queryCsrf(): array
     {
-        $csrf = kirby()->option('bnomei.kart.router.csrf');
+        $csrf = kart()->option('router.csrf');
         if (! $csrf) {
             return [];
         }
@@ -201,7 +202,7 @@ class Router
 
     public static function encrypt(array $query): array
     {
-        $password = option('bnomei.kart.router.encryption');
+        $password = kart()->option('router.encryption');
         if ($password instanceof Closure) {
             $password = $password();
         }

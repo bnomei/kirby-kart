@@ -110,7 +110,7 @@ abstract class Provider
         $images = $this->kirby()->site()->kart()->page(ContentPageEnum::PRODUCTS)->images();
 
         return array_filter(array_map(
-            // fn ($url) => $this->kirby()->option('bnomei.kart.products.page').'/'.F::filename($url), // simple but does not resolve change in extension
+            // fn ($url) => $this->kart()->option('products.page').'/'.F::filename($url), // simple but does not resolve change in extension
             fn ($url) => $images->filter('name', F::name($url))->first()?->uuid()->toString(), // slower but better results
             $urls
         ));
@@ -145,7 +145,7 @@ abstract class Provider
             $data = array_slice($data, 0, 10);
         }
 
-        $expire = $this->kirby()->option('bnomei.kart.expire');
+        $expire = $this->kart()->option('expire');
         if (! is_null($expire)) {
             $this->cache()->set($interface, $data, intval($expire));
         }
@@ -173,7 +173,7 @@ abstract class Provider
     {
         $this->kirby()->session()->set(
             'kart.redirect.success',
-            $this->kirby()->option('bnomei.kart.successPage') // if null will use order page after creation
+            $this->kart()->option('successPage') // if null will use order page after creation
         );
 
         $this->kirby()->session()->set(

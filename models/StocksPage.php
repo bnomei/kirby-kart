@@ -90,7 +90,7 @@ class StocksPage extends Page
      */
     public function stock(?string $id = null): ?int
     {
-        $expire = kirby()->option('bnomei.kart.expire');
+        $expire = kart()->option('expire');
         if (is_int($expire)) {
             $stocks = kirby()->cache('bnomei.kart.stocks')->getOrSet('stocks', function () {
                 return $this->stockPages()->toArray(fn (StockPage $stock) => $stock->stock()->toInt());

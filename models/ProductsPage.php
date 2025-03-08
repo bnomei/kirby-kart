@@ -84,9 +84,9 @@ class ProductsPage extends Page
         $this->children = parent::children();
 
         $this->kirby()->impersonate('kirby', function () {
-            $uuid = kirby()->option('bnomei.kart.products.product.uuid');
+            $uuid = kart()->option('products.product.uuid');
             foreach (kart()->provider()->products() as $product) {
-                if ($this->children->find($uuid($this, $product))) {
+                if ($this->children->findByUuid('page://'.$uuid($this, $product))) {
                     continue;
                 }
                 $this->createChild($product);

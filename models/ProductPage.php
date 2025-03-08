@@ -27,17 +27,17 @@ class ProductPage extends Page
         $parent = kart()->page(ContentPageEnum::PRODUCTS);
 
         // enforce unique but short slug with the option to overwrite it in a closure
-        $uuid = kirby()->option('bnomei.kart.products.product.uuid');
+        $uuid = kart()->option('products.product.uuid');
         if ($uuid instanceof Closure) {
             $uuid = $uuid($parent, $props);
-            $props['slug'] = Str::slug($uuid);
+            $props['slug'] = Str::slug($props['title'] ?? $uuid);
             $props['content']['uuid'] = $uuid;
         }
 
         $props['parent'] = $parent;
         $props['isDraft'] = false;
-        $props['template'] = kirby()->option('bnomei.kart.products.product.template', 'product');
-        $props['model'] = kirby()->option('bnomei.kart.products.product.model', 'product');
+        $props['template'] = kart()->option('products.product.template', 'product');
+        $props['model'] = kart()->option('products.product.model', 'product');
 
         /** @var ProductPage $p */
         $p = parent::create($props);

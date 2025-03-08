@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "aa7b03c5878177a6c3eeef7abef89233",
+    "content-hash": "313bd76840df0322f0403e2512a961e4",
     "packages": [
         {
             "name": "getkirby/composer-installer",
@@ -52,6 +52,82 @@
                 }
             ],
             "time": "2020-12-28T12:54:39+00:00"
+        },
+        {
+            "name": "s1syphos/php-simple-captcha",
+            "version": "2.3.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/S1SYPHOS/php-simple-captcha.git",
+                "reference": "8ceff4950ef75d5deb4a19bbc8e25012818234d9"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/S1SYPHOS/php-simple-captcha/zipball/8ceff4950ef75d5deb4a19bbc8e25012818234d9",
+                "reference": "8ceff4950ef75d5deb4a19bbc8e25012818234d9",
+                "shasum": ""
+            },
+            "require": {
+                "ext-gd": "*",
+                "ext-mbstring": "*",
+                "php": "^8.0"
+            },
+            "require-dev": {
+                "laravel/pint": "^1.4",
+                "mikey179/vfsstream": "^1.6",
+                "phpunit/phpunit": "^9.5",
+                "vimeo/psalm": "^5.6"
+            },
+            "suggest": {
+                "thiagoalessio/tesseract_ocr": "Provides better results when building against OCR. Requires 'tesseract-ocr' to be installed."
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "SimpleCaptcha\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Grégoire Passault",
+                    "email": "g.passault@gmail.com",
+                    "homepage": "http://www.gregwar.com",
+                    "role": "Founder"
+                },
+                {
+                    "name": "Jeremy Livingston",
+                    "email": "jeremy.j.livingston@gmail.com",
+                    "role": "Contributor"
+                },
+                {
+                    "name": "Martin Folkers",
+                    "email": "hello@twobrain.io",
+                    "homepage": "https://twobrain.io",
+                    "role": "Maintainer"
+                }
+            ],
+            "description": "Simple captcha generator",
+            "homepage": "https://codeberg.org/S1SYPHOS/php-simple-captcha",
+            "keywords": [
+                "anti-bot",
+                "anti-spam",
+                "bot-protection",
+                "captcha",
+                "no-bot",
+                "obfuscation",
+                "security",
+                "spam",
+                "spam-protection"
+            ],
+            "support": {
+                "issues": "https://github.com/S1SYPHOS/php-simple-captcha/issues",
+                "source": "https://github.com/S1SYPHOS/php-simple-captcha/tree/2.3.0"
+            },
+            "time": "2023-02-06T10:52:17+00:00"
         }
     ],
     "packages-dev": [

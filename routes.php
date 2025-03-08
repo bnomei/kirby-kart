@@ -1,5 +1,6 @@
 <?php
 
+use Bnomei\Kart\Kart;
 use Bnomei\Kart\Router;
 use Kirby\Cms\App;
 use Kirby\Cms\Page;
@@ -17,10 +18,24 @@ return function (App $kirby) {
             },
         ],
         [
+            'pattern' => Router::CAPTCHA,
+            'method' => 'GET',
+            'action' => function () {
+                if ($r = Router::denied()) {
+                    return $r;
+                }
+
+                return kart()->option('captcha.set')();
+            },
+        ],
+        [
             'pattern' => Router::LOGIN,
             'method' => 'POST',
             'action' => function () use ($kirby) {
-                if ($r = Router::denied()) {
+                if ($r = Router::denied([
+                    Kart::class.'::captcha',
+                    Kart::class.'::turnstile',
+                ])) {
                     return $r;
                 }
 
@@ -29,8 +44,9 @@ return function (App $kirby) {
                 }
 
                 $email = trim(strip_tags(urldecode(get('email', ''))));
+                // TODO: performance on a lot of users might drop
                 $user = $kirby->users()
-                    ->filterBy('role', 'in', $kirby->option('bnomei.kart.customers.roles'))
+                    ->filterBy('role', 'in', kart()->option('customers.roles'))
                     ->findBy('email', $email);
                 if (! $user?->login(get('password'))) {
                     return Response::json([], 401);
@@ -175,7 +191,10 @@ return function (App $kirby) {
             'pattern' => Router::CART_CHECKOUT,
             'method' => 'POST',
             'action' => function () {
-                if ($r = Router::denied()) {
+                if ($r = Router::denied([
+                    Kart::class.'::captcha',
+                    Kart::class.'::turnstile',
+                ])) {
                     return $r;
                 }
 
