@@ -4,6 +4,7 @@ use Bnomei\Kart\Cart;
 use Bnomei\Kart\Kart;
 use Bnomei\Kart\License;
 use Bnomei\Kart\Router;
+use Bnomei\Kart\Wishlist;
 use Kirby\Cms\App;
 use Kirby\Cms\Collection;
 use Kirby\Cms\Page;
@@ -30,10 +31,14 @@ App::plugin(
         'options' => [
             'license' => '', // set your license from https://buy-kart.bnomei.com code in the config `bnomei.kart.license`
             'cache' => [
-                'ratelimit' => true,
-                'gravatar' => true,
+                'categories' => true,
                 'crypto' => true,
+                'gravatar' => true,
+                'orders' => true,
+                'products' => true,
+                'ratelimit' => true,
                 'stocks' => true,
+                'tags' => true,
 
                 // providers
                 'fastspring' => true,
@@ -188,6 +193,14 @@ App::plugin(
                     if (! $page->onlyOneStockPagePerProduct($values)) {
                         throw new Exception(strval(t('bnomei.kart.stocks.exception-uniqueness')));
                     }
+                } elseif ($page instanceof StocksPage) {
+                    kirby()->cache('bnomei.kart.stocks')->flush();
+                } elseif ($page instanceof OrderPage || $page instanceof OrdersPage) {
+                    kirby()->cache('bnomei.kart.orders')->flush();
+                } elseif ($page instanceof ProductPage || $page instanceof ProductsPage) {
+                    kirby()->cache('bnomei.kart.categories')->flush();
+                    kirby()->cache('bnomei.kart.products')->flush();
+                    kirby()->cache('bnomei.kart.tags')->flush();
                 }
             },
             'page.update:after' => function (Page $newPage, Page $oldPage): void {
@@ -361,17 +374,32 @@ App::plugin(
             'kart' => function (): Kart {
                 return kart();
             },
-            /* DANGER: do not do this... this is a field
-            'cart' => function (): Cart { },
-            */
-            /* DANGER: do not do this... this is a field
-            'wishlist' => function (): Cart { },
-            */
             /**
              * @kql-allowed
              */
-            'orders' => function (): ?Pages {
-                // TODO: slow on many orders, add a cache
+            'cart' => function (): Cart {
+                return kart()->cart();
+            },
+            /**
+             * @kql-allowed
+             */
+            'wishlist' => function (): Wishlist {
+                return kart()->wishlist();
+            },
+            /**
+             * @kql-allowed
+             */
+            'orders' => function (): Pages {
+                $expire = kirby()->option('bnomei.kart.expire');
+                if (is_int($expire)) {
+                    return new Pages(kirby()->cache('bnomei.kart.orders')->getOrSet($this->id(), function () {
+                        return array_values(kart()->orders()
+                            ->filterBy(fn (OrderPage $order) => $order->customer()->toUser()?->id() === $this->id())
+                            ->sortBy('paidDate', 'desc')
+                            ->toArray(fn (OrderPage $order) => $order->uuid()->toString()));
+                    }, $expire));
+                }
+
                 return kart()->orders()
                     ->filterBy(fn (OrderPage $order) => $order->customer()->toUser()?->id() === $this->id())
                     ->sortBy('paidDate', 'desc');

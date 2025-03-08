@@ -253,10 +253,10 @@ class Kart
         return $this->kirby;
     }
 
-    public function wishlist(): Cart
+    public function wishlist(): Wishlist
     {
         if (! $this->wishlist) {
-            $this->wishlist = new Cart('wishlist');
+            $this->wishlist = new Wishlist('wishlist');
         }
 
         return $this->wishlist;
@@ -497,10 +497,7 @@ class Kart
             $this->products()->filterBy(fn ($product) => count(array_diff($category, $product->categories()->split())) === 0);
     }
 
-    /**
-     * @return Collection<string, Category>
-     */
-    public function categories(?string $path = null): Collection
+    private function getCategories(?string $path = null): array
     {
         $products = kart()->page(ContentPageEnum::PRODUCTS);
         $categories = $products->children()->pluck('categories', ',', true);
@@ -510,7 +507,7 @@ class Kart
         $category = param('category');
         $tag = param('tag');
 
-        return new Collection(array_map(fn ($c) => new Category([
+        return array_map(fn ($c) => [
             'id' => $c,
             'label' => t('category.'.$c, $c),
             'title' => t('category.'.$c, $c),
@@ -526,7 +523,24 @@ class Kart
                     'tag' => $tag,
                 ]]
             ),
-        ]), $categories));
+        ], $categories);
+    }
+
+    /**
+     * @return Collection<string, Category>
+     */
+    public function categories(?string $path = null): Collection
+    {
+        $expire = kirby()->option('bnomei.kart.expire');
+        if (is_int($expire)) {
+            $categories = kirby()->cache('bnomei.kart.categories')->getOrSet('categories'.($path ? '-'.Kart::hash($path) : ''), function () use ($path) {
+                return $this->getCategories($path);
+            }, $expire);
+        } else {
+            $categories = $this->getCategories($path);
+        }
+
+        return new Collection(array_map(fn ($c) => new Category($c), $categories));
     }
 
     /**
@@ -544,10 +558,7 @@ class Kart
             $this->products()->filterBy(fn ($product) => count(array_diff($tags, $product->tags()->split())) === 0);
     }
 
-    /**
-     * @return Collection<string, Tag>
-     */
-    public function tags(?string $path = null): Collection
+    private function getTags(?string $path = null): array
     {
         $products = kart()->page(ContentPageEnum::PRODUCTS);
         $categories = $products->children()->pluck('categories', ',', true);
@@ -557,7 +568,7 @@ class Kart
         $category = param('category');
         $tag = param('tag');
 
-        return new Collection(array_map(fn ($t) => new Tag([
+        return array_map(fn ($t) => [
             'id' => $t,
             'label' => t('category.'.$t, $t),
             'title' => t('category.'.$t, $t),
@@ -573,7 +584,24 @@ class Kart
                     'tag' => $t === $tag ? null : $t,
                 ]]
             ),
-        ]), $tags));
+        ], $tags);
+    }
+
+    /**
+     * @return Collection<string, Tag>
+     */
+    public function tags(?string $path = null): Collection
+    {
+        $expire = kirby()->option('bnomei.kart.expire');
+        if (is_int($expire)) {
+            $tags = kirby()->cache('bnomei.kart.tags')->getOrSet('tags'.($path ? '-'.Kart::hash($path) : ''), function () use ($path) {
+                return $this->getTags($path);
+            }, $expire);
+        } else {
+            $tags = $this->getTags($path);
+        }
+
+        return new Collection(array_map(fn ($c) => new Tag($c), $tags));
     }
 
     /**

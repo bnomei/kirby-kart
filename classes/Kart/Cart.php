@@ -96,7 +96,7 @@ class Cart
             $this->user = $user;
         }
         $this->user?->update([
-            $this->id => $this->lines->toArray(),
+            'kart_'.$this->id => $this->lines->toArray(),
         ]);
     }
 
@@ -221,8 +221,8 @@ class Cart
 
         $this->user = $user;
 
-        /** @var Field $cart */
-        $cart = $user->cart(); // @phpstan-ignore-line
+        $cartname = 'kart_'.$this->id;
+        $cart = $user->$cartname();
         if ($cart->isEmpty()) {
             return true; // no plans to merge
         }

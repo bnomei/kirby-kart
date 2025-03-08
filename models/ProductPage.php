@@ -302,7 +302,7 @@ class ProductPage extends Page
      */
     public function priceIds(): array
     {
-        // TODO: return a list of all know priceIds for this product
+        // return a list of all know priceIds for this product
         // uses to find of the product was purchased with a given priceId
         return [];
     }
