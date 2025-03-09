@@ -1,6 +1,7 @@
 <?php
 
 return [
+    'bnomei.kart.cart' => 'Cart',
     'bnomei.kart.categories' => 'Kategorien',
     'bnomei.kart.created' => 'Erstellt am',
     'bnomei.kart.customer' => 'Kunde',
@@ -12,6 +13,7 @@ return [
     'bnomei.kart.invoice' => 'Rechnung',
     'bnomei.kart.invoiceNumber' => 'Rechnungsnummer',
     'bnomei.kart.items' => 'Einträge',
+    'bnomei.kart.kart' => 'KART', // do not translate
     'bnomei.kart.last-sync' => 'Letzte Synchronisation',
     'bnomei.kart.latest' => 'Aktuellste',
     'bnomei.kart.latest-invoice-number' => 'Aktuelle Rechnungsnummer',

@@ -286,6 +286,36 @@ return function (App $kirby) {
             },
         ],
         [
+            'pattern' => Router::KART,
+            'method' => 'GET',
+            'action' => function () {
+                $page = new Page([
+                    'slug' => 'kart',
+                    'template' => 'kart',
+                    'content' => [
+                        'title' => t('bnomei.kart.kart'),
+                    ],
+                ]);
+
+                return site()->visit($page);
+            },
+        ],
+        [
+            'pattern' => Router::CART,
+            'method' => 'GET',
+            'action' => function () {
+                $page = kirby()->page(Router::CART) ?? new Page([
+                    'slug' => 'cart',
+                    'template' => 'cart',
+                    'content' => [
+                        'title' => t('bnomei.kart.cart'),
+                    ],
+                ]);
+
+                return site()->visit($page);
+            },
+        ],
+        [
             'pattern' => [
                 Router::CART_ADD,
                 '(:all)/'.Router::CART_ADD,

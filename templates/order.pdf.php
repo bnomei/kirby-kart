@@ -1,4 +1,13 @@
 <?php
 
-// Overwrite this with an PDF implementation if you want
-// like using mpdf or some background task with browsershot
+snippet('kart', slots: true);
+// COPY and modify the code below this line --------
+// TODO: composer require mpdf/mpdf
+
+use Mpdf\Mpdf;
+
+$mpdf = new Mpdf;
+$mpdf->WriteHTML(snippet('kart/order.pdf', ['order' => $page], return: true));
+$mpdf->Output($page->slug().'.pdf', 'D'); // D = download, I = in browser
+
+exit();

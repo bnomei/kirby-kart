@@ -1,6 +1,24 @@
 <?php
+snippet('kart', slots: true);
+// COPY and modify the code below this line --------
+?>
 
-// You need to provide a custom template for this in your
-// site/templates folder to overwrite this default.
+<main>
+    <nav>
+        <?php foreach (kart()->categories()->sortBy('count', 'desc') as $category) {
+            /** @var \Bnomei\Kart\Category $category */ ?>
+            <a class="<?php e($category->isActive(), 'is-active') ?>" href="<?= $category->urlWithParams() ?>"><?= $category ?></a>
+        <?php } ?>
+        <?php foreach (kart()->tags()->sortBy('count', 'desc') as $tag) {
+            /** @var \Bnomei\Kart\Tag $tag */ ?>
+            <a class="<?php e($tag->isActive(), 'is-active') ?>" href="<?= $tag->urlWithParams() ?>"><?= $tag ?></a>
+        <?php } ?>
+    </nav>
 
-go(site()->homePage()->url());
+    <article>
+        <?php foreach (kart()->productsByParams() as $product) {
+            /** @var ProductPage $product */
+            snippet('product-card', ['product' => $product]);
+        } ?>
+    </article>
+</main>

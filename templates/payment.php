@@ -1,14 +1,19 @@
 <?php
+snippet('kart', slots: true);
 // Unless you want to create a custom checkout view you can ignore this template.
-// I used it in my demo for the fake payment provider.
+// I used it in the online and localhost demo for the fake payment provider.
 ?>
 
-<a href="<?= \Bnomei\Kart\Router::get('cancel_url') ?>">Back</a>
+<main>
+    <nav>
+        <a href="<?= \Bnomei\Kart\Router::get('cancel_url') ?>">Back</a>
+    </nav>
 
-<form method="POST" action="<?= \Bnomei\Kart\Router::get('success_url') ?>">
-    <?php // TODO: add turnstile protection?>
-    <label>
-        <input type="email" name="email" />
-    </label>
-    <button type="submit" onclick="this.disabled=true;this.form.submit();">Pay</button>
-</form>
+    <form method="POST" action="<?= \Bnomei\Kart\Router::get('success_url') ?>">
+        <?php // TODO: add turnstile protection?>
+        <label>
+            <input type="email" name="email" />
+        </label>
+        <button type="submit" onclick="this.disabled=true;this.form.submit();">Pay</button>
+    </form>
+</main>

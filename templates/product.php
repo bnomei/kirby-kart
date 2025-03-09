@@ -1,6 +1,30 @@
 <?php
+snippet('kart', slots: true);
+// COPY and modify the code below this line --------
 
-// You need to provide a custom template for this in your
-// site/templates folder to overwrite this default.
+/** @var ProductPage $page */
+$product ??= $page;
+?>
 
-go($page->parent()->url());
+<main>
+    <article>
+        <img src="<?= $product->gallery()->toFile()?->url() ?>" alt="<?= $product->title() ?>">
+        <h1><?= $product->title() ?></h1>
+        <?= $product->description()->kirbytext() ?>
+        <div><?= $product->formattedPrice() ?></div>
+        <?php snippet('kart/add') ?>
+        <?php snippet('kart/wish-or-forget') ?>
+    </article>
+</main>
+
+<aside>
+    <header>
+        <?php snippet('kart/profile') ?>
+    </header>
+
+    <?php snippet('kart/cart') ?>
+    <hr>
+    <?php snippet('kart/wishlist') ?>
+</aside>
+
+<?php snippet('kart/product/json-ld') ?>

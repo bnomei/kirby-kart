@@ -28,7 +28,7 @@ class MagicLinkChallenge extends Challenge
         }
 
         $kirby = $user->kirby();
-        $link = $kirby->site()->url().'/kart/magic-link?'.implode('&', [
+        $link = url(Router::MAGIC_LINK).'?'.implode('&', [
             'email='.urlencode($user->email()),
             'code='.$code,
             'token='.self::secret($code),

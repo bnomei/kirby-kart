@@ -20,6 +20,8 @@ class Router
 
     const CAPTCHA = 'kart/captcha';
 
+    const CART = 'cart';
+
     const CART_ADD = 'kart/cart/add';
 
     const CART_BUY = 'kart/cart/buy';
@@ -33,6 +35,8 @@ class Router
     const CSRF_TOKEN = 'kart/csrf';
 
     const ENCRYPTED_QUERY = 'keq'; // make it less likely to collide with others
+
+    const KART = 'kart';
 
     const LOGIN = 'kart/login';
 
@@ -125,7 +129,7 @@ class Router
 
     public static function hasMagicLink(): ?int
     {
-        if (A::has(kirby()->option('auth.methods'), 'magic-link') === false) {
+        if (A::has(kirby()->option('auth.methods'), 'kart-magic-link') === false) {
             return 405;
         }
 

@@ -53,4 +53,24 @@ class OrderLine
     {
         return $this->product;
     }
+
+    public function formattedPrice(): string
+    {
+        return Kart::formatCurrency($this->price);
+    }
+
+    public function formattedTotal(): string
+    {
+        return Kart::formatCurrency($this->total);
+    }
+
+    public function formattedSubtotal(): string
+    {
+        return Kart::formatCurrency($this->subtotal);
+    }
+
+    public function formattedDiscount(): string
+    {
+        return Kart::formatCurrency($this->discount);
+    }
 }

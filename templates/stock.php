@@ -1,6 +1,6 @@
 <?php
 
-// You need to provide a custom template for this in your
-// site/templates folder to overwrite this default.
+// You will most likely not want to expose this page
+// so the default presented here should be good enough.
 
-go($page->parent()->url());
+go(site()->homePage()->url());
