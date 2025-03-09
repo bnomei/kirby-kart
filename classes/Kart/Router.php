@@ -389,12 +389,12 @@ class Router
         );
     }
 
-    public static function account_login_magic(): string
+    public static function magiclink(): string
     {
         return self::factory(self::MAGIC_LINK);
     }
 
-    public static function account_signup_magic(): string
+    public static function signup_magic(): string
     {
         return self::factory(self::SIGNUP_MAGIC);
     }

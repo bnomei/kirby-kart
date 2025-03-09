@@ -1,4 +1,4 @@
-<form action="<?= \Bnomei\Kart\Router::account_login_magic() ?>" method="POST">
+<form action="<?= \Bnomei\Kart\Router::magiclink() ?>" method="POST">
     <?php // TODO: You should add a CAPTCHA here?>
     <input type="email" name="email" required
            placeholder="Email"
