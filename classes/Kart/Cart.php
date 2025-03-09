@@ -113,7 +113,7 @@ class Cart
     {
         $this->kirby->session()->set($this->id, $this->lines->toArray());
         $user = $this->kirby->user();
-        if (in_array($user?->role()->name(), (array) $this->kart->option('customers.roles'))) {
+        if ($user?->isCustomer()) {
             $this->user = $user;
         }
         $this->user?->update([
@@ -236,7 +236,7 @@ class Cart
 
     public function merge(User $user): bool
     {
-        if (! in_array($user->role()->name(), (array) $this->kart->option('customers.roles'))) {
+        if ($user->isCustomer() === false) {
             return false; // no merging for customers
         }
 
@@ -267,10 +267,12 @@ class Cart
     {
         $data = $this->kart->provider()->completed();
 
-        $customer = $this->kart->createCustomer($data);
+        $customer = $this->kart->createOrUpdateCustomer($data);
+
         $order = $this->kart->page(ContentPageEnum::ORDERS)->createOrder($data, $customer);
-        $this->kart->page(ContentPageEnum::STOCKS)->updateStocks($data);
         $order?->createZipWithFiles();
+
+        $this->kart->page(ContentPageEnum::STOCKS)->updateStocks($data);
 
         $this->kirby->trigger('kart.cart.completed', [
             'customer' => $customer,

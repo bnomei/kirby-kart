@@ -16,6 +16,7 @@ use Kirby\Content\Field;
  * @method Field paypal()
  * @method Field snipcart()
  * @method Field stripe()
+ * @method bool isCustomer()
  * @method string gravatar()
  * @method \Bnomei\Kart\Kart kart()
  * @method bool hasPurchased(ProductPage|string $product)

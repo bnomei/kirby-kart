@@ -38,7 +38,8 @@ class Kirby extends Provider
         }
 
         $input = Kart::sanitize(array_filter([
-            'email' => urldecode(strval(get('email', $this->kirby->user()?->email()))),
+            'email' => strtolower(urldecode(strval(get('email', $this->kirby->user()?->email())))),
+            'name' => urldecode(strval(get('name', $this->kirby->user()?->name()))),
             'payment_method' => urldecode(strval(get('payment_method', ''))),
             'payment_status' => urldecode(strval(get('payment_status', ''))),
             'invoiceurl' => urldecode(strval(get('invoiceurl', ''))),
@@ -46,7 +47,11 @@ class Kirby extends Provider
 
         // build data for user, order and stock updates
         $data = array_merge($data, array_filter([
-            'email' => strtolower(A::get($input, 'email', '')),
+            'email' => A::get($input, 'email'),
+            'customer' => [
+                'email' => A::get($input, 'email'),
+                'name' => A::get($input, 'name'),
+            ],
             'paidDate' => date('Y-m-d H:i:s'),
             'paymentMethod' => A::get($input, 'payment_method'),
             'paymentComplete' => A::get($input, 'payment_status', 'paid') === 'paid',

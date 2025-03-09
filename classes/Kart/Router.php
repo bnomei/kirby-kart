@@ -2,6 +2,8 @@
 
 namespace Bnomei\Kart;
 
+use Bnomei\Kart\Mixins\Captcha;
+use Bnomei\Kart\Mixins\Turnstile;
 use Closure;
 use Kirby\Cms\Page;
 use Kirby\Cms\Response;
@@ -11,42 +13,52 @@ use ProductPage;
 
 class Router
 {
-    const LOGIN = 'kart/login';
+    use Captcha;
+    use Turnstile;
 
-    const LOGOUT = 'kart/logout';
     const ACCOUNT_DELETE = 'kart/account/delete';
+
+    const CAPTCHA = 'kart/captcha';
 
     const CART_ADD = 'kart/cart/add';
 
     const CART_BUY = 'kart/cart/buy';
 
-    const CART_REMOVE = 'kart/cart/remove';
-
     const CART_CHECKOUT = 'kart/cart/checkout';
-
-    const PROVIDER_SUCCESS = 'kart/cart/success';
-
-    const PROVIDER_PAYMENT = 'kart/cart/payment';
-
-    const PROVIDER_CANCEL = 'kart/cart/cancel';
-
-    const WISHLIST_ADD = 'kart/wishlist/add';
-
-    const WISHLIST_REMOVE = 'kart/wishlist/remove';
 
     const CART_LATER = 'kart/cart/later';
 
-    const WISHLIST_NOW = 'kart/wishlist/now';
-
-    const SYNC = 'kart/sync';
+    const CART_REMOVE = 'kart/cart/remove';
 
     const CSRF_TOKEN = 'kart/csrf';
 
-    const CAPTCHA = 'kart/captcha';
-
     const ENCRYPTED_QUERY = 'keq'; // make it less likely to collide with others
 
-    public static function denied(array $check = []): ?Response
+    const LOGIN = 'kart/login';
+
+    const LOGOUT = 'kart/logout';
+
+    const MAGIC_LINK = 'kart/magic-link';
+
+    const PROVIDER_CANCEL = 'kart/provider/cancel';
+
+    const PROVIDER_PAYMENT = 'kart/provider/payment';
+
+    const PROVIDER_PORTAL = 'kart/provider/portal';
+
+    const PROVIDER_SUCCESS = 'kart/provider/success';
+
+    const PROVIDER_SYNC = 'kart/provider/sync';
+
+    const SIGNUP_MAGIC = 'kart/signup';
+
+    const WISHLIST_ADD = 'kart/wishlist/add';
+
+    const WISHLIST_NOW = 'kart/wishlist/now';
+
+    const WISHLIST_REMOVE = 'kart/wishlist/remove';
+
+    public static function denied(array $check = [], bool $exclusive = false): ?Response
     {
         $middlewares = kart()->option('middlewares.enabled');
 
@@ -58,7 +70,9 @@ class Router
             $middlewares = [];
         }
 
-        if ($code = Router::middlewares($middlewares + $check)) {
+        $middlewares = $exclusive ? $check : $middlewares + $check;
+
+        if ($code = Router::middlewares($middlewares)) {
             return Response::json([], $code);
         }
 
@@ -89,7 +103,36 @@ class Router
         return null;
     }
 
-    public static function ratelimit(): ?int
+    public static function hasUser(): ?int
+    {
+        $user = kirby()->user();
+        if (! $user) {
+            return 401;
+        }
+
+        return null;
+    }
+
+    public static function hasAdmin(): ?int
+    {
+        $user = kirby()->user();
+        if (! $user || $user->isAdmin() === false) {
+            return 401;
+        }
+
+        return null;
+    }
+
+    public static function hasMagicLink(): ?int
+    {
+        if (A::has(kirby()->option('auth.methods'), 'magic-link') === false) {
+            return 405;
+        }
+
+        return null;
+    }
+
+    public static function hasRatelimit(): ?int
     {
         if (! kart()->option('ratelimit.enabled')) {
             return null;
@@ -98,7 +141,7 @@ class Router
         return Ratelimit::check(kirby()->visitor()->ip()) ? null : 429;
     }
 
-    public static function csrf(): ?int
+    public static function hasCsrf(): ?int
     {
         if (! kart()->option('csrf.enabled')) {
             return null;
@@ -338,11 +381,21 @@ class Router
         }
 
         return self::factory(
-            self::SYNC,
+            self::PROVIDER_SYNC,
             [
                 'page' => $page,
                 'user' => kirby()->user()?->id(),
             ]
         );
+    }
+
+    public static function account_login_magic(): string
+    {
+        return self::factory(self::MAGIC_LINK);
+    }
+
+    public static function account_signup_magic(): string
+    {
+        return self::factory(self::SIGNUP_MAGIC);
     }
 }

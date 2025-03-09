@@ -5,6 +5,8 @@ namespace Bnomei\Kart;
 use Closure;
 use Kirby\Cache\Cache;
 use Kirby\Cms\App;
+use Kirby\Cms\User;
+use Kirby\Data\Yaml;
 use Kirby\Filesystem\F;
 use Kirby\Toolkit\A;
 use Kirby\Toolkit\Date;
@@ -45,13 +47,51 @@ abstract class Provider
             return $this->options[$key];
         }
 
-        $option = $this->kirby()->option("bnomei.kart.providers.{$this->name}.$key");
+        $option = $this->kart->option("providers.{$this->name}.$key");
         if ($resolveCallables && $option instanceof Closure) {
             $option = $option();
         }
         $this->options[$key] = $option;
 
         return $option;
+    }
+
+    public function userData(string $key): mixed
+    {
+        return A::get($this->getUserData(), $key);
+    }
+
+    public function getUserData(): array
+    {
+        $user = $this->kirby->user();
+
+        if (! $user || $user->isCustomer() === false) {
+            return [];
+        }
+
+        $field = $this->name; // no prefix to align with KLUB
+
+        return $user->$field()->isNotEmpty() ? Yaml::decode($user->$field()->value()) : [];
+    }
+
+    public function setUserData(array $data): ?User
+    {
+        $user = $this->kirby->user();
+        $data = array_filter($data);
+
+        if (empty($data) || ! $user || $user->isCustomer() === false) {
+            return $user;
+        }
+
+        $data = array_merge($this->getUserData(), $data);
+
+        return kirby()->impersonate('kirby', function () use ($user, $data) {
+            $field = $this->name; // no prefix to align with KLUB
+
+            return $user->update([
+                $field => Yaml::encode($data),
+            ]);
+        });
     }
 
     public function kirby(): App
@@ -119,6 +159,11 @@ abstract class Provider
     public function name(): string
     {
         return $this->name;
+    }
+
+    public function portal(?string $returnUrl = null): ?string
+    {
+        return null;
     }
 
     public function products(): array

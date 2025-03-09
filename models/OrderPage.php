@@ -436,63 +436,69 @@ class OrderPage extends Page
 
     public function createZipWithFiles(Files|array $files = [], ?string $zipFilename = null): ?File
     {
-        $tmpId = date('U-v');
-        $tmpDir = kirby()->roots()->cache().'/zips/'.$tmpId;
-        Dir::make($tmpDir);
+        try {
+            $tmpId = date('U-v');
+            $tmpDir = kirby()->roots()->cache().'/zips/'.$tmpId;
+            Dir::make($tmpDir);
 
-        if ($files instanceof Files) {
-            foreach ($files as $file) {
-                F::copy($file->root(), $tmpDir.'/'.$file->filename());
+            if ($files instanceof Files) {
+                foreach ($files as $file) {
+                    F::copy($file->root(), $tmpDir.'/'.$file->filename());
+                }
             }
-        }
 
-        foreach ($this->items()->toStructure() as $item) {
-            foreach ($item->key()->toPage()?->downloads()->toFiles() as $file) {
-                F::copy($file->root(), $tmpDir.'/'.$file->filename());
+            foreach ($this->items()->toStructure() as $item) {
+                foreach ($item->key()->toPage()?->downloads()->toFiles() as $file) {
+                    F::copy($file->root(), $tmpDir.'/'.$file->filename());
+                }
             }
-        }
 
-        if (is_array($files)) {
-            foreach ($files as $file) {
-                F::copy($file, $tmpDir.'/'.basename($file));
+            if (is_array($files)) {
+                foreach ($files as $file) {
+                    F::copy($file, $tmpDir.'/'.basename($file));
+                }
             }
-        }
 
-        $existingFiles = Dir::read($tmpDir);
+            $existingFiles = Dir::read($tmpDir);
 
-        if (count($existingFiles) === 0) {
+            if (count($existingFiles) === 0) {
+                Dir::remove($tmpDir);
+
+                return null;
+            }
+
+            if (count($existingFiles) === 1 && pathinfo($existingFiles[0], PATHINFO_EXTENSION) === 'zip') {
+                $zipFile = $tmpDir.'/'.$existingFiles[0];
+            } else {
+                $zipFile = $tmpDir.'.zip';
+                $zip = new ZipArchive;
+                if ($zip->open($zipFile, ZipArchive::CREATE) === true) {
+                    foreach (Dir::read($tmpDir) as $file) {
+                        $filePath = $tmpDir.'/'.$file;
+                        if (is_file($filePath)) {
+                            $zip->addFile($filePath, $this->slug().'/'.$file);
+                            $zip->setCompressionName($file, ZipArchive::CM_STORE); // store is quickest
+                        }
+                    }
+                    $zip->close();
+                }
+            }
+
+            $file = kirby()->impersonate('kirby', function () use ($zipFile, $zipFilename, $tmpId) {
+                return $this->createFile([
+                    'filename' => $zipFilename ?? md5($tmpId).'.zip', // make unguessable
+                    'source' => $zipFile,
+                ], move: true);
+            });
+
             Dir::remove($tmpDir);
 
-            return null;
+            return $file;
+        } catch (Throwable $e) {
+            kirby()->trigger('kart.log.error', ['error' => $e]);
         }
 
-        if (count($existingFiles) === 1 && pathinfo($existingFiles[0], PATHINFO_EXTENSION) === 'zip') {
-            $zipFile = $tmpDir.'/'.$existingFiles[0];
-        } else {
-            $zipFile = $tmpDir.'.zip';
-            $zip = new ZipArchive;
-            if ($zip->open($zipFile, ZipArchive::CREATE) === true) {
-                foreach (Dir::read($tmpDir) as $file) {
-                    $filePath = $tmpDir.'/'.$file;
-                    if (is_file($filePath)) {
-                        $zip->addFile($filePath, $this->slug().'/'.$file);
-                        $zip->setCompressionName($file, ZipArchive::CM_STORE); // store is quickest
-                    }
-                }
-                $zip->close();
-            }
-        }
-
-        $file = kirby()->impersonate('kirby', function () use ($zipFile, $zipFilename, $tmpId) {
-            return $this->createFile([
-                'filename' => $zipFilename ?? md5($tmpId).'.zip', // make unguessable
-                'source' => $zipFile,
-            ], move: true);
-        });
-
-        Dir::remove($tmpDir);
-
-        return $file;
+        return null;
     }
 
     /**

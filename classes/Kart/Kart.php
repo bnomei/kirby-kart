@@ -2,10 +2,8 @@
 
 namespace Bnomei\Kart;
 
-use Bnomei\Kart\Mixins\Captcha;
 use Bnomei\Kart\Mixins\ContentPages;
 use Bnomei\Kart\Mixins\Options;
-use Bnomei\Kart\Mixins\Turnstile;
 use Bnomei\Kart\Provider\Kirby;
 use Closure;
 use Exception;
@@ -26,10 +24,8 @@ use StockPage;
 
 class Kart
 {
-    use Captcha;
     use ContentPages;
     use Options;
-    use Turnstile;
 
     private static ?Kart $singleton = null;
 
@@ -313,15 +309,26 @@ class Kart
         return null;
     }
 
-    public function createCustomer(array $credentials): ?User
+    public function createOrUpdateCustomer(array $credentials): ?User
     {
-        $email = A::get($credentials, 'email');
-        $customer = $this->kirby()->users()->findBy('email', $email);
+        $email = A::get($credentials, 'customer.email');
+        $id = A::get($credentials, 'customer.id');
+
+        $customer = null;
+        if ($id) {
+            $customer = $this->kirby()->users()->filterBy(function ($user) use ($id) {
+                // customerId to align with KLUB
+                return $user->isCustomer() && $user->userData('customerId') === $id;
+            })->first();
+        }
+        if (! $customer) {
+            $customer = $this->kirby()->users()->findBy('email', $email);
+        }
         if (! $customer && V::email($email) && $this->option('customers.enabled')) {
             $customer = $this->kirby()->impersonate('kirby', function () use ($credentials, $email) {
                 return $this->kirby()->users()->create([
                     'email' => $email,
-                    'name' => A::get($credentials, 'name', ''),
+                    'name' => A::get($credentials, 'customer.name', ''),
                     'password' => Str::random(16),
                     'role' => ((array) $this->option('customers.roles'))[0],
                 ]);
@@ -329,7 +336,10 @@ class Kart
             $this->kirby()->trigger('kart.user.created', ['user' => $customer]);
         }
 
-        return $customer;
+        // update user
+        return $this->provider()->setUserData([
+            'customerId' => $id, // customerId to align with KLUB
+        ]);
     }
 
     /**

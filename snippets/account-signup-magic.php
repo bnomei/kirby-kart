@@ -1,4 +1,5 @@
-<form action="<?= site()->url() ?>/kart/signup" method="POST">
+<form action="<?= \Bnomei\Kart\Router::account_signup_magic() ?>"  method="POST">
+    <?php // TODO: You should add a CAPTCHA here?>
     <input type="hidden" name="token" value="<?= csrf() ?>">
     <input type="hidden" name="redirect" value="<?= site()->url() ?>">
     <input type="email" name="email" required

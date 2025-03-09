@@ -59,6 +59,11 @@ class Stripe extends Provider
             'headers' => [
                 'Content-Type' => 'application/json',
                 'Authorization' => 'Bearer '.strval($this->option('secret_key')),
+            ],
+            'data' => [
+                'expand' => [
+                    'customer',
+                ],
             ]]);
         if ($remote->code() !== 200) {
             return [];
@@ -69,6 +74,11 @@ class Stripe extends Provider
         $data = array_merge($data, array_filter([
             // 'session_id' => $sessionId,
             'email' => A::get($json, 'customer_email'),
+            'customer' => [
+                'id' => A::get($json, 'customer.id'),
+                'email' => A::get($json, 'customer.email'),
+                'name' => A::get($json, 'customer.name'),
+            ],
             'paidDate' => date('Y-m-d H:i:s', A::get($json, 'created', time())),
             'paymentMethod' => implode(',', A::get($json, 'payment_method_types', [])),
             'paymentComplete' => A::get($json, 'payment_status') === 'paid',
@@ -80,7 +90,7 @@ class Stripe extends Provider
                 'Content-Type' => 'application/json',
                 'Authorization' => 'Bearer '.strval($this->option('secret_key')),
             ], [
-                'limit' => $this->kart->lines()->count(),
+                'limit' => 100, // is max without pagination. $this->kart->cart()->lines()->count(),
             ]]);
 
         if ($remote->code() !== 200) {
@@ -165,5 +175,32 @@ class Stripe extends Provider
                 $this->kart->page(ContentPageEnum::PRODUCTS))
             )->mixinProduct($data)->toArray();
         }, $products);
+    }
+
+    public function portal(?string $returnUrl = null): ?string
+    {
+        $customer = $this->userData('customerId');
+        if (! $customer) {
+            return null;
+        }
+
+        $remote = Remote::get('https://api.stripe.com/v1/billing_portal/sessions', [
+            'headers' => [
+                'Content-Type' => 'application/json',
+                'Authorization' => 'Bearer '.strval($this->option('secret_key')),
+            ],
+            'data' => array_filter([
+                'customer' => $customer,
+                'return_url' => $returnUrl,
+            ]),
+        ]);
+
+        if ($remote->code() !== 200) {
+            return null;
+        }
+
+        $json = $remote->json();
+
+        return A::get($json, 'url');
     }
 }

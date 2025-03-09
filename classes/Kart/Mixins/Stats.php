@@ -9,7 +9,7 @@ trait Stats
         $customers = kirby()->cache('bnomei.kart.stats')->get('customers', 0);
         if (! $customers) {
             $customers = kirby()->users()
-                ->filterBy('role', 'in', kart()->option('customers.roles'))
+                ->customers()
                 ->count();
             kirby()->cache('bnomei.klub.stats')->set('customers', $customers, 15);
         }

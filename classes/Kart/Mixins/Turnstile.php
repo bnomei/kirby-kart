@@ -6,7 +6,7 @@ use Kirby\Http\Remote;
 
 trait Turnstile
 {
-    public static function turnstile(?string $response = null): ?bool
+    public static function hasTurnstile(?string $response = null): ?bool
     {
         $secretkey = kart()->option('turnstile.secretkey');
         if (! $secretkey) {

@@ -4,7 +4,7 @@ namespace Bnomei\Kart\Mixins;
 
 trait Captcha
 {
-    public static function captcha(?string $response = null): ?bool
+    public static function hasCaptcha(?string $response = null): ?bool
     {
         $response = $response ?? kart()->option('captcha.current')();
         if (! $response) {

@@ -3,6 +3,7 @@
 use Bnomei\Kart\Cart;
 use Bnomei\Kart\Kart;
 use Bnomei\Kart\License;
+use Bnomei\Kart\MagicLinkChallenge;
 use Bnomei\Kart\Router;
 use Bnomei\Kart\Wishlist;
 use Kirby\Cms\App;
@@ -98,8 +99,8 @@ App::plugin(
                 'enabled' => function (): array {
                     // could do different stuff based on kirby()->request()
                     return [
-                        Router::class.'::csrf',
-                        Router::class.'::ratelimit',
+                        Router::class.'::hasCsrf',
+                        Router::class.'::hasRatelimit',
                         // ... static class::method or closures
                     ];
                 },
@@ -174,6 +175,9 @@ App::plugin(
             'kart/account/signup-magic' => __DIR__.'/snippets/account-signup-magic.php.php',
             'kart/turnstile/form' => __DIR__.'/snippets/turnstile-form.php.php',
             'kart/turnstile/widget' => __DIR__.'/snippets/turnstile-widget.php',
+        ],
+        'authChallenges' => [
+            'kart-magic-link' => MagicLinkChallenge::class,
         ],
         'translations' => [
             'en' => require_once __DIR__.'/translations/en.php',
@@ -409,6 +413,14 @@ App::plugin(
                 return kart();
             },
         ],
+        'usersMethods' => [
+            /**
+             * @kql-allowed
+             */
+            'customers' => function (): bool {
+                return $this->filterBy('role', 'in', kart()->option('customers.roles'));
+            },
+        ],
         'userMethods' => [
             /**
              * @kql-allowed
@@ -427,6 +439,12 @@ App::plugin(
              */
             'wishlist' => function (): Wishlist {
                 return kart()->wishlist();
+            },
+            /**
+             * @kql-allowed
+             */
+            'isCustomer' => function (): bool {
+                return in_array($this->role()->name(), (array) kart()->option('customers.roles'));
             },
             /**
              * @kql-allowed

@@ -1,10 +1,13 @@
 <?php
 
 use Bnomei\Kart\Kart;
+use Bnomei\Kart\MagicLinkChallenge;
 use Bnomei\Kart\Router;
 use Kirby\Cms\App;
 use Kirby\Cms\Page;
 use Kirby\Cms\Response;
+use Kirby\Cms\User;
+use Kirby\Toolkit\A;
 
 return function (App $kirby) {
     return [
@@ -33,8 +36,8 @@ return function (App $kirby) {
             'method' => 'POST',
             'action' => function () use ($kirby) {
                 if ($r = Router::denied([
-                    Kart::class.'::captcha',
-                    Kart::class.'::turnstile',
+                    Router::class.'::hasCaptcha',
+                    Router::class.'::hasTurnstile',
                 ])) {
                     return $r;
                 }
@@ -46,7 +49,7 @@ return function (App $kirby) {
                 $email = trim(strip_tags(urldecode(get('email', ''))));
                 // TODO: performance on a lot of users might drop
                 $user = $kirby->users()
-                    ->filterBy('role', 'in', kart()->option('customers.roles'))
+                    ->customers()
                     ->findBy('email', $email);
                 if (! $user?->login(get('password'))) {
                     return Response::json([], 401);
@@ -71,18 +74,150 @@ return function (App $kirby) {
             },
         ],
         [
+            'pattern' => Router::SIGNUP_MAGIC,
+            'method' => 'POST',
+            'action' => function () {
+                if ($r = Router::denied([
+                    Router::class.'::hasCaptcha',
+                    Router::class.'::hasTurnstile',
+                    Router::class.'::hasMagicLink',
+                ])) {
+                    return $r;
+                }
+
+                $data = Kart::sanitize(kirby()->request()->data());
+
+                // create a virtual user to make kirby happily create
+                // the magic challenge even if NO user with that
+                // email exists.
+                // $user = kirby()->user(get('email')); might fail
+                $user = new User([
+                    'email' => A::get($data, 'email'),
+                    'name' => A::get($data, 'name'),
+                    'language' => kirby()->language()?->code(),
+                    'role' => klub()->option('members.roles')[0],
+                ]);
+                if ($user) { // @phpstan-ignore-line
+                    $code = MagicLinkChallenge::create($user, [
+                        'mode' => 'login',
+                        'timeout' => 10 * 60,
+                        'email' => A::get($data, 'email'),
+                        'name' => A::get($data, 'name'),
+                        'signup' => 1,
+                        'success_url' => get('success_url'),
+                    ]);
+                    kirby()->session()->set('kirby.challenge.type', 'login');
+                    kirby()->session()->set('kirby.challenge.code', password_hash($code, PASSWORD_DEFAULT));
+                }
+
+                return Router::go();
+            },
+        ],
+        [
+            'pattern' => Router::MAGIC_LINK,
+            'method' => 'POST',
+            'action' => function () {
+                if ($r = Router::denied([
+                    Router::class.'::hasCaptcha',
+                    Router::class.'::hasTurnstile',
+                    Router::class.'::hasMagicLink',
+                ])) {
+                    return $r;
+                }
+
+                $data = Kart::sanitize(kirby()->request()->data());
+
+                $user = kirby()->user(A::get($data, 'email'));
+                if ($user) {
+                    $code = MagicLinkChallenge::create($user, [
+                        'mode' => 'login',
+                        'timeout' => 10 * 60,
+                        'email' => A::get($data, 'email'),
+                        'redirect' => A::get($data, 'redirect'),
+                    ]);
+                    kirby()->session()->set('kirby.challenge.type', 'login');
+                    kirby()->session()->set('kirby.challenge.code', password_hash($code, PASSWORD_DEFAULT));
+                }
+
+                return Router::go();
+            },
+        ],
+        [
+            'pattern' => Router::MAGIC_LINK,
+            'method' => 'GET',
+            'action' => function () {
+                if ($r = Router::denied([
+                    Router::class.'::hasMagicLink',
+                ], true)) {
+                    return $r;
+                }
+
+                if (get('prg') !== '1') {
+                    $url = kirby()->request()->url().'&prg=1';
+                    header('Refresh: 1; url='.$url);
+                    exit();
+                }
+
+                $data = Kart::sanitize(kirby()->request()->data());
+
+                $code = A::get($data, 'code');
+                $token = A::get($data, 'token');
+                $secret = MagicLinkChallenge::secret($code);
+
+                if ($token !== $secret) {
+                    return Response::json([], 401);
+                }
+
+                $user = null;
+                if (get('signup')) {
+                    // try creating
+                    $user = kart()->createOrUpdateCustomer([
+                        'customer' => [
+                            'email' => A::get($data, 'email'),
+                            'name' => A::get($data, 'name'),
+                        ],
+                    ]);
+                    kirby()->trigger('kart.signup', ['user' => $user]);
+                }
+                if (! $user) {
+                    // if not created because it exists then try finding
+                    $user = kirby()->user(get('email'));
+                }
+
+                if ($user && MagicLinkChallenge::verify($user, $code)) {
+                    $user->loginPasswordless();
+                }
+
+                return Router::go();
+            },
+        ],
+        [
+            'pattern' => Router::PROVIDER_PORTAL,
+            'method' => 'POST',
+            'action' => function () {
+                if ($r = Router::denied([
+                    Router::class.'::hasUser',
+                ])) {
+                    return $r;
+                }
+
+                return Router::go(kart()->provider()->portal(
+                    Router::get('redirect', site()->url())
+                ));
+            },
+        ],
+        [
             'pattern' => Router::ACCOUNT_DELETE,
             'method' => 'POST',
             'action' => function () {
-                if ($r = Router::denied()) {
+                if ($r = Router::denied([
+                    Router::class.'::hasUser',
+                ])) {
                     return $r;
                 }
 
                 $user = kirby()->user();
-                if (! $user) {
-                    return Response::json([], 404);
-                }
-                if ($user->isAdmin()) {
+                if ($user?->isAdmin()) {
                     return Response::json([], 401);
                 }
 
@@ -213,8 +348,8 @@ return function (App $kirby) {
             'method' => 'POST',
             'action' => function () {
                 if ($r = Router::denied([
-                    Kart::class.'::captcha',
-                    Kart::class.'::turnstile',
+                    Router::class.'::hasCaptcha',
+                    Router::class.'::hasTurnstile',
                 ])) {
                     return $r;
                 }
@@ -280,10 +415,12 @@ return function (App $kirby) {
             },
         ],
         [
-            'pattern' => Router::SYNC,
+            'pattern' => Router::PROVIDER_SYNC,
             'method' => 'GET',
             'action' => function () {
-                if ($r = Router::denied()) {
+                if ($r = Router::denied([
+                    Router::class.'::hasAdmin',
+                ])) {
                     return $r;
                 }
 
