@@ -4,6 +4,7 @@ use Bnomei\Kart\ContentPageEnum;
 use Bnomei\Kart\Kart;
 use Bnomei\Kart\ProductStorage;
 use Bnomei\Kart\Router;
+use Kirby\Cms\File;
 use Kirby\Cms\Page;
 use Kirby\Content\Field;
 use Kirby\Content\Storage;
@@ -91,6 +92,11 @@ class ProductPage extends Page
                                 'line' => [
                                     'type' => 'line',
                                 ],
+                                'description' => [
+                                    'label' => 'bnomei.kart.description',
+                                    'type' => 'textarea',
+                                    'virtual' => true,
+                                ],
                                 'price' => [
                                     'label' => 'bnomei.kart.price',
                                     'type' => 'number',
@@ -125,9 +131,26 @@ class ProductPage extends Page
                                     'width' => '1/2',
                                     // 'virtual' => true, // needed for `num`
                                 ],
-                                'description' => [
-                                    'label' => 'bnomei.kart.description',
-                                    'type' => 'textarea',
+                                'categories' => [
+                                    'label' => 'bnomei.kart.categories',
+                                    'type' => 'tags',
+                                    'options' => [
+                                        'type' => 'query',
+                                        'query' => 'page.siblings.pluck("categories", ",", true)',
+                                    ],
+                                    'width' => '1/2',
+                                    'translate' => false,
+                                    'virtual' => true,
+                                ],
+                                'tags' => [
+                                    'label' => 'bnomei.kart.tags',
+                                    'type' => 'tags',
+                                    'options' => [
+                                        'type' => 'query',
+                                        'query' => 'page.siblings.pluck("tags", ",", true)',
+                                    ],
+                                    'width' => '1/2',
+                                    'translate' => false,
                                     'virtual' => true,
                                 ],
                                 'gallery' => [
@@ -153,26 +176,6 @@ class ProductPage extends Page
                                     'width' => '1/2',
                                     'translate' => false,
                                     // 'virtual' => true,
-                                ],
-                                'categories' => [
-                                    'label' => 'bnomei.kart.categories',
-                                    'type' => 'tags',
-                                    'options' => [
-                                        'type' => 'query',
-                                        'query' => 'page.siblings.pluck("categories", ",", true)',
-                                    ],
-                                    'translate' => false,
-                                    'virtual' => true,
-                                ],
-                                'tags' => [
-                                    'label' => 'bnomei.kart.tags',
-                                    'type' => 'tags',
-                                    'options' => [
-                                        'type' => 'query',
-                                        'query' => 'page.siblings.pluck("tags", ",", true)',
-                                    ],
-                                    'translate' => false,
-                                    'virtual' => true,
                                 ],
                                 'raw' => [
                                     'type' => 'hidden',
@@ -340,5 +343,15 @@ class ProductPage extends Page
         // return a list of all know priceIds for this product
         // uses to find of the product was purchased with a given priceId
         return [];
+    }
+
+    public function firstGalleryImage(): ?File
+    {
+        return $this->gallery()->toFile();
+    }
+
+    public function firstGalleryImageUrl(): ?string
+    {
+        return $this->firstGalleryImage()?->resize(1920)->url();
     }
 }

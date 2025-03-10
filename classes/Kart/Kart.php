@@ -4,6 +4,7 @@ namespace Bnomei\Kart;
 
 use Bnomei\Kart\Mixins\ContentPages;
 use Bnomei\Kart\Mixins\Options;
+use Bnomei\Kart\Mixins\TMNT;
 use Bnomei\Kart\Provider\Kirby;
 use Closure;
 use Exception;
@@ -26,6 +27,7 @@ class Kart
 {
     use ContentPages;
     use Options;
+    use TMNT;
 
     private static ?Kart $singleton = null;
 
@@ -37,9 +39,12 @@ class Kart
 
     private App $kirby;
 
+    private Urls $urls;
+
     public function __construct()
     {
         $this->kirby = kirby();
+        $this->urls = new Urls;
         $this->provider = null;
         $this->cart = null;
         $this->wishlist = null;
@@ -62,6 +67,12 @@ class Kart
         if (sha1(file_get_contents(__DIR__.strrev(base64_decode('cGhwLmVzbmVjaUwv')))) !== 'c6187eac0a6659724beb632dcb46806ee24a7e81' && $kart = base64_decode('c2xlZXA=')) { // @phpstan-ignore-line
             $kart(5); // @phpstan-ignore-line
         }
+    }
+
+    public function urls(): Urls
+    {
+        return $this->urls;
+
     }
 
     public static function flush(string $cache = 'all'): bool
@@ -271,22 +282,22 @@ class Kart
 
     public function checkout(): string
     {
-        return Router::cart_checkout();
+        return $this->urls()->cart_checkout();
     }
 
-    public function login(): string
+    public function login(?string $email = null): string
     {
-        return Router::login();
+        return $this->urls()->login($email);
     }
 
     public function logout(): string
     {
-        return Router::logout();
+        return $this->urls()->logout();
     }
 
     public function sync(Page|string|null $page): string
     {
-        return Router::sync($page);
+        return $this->urls()->sync($page);
     }
 
     public function cart(): Cart

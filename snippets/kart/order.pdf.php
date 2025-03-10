@@ -26,14 +26,15 @@
 
 <table>
     <?php /** @var ProductPage $product */
-    foreach ($order->items()->toStructure() as $item) {
-        $product = $item->key()->toPage();
+    /** @var \Bnomei\Kart\OrderLine $line */
+    foreach ($order->orderLines() as $line) {
+        $product = $line->key()->toPage();
         ?>
         <tr>
             <td><img class="max-w-[128px]" src="<?= $product->gallery()->toFile()?->resize(128)->url() ?>" alt="<?= $product->title() ?>"></td>
             <td><?= $product->title() ?></td>
-            <td><?= $item->quantity() ?>x</td>
-            <td><?= $item->price()->toFormattedCurrency() ?></td>
+            <td><?= $line->quantity() ?>x</td>
+            <td><?= $line->price()->toFormattedCurrency() ?></td>
         </tr>
     <?php } ?>
 </table>

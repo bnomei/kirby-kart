@@ -21,57 +21,66 @@ class ProductsPage extends Page
                 'sync' => [
                     'icon' => 'refresh',
                     'text' => 'bnomei.kart.sync-provider',
-                    'link' => '{< site.kart.sync("products") >}',
+                    'link' => '{< site.kart.urls.sync("products") >}',
                 ],
                 'status' => true,
             ],
-            'sections' => [
-                'stats' => [
-                    'label' => 'bnomei.kart.summary',
-                    'type' => 'stats',
-                    'reports' => [
-                        [
+            'tabs' => [
+                'overview' => [
+                    'sections' => [
+                        'stats' => [
+                            'label' => 'bnomei.kart.summary',
+                            'type' => 'stats',
+                            'reports' => [
+                                [
+                                    'label' => 'bnomei.kart.products',
+                                    'value' => '{{ page.children.count }}',
+                                ],
+                                [
+                                    'label' => 'bnomei.kart.provider',
+                                    'value' => '{{ site.kart.provider.title }}',
+                                ],
+                                [
+                                    'label' => 'bnomei.kart.last-sync',
+                                    'value' => '{{ site.kart.provider.updatedAt("products") }}',
+                                ],
+                            ],
+                        ],
+                        'meta' => [
+                            'type' => 'fields',
+                            'fields' => [
+                                'line' => [
+                                    'type' => 'line',
+                                ],
+                            ],
+                        ],
+                        'products' => [
                             'label' => 'bnomei.kart.products',
-                            'value' => '{{ page.children.count }}',
+                            'type' => 'pages',
+                            'layout' => 'cards',
+                            'search' => true,
+                            'template' => 'product', // maps to ProductPage model
+                            'info' => '{{ page.formattedPrice }}',
+                            'image' => [
+                                'query' => 'page.gallery.first.toFile',
+                            ],
                         ],
-                        [
-                            'label' => 'bnomei.kart.provider',
-                            'value' => '{{ site.kart.provider.title }}',
-                        ],
-                        [
-                            'label' => 'bnomei.kart.last-sync',
-                            'value' => '{{ site.kart.provider.updatedAt("products") }}',
-                        ],
-                    ],
-                ],
-                'meta' => [
-                    'type' => 'fields',
-                    'fields' => [
-                        'line' => [
-                            'type' => 'line',
-                        ],
-                    ],
-                ],
-                'products' => [
-                    'label' => 'bnomei.kart.products',
-                    'type' => 'pages',
-                    'layout' => 'cards',
-                    'search' => true,
-                    'template' => 'product', // maps to ProductPage model
-                    'info' => '{{ page.formattedPrice }}',
-                    'image' => [
-                        'query' => 'page.gallery.first.toFile',
                     ],
                 ],
                 'files' => [
-                    'type' => 'files',
-                    'info' => '{{ file.dimensions }} ・ {{ file.niceSize }}',
-                    'layout' => 'cardlets',
-                    'image' => [
-                        'cover' => true,
+                    'sections' => [
+                        'files' => [
+                            'type' => 'files',
+                            'info' => '{{ file.dimensions }} ・ {{ file.niceSize }}',
+                            'layout' => 'cardlets',
+                            'image' => [
+                                'cover' => true,
+                            ],
+                        ],
                     ],
                 ],
             ],
+
         ];
     }
 

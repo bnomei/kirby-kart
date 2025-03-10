@@ -12,7 +12,7 @@ use Kirby\Toolkit\A;
 return function (App $kirby) {
     return [
         [
-            'pattern' => Router::CSRF_TOKEN,
+            'pattern' => Router::CSRF,
             'method' => 'GET',
             'action' => function () use ($kirby) {
                 return Response::json([
@@ -289,6 +289,8 @@ return function (App $kirby) {
             'pattern' => Router::KART,
             'method' => 'GET',
             'action' => function () {
+                kart()->tmnt(); // create demo content if needed
+
                 $page = new Page([
                     'slug' => 'kart',
                     'template' => 'kart',

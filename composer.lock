@@ -957,12 +957,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/getkirby/kirby.git",
-                "reference": "a84f7588fe2e541443b2580fc7ea13dd446e25c6"
+                "reference": "af72c4a8671bec58f86d95a84fd0873eb4a5d6a2"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/getkirby/kirby/zipball/a84f7588fe2e541443b2580fc7ea13dd446e25c6",
-                "reference": "a84f7588fe2e541443b2580fc7ea13dd446e25c6",
+                "url": "https://api.github.com/repos/getkirby/kirby/zipball/af72c4a8671bec58f86d95a84fd0873eb4a5d6a2",
+                "reference": "af72c4a8671bec58f86d95a84fd0873eb4a5d6a2",
                 "shasum": ""
             },
             "require": {
@@ -1053,7 +1053,7 @@
                     "type": "custom"
                 }
             ],
-            "time": "2025-02-28T09:24:11+00:00"
+            "time": "2025-03-10T09:05:38+00:00"
         },
         {
             "name": "guzzlehttp/guzzle",
@@ -4146,16 +4146,16 @@
         },
         {
             "name": "phpstan/phpstan",
-            "version": "2.1.7",
+            "version": "2.1.8",
             "source": {
                 "type": "git",
                 "url": "https://github.com/phpstan/phpstan.git",
-                "reference": "12567f91a74036d56ba0af6d56c8e73ac0e8d850"
+                "reference": "f9adff3b87c03b12cc7e46a30a524648e497758f"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/phpstan/phpstan/zipball/12567f91a74036d56ba0af6d56c8e73ac0e8d850",
-                "reference": "12567f91a74036d56ba0af6d56c8e73ac0e8d850",
+                "url": "https://api.github.com/repos/phpstan/phpstan/zipball/f9adff3b87c03b12cc7e46a30a524648e497758f",
+                "reference": "f9adff3b87c03b12cc7e46a30a524648e497758f",
                 "shasum": ""
             },
             "require": {
@@ -4200,7 +4200,7 @@
                     "type": "github"
                 }
             ],
-            "time": "2025-03-05T13:43:55+00:00"
+            "time": "2025-03-09T09:30:48+00:00"
         },
         {
             "name": "phpunit/php-code-coverage",

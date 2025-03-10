@@ -1,5 +1,5 @@
 <?php
-snippet('kart', slots: true);
+snippet('kart/kart', slots: true);
 // COPY and modify the code below this line --------
 ?>
 
@@ -15,10 +15,10 @@ snippet('kart', slots: true);
         <?php } ?>
     </nav>
 
-    <article>
+    <article class="cards">
         <?php foreach (kart()->productsByParams() as $product) {
             /** @var ProductPage $product */
-            snippet('product-card', ['product' => $product]);
+            snippet('kart/product-card', ['product' => $product]);
         } ?>
     </article>
 </main>

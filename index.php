@@ -11,11 +11,13 @@ use Kirby\Cms\Collection;
 use Kirby\Cms\Page;
 use Kirby\Cms\Pages;
 use Kirby\Cms\User;
+use Kirby\Cms\Users;
 use Kirby\Content\Field;
 use Kirby\Data\Yaml;
 use Kirby\Http\Remote;
 use Kirby\Session\Session;
 use Kirby\Toolkit\A;
+use SimpleCaptcha\Builder;
 
 @include_once __DIR__.'/vendor/autoload.php';
 
@@ -140,7 +142,7 @@ App::plugin(
                 },
                 'set' => function () {
                     // https://github.com/S1SYPHOS/php-simple-captcha
-                    $builder = new \SimpleCaptcha\Builder;
+                    $builder = new Builder;
                     $builder->bgColor = '#FFFFFF';
                     $builder->lineColor = '#FFFFFF';
                     $builder->textColor = '#000000';
@@ -160,24 +162,25 @@ App::plugin(
         ],
         'routes' => require_once __DIR__.'/routes.php',
         'snippets' => [
-            'kart/account/login-magic' => __DIR__.'/snippets/account-login-magic.php.php',
-            'kart/account/signup-magic' => __DIR__.'/snippets/account-signup-magic.php.php',
-            'kart/add' => __DIR__.'/snippets/add.php',
-            'kart/buy' => __DIR__.'/snippets/buy.php',
-            'kart/cart' => __DIR__.'/snippets/cart.php',
-            'kart/input/csrf' => __DIR__.'/snippets/input-csrf.php',
-            'kart/input/csrf-defer' => __DIR__.'/snippets/input-csrf-defer.php',
-            'kart/kart' => __DIR__.'/snippets/kart.php',
-            'kart/login' => __DIR__.'/snippets/login.php',
-            'kart/logout' => __DIR__.'/snippets/logout.php',
-            'kart/order.pdf' => __DIR__.'/snippets/order.pdf.php',
-            'kart/product/card' => __DIR__.'/snippets/product-card.php',
-            'kart/product/json-ld' => __DIR__.'/snippets/product-json-ld.php',
-            'kart/profile' => __DIR__.'/snippets/profile.php',
-            'kart/turnstile/form' => __DIR__.'/snippets/turnstile-form.php.php',
-            'kart/turnstile/widget' => __DIR__.'/snippets/turnstile-widget.php',
-            'kart/wish-or-forget' => __DIR__.'/snippets/wish-or-forget.php',
-            'kart/wishlist' => __DIR__.'/snippets/wishlist.php',
+            'kart/add' => __DIR__.'/snippets/kart/add.php',
+            'kart/buy' => __DIR__.'/snippets/kart/buy.php',
+            'kart/captcha' => __DIR__.'/snippets/kart/captcha.php',
+            'kart/cart' => __DIR__.'/snippets/kart/cart.php',
+            'kart/input-csrf' => __DIR__.'/snippets/kart/input-csrf.php',
+            'kart/input-csrf-defer' => __DIR__.'/snippets/kart/input-csrf-defer.php',
+            'kart/kart' => __DIR__.'/snippets/kart/kart.php',
+            'kart/login' => __DIR__.'/snippets/kart/login.php',
+            'kart/login-magic' => __DIR__.'/snippets/kart/login-magic.php.php',
+            'kart/logout' => __DIR__.'/snippets/kart/logout.php',
+            'kart/order.pdf' => __DIR__.'/snippets/kart/order.pdf.php',
+            'kart/product-card' => __DIR__.'/snippets/kart/product-card.php',
+            'kart/product-json-ld' => __DIR__.'/snippets/kart/product-json-ld.php',
+            'kart/profile' => __DIR__.'/snippets/kart/profile.php',
+            'kart/signup-magic' => __DIR__.'/snippets/kart/signup-magic.php.php',
+            'kart/turnstile-form' => __DIR__.'/snippets/kart/turnstile-form.php.php',
+            'kart/turnstile-widget' => __DIR__.'/snippets/kart/turnstile-widget.php',
+            'kart/wish-or-forget' => __DIR__.'/snippets/kart/wish-or-forget.php',
+            'kart/wishlist' => __DIR__.'/snippets/kart/wishlist.php',
         ],
         'authChallenges' => [
             'kart-magic-link' => MagicLinkChallenge::class,
@@ -422,7 +425,7 @@ App::plugin(
             /**
              * @kql-allowed
              */
-            'customers' => function (): bool {
+            'customers' => function (): ?Users {
                 return $this->filterBy('role', 'in', kart()->option('customers.roles'));
             },
         ],

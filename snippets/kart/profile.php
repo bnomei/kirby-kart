@@ -1,4 +1,4 @@
-<div>
+<div class="profile">
 <?php if ($user = kirby()->user()) { ?>
     <img src="<?= $user->gravatar(48 * 2) ?>" alt="">
     <div><?= $user->nameOrEmail() ?></div>

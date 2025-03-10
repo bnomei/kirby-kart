@@ -1,5 +1,5 @@
 <?php
-snippet('kart', slots: true);
+snippet('kart/kart', slots: true);
 // COPY and modify the code below this line --------
 
 /** @var ProductPage $page */
@@ -8,7 +8,7 @@ $product ??= $page;
 
 <main>
     <article>
-        <img src="<?= $product->gallery()->toFile()?->url() ?>" alt="<?= $product->title() ?>">
+        <img src="<?= $product->gallery()->toFile()?->url() ?>" alt="" style="aspect-ratio: 1; width: 100px; background-color: #dadada;">
         <h1><?= $product->title() ?></h1>
         <?= $product->description()->kirbytext() ?>
         <div><?= $product->formattedPrice() ?></div>
@@ -27,4 +27,4 @@ $product ??= $page;
     <?php snippet('kart/wishlist') ?>
 </aside>
 
-<?php snippet('kart/product/json-ld') ?>
+<?php snippet('kart/product-json-ld') ?>

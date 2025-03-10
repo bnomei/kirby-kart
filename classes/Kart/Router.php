@@ -32,7 +32,7 @@ class Router
 
     const CART_REMOVE = 'kart/cart/remove';
 
-    const CSRF_TOKEN = 'kart/csrf';
+    const CSRF = 'kart/csrf';
 
     const ENCRYPTED_QUERY = 'keq'; // make it less likely to collide with others
 
@@ -129,7 +129,7 @@ class Router
 
     public static function hasMagicLink(): ?int
     {
-        if (A::has(kirby()->option('auth.methods'), 'kart-magic-link') === false) {
+        if (A::has(kirby()->option('auth.methods', []), 'kart-magic-link') === false) {
             return 405;
         }
 
@@ -224,9 +224,11 @@ class Router
         return null;
     }
 
-    public static function login(): string
+    public static function login(?string $email = null): string
     {
-        return self::factory(self::LOGIN);
+        return self::factory(self::LOGIN, params: array_filter([
+            'email' => $email,
+        ]));
     }
 
     public static function factory(string $path, array $query = [], array $params = []): string
@@ -309,6 +311,16 @@ class Router
         return kirby()->request()->path();
     }
 
+    public static function cart(): string
+    {
+        return self::factory(self::current().'/'.self::CART);
+    }
+
+    public static function kart(): string
+    {
+        return self::factory(self::KART);
+    }
+
     public static function cart_buy(ProductPage $product): string
     {
         return self::factory(
@@ -369,9 +381,14 @@ class Router
         );
     }
 
-    public static function csrf_token(): string
+    public static function csrf(): string
     {
-        return self::factory(self::CSRF_TOKEN);
+        return self::factory(self::CSRF);
+    }
+
+    public static function captcha(): string
+    {
+        return self::factory(self::CAPTCHA);
     }
 
     public static function sync(Page|string|null $page): string
@@ -393,13 +410,17 @@ class Router
         );
     }
 
-    public static function magiclink(): string
+    public static function magiclink(?string $email = null): string
     {
-        return self::factory(self::MAGIC_LINK);
+        return self::factory(self::MAGIC_LINK, params: array_filter([
+            'email' => $email,
+        ]));
     }
 
-    public static function signup_magic(): string
+    public static function signup_magic(?string $email = null): string
     {
-        return self::factory(self::SIGNUP_MAGIC);
+        return self::factory(self::SIGNUP_MAGIC, params: array_filter([
+            'email' => $email,
+        ]));
     }
 }

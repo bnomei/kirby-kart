@@ -1,10 +1,10 @@
 <?php
-snippet('kart', slots: true) ?>
+snippet('kart/kart', slots: true) ?>
 
 <main>
-    <nav>
+    <div class="cards">
         <?php foreach (kart()->products()->random(2) as $product) {
-            snippet('product-card', ['product' => $product]);
+            snippet('kart/product-card', ['product' => $product]);
         } ?>
-    </nav>
+    </div>
 </main>

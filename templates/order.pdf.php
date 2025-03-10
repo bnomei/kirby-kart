@@ -1,6 +1,6 @@
 <?php
 
-snippet('kart', slots: true);
+snippet('kart/kart', slots: true);
 // COPY and modify the code below this line --------
 // TODO: composer require mpdf/mpdf
 
