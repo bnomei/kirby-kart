@@ -1,4 +1,4 @@
-<div>
+<div class="wishlist">
     <h3>Wishlist (<?= kart()->wishlist()->lines()->count() ?>)</h3>
     <ol>
     <?php foreach (kart()->wishlist()->lines() as $line) {

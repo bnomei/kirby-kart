@@ -7,11 +7,12 @@ snippet('kart/kart', slots: true);
     <nav>
         <?php foreach (kart()->categories()->sortBy('count', 'desc') as $category) {
             /** @var \Bnomei\Kart\Category $category */ ?>
-            <a class="<?php e($category->isActive(), 'is-active') ?>" href="<?= $category->urlWithParams() ?>"><?= $category ?></a>
+            <a class="<?= $category->isActive() ? 'is-active' : '' ?>" href="<?= $category->urlWithParams() ?>"><?= $category ?></a>
         <?php } ?>
+        <br>
         <?php foreach (kart()->tags()->sortBy('count', 'desc') as $tag) {
             /** @var \Bnomei\Kart\Tag $tag */ ?>
-            <a class="<?php e($tag->isActive(), 'is-active') ?>" href="<?= $tag->urlWithParams() ?>"><?= $tag ?></a>
+            <a class="<?= $tag->isActive() ? 'is-active' : '' ?>" href="<?= $tag->urlWithParams() ?>"><?= $tag ?></a>
         <?php } ?>
     </nav>
 

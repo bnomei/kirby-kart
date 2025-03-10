@@ -553,7 +553,7 @@ class Kart
             'title' => t('category.'.$c, $c),
             'text' => t('category.'.$c, $c),
             'value' => $c,
-            'count' => $products->children()->filterBy('categories', $c, ',')->filterBy('tags', 'in', $tag ? [$tag] : $tags)->count(),
+            'count' => $products->children()->filterBy('categories', $c, ',')->filterBy('tags', 'in', $tag ? [$tag] : $tags, ',')->count(),
             'isActive' => $c === $category,
             'url' => ($path ? url($path) : $products->url()).'?category='.$c,
             'urlWithParams' => url(
@@ -628,7 +628,7 @@ class Kart
             'label' => t('category.'.$t, $t),
             'title' => t('category.'.$t, $t),
             'text' => t('category.'.$t, $t),
-            'count' => $products->children()->filterBy('tags', $t, ',')->filterBy('categories', 'in', $category ? [$category] : $categories)->count(),
+            'count' => $products->children()->filterBy('tags', $t, ',')->filterBy('categories', 'in', $category ? [$category] : $categories, ',')->count(),
             'value' => $t,
             'isActive' => $t === $tag,
             'url' => ($path ? url($path) : $products->url()).'?tag='.$t,

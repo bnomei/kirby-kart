@@ -13,7 +13,11 @@ snippet('kart/kart', slots: true);
     <form method="POST" action="<?= \Bnomei\Kart\Router::get('success_url') ?>">
         <?php // TODO: add turnstile protection?>
         <label>
-            <input type="email" name="email" placeholder="Email (provide for account creation)" style="min-width: 42ch;"/>
+            <input type="email" name="email" placeholder="Email (provide for account creation)"
+                   style="min-width: 42ch;"
+                   value="<?= kirby()->user()?->email() ?>"
+                   <?= kirby()->user() ? 'readonly' : '' ?>
+            />
         </label>
         <button type="submit" onclick="this.disabled=true;this.form.submit();">Pay</button>
     </form>

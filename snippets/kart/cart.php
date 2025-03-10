@@ -5,7 +5,7 @@
             /** @var \Bnomei\Kart\CartLine $line */
             /** @var ProductPage $product */
             $product = $line->product(); ?>
-            <li>
+            <li style="border-top: 1px dashed #aaa; padding: 10px 0">
                 <a href="<?= $product->url() ?>"><?= $product->title() ?></a>
                 <?php if ($line->hasStockForQuantity() === false) { ?>
                     <span><?= $product->stock() ?> of <?= $line->quantity() ?>x</span>
@@ -24,11 +24,12 @@
             </li>
         <?php } ?>
     </ol>
-    <div><?= kart()->cart()->formattedSubtotal() ?> +tax</div>
+    <hr>
+    <div><strong><?= kart()->cart()->formattedSubtotal() ?> +tax</strong></div>
     <form method="POST" action="<?= kart()->urls()->cart_checkout() ?>">
         <?php // TODO: You should add an invisible CAPTCHA here, like...?>
         <?php // snippet('kart/turnstile-form')?>
         <input type="hidden" name="redirect" value="<?= $page->url() ?>">
-        <button type="submit" onclick="this.disabled=true;this.form.submit();" <?php e(kart()->cart()->canCheckout() === false, 'disabled') ?>>Checkout</button>
+        <button type="submit" onclick="this.disabled=true;this.form.submit();" <?= kart()->cart()->canCheckout() === false ? 'disabled' : '' ?>>Checkout</button>
     </form>
 </div>

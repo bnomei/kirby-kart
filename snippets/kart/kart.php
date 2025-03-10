@@ -45,8 +45,9 @@ if (! kirby()->environment()->isLocal()) {
                 border-radius: 50%;
             }
         }
-        .cart {
+        .cart, .wishlist {
             background-color: #dadada;
+            padding: 1rem;
         }
     </style>
 </head>
