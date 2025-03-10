@@ -18,6 +18,9 @@ return [
     'cache' => [
         'uuid' => false, // when switching providers a lot during dev this avoids mismatches
     ],
+    'auth' => [
+        'methods' => ['code', 'kart-magic-link', 'password'], // 'code', 'password', 'password-reset'
+    ],
 
     // /////////////////////////////////
     // KART options used in the tests //

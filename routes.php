@@ -24,11 +24,44 @@ return function (App $kirby) {
             'pattern' => Router::CAPTCHA,
             'method' => 'GET',
             'action' => function () {
-                if ($r = Router::denied()) {
+                if ($r = Router::denied([
+                    Router::class.'::hasRatelimit',
+                ], exclusive: true)) {
                     return $r;
                 }
 
-                return kart()->option('captcha.set')();
+                header('Content-Type: image/jpeg');
+                kart()->option('captcha.set')(inline: false);
+                exit();
+            },
+        ],
+        [
+            'pattern' => Router::CAPTCHA,
+            'method' => 'POST',
+            'action' => function () {
+                if ($r = Router::denied([
+                    Router::class.'::hasRatelimit',
+                ], exclusive: true)) {
+                    return $r;
+                }
+
+                return Response::json()(kart()->option('captcha.set')());
+            },
+        ],
+        [
+            'pattern' => Router::LOGIN,
+            'method' => 'GET',
+            'action' => function () {
+
+                $page = kirby()->page(Router::LOGIN) ?? new Page([
+                    'slug' => 'login',
+                    'template' => 'login',
+                    'content' => [
+                        'title' => t('bnomei.kart.login'),
+                    ],
+                ]);
+
+                return site()->visit($page);
             },
         ],
         [
@@ -75,12 +108,27 @@ return function (App $kirby) {
         ],
         [
             'pattern' => Router::SIGNUP_MAGIC,
+            'method' => 'GET',
+            'action' => function () {
+
+                $page = kirby()->page(Router::SIGNUP_MAGIC) ?? new Page([
+                    'slug' => 'signup',
+                    'template' => 'signup',
+                    'content' => [
+                        'title' => t('bnomei.kart.signup'),
+                    ],
+                ]);
+
+                return site()->visit($page);
+            },
+        ],
+        [
+            'pattern' => Router::SIGNUP_MAGIC,
             'method' => 'POST',
             'action' => function () {
                 if ($r = Router::denied([
                     Router::class.'::hasCaptcha',
                     Router::class.'::hasTurnstile',
-                    Router::class.'::hasMagicLink',
                 ])) {
                     return $r;
                 }
@@ -95,7 +143,7 @@ return function (App $kirby) {
                     'email' => A::get($data, 'email'),
                     'name' => A::get($data, 'name'),
                     'language' => kirby()->language()?->code(),
-                    'role' => klub()->option('members.roles')[0],
+                    'role' => kart()->option('customers.roles')[0],
                 ]);
                 if ($user) { // @phpstan-ignore-line
                     $code = MagicLinkChallenge::create($user, [
@@ -120,7 +168,6 @@ return function (App $kirby) {
                 if ($r = Router::denied([
                     Router::class.'::hasCaptcha',
                     Router::class.'::hasTurnstile',
-                    Router::class.'::hasMagicLink',
                 ])) {
                     return $r;
                 }
@@ -133,7 +180,7 @@ return function (App $kirby) {
                         'mode' => 'login',
                         'timeout' => 10 * 60,
                         'email' => A::get($data, 'email'),
-                        'redirect' => A::get($data, 'redirect'),
+                        'success_url' => A::get($data, 'success_url'),
                     ]);
                     kirby()->session()->set('kirby.challenge.type', 'login');
                     kirby()->session()->set('kirby.challenge.code', password_hash($code, PASSWORD_DEFAULT));

@@ -78,7 +78,7 @@ class OrderPage extends Page
                             'info' => '+ {{ page.formattedTax }}',
                         ],
                         [
-                            'label' => t('bnomei.kart.items'),
+                            'label' => 'bnomei.kart.items',
                             'value' => '{{ page.items.toStructure.count }}',
                         ],
                     ],

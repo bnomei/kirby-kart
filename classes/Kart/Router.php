@@ -388,7 +388,7 @@ class Router
 
     public static function captcha(): string
     {
-        return self::factory(self::CAPTCHA);
+        return url(self::CAPTCHA);
     }
 
     public static function sync(Page|string|null $page): string

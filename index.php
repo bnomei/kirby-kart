@@ -140,7 +140,7 @@ App::plugin(
                 'current' => function () {
                     return get('captcha'); // in current request
                 },
-                'set' => function () {
+                'set' => function (bool $inline = true) {
                     // https://github.com/S1SYPHOS/php-simple-captcha
                     $builder = new Builder;
                     $builder->bgColor = '#FFFFFF';
@@ -150,6 +150,13 @@ App::plugin(
                     $builder->build();
                     kirby()->session()->set('captcha', $builder->phrase);
 
+                    // the image
+                    if (! $inline) {
+                        $builder->output();
+                        exit();
+                    }
+
+                    // json
                     return [
                         'captcha' => $builder->inline(),
                     ];
@@ -166,18 +173,19 @@ App::plugin(
             'kart/buy' => __DIR__.'/snippets/kart/buy.php',
             'kart/captcha' => __DIR__.'/snippets/kart/captcha.php',
             'kart/cart' => __DIR__.'/snippets/kart/cart.php',
+            'kart/checkout-json-ld' => __DIR__.'/snippets/kart/checkout-json-ld.php',
             'kart/input-csrf' => __DIR__.'/snippets/kart/input-csrf.php',
             'kart/input-csrf-defer' => __DIR__.'/snippets/kart/input-csrf-defer.php',
             'kart/kart' => __DIR__.'/snippets/kart/kart.php',
             'kart/login' => __DIR__.'/snippets/kart/login.php',
-            'kart/login-magic' => __DIR__.'/snippets/kart/login-magic.php.php',
+            'kart/login-magic' => __DIR__.'/snippets/kart/login-magic.php',
             'kart/logout' => __DIR__.'/snippets/kart/logout.php',
             'kart/order.pdf' => __DIR__.'/snippets/kart/order.pdf.php',
             'kart/product-card' => __DIR__.'/snippets/kart/product-card.php',
             'kart/product-json-ld' => __DIR__.'/snippets/kart/product-json-ld.php',
             'kart/profile' => __DIR__.'/snippets/kart/profile.php',
-            'kart/signup-magic' => __DIR__.'/snippets/kart/signup-magic.php.php',
-            'kart/turnstile-form' => __DIR__.'/snippets/kart/turnstile-form.php.php',
+            'kart/signup-magic' => __DIR__.'/snippets/kart/signup-magic.php',
+            'kart/turnstile-form' => __DIR__.'/snippets/kart/turnstile-form.php',
             'kart/turnstile-widget' => __DIR__.'/snippets/kart/turnstile-widget.php',
             'kart/wish-or-forget' => __DIR__.'/snippets/kart/wish-or-forget.php',
             'kart/wishlist' => __DIR__.'/snippets/kart/wishlist.php',
@@ -201,6 +209,7 @@ App::plugin(
         'templates' => [
             'cart' => __DIR__.'/templates/cart.php',
             'kart' => __DIR__.'/templates/kart.php',
+            'login' => __DIR__.'/templates/login.php',
             'order' => __DIR__.'/templates/order.php',
             'order.pdf' => __DIR__.'/templates/order.pdf.php',
             'order.zip' => __DIR__.'/templates/order.zip.php',
@@ -208,6 +217,7 @@ App::plugin(
             'payment' => __DIR__.'/templates/payment.php',
             'product' => __DIR__.'/templates/product.php',
             'products' => __DIR__.'/templates/products.php',
+            'signup' => __DIR__.'/templates/signup.php',
             'stock' => __DIR__.'/templates/stock.php',
             'stocks' => __DIR__.'/templates/stocks.php',
         ],
