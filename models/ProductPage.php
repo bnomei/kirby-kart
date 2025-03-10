@@ -31,7 +31,7 @@ class ProductPage extends Page
         $uuid = kart()->option('products.product.uuid');
         if ($uuid instanceof Closure) {
             $uuid = $uuid($parent, $props);
-            $props['slug'] = Str::slug($props['title'] ?? $uuid);
+            $props['slug'] = Str::slug($props['content']['title'] ?? $uuid);
             $props['content']['uuid'] = $uuid;
         }
 
