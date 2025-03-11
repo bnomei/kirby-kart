@@ -35,6 +35,16 @@ if (! kirby()->environment()->isLocal()) {
                     }
                 }
             }
+            & > footer {
+                border-top: 1px dotted #ccc;
+                padding-top: 1rem;
+                margin-top: 1rem;
+                text-align: center;
+                font-size: .8rem;
+                a {
+                    color: #999;
+                }
+            }
         }
         a, a:hover, a:visited, a:focus, a:active {
             color: #000;
@@ -44,18 +54,22 @@ if (! kirby()->environment()->isLocal()) {
             display: grid;
             grid-template-areas: 
                 "nav nav"
-                "main aside";
+                "main aside"
+                "footer footer";
             grid-template-columns: 2fr 1fr;
             gap: 1rem;
             nav {
                 grid-area: nav;
                 grid-column: span 2;
             }
-            main {
+            & > main {
                 grid-area: main;
             }
-            aside {
+            & > aside {
                 grid-area: aside;
+            }
+            & > footer {
+                grid-area: footer;
             }
             article img {
                 max-width: 256px;
@@ -218,5 +232,11 @@ if (! kirby()->environment()->isLocal()) {
     </nav>
 
     <?= $slots->default() ?>
+
+    <?php if (kirby()->plugin('bnomei/kart')->license()->status()->value() !== 'active') { ?>
+    <footer>
+        <a href="https://buy-kart.bnomei.com" target="_blank">Buy a KART license</a>
+    </footer>
+    <?php } ?>
 </body>
 </html>
