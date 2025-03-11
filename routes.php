@@ -288,7 +288,7 @@ return function (App $kirby) {
                     page('page://'.Router::get('product'))
                 );
 
-                return Router::go($id);
+                return Router::go(Router::idWithParams(Router::WISHLIST_ADD));
             },
         ],
         [
@@ -307,7 +307,7 @@ return function (App $kirby) {
                     999
                 );
 
-                return Router::go($id);
+                return Router::go(Router::idWithParams(Router::WISHLIST_REMOVE));
             },
         ],
         [
@@ -329,7 +329,7 @@ return function (App $kirby) {
                     999
                 );
 
-                return Router::go($id);
+                return Router::go(Router::idWithParams(Router::WISHLIST_NOW));
             },
         ],
         [
@@ -379,7 +379,7 @@ return function (App $kirby) {
                     page('page://'.Router::get('product'))
                 );
 
-                return Router::go($id);
+                return Router::go(Router::idWithParams(Router::CART_ADD));
             },
         ],
         [
@@ -419,7 +419,7 @@ return function (App $kirby) {
                     page('page://'.Router::get('product'))
                 );
 
-                return Router::go($id);
+                return Router::go(Router::idWithParams(Router::CART_REMOVE));
             },
         ],
         [
@@ -459,7 +459,7 @@ return function (App $kirby) {
                     page('page://'.Router::get('product'))
                 );
 
-                return Router::go($id);
+                return Router::go(Router::idWithParams(Router::CART_LATER));
             },
         ],
         [

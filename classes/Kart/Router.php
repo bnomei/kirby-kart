@@ -308,7 +308,12 @@ class Router
 
     public static function current(): string
     {
-        return kirby()->request()->path();
+        return kirby()->request()->path().'/'.kirby()->request()->params();
+    }
+
+    public static function idWithParams(string $pattern): string
+    {
+        return str_replace('/'.$pattern, '', kirby()->request()->path().'/'.kirby()->request()->params());
     }
 
     public static function cart(): string
