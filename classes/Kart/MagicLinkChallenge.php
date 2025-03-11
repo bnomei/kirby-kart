@@ -42,22 +42,25 @@ class MagicLinkChallenge extends Challenge
         if (isset($options['name'])) {
             $link .= '&name='.urlencode($options['name']);
         }
+        $data = [
+            'user' => $user,
+            'site' => $kirby->system()->title(),
+            'code' => $link,
+            'link' => $link,
+            'formatted' => $formatted,
+            'timeout' => round($options['timeout'] / 60),
+        ];
         $kirby->email([
             'from' => $kirby->option('auth.challenge.email.from', 'noreply@'.$kirby->url('index', true)->host()),
             'fromName' => $kirby->option('auth.challenge.email.fromName', $kirby->site()->title()->value()),
             'to' => $user,
-            'subject' => $kirby->option(
-                'auth.challenge.email.subject',
+            'subject' => I18n::template($kirby->option(
+                'auth.challenge.email.subject', // use this option to set your own
                 I18n::translate('login.email.'.$mode.'.subject', null, $user->language())
-            ),
-            'template' => 'auth/'.$mode,
-            'data' => [
-                'user' => $user,
-                'site' => $kirby->system()->title(),
-                'code' => $link,
-                'link' => $link,
-                'formatted' => $formatted,
-                'timeout' => round($options['timeout'] / 60),
+            ), null, $data, $user->language()),
+            'body' => [
+                'html' => Str::template(snippet('kart/email-'.$mode.'.html', $data, true)),
+                'text' => Str::template(snippet('kart/email-'.$mode, $data, true)),
             ],
         ]);
 

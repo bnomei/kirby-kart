@@ -177,7 +177,7 @@ return function (App $kirby) {
                 $user = kirby()->user(A::get($data, 'email'));
                 if ($user) {
                     $code = MagicLinkChallenge::create($user, [
-                        'mode' => 'login',
+                        'mode' => 'login-magic',
                         'timeout' => 10 * 60,
                         'email' => A::get($data, 'email'),
                         'success_url' => A::get($data, 'success_url'),

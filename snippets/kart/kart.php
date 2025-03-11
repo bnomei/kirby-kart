@@ -178,6 +178,17 @@ if (! kirby()->environment()->isLocal()) {
                 font-weight: bold;
             }
         }
+
+        dialog {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            &::backdrop {
+                background-color: rgba(0, 0, 0, .5) !important;
+            }
+        }
     </style>
 </head>
 <body data-template="<?= $page->template() ?>">
@@ -188,6 +199,12 @@ if (! kirby()->environment()->isLocal()) {
                 <button autofocus><?= t('close') ?></button>
             </form>
         </dialog>
+        <script defer>
+            // otherwise the backdrop will not work
+            setTimeout(() => {
+                document.querySelector('dialog').showModal();
+            }, 100);
+        </script>
     <?php } ?>
     <nav>
         <ul aria-label="Breadcrumb">

@@ -1,6 +1,7 @@
 <?php
 
 return [
+    'login.email.magic-link.subject' => 'Your login link for {site}',
     'bnomei.kart.cart' => 'Cart',
     'bnomei.kart.categories' => 'Categories',
     'bnomei.kart.created' => 'Created at',

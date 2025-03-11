@@ -174,6 +174,8 @@ App::plugin(
             'kart/captcha' => __DIR__.'/snippets/kart/captcha.php',
             'kart/cart' => __DIR__.'/snippets/kart/cart.php',
             'kart/checkout-json-ld' => __DIR__.'/snippets/kart/checkout-json-ld.php',
+            'kart/email-login-magic' => __DIR__.'/snippets/kart/email-login-magic.php',
+            'kart/email-login-magic.html' => __DIR__.'/snippets/kart/email-login-magic.html.php',
             'kart/input-csrf' => __DIR__.'/snippets/kart/input-csrf.php',
             'kart/input-csrf-defer' => __DIR__.'/snippets/kart/input-csrf-defer.php',
             'kart/kart' => __DIR__.'/snippets/kart/kart.php',
