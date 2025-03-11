@@ -2,10 +2,10 @@
 /** @var ProductPage $page */
 $product ??= $page;
 ?>
-<div class="card">
+<article>
     <a href="<?= $product->url() ?>">
         <img src="<?= $product->gallery()->toFile()?->url() ?>" alt="">
-        <h2><?= $product->title() ?></h2>
+        <?= $product->title() ?>
     </a>
     <div><?= $product->formattedPrice() ?></div>
     <?php snippet('kart/buy', [
@@ -15,4 +15,4 @@ $product ??= $page;
     <?php snippet('kart/wish-or-forget', [
         'product' => $product,
     ]) ?>
-</div>
+</article>

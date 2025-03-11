@@ -6,7 +6,10 @@ snippet('kart/kart', slots: true);
 <main>
     <?php if (kirby()->user()?->isCustomer()) {
         snippet('kart/profile');
-    } else {
-        snippet('kart/signup-magic');
-    } ?>
+    } else { ?>
+    <fieldset>
+        <legend>Sign up</legend>
+        <?php snippet('kart/signup-magic'); ?>
+    </fieldset>
+    <?php } ?>
 </main>

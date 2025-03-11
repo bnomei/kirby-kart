@@ -7,11 +7,11 @@ $order ??= $page;
 ?>
 
 <main>
-    <header>
-        <h1>Your Order <?= $order->title() ?></h1>
-    </header>
-
     <article>
+        <header>
+            <h1>Your Order <?= $order->title() ?></h1>
+        </header>
+
         <p>
             Invoice Number: #<?= $order->invoiceNumber() ?><br>
             Order Date: <?= $order->paidDate()->toDate('Y-m-d H:i') ?><br>
@@ -19,28 +19,27 @@ $order ??= $page;
             Order Total: <?= $order->formattedTotal() ?>
         </p>
 
-        <ol>
+        <table>
             <?php foreach ($order->orderLines() as $line) {
                 /** @var \Bnomei\Kart\OrderLine $line */
                 /** @var ProductPage $product */
                 $product = $line->product();
                 ?>
-                <li>
-                    <a href="<?= $product->url() ?>">
-                        <img src="<?= $product->gallery()->toFile()?->url() ?>" alt="<?= $product->title() ?>">
-                        <span><?= $product->title() ?></span>
-                    </a>
-                    <span><?= $line->quantity() ?>x</span>
-                    <span><?= $line->formattedPrice() ?></span>
-                </li>
+                <tr>
+                    <td><img src="<?= $product->gallery()->toFile()?->url() ?>" alt=""></td>
+                    <td><a href="<?= $product->url() ?>"><?= $product->title() ?></a></td>
+                    <td><?= $line->quantity() ?>x</td>
+                    <td><?= $line->formattedPrice() ?></td>
+                    <td><?= $line->formattedTotal() ?></td>
+                </tr>
             <?php } ?>
-        </ol>
+        </table>
     </article>
 
     <nav>
-        <h3>Previous Orders</h3>
-
-<?php $user = kirby()->user();
+        <h2>Previous Orders</h2>
+<?php
+$user = kirby()->user();
 if ($user && $user === $page->customer()->toUser()) { ?>
             <ol>
                 <?php foreach ($user->orders()->not($order) as $order) { ?>
@@ -48,7 +47,7 @@ if ($user && $user === $page->customer()->toUser()) { ?>
                 <?php } ?>
             </ol>
         <?php } else { ?>
-            <p >Please log in to see previous orders.</p>
+            <p><mark>Please <a href="<?= url('kart/login') ?>">log in</a> to see previous orders.</mark></p>
         <?php } ?>
     </nav>
 </main>

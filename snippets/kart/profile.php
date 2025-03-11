@@ -1,9 +1,13 @@
-<div class="profile">
+<fieldset>
+    <legend><?= t('view.account') ?></legend>
 <?php if ($user = kirby()->user()) { ?>
-    <img src="<?= $user->gravatar(48 * 2) ?>" alt="">
-    <div><?= $user->nameOrEmail() ?></div>
+    <figure>
+        <img src="<?= $user->gravatar(48 * 2) ?>" alt="">
+        <figcaption><?= $user->nameOrEmail() ?></figcaption>
+    </figure>
     <?php snippet('kart/logout') ?>
 <?php } else {
-        snippet('kart/login');
-    } ?>
-</div>
+        snippet('kart/login-magic'); ?>
+    <br>or <a href="<?= url('kart/signup') ?>">sign up</a>
+<?php } ?>
+</fieldset>

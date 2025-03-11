@@ -74,4 +74,24 @@ class CartLine
     {
         return $this->quantity;
     }
+
+    public function price(): float
+    {
+        return $this->product()->price()->toFloat();
+    }
+
+    public function subtotal(): float
+    {
+        return $this->price() * $this->quantity();
+    }
+
+    public function formattedPrice(): string
+    {
+        return Kart::formatCurrency($this->price());
+    }
+
+    public function formattedSubtotal(): string
+    {
+        return Kart::formatCurrency($this->subtotal());
+    }
 }

@@ -11,58 +11,194 @@ if (! kirby()->environment()->isLocal()) {
     <title><?= $page->title() ?></title>
 
     <style>
-        nav {
-            padding: 1rem 0;
+        body {
+            font-family: 'Inter', sans-serif;
+            max-width: 768px;
+            margin: 0 auto;
+            padding-bottom: 1rem;
+            & > nav {
+                display: flex;
+                justify-content: space-between;
+                border-bottom: 1px dotted #ccc;
+                margin-bottom: 1rem;
+                ul {
+                    display: flex;
+                    flex-wrap: wrap;
+                    list-style: none;
+                    padding: 0;
+                    li:not(:last-child) {
+                        margin-right: .5rem;
+                        &::after {
+                            content: '‣';
+                            margin-left: .5rem;
+                        }
+                    }
+                }
+            }
         }
-        .is-active {
-            font-weight: bold;
+        a, a:hover, a:visited, a:focus, a:active {
+            color: #000;
+            text-decoration: underline;
         }
-        .cards {
+        body[data-template="product"] {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-            grid-gap: 1rem;
+            grid-template-areas: 
+                "nav nav"
+                "main aside";
+            grid-template-columns: 2fr 1fr;
+            gap: 1rem;
+            nav {
+                grid-area: nav;
+                grid-column: span 2;
+            }
+            main {
+                grid-area: main;
+            }
+            aside {
+                grid-area: aside;
+            }
+            article img {
+                max-width: 256px;
+            }
         }
-        .card {
+        body[data-template="cart"],
+        body[data-template="signup"] {
+            fieldset {
+                max-width: 412px;
+                margin: 0 auto;
+            }
+        }
+        menu {
+            margin: 0;
+            padding: 0;
+        }
+        button {
+            display: inline-block;
+            background: #eee;
             border: 1px solid #ccc;
-            padding: 10px;
-            margin-bottom: 10px;
-            background-color: #fafafa;
+            cursor: pointer;
+            padding: .5rem;
+            margin: .25rem;
+            border-radius: .25rem;
+            min-width: 20ch;
+            height: 2rem;
+            &:hover {
+                background: #fafafa;
+            }
+        }
+        output {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            grid-gap: 2rem 1rem;
+            article {
+                border: 1px solid #ccc;
+                border-radius: .25rem;
+                padding: 1rem;
+                &:hover {
+                    border-color: #999;
+                }
+            }
+        }
+        article {
             img {
-                aspect-ratio: 1;
+                border: none;
                 width: 100%;
-                background-color: #dadada;
-            }
-        }
-        .profile {
-            color: #fff;
-            background-color: #000;
-            padding: 1rem;
-            margin: 1rem 0;
-            border-radius: 0.5rem;
-            img {
                 aspect-ratio: 1;
-                width: 48px;
-                border-radius: 50%;
+                background-color: #999;
+                margin-bottom: .5rem;
             }
         }
-        .cart, .wishlist {
-            background-color: #dadada;
+        fieldset {
             padding: 1rem;
+            margin-bottom: 1rem;
+            border: 1px solid #ccc;
+            background-color: #fafafa;
+            border-radius: .25rem;
+        }
+        aside > fieldset > figure {
+            padding: 0;
+            margin: 0;
+            img {
+                border-radius: 50%;
+                width: 3rem;
+            }
+            figcaption {
+                margin: .5rem 0;
+            }
+        }
+        aside fieldset menu {
+            list-style: none;
+        }
+        aside fieldset menu li {
+            border-top: 1px solid #ccc;
+            padding: .5rem 0;
+            &:first-child {
+                border-top: none;
+            }
+            > div {
+                display: flex;
+                justify-content: flex-end;
+                button {
+                    min-width: 2rem;
+                }
+            }
+        }
+        legend {
+            font-style: italic;
+        }
+        form {
+            input {
+                min-width: calc(100% - 1rem);
+                padding: .5rem;
+                border: 1px solid #ccc;
+                border-radius: .25rem;
+                margin-bottom: .5rem;
+                &:focus {
+                    outline: none;
+                    border-color: #999;
+                }
+            }
+            figure {
+                margin: 0 0 .5rem;
+                padding: 0;
+                img {
+                    width: 100%;
+                    border: 1px solid #ccc;
+                    aspect-ratio: 150/40;
+                }
+
+            }
+        }
+        search {
+            border-bottom: 1px dotted #ccc;
+            padding: 0 1rem 1rem;
+            margin-bottom: 1rem;
+            line-height: 1.6;
+            .is-active {
+                font-weight: bold;
+            }
         }
     </style>
 </head>
-<body>
+<body data-template="<?= $page->template() ?>">
+    <?php if ($msg = get('msg')) { ?>
+        <dialog>
+            <p><?= strip_tags(urldecode($msg)) ?></p>
+            <form method="dialog">
+                <button autofocus><?= t('close') ?></button>
+            </form>
+        </dialog>
+    <?php } ?>
     <nav>
+        <ul aria-label="Breadcrumb">
+            <li><a href="<?= url('kart') ?>">Kart</a></li>
+            <li><a href="<?= url('products') ?>">Products</a></li>
+        </ul>
         <ul>
-            <?php foreach (site()->breadcrumb() as $crumb) { ?>
-                <li><a href="<?= $crumb->slug() === 'home' ? url('kart') : $crumb->url() ?>"><?= $crumb->title() ?></a></li>
-            <?php } ?>
             <li><a href="<?= url('cart') ?>">Cart (<?= kart()->cart()->quantity() ?>)</a></li>
         </ul>
     </nav>
-    <hr>
-    <!-- SLOT: default -->
+
     <?= $slots->default() ?>
-    <!-- /SLOT: default -->
 </body>
 </html>

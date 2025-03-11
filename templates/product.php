@@ -8,7 +8,7 @@ $product ??= $page;
 
 <main>
     <article>
-        <img src="<?= $product->gallery()->toFile()?->url() ?>" alt="" style="aspect-ratio: 1; width: 100px; background-color: #dadada;">
+        <img src="<?= $product->gallery()->toFile()?->url() ?>" alt="">
         <h1><?= $product->title() ?></h1>
         <?= $product->description()->kirbytext() ?>
         <div><?= $product->formattedPrice() ?></div>
@@ -18,12 +18,8 @@ $product ??= $page;
 </main>
 
 <aside>
-    <header>
-        <?php snippet('kart/profile') ?>
-    </header>
-
+    <?php snippet('kart/profile') ?>
     <?php snippet('kart/cart') ?>
-    <hr>
     <?php snippet('kart/wishlist') ?>
 </aside>
 

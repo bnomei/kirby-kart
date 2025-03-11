@@ -486,7 +486,7 @@ return function (App $kirby) {
                     'template' => 'payment',
                     'model' => 'payment',
                     'content' => [
-                        'title' => t('bnomei.kart.payment', 'Payment'),
+                        'title' => t('bnomei.kart.payment'),
                     ],
                 ]);
 

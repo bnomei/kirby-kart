@@ -8,5 +8,5 @@ if ($product->inStock()) { ?>
         <button type="submit" onclick="this.disabled=true;this.form.submit();">Buy now</button>
     </form>
 <?php } else { ?>
-    <div>out of stock</div>
+    <p><mark>out of stock</mark></p>
 <?php }

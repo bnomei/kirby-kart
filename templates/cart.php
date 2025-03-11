@@ -4,10 +4,6 @@ snippet('kart/kart', slots: true);
 ?>
 
 <main>
-    <header>
-        <?php snippet('kart/profile') ?>
-    </header>
-
     <?php snippet('kart/cart') ?>
     <?php snippet('kart/checkout-json-ld') ?>
 </main>
