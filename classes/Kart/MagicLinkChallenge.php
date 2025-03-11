@@ -26,6 +26,9 @@ class MagicLinkChallenge extends Challenge
         if ($mode === '2fa') {
             $mode = 'login';
         }
+        if ($mode === 'login') {
+            $mode = 'login-magic';
+        }
 
         $kirby = $user->kirby();
         $link = url(Router::MAGIC_LINK).'?'.implode('&', [

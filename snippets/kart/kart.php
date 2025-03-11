@@ -194,6 +194,7 @@ if (! kirby()->environment()->isLocal()) {
 <body data-template="<?= $page->template() ?>">
     <?php if ($msg = get('msg')) { ?>
         <dialog>
+            <p><strong>Hi <?= kirby()->user()?->nameOrEmail() ?></strong>,</p>
             <p><?= strip_tags(urldecode($msg)) ?></p>
             <form method="dialog">
                 <button autofocus><?= t('close') ?></button>
