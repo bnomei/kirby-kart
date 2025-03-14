@@ -106,7 +106,9 @@ class StockPage extends Page
         if ($amount === 0) {
             return 0;
         }
-
+        // TODO: prevent race conditions between different requests by adding memcached/redis that can do locking itself
+        // locking with sleep to wait for unlock. without locking one request could overwrite another
+        // (not file cache NOT fast enough)
         return $this->kirby()->impersonate('kirby', function () use ($amount) {
             return $this->increment('stock', $amount);
         })->stock()->toInt();

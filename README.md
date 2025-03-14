@@ -21,13 +21,22 @@ Streamlined E-Commerce Shopping Cart Solution
 
 Kirby Kart is a commercial plugin that requires a license. You can install and test the plugin locally without a license. However, production environments require a valid license. You can [purchase a license here](https://buy-kart.bnomei.com).
 
+## Quickstart
 
-## Settings
+1. ⬇️ Download the ZIP or, for easier updates later on, use `composer require bnomei/kirby-kart`.
+2. 🏎️ Access the `/kart`-route on your local setup to initialize Kart and start the demo.
+3. 🪞 Copy the snippets and templates from the plugin into your project `site`-folder.
+4. 🎨 Modify the copied snippets and templates to match your projects style and site structure.
+5. 🔗 Link Kart to a Provider (like Stripe or Paypal) and fetch your products from them.
+6. 💅 Enhance your products within Kirby with additional text, images and downloadable files.
+7. 🪪 Buy a license for Kirby Kart, register it in the config-file and go online with your shop.
+8. 💰 The streamlined shopping cart, invoices and downloads will make your customers happy.
+9. 📈 Track orders and remaining stock within Kirby.
 
-| bnomei.kart. | Default               | Description                                                                                                        |
-|--------------|-----------------------|--------------------------------------------------------------------------------------------------------------------|
-| license      | `string/fn()`         | Enter your license key. You need to [buy a license](https://buy-kart.bnomei.com) for non-development environments. |
-| expire       | `0`                   | cache duration where `0` = infinite, `n` = in minutes, `null` = disabled                                           
+## Documentation
+
+You can find the full [documentation for Kirby Kart](https://kart.bnomei.com) on its dedicated website.
+
 ## Disclaimer
 
 This plugin is provided "as is" with no guarantee. You can use it at your own risk and always test it before using it in a production environment. If you find any issues, please [create a new issue](https://github.com/bnomei/kirby-kart/issues/new).
