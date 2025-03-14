@@ -77,7 +77,7 @@ class Router
         $middlewares = $exclusive ? $check : $middlewares + $check;
 
         if ($code = Router::middlewares($middlewares)) {
-            return Response::json([], $code);
+            return Router::go(code: $code);
         }
 
         return null;
@@ -153,6 +153,12 @@ class Router
 
         $token = self::get('token');
 
+        // prefer from header if it exists
+        $token = kirby()->request()->header(
+            strval(kart()->option('router.header.csrf')),
+            $token
+        );
+
         return is_string($token) && csrf($token) ? null : 401;
     }
 
@@ -188,7 +194,7 @@ class Router
 
         if ($mode === 'go') {
             $url = strval(Router::get('redirect', $url ?? '/'));
-            Response::go($url, $code ?? 302);
+            Response::go($url, $code ?? 200);
         }
 
         if ($mode === 'json') {
@@ -196,15 +202,17 @@ class Router
                 // the snippet could also set a header with a different code, echo and die itself
                 // instead of just returning a string and defaulting to the 200 status code below
                 $json = snippet(
-                    Router::get('snippet'), // NOTE: snippet(null) yields ''
+                    'kart/'.Router::get('snippet'), // NOTE: snippet(null) yields ''
                     data: kirby()->request()->data(),
                     return: true
                 );
             }
+            /*
             if (is_string($json)) {
                 $json = json_decode($json, true);
                 $json['token'] = csrf(); // return a new token for the next request
             }
+            */
 
             return Response::json($json, $code ?? 200);
         }
@@ -214,7 +222,7 @@ class Router
                 header('HTTP/1.1 '.$code.' '.$http_response_header[0]);
             }
             echo $html ?? snippet(
-                Router::get('snippet'), // NOTE: snippet(null) yields ''
+                'kart/'.Router::get('snippet'), // NOTE: snippet(null) yields ''
                 data: kirby()->request()->data(),
                 return: true
             );

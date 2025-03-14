@@ -91,6 +91,9 @@ App::plugin(
                 'mode' => 'go', // go/json/html
                 'encryption' => fn () => sha1(__DIR__), // or false
                 'csrf' => 'token', // null|false or name of form data
+                'header' => [
+                    'csrf' => 'X-CSRF-TOKEN',
+                ],
             ],
             'middlewares' => [
                 'csrf' => 'token', // null|false or name of form data
