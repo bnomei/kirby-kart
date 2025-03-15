@@ -186,11 +186,23 @@ class Router
 
     public static function go(
         ?string $url = null,
-        string|array $json = [],
+        null|string|array $json = null,
         ?string $html = null,
         ?int $code = null,
     ): ?Response {
         $mode = kart()->option('router.mode');
+
+        if (kirby()->request()->header(kart()->option('router.header.htmx'))) {
+            $mode = 'htmx';
+        }
+
+        if (! is_null($html) || kirby()->request()->header('Accept') === 'application/html') {
+            $mode = 'html';
+        }
+
+        if (! is_null($json) || kirby()->request()->header('Accept') === 'application/json') {
+            $mode = 'json';
+        }
 
         if ($mode === 'go') {
             $url = strval(Router::get('redirect', $url ?? '/'));
@@ -201,11 +213,14 @@ class Router
             if (empty($json)) {
                 // the snippet could also set a header with a different code, echo and die itself
                 // instead of just returning a string and defaulting to the 200 status code below
-                $json = snippet(
-                    'kart/'.Router::get('snippet'), // NOTE: snippet(null) yields ''
-                    data: kirby()->request()->data(),
-                    return: true
-                );
+                $snippet = Router::get('snippet');
+                if (in_array($snippet, kart()->option('router.snippets', []))) {
+                    $json = snippet(
+                        $snippet, // NOTE: snippet(null) yields ''
+                        data: kirby()->request()->data(),
+                        return: true
+                    );
+                }
             }
             /*
             if (is_string($json)) {
@@ -214,18 +229,21 @@ class Router
             }
             */
 
-            return Response::json($json, $code ?? 200);
+            return Response::json($json ?? [], $code ?? 200);
         }
 
-        if ($mode === 'html') {
+        if (in_array($mode, ['html', 'htmx'])) {
             if ($code) {
                 header('HTTP/1.1 '.$code.' '.$http_response_header[0]);
             }
-            echo $html ?? snippet(
-                'kart/'.Router::get('snippet'), // NOTE: snippet(null) yields ''
-                data: kirby()->request()->data(),
-                return: true
-            );
+            $snippet = Router::get('snippet');
+            if (in_array($snippet, kart()->option('router.snippets', []))) {
+                $html ?? snippet(
+                    $snippet, // NOTE: snippet(null) yields ''
+                    data: kirby()->request()->data(),
+                    return: true
+                );
+            }
             exit;
         }
 

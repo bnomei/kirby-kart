@@ -93,6 +93,17 @@ App::plugin(
                 'csrf' => 'token', // null|false or name of form data
                 'header' => [
                     'csrf' => 'X-CSRF-TOKEN',
+                    'htmx' => 'HX-Request',
+                ],
+                'snippets' => [
+                    // define the snippets that are allowed to be called
+                    'kart/add',
+                    'kart/captcha',
+                    'kart/login',
+                    'kart/login-magic',
+                    'kart/signup-magic',
+                    'kart/wish-or-forget',
+                    // overwrite to change or set your own
                 ],
             ],
             'middlewares' => [
