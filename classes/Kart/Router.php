@@ -74,13 +74,18 @@ class Router
             $middlewares = [];
         }
 
-        $middlewares = $exclusive ? $check : $middlewares + $check;
+        $middlewares = $exclusive ? $check : array_merge($middlewares, $check);
 
         if ($code = Router::middlewares($middlewares)) {
-            return Router::go(code: $code);
+            return Router::go(Router::back(), code: $code);
         }
 
         return null;
+    }
+
+    public static function back(): ?string
+    {
+        return kirby()->request()->header('referer');
     }
 
     public static function middlewares(array $middlewares = []): ?int
@@ -207,8 +212,11 @@ class Router
         }
 
         if ($mode === 'go') {
-            $url = strval(Router::get('redirect', $url ?? '/'));
-            Response::go($url, $code);
+            $url = strval($url ?? Router::get('redirect', '/'));
+            Response::go($url, $code); // NOTE: code provided but a redirect will always be a 302, use the JSON API if you need the code
+            // NOTE: this does not redirect
+            // header('Location: ' . $url, true, $code);
+            // exit;
         }
 
         if ($mode === 'json') {
@@ -253,6 +261,11 @@ class Router
         }
 
         return null;
+    }
+
+    public static function account_delete(): string
+    {
+        return self::factory(self::ACCOUNT_DELETE);
     }
 
     public static function login(?string $email = null): string

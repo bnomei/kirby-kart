@@ -10,6 +10,7 @@ use ProductPage;
  * @method string cart()
  * @method string csrf()
  * @method string kart()
+ * @method string account_delete()
  * @method string logout()
  * @method string login(?string $email = null)
  * @method string login_magic(?string $email = null)

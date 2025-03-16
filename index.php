@@ -323,11 +323,16 @@ App::plugin(
                 // StockPage::updateStock()
             },
             'kart.user.created' => function (?User $user = null): void {
-                // kart()->wishlist()
-                // TIP: use default kirby hook to track delete
+                // TIP: use default kirby hook to track delete, or kart.user.softDeleted
+                // TIP: send a magic login email
+                // $user?->sendMagicLink();
+                // TIP: or a discord notification to yourself
+            },
+            'kart.user.softDeleted' => function (?User $user = null): void {
+                // TIP: or a discord notification to yourself
             },
             'kart.user.signup' => function (?User $user = null): void {
-                // kart()->wishlist()
+                // NOTE: this will happen in ADDITION to kart.user.created when the signup form is used
             },
             'kart.cart.add' => function (ProductPage $product, int $count, ?CartLine $item = null, ?User $user = null): void {
                 // kart()->cart()
@@ -632,10 +637,25 @@ App::plugin(
             },
             'softDelete' => function (): void {
                 $user = $this;
-                kirby()->impersonate('kirby', function() use ($user) {
+                kirby()->impersonate('kirby', function () use ($user) {
                     $user = $user->changeRole('deleted');
                     $user = $user->update(['deletedAt' => time()]);
+                    kirby()->trigger('kart.user.softDeleted', [
+                        'user' => $user,
+                    ]);
                 });
+            },
+            'sendMagicLink' => function (?string $success_url = null): void {
+                /** @var User $this */
+                $code = MagicLinkChallenge::create($this, [
+                    'mode' => 'login',
+                    'timeout' => 10 * 60,
+                    'email' => $this->email(),
+                    'name' => $this->nameOrEmail(),
+                    'success_url' => $success_url ?? url('/'),
+                ]);
+                kirby()->session()->set('kirby.challenge.type', 'login');
+                kirby()->session()->set('kirby.challenge.code', password_hash($code, PASSWORD_DEFAULT));
             },
         ],
         'commands' => [

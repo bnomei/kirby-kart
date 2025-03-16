@@ -11,6 +11,7 @@ return [
     'bnomei.kart.discount' => 'Rabatt',
     'bnomei.kart.dowloads' => 'Downloads',
     'bnomei.kart.gallery' => 'Galerie',
+    'bnomei.kart.goodbye' => 'Macht’s gut, und danke für den Fisch',
     'bnomei.kart.invoice' => 'Rechnung',
     'bnomei.kart.invoiceNumber' => 'Rechnungsnummer',
     'bnomei.kart.items' => 'Einträge',

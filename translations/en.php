@@ -11,6 +11,7 @@ return [
     'bnomei.kart.discount' => 'Discount',
     'bnomei.kart.dowloads' => 'Downloads',
     'bnomei.kart.gallery' => 'Gallery',
+    'bnomei.kart.goodbye' => 'So long and thanks for all the fish', // https://en.wikipedia.org/wiki/So_Long,_and_Thanks_for_All_the_Fish
     'bnomei.kart.invoice' => 'Invoice',
     'bnomei.kart.invoiceNumber' => 'Invoice Number',
     'bnomei.kart.items' => 'Items',

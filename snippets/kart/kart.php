@@ -52,7 +52,7 @@ if (! kirby()->environment()->isLocal()) {
         }
         body[data-template="product"] {
             display: grid;
-            grid-template-areas: 
+            grid-template-areas:
                 "nav nav"
                 "main aside"
                 "footer footer";
@@ -206,7 +206,7 @@ if (! kirby()->environment()->isLocal()) {
     </style>
 </head>
 <body data-template="<?= $page->template() ?>">
-    <?php if ($msg = get('msg')) { ?>
+    <?php if ($msg = get('msg', kart()->message())) { ?>
         <dialog>
             <p><strong>Hi <?= kirby()->user()?->nameOrEmail() ?></strong>,</p>
             <p><?= strip_tags(urldecode($msg)) ?></p>

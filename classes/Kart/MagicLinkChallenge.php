@@ -59,11 +59,11 @@ class MagicLinkChallenge extends Challenge
             'to' => $user,
             'subject' => I18n::template($kirby->option(
                 'auth.challenge.email.subject', // use this option to set your own
-                I18n::translate('login.email.'.$mode.'.subject', null, $user->language())
+                I18n::translate('login.email.'.$mode.'.subject', null, $user->language()) ?? ''
             ), null, $data, $user->language()),
             'body' => [
-                'html' => Str::template(snippet('kart/email-'.$mode.'.html', $data, true)),
-                'text' => Str::template(snippet('kart/email-'.$mode, $data, true)),
+                'html' => snippet('kart/email-'.$mode.'.html', $data, true),
+                'text' => snippet('kart/email-'.$mode, $data, true),
             ],
         ]);
 

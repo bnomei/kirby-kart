@@ -85,11 +85,12 @@ return function (App $kirby) {
                     ->customers()
                     ->findBy('email', $email);
 
-                if ($user?->login(get('password'))) {
+                $pw = get('password');
+                if ($pw && strlen($pw) >= 8 && $user?->login($pw)) {
                     return Router::go();
                 }
 
-                return Router::go(code: 401);
+                return Router::go(Router::back(), code: 401);
             },
         ],
         [
@@ -139,14 +140,17 @@ return function (App $kirby) {
                 // create a virtual user to make kirby happily create
                 // the magic challenge even if NO user with that
                 // email exists.
-                // $user = kirby()->user(get('email')); might fail
+                $maybe = kirby()->user(get('email'));
+                if ($maybe) {
+                    kart()->message(t('error.user.duplicate'));
+                }
                 $user = new User([
                     'email' => A::get($data, 'email'),
                     'name' => A::get($data, 'name'),
                     'language' => kirby()->language()?->code(),
                     'role' => kart()->option('customers.roles')[0],
                 ]);
-                if ($user) { // @phpstan-ignore-line
+                if ($user && is_null($maybe)) { // @phpstan-ignore-line
                     $code = MagicLinkChallenge::create($user, [
                         'mode' => 'login',
                         'timeout' => 10 * 60,
@@ -157,9 +161,11 @@ return function (App $kirby) {
                     ]);
                     kirby()->session()->set('kirby.challenge.type', 'login');
                     kirby()->session()->set('kirby.challenge.code', password_hash($code, PASSWORD_DEFAULT));
+
+                    return Router::go();
                 }
 
-                return Router::go();
+                return Router::go(Router::back(), code: 401);
             },
         ],
         [
@@ -176,7 +182,10 @@ return function (App $kirby) {
                 $data = Kart::sanitize(kirby()->request()->data());
 
                 $user = kirby()->user(A::get($data, 'email'));
-                if ($user && in_array($user->role()->name(), kart()->option('customers.roles'))) {
+                if (! $user) {
+                    kart()->message(t('error.user.notFound'));
+                }
+                if ($user && $user->isCustomer()) {
                     $code = MagicLinkChallenge::create($user, [
                         'mode' => 'login-magic',
                         'timeout' => 10 * 60,
@@ -185,9 +194,11 @@ return function (App $kirby) {
                     ]);
                     kirby()->session()->set('kirby.challenge.type', 'login');
                     kirby()->session()->set('kirby.challenge.code', password_hash($code, PASSWORD_DEFAULT));
+
+                    return Router::go();
                 }
 
-                return Router::go();
+                return Router::go(Router::back(), code: 401);
             },
         ],
         [
@@ -266,11 +277,13 @@ return function (App $kirby) {
 
                 $user = kirby()->user();
                 if ($user?->isAdmin()) {
-                    return Response::json([], 401);
+                    return Router::go(Router::back(), code: 401);
                 }
 
                 $user?->logout();
                 $user?->softDelete();
+                kart()->message(t('bnomei.kart.goodbye'));
+
                 go(site()->url());
             },
         ],
