@@ -243,6 +243,10 @@ return function (App $kirby) {
                     $user = kirby()->user(get('email'));
                 }
 
+                if (! $user) {
+                    kart()->message(t('error.user.notFound'));
+                }
+
                 if ($user && MagicLinkChallenge::verify($user, $code)) {
                     $user->loginPasswordless();
                 }
