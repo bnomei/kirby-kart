@@ -142,7 +142,7 @@ App::plugin(
                         // https://docs.stripe.com/api/checkout/sessions/create
                         return [];
                     },
-                    'virtual' => 'prune', // 'prune', // do not write virtual fields to file
+                    'virtual' => 'prune', // 'prune', // do not write pure virtual fields to file
                 ],
             ],
             'turnstile' => [
@@ -290,6 +290,28 @@ App::plugin(
                     // higher values. like start with #12345
                     $newPage->updateInvoiceNumber();
                 }
+            },
+            // KART
+            'kart.cart.completed' => function (?CustomerUser $user = null, ?OrderPage $order = null): void {
+                // fulfillment hook of Cart::complete()
+            },
+            'kart.cart.add' => function (\Bnomei\Kart\CartLine $item, ProductPage $product, int $count, ?CustomerUser $user = null): void {
+                // kart()->cart()
+            },
+            'kart.cart.remove' => function (\Bnomei\Kart\CartLine $item, ProductPage $product, int $count, ?CustomerUser $user = null): void {
+                // kart()->cart()
+            },
+            'kart.cart.clear' => function (?CustomerUser $user = null): void {
+                // kart()->cart()
+            },
+            'kart.wishlist.add' => function (\Bnomei\Kart\CartLine $item, ProductPage $product, int $count, ?CustomerUser $user = null): void {
+                // kart()->wishlist()
+            },
+            'kart.wishlist.remove' => function (\Bnomei\Kart\CartLine $item, ProductPage $product, int $count, ?CustomerUser $user = null): void {
+                // kart()->wishlist()
+            },
+            'kart.wishlist.clear' => function (?CustomerUser $user = null): void {
+                // kart()->wishlist()
             },
         ],
         'fieldMethods' => [

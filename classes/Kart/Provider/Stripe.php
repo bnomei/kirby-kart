@@ -162,14 +162,17 @@ class Stripe extends Provider
                     'id' => 'id', // id, uuid and slug will be hashed in ProductPage::create based on this `id`
                     'title' => 'name',
                     'content' => [
+                        'created' => fn ($i) => date('Y-m-d H:i:s', $i['created']),
                         'description' => 'description',
                         'price' => fn ($i) => A::get($i, 'default_price.unit_amount', 0) / 100.0,
-                        'gallery' => fn ($i) => $this->findImagesFromUrls(
-                            A::get($i, 'images', [])
-                        ),
                         'tags' => fn ($i) => A::get($i, 'metadata.tags', []),
                         'categories' => fn ($i) => A::get($i, 'metadata.categories', []),
-                        'created' => fn ($i) => date('Y-m-d H:i:s', $i['created']),
+                        'gallery' => fn ($i) => $this->findImagesFromUrls(
+                            A::get($i, 'images', A::get($i, 'metadata.gallery', []))
+                        ),
+                        'downloads' => fn ($i) => $this->findFilesFromUrls(
+                            A::get($i, 'metadata.downloads', [])
+                        ),
                     ],
                 ],
                 $this->kart->page(ContentPageEnum::PRODUCTS))

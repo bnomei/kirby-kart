@@ -127,6 +127,10 @@ class VirtualPage extends Obj
     {
         $result = parent::toArray();
 
+        // remove all null values in content so when hydration with
+        // local file happens the local value will be kept
+        $result['content'] = array_filter($result['content']);
+
         // convert all arrays in content to yaml
         foreach ($result['content'] as $key => $value) {
             if (is_array($value)) {

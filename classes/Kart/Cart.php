@@ -79,10 +79,10 @@ class Cart
         $this->save();
 
         $this->kirby->trigger('kart.'.$this->id.'.add', [
-            'user' => $this->user,
             'item' => $item,
             'product' => $product,
             'count' => $this->lines->count(),
+            'user' => $this->user,
         ]);
 
         return $item->quantity();
@@ -196,10 +196,10 @@ class Cart
         $this->save();
 
         $this->kirby->trigger('kart.'.$this->id.'.remove', [
-            'user' => $this->user,
             'item' => $item,
             'product' => $product,
             'count' => $this->lines->count(),
+            'user' => $this->user,
         ]);
 
         return $item?->quantity() ?? 0;

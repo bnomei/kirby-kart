@@ -10,6 +10,7 @@ use Kirby\Data\Yaml;
 use Kirby\Filesystem\F;
 use Kirby\Toolkit\A;
 use Kirby\Toolkit\Date;
+use Kirby\Toolkit\Str;
 
 abstract class Provider
 {
@@ -151,7 +152,19 @@ abstract class Provider
 
         return array_filter(array_map(
             // fn ($url) => $this->kart()->option('products.page').'/'.F::filename($url), // simple but does not resolve change in extension
-            fn ($url) => $images->filter('name', F::name($url))->first()?->uuid()->toString(), // slower but better results
+            fn ($url) => Str::startsWith($url, 'file://') ? $url : $images->filter('name', F::name($url))->first()?->uuid()->toString(), // slower but better results
+            $urls
+        ));
+    }
+
+    public function findFilesFromUrls(array $urls): array
+    {
+        // media pool in the products page
+        $images = $this->kirby()->site()->kart()->page(ContentPageEnum::PRODUCTS)->files();
+
+        return array_filter(array_map(
+            // fn ($url) => $this->kart()->option('products.page').'/'.F::filename($url), // simple but does not resolve change in extension
+            fn ($url) => Str::startsWith($url, 'file://') ? $url : $images->filter('name', F::name($url))->first()?->uuid()->toString(), // slower but better results
             $urls
         ));
     }

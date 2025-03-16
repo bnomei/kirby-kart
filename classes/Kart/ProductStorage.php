@@ -19,6 +19,7 @@ class ProductStorage extends PlainTextStorage
             $uuid = kart()->option('products.product.uuid');
             foreach (kart()->provider()->products() as $product) {
                 if (A::get($content, 'uuid', time()) === $uuid(null, $product)) {
+                    // provider overwrites local changes
                     $content = A::merge($content, A::get($product, 'content', []));
                     break;
                 }

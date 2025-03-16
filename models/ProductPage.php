@@ -95,7 +95,7 @@ class ProductPage extends Page
                                 'description' => [
                                     'label' => 'bnomei.kart.description',
                                     'type' => 'textarea',
-                                    'virtual' => true,
+                                    // 'virtual' => true,
                                 ],
                                 'price' => [
                                     'label' => 'bnomei.kart.price',
@@ -140,7 +140,7 @@ class ProductPage extends Page
                                     ],
                                     'width' => '1/2',
                                     'translate' => false,
-                                    'virtual' => true,
+                                    // 'virtual' => true,
                                 ],
                                 'tags' => [
                                     'label' => 'bnomei.kart.tags',
@@ -151,7 +151,7 @@ class ProductPage extends Page
                                     ],
                                     'width' => '1/2',
                                     'translate' => false,
-                                    'virtual' => true,
+                                    // 'virtual' => true,
                                 ],
                                 'gallery' => [
                                     'label' => 'bnomei.kart.gallery',

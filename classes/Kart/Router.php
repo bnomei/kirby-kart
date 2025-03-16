@@ -213,7 +213,7 @@ class Router
             if (empty($json)) {
                 // the snippet could also set a header with a different code, echo and die itself
                 // instead of just returning a string and defaulting to the 200 status code below
-                $snippet = Router::get('snippet');
+                $snippet = Router::get('snippet', kirby()->request()->path());
                 if (in_array($snippet, kart()->option('router.snippets', []))) {
                     $json = snippet(
                         $snippet, // NOTE: snippet(null) yields ''
@@ -236,7 +236,7 @@ class Router
             if ($code) {
                 header('HTTP/1.1 '.$code.' '.$http_response_header[0]);
             }
-            $snippet = Router::get('snippet');
+            $snippet = Router::get('snippet', kirby()->request()->path());
             if (in_array($snippet, kart()->option('router.snippets', []))) {
                 $html ?? snippet(
                     $snippet, // NOTE: snippet(null) yields ''
