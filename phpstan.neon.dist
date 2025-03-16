@@ -21,6 +21,5 @@ parameters:
         - '#Cannot call method toString\(\) on Kirby\\Uuid\\Uuid\|null#'
         - '#Cannot call method id\(\) on Kirby\\Uuid\\Uuid\|null#'
         - '#Cannot call method license\(\) on Kirby\\Plugin\\Plugin\|null#'
-        - '#Method Bnomei\\Kart\\Cart::createOrUpdateCustomer\(\) should return Kirby\\Cms\\User\|null but returns mixed.#'
         -
             identifier: missingType.iterableValue

@@ -8,6 +8,7 @@ trait Stats
     {
         $customers = kirby()->cache('bnomei.kart.stats')->get('customers', 0);
         if (! $customers) {
+            // @phpstan-ignore-next-line
             $customers = kirby()->users()
                 ->customers()
                 ->count();

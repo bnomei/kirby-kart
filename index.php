@@ -378,13 +378,13 @@ App::plugin(
              * @kql-allowed
              */
             'toCategories' => function (Field $field): Collection {
-                return kart()->categories()->filterBy('value', 'in', explode(',', $field->value));
+                return kart()->categories()->filterBy('value', 'in', explode(',', strval($field->value)));
             },
             /**
              * @kql-allowed
              */
             'toTags' => function (Field $field): Collection {
-                return kart()->tags()->filterBy('value', 'in', explode(',', $field->value));
+                return kart()->tags()->filterBy('value', 'in', explode(',', strval($field->value)));
             },
         ],
         'pagesMethods' => [
@@ -478,8 +478,12 @@ App::plugin(
                 if ($field) {
                     $content = A::get($content, $field, []);
                     try { // if the field is a yaml/json content
-                        $content = is_string($content) ? Yaml::decode($content) : $content;
-                        $content = is_string($content) && json_decode($content) ? json_decode($content) : $content;
+                        if (is_string($content) && json_decode($content)) {
+                            $content = json_decode($content);
+                        }
+                        if (is_string($content)) {
+                            $content = Yaml::decode($content);
+                        }
                     } catch (Throwable $th) {
                         // ignore
                     }
@@ -567,7 +571,9 @@ App::plugin(
              * @kql-allowed
              */
             'completedOrders' => function (): Pages {
-                /** @var CustomerUser $this */
+                /** @var CustomerUser $user */
+                $user = $this;
+
                 return $this->orders()
                     ->filterBy(fn (OrderPage $order) => $order->paymentComplete()->toBool());
             },
@@ -588,7 +594,8 @@ App::plugin(
              * @kql-allowed
              */
             'hasMadePaymentFor' => function (string $provider, ProductPage $productPage): bool {
-                /** @var CustomerUser $this */
+                /** @var CustomerUser $user */
+                $user = $this;
                 if ($this->$provider()->isEmpty()) {
                     return false;
                 }
@@ -622,6 +629,10 @@ App::plugin(
                 $image = Remote::get($url);
                 if ($image->code() === 200) {
                     $image = $image->content();
+                    if (! is_string($image)) {
+                        return $url;
+                    }
+
                     $imageInfo = getimagesizefromstring($image) ?: [];
                     $mimeType = A::get($imageInfo, 'mime', 'image/png');
                     $base64 = base64_encode($image);
@@ -646,7 +657,8 @@ App::plugin(
                 });
             },
             'sendMagicLink' => function (?string $success_url = null): void {
-                /** @var User $this */
+                /** @var User $user */
+                $user = $this;
                 $code = MagicLinkChallenge::create($this, [
                     'mode' => 'login',
                     'timeout' => 10 * 60,
@@ -654,8 +666,10 @@ App::plugin(
                     'name' => $this->nameOrEmail(),
                     'success_url' => $success_url ?? url('/'),
                 ]);
-                kirby()->session()->set('kirby.challenge.type', 'login');
-                kirby()->session()->set('kirby.challenge.code', password_hash($code, PASSWORD_DEFAULT));
+                if ($code) {
+                    kirby()->session()->set('kirby.challenge.type', 'login');
+                    kirby()->session()->set('kirby.challenge.code', password_hash($code, PASSWORD_DEFAULT));
+                }
             },
         ],
         'commands' => [
@@ -670,7 +684,7 @@ App::plugin(
                         'pages/products' => ProductsPage::class,
                         'pages/stock' => StockPage::class,
                     ] as $name => $class) {
-                        Yaml::write(__DIR__."/blueprints/{$name}.yml", $class::phpBlueprint()); // @phpstan-ignore-line
+                        Yaml::write(__DIR__."/blueprints/{$name}.yml", $class::phpBlueprint());
                     }
                 },
             ],

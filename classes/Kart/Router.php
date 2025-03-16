@@ -134,7 +134,7 @@ class Router
 
     public static function hasMagicLink(): ?int
     {
-        if (A::has(kirby()->option('auth.methods', []), 'kart-magic-link') === false) {
+        if (A::has((array) kirby()->option('auth.methods', []), 'kart-magic-link') === false) {
             return 405;
         }
 
@@ -199,7 +199,7 @@ class Router
 
         $code ??= 200;
 
-        if (kirby()->request()->header(kart()->option('router.header.htmx'))) {
+        if (kirby()->request()->header(strval(kart()->option('router.header.htmx')))) {
             $mode = 'htmx';
         }
 
@@ -224,12 +224,12 @@ class Router
                 // the snippet could also set a header with a different code, echo and die itself
                 // instead of just returning a string and defaulting to the 200 status code below
                 $snippet = Router::get('snippet', kirby()->request()->path()->toString());
-                if (in_array($snippet, kart()->option('router.snippets'))) {
-                    $json = snippet(
+                if (in_array($snippet, (array) kart()->option('router.snippets'))) {
+                    $json = strval(snippet(
                         $snippet, // NOTE: snippet(null) yields ''
                         data: array_merge(kirby()->request()->data(), Router::resolveModelsFromRequest()),
                         return: true
-                    );
+                    ));
                 }
             }
             /*
@@ -239,21 +239,21 @@ class Router
             }
             */
 
-            return Response::json($json ?? [], $code ?? 200);
+            return Response::json($json ?? [], $code);
         }
 
         if (in_array($mode, ['html', 'htmx'])) {
             if ($code) {
-                header('HTTP/1.1 '.$code.' '.$http_response_header[0]);
+                header('HTTP/1.1 '.$code);
             }
             if ($code < 300) {
                 $snippet = Router::get('snippet', kirby()->request()->path()->toString());
-                if (in_array($snippet, kart()->option('router.snippets', []))) {
-                    $html ?? snippet(
+                if (in_array($snippet, (array) kart()->option('router.snippets', []))) {
+                    $html ?? strval(snippet(
                         $snippet, // NOTE: snippet(null) yields ''
                         data: array_merge(kirby()->request()->data(), Router::resolveModelsFromRequest()),
                         return: true
-                    );
+                    ));
                 }
             }
 

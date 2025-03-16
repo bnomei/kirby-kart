@@ -2,6 +2,7 @@
 
 namespace Bnomei\Kart;
 
+use Kirby\Cache\FileCache;
 use Kirby\Filesystem\Dir;
 use Kirby\Filesystem\F;
 use Kirby\Toolkit\A;
@@ -13,7 +14,9 @@ class Queue
 
     public function __construct()
     {
-        $this->dir = kirby()->cache('bnomei.kart.queue')->root();
+        /** @var FileCache $cache */
+        $cache = kirby()->cache('bnomei.kart.queue');
+        $this->dir = $cache->root();
         if (! Dir::exists($this->dir)) {
             Dir::make($this->dir);
         }
@@ -55,16 +58,22 @@ class Queue
                 if ($locking) {
                     $fileHandle = fopen($file, 'r');
                     if ($fileHandle && flock($fileHandle, LOCK_EX)) {
-                        $job = fread($fileHandle, filesize($file));
+                        $fs = filesize($file);
+                        if (! $fs) {
+                            continue;
+                        }
+                        $job = fread($fileHandle, $fs);
                         flock($fileHandle, LOCK_UN);
                         fclose($fileHandle);
                         @unlink($file);
-                    } else {
+                    } elseif ($fileHandle) {
                         // Handle error if unable to lock file:
                         // some other process is handling it
                         // so this process will not
                         fclose($fileHandle);
 
+                        continue;
+                    } else {
                         continue;
                     }
                 } else {
@@ -72,15 +81,19 @@ class Queue
                     F::remove($file);
                 }
 
+                if (empty($job)) {
+                    continue;
+                }
+
                 $job = json_decode($job, true);
-                if (! $this->handle($job)) {
+                if (is_array($job) && ! $this->handle($job)) {
                     $this->failed($job); // no retries
                 }
             }
         }
     }
 
-    public function handle(mixed $job): bool
+    public function handle(array $job): bool
     {
         if ($page = A::get($job, 'page')) {
             if ($page = page($page)) { // retrieves the mutable version every time

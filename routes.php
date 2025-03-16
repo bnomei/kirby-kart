@@ -159,10 +159,12 @@ return function (App $kirby) {
                         'signup' => 1,
                         'success_url' => get('success_url'),
                     ]);
-                    kirby()->session()->set('kirby.challenge.type', 'login');
-                    kirby()->session()->set('kirby.challenge.code', password_hash($code, PASSWORD_DEFAULT));
+                    if ($code) {
+                        kirby()->session()->set('kirby.challenge.type', 'login');
+                        kirby()->session()->set('kirby.challenge.code', password_hash($code, PASSWORD_DEFAULT));
 
-                    return Router::go();
+                        return Router::go();
+                    }
                 }
 
                 return Router::go(Router::back(), code: 401);
@@ -192,10 +194,12 @@ return function (App $kirby) {
                         'email' => A::get($data, 'email'),
                         'success_url' => A::get($data, 'success_url'),
                     ]);
-                    kirby()->session()->set('kirby.challenge.type', 'login');
-                    kirby()->session()->set('kirby.challenge.code', password_hash($code, PASSWORD_DEFAULT));
+                    if ($code) {
+                        kirby()->session()->set('kirby.challenge.type', 'login');
+                        kirby()->session()->set('kirby.challenge.code', password_hash($code, PASSWORD_DEFAULT));
 
-                    return Router::go();
+                        return Router::go();
+                    }
                 }
 
                 return Router::go(Router::back(), code: 401);

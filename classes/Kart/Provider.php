@@ -39,7 +39,12 @@ abstract class Provider
 
     public function virtual(): bool|string
     {
-        return $this->kirby()->option("bnomei.kart.providers.{$this->name}.virtual", true);
+        $virtual = $this->kirby()->option("bnomei.kart.providers.{$this->name}.virtual", true);
+        if (is_string($virtual) || is_bool($virtual)) {
+            return $virtual;
+        }
+
+        return false;
     }
 
     public function option(string $key, bool $resolveCallables = true): mixed
@@ -86,7 +91,7 @@ abstract class Provider
 
         $data = array_merge($this->getUserData(), $data);
 
-        return kirby()->impersonate('kirby', function () use ($user, $data) {
+        return kirby()->impersonate('kirby', function () use ($user, $data) { // @phpstan-ignore-line
             $field = $this->name; // no prefix to align with KLUB
 
             return $user->update([

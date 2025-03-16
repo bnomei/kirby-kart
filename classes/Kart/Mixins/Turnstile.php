@@ -15,7 +15,7 @@ trait Turnstile
 
         $response = $response ?? get('cf-turnstile-response');
         if (empty($response)) {
-            return false;
+            return null;
         }
 
         $response = Remote::post(

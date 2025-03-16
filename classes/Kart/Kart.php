@@ -4,6 +4,7 @@ namespace Bnomei\Kart;
 
 use Bnomei\Kart\Mixins\ContentPages;
 use Bnomei\Kart\Mixins\Options;
+use Bnomei\Kart\Mixins\Stats;
 use Bnomei\Kart\Mixins\TMNT;
 use Bnomei\Kart\Provider\Kirby;
 use Closure;
@@ -27,6 +28,7 @@ class Kart
 {
     use ContentPages;
     use Options;
+    use Stats;
     use TMNT;
 
     private static ?Kart $singleton = null;
@@ -35,7 +37,7 @@ class Kart
 
     private ?Cart $cart;
 
-    private ?Cart $wishlist;
+    private ?Wishlist $wishlist;
 
     private App $kirby;
 
@@ -122,7 +124,7 @@ class Kart
             // encryption is slowish thus using a cache
             $expire = kart()->option('expire');
             if (is_int($expire)) {
-                $key = Kart::hash($data);
+                $key = Kart::hash(strval($data));
                 $data = kirby()->cache('bnomei.kart.crypto')->getOrSet($key, function () use ($data, $password) {
                     return is_string($data) ? (new SymmetricCrypto(password: $password))->encrypt($data) : $data;
                 }, $expire);
@@ -364,20 +366,16 @@ class Kart
 
     /**
      * @kql-allowed
-     *
-     * @return Pages<string, OrderPage>
      */
     public function ordersWithProduct(ProductPage|string|null $product): Pages
     {
         return $this->orders()->filterBy(
-            fn (OrderPage $orderPage) => $orderPage->hasProduct($product)
+            fn (OrderPage $orderPage) => $product ? $orderPage->hasProduct($product) : false
         );
     }
 
     /**
      * @kql-allowed
-     *
-     * @return Pages<string, OrderPage>
      */
     public function orders(): Pages
     {
@@ -405,8 +403,6 @@ class Kart
 
     /**
      * @kql-allowed
-     *
-     * @return Pages<string, OrderPage>
      */
     public function ordersWithCustomer(User|string|null $user): Pages
     {
@@ -455,8 +451,6 @@ class Kart
 
     /**
      * @kql-allowed
-     *
-     * @return Pages<string, ProductPage>
      */
     public function productsByParams(array $params = []): Pages
     {
@@ -473,7 +467,7 @@ class Kart
 
         $expire = kart()->option('expire');
         if (is_int($expire)) {
-            $key = Kart::hash(implode(',', array_filter($params)));
+            $key = Kart::hash(implode(',', $params));
             $products = kirby()->cache('bnomei.kart.products')->getOrSet('products-'.$key, function () use ($params) {
                 return array_values($this->getProductsByParam($params)->toArray(fn (ProductPage $product) => $product->uuid()->toString()));
             });
@@ -486,8 +480,6 @@ class Kart
 
     /**
      * @kql-allowed
-     *
-     * @return Pages<string, ProductPage>
      */
     public function products(): Pages
     {
@@ -496,8 +488,6 @@ class Kart
 
     /**
      * @kql-allowed
-     *
-     * @return Pages<string, ProductPage>
      */
     public function productsWithoutStocks(): Pages
     {
@@ -506,8 +496,6 @@ class Kart
 
     /**
      * @kql-allowed
-     *
-     * @return Pages<string, ProductPage>
      */
     public function productsRelated(ProductPage $product): Pages
     {
@@ -519,8 +507,6 @@ class Kart
 
     /**
      * @kql-allowed
-     *
-     * @return Pages<string, ProductPage>
      */
     public function productsWithCategory(string|array $categories, bool $any = true): Pages
     {
@@ -542,8 +528,8 @@ class Kart
             }, $expire));
         }
 
-        return $any ? $this->products()->filterBy('categories', 'in', $category, ',') :
-            $this->products()->filterBy(fn ($product) => count(array_diff($category, $product->categories()->split())) === 0);
+        return $any ? $this->products()->filterBy('categories', 'in', $categories, ',') :
+            $this->products()->filterBy(fn ($product) => count(array_diff($categories, $product->categories()->split())) === 0);
     }
 
     private function getCategories(?string $path = null): array

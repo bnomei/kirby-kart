@@ -36,7 +36,7 @@ trait ContentPages
                                 'code' => $languageCode,
                                 'content' => array_filter([
                                     'title' => t("bnomei.kart.{$key}", ucfirst($key), $languageCode),
-                                    'uuid' => $languageCode === kirby()->defaultLanguage()->code() ? $key : null, // match key to make them easier to find
+                                    'uuid' => $languageCode === kirby()->defaultLanguage()?->code() ? $key : null, // match key to make them easier to find
                                 ]),
                             ],
                         ];

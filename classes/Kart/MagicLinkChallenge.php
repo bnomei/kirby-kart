@@ -17,6 +17,9 @@ class MagicLinkChallenge extends Challenge
     public static function create(User $user, array $options): ?string
     {
         $code = Str::random(6, 'num');
+        if (! $code) {
+            return null;
+        }
 
         // insert a space in the middle for easier readability
         $formatted = substr($code, 0, 3).' '.substr($code, 3, 3);
@@ -32,7 +35,7 @@ class MagicLinkChallenge extends Challenge
 
         $kirby = $user->kirby();
         $link = url(Router::MAGIC_LINK).'?'.implode('&', [
-            'email='.urlencode($user->email()),
+            'email='.urlencode($user->email() ?? ''),
             'code='.$code,
             'token='.self::secret($code),
         ]);
@@ -53,14 +56,15 @@ class MagicLinkChallenge extends Challenge
             'formatted' => $formatted,
             'timeout' => round($options['timeout'] / 60),
         ];
+        $from = 'noreply@'.($kirby->url('index', true)->domain() ?? 'localhost');
         $kirby->email([
-            'from' => $kirby->option('auth.challenge.email.from', 'noreply@'.$kirby->url('index', true)->host()),
-            'fromName' => $kirby->option('auth.challenge.email.fromName', $kirby->site()->title()->value()),
+            'from' => $kirby->option('auth.challenge.email.from', $from),
+            'fromName' => $kirby->option('auth.challenge.email.fromName', $kirby->site()->title()->value()), // @phpstan-ignore-line
             'to' => $user,
-            'subject' => I18n::template($kirby->option(
+            'subject' => I18n::template(strval($kirby->option(
                 'auth.challenge.email.subject', // use this option to set your own
                 I18n::translate('login.email.'.$mode.'.subject', null, $user->language()) ?? ''
-            ), null, $data, $user->language()),
+            )), null, $data, $user->language()),
             'body' => [
                 'html' => snippet('kart/email-'.$mode.'.html', $data, true),
                 'text' => snippet('kart/email-'.$mode, $data, true),
@@ -70,7 +74,7 @@ class MagicLinkChallenge extends Challenge
         return $code;
     }
 
-    public static function secret($code): string
+    public static function secret(string $code): string
     {
         return sha1(__DIR__.$code.date('Y/m/d'));
     }

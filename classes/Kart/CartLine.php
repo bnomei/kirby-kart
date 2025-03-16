@@ -53,7 +53,7 @@ class CartLine
 
     public function hasStockForQuantity(): bool
     {
-        $stock = $this->product()->stock();
+        $stock = $this->product()?->stock();
 
         if (is_string($stock)) { // unknown stock = unlimited
             return true;
@@ -77,7 +77,7 @@ class CartLine
 
     public function price(): float
     {
-        return $this->product()->price()->toFloat();
+        return $this->product() ? $this->product()->price()->toFloat() : 0;
     }
 
     public function subtotal(): float

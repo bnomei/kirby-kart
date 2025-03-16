@@ -6,12 +6,19 @@ trait Captcha
 {
     public static function hasCaptcha(?string $response = null): ?int
     {
-        $response = $response ?? kart()->option('captcha.current')();
+        $current = kart()->option('captcha.current');
+        if ($current instanceof \Closure) {
+            $current = $current();
+        }
+        $response = $response ?? $current;
         if (! $response) {
             return null;
         }
 
-        $secret = kart()->option('captcha.get')();
+        $secret = kart()->option('captcha.get');
+        if ($secret instanceof \Closure) {
+            $secret = $secret();
+        }
         if (! $secret) {
             return null;
         }

@@ -269,10 +269,15 @@ class Cart
 
         $customer = $this->kart->createOrUpdateCustomer($data);
 
-        $order = $this->kart->page(ContentPageEnum::ORDERS)->createOrder($data, $customer);
+        /** @var \OrdersPage|null $orders */
+        $orders = $this->kart->page(ContentPageEnum::ORDERS);
+        /** @var \OrderPage|null $order */
+        $order = $orders?->createOrder($data, $customer);
         $order?->createZipWithFiles();
 
-        $this->kart->page(ContentPageEnum::STOCKS)->updateStocks($data);
+        /** @var \StocksPage|null $stocks */
+        $stocks = $this->kart->page(ContentPageEnum::STOCKS);
+        $stocks?->updateStocks($data);
 
         $this->kirby->trigger('kart.cart.completed', [
             'customer' => $customer,

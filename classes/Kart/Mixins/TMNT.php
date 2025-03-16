@@ -3,7 +3,6 @@
 namespace Bnomei\Kart\Mixins;
 
 use Bnomei\Kart\ContentPageEnum;
-use Bnomei\Kart\Kart;
 use Bnomei\Kart\VirtualPage;
 use Kirby\Data\Yaml;
 
@@ -12,11 +11,10 @@ trait TMNT
     public function tmnt(): void
     {
         kirby()->impersonate('kirby', function () {
-            /** @var Kart $this */
             // create generic products for the demo
-            $prod = $this->page(ContentPageEnum::PRODUCTS);
-            $stock = $this->page(ContentPageEnum::STOCKS);
-            if (! kirby()->environment()->isLocal() || ! $prod || $prod->children()->count() !== 0) {
+            $prods = $this->page(ContentPageEnum::PRODUCTS);
+            $stocks = $this->page(ContentPageEnum::STOCKS);
+            if (! kirby()->environment()->isLocal() || ! $prods || $prods->children()->count() !== 0) {
                 return;
             }
 
@@ -36,7 +34,7 @@ trait TMNT
             ];
 
             foreach ($turtles as $turtle) {
-                $product = $prod->createChild(
+                $product = $prods->createChild(
                     (new VirtualPage($turtle, [
                         'title' => 'content.title',
                         'content' => 'content',
@@ -44,7 +42,7 @@ trait TMNT
                         ->mixinProduct()
                         ->toArray()
                 );
-                $stock->createChild([
+                $stocks?->createChild([
                     'title' => $product->title(), // will be replaced by StockPage::create
                     'template' => 'stock',
                     'content' => [
