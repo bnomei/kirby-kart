@@ -62,7 +62,7 @@ App::plugin(
             'expire' => 0, // 0 = forever, null to disable caching
             'customers' => [
                 'enabled' => true,
-                'roles' => ['customer', 'member', 'admin'],
+                'roles' => ['customer', 'member', 'admin'], // does NOT include `deleted`
             ],
             'locale' => 'en_EN', // or current locale on multilanguage setups
             'currency' => 'EUR', // uppercase 3-letter code
@@ -195,6 +195,7 @@ App::plugin(
         ],
         'routes' => require_once __DIR__.'/routes.php',
         'snippets' => [
+            'kart/account-delete' => __DIR__.'/snippets/kart/account-delete.php',
             'kart/captcha' => __DIR__.'/snippets/kart/captcha.php',
             'kart/cart' => __DIR__.'/snippets/kart/cart.php',
             'kart/cart-add' => __DIR__.'/snippets/kart/cart-add.php',
@@ -227,6 +228,7 @@ App::plugin(
         ],
         'blueprints' => [
             'users/customer' => CustomerUser::phpBlueprint(),
+            'users/deleted' => DeletedUser::phpBlueprint(),
             'pages/order' => OrderPage::phpBlueprint(),
             'pages/orders' => OrdersPage::phpBlueprint(),
             'pages/product' => ProductPage::phpBlueprint(),
@@ -627,6 +629,13 @@ App::plugin(
                 }
 
                 return $url;
+            },
+            'softDelete' => function (): void {
+                $user = $this;
+                kirby()->impersonate('kirby', function() use ($user) {
+                    $user = $user->changeRole('deleted');
+                    $user = $user->update(['deletedAt' => time()]);
+                });
             },
         ],
         'commands' => [

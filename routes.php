@@ -84,11 +84,12 @@ return function (App $kirby) {
                 $user = $kirby->users()
                     ->customers()
                     ->findBy('email', $email);
-                if (! $user?->login(get('password'))) {
-                    return Response::json([], 401);
+
+                if ($user?->login(get('password'))) {
+                    return Router::go();
                 }
 
-                return Router::go();
+                return Router::go(code: 401);
             },
         ],
         [
@@ -175,7 +176,7 @@ return function (App $kirby) {
                 $data = Kart::sanitize(kirby()->request()->data());
 
                 $user = kirby()->user(A::get($data, 'email'));
-                if ($user) {
+                if ($user && in_array($user->role()->name(), kart()->option('customers.roles'))) {
                     $code = MagicLinkChallenge::create($user, [
                         'mode' => 'login-magic',
                         'timeout' => 10 * 60,
@@ -268,8 +269,8 @@ return function (App $kirby) {
                     return Response::json([], 401);
                 }
 
-                $user->logout();
-                $user->delete();
+                $user?->logout();
+                $user?->softDelete();
                 go(site()->url());
             },
         ],
