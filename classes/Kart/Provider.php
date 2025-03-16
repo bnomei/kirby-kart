@@ -239,6 +239,8 @@ abstract class Provider
             Router::get('redirect')
         );
 
+        $this->kirby()->trigger('kart.provider.'.$this->name.'.checkout');
+
         if (! $this->kirby()->environment()->isLocal() && $this->kirby()->plugin('bnomei/kart')->license()->status()->value() !== 'active') {
             return null;
         }
@@ -248,14 +250,14 @@ abstract class Provider
 
     public function canceled(): string
     {
-        kirby()->trigger('kart.'.$this->name.'.canceled');
+        kirby()->trigger('kart.provider.'.$this->name.'.canceled');
 
         return $this->kirby()->session()->pull('kart.redirect.canceled', $this->kirby()->site()->url());
     }
 
     public function completed(array $data = []): array
     {
-        kirby()->trigger('kart.'.$this->name.'.completed');
+        kirby()->trigger('kart.provider.'.$this->name.'.completed', ['data' => $data]);
 
         return $data;
     }

@@ -111,7 +111,12 @@ class StockPage extends Page
         // locking with sleep to wait for unlock. without locking one request could overwrite another
         // (not file cache NOT fast enough)
         return $this->kirby()->impersonate('kirby', function () use ($amount) {
-            return $this->increment('stock', $amount);
+            $stock = $this->increment('stock', $amount);
+            kirby()->trigger('kart.stocks.updated', [
+                'stock' => $stock,
+                'amount' => $amount,
+            ]);
+            return $stock;
         })->stock()->toInt();
     }
 }

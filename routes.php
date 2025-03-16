@@ -224,7 +224,7 @@ return function (App $kirby) {
                             'name' => A::get($data, 'name'),
                         ],
                     ]);
-                    kirby()->trigger('kart.signup', ['user' => $user]);
+                    kirby()->trigger('kart.user.signup', ['user' => $user]);
                 }
                 if (! $user) {
                     // if not created because it exists then try finding

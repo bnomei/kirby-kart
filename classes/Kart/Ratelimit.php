@@ -39,6 +39,9 @@ class Ratelimit
         if ($count > $limit) {
             kirby()->trigger('kart.ratelimit.hit', [
                 'ip' => $ip,
+                'key' => $key,
+                'count' => $count,
+                'limit' => $limit,
             ]);
 
             return false;

@@ -295,6 +295,25 @@ App::plugin(
             'kart.cart.completed' => function (?CustomerUser $user = null, ?OrderPage $order = null): void {
                 // fulfillment hook of Cart::complete()
             },
+            'kart.provider.*.checkout' => function (): void {
+                // kart()->provider()
+            },
+            'kart.provider.*.cancelled' => function (): void {
+                // kart()->provider()
+            },
+            'kart.provider.*.completed' => function (array $data = []): void {
+                // kart()->provider()
+            },
+            'kart.stock.updated' => function (StockPage $stock, int $amount): void {
+                // StockPage::updateStock()
+            },
+            'kart.user.created' => function (?CustomerUser $user = null): void {
+                // kart()->wishlist()
+                // TIP: use default kirby hook to track delete
+            },
+            'kart.user.signup' => function (?CustomerUser $user = null): void {
+                // kart()->wishlist()
+            },
             'kart.cart.add' => function (\Bnomei\Kart\CartLine $item, ProductPage $product, int $count, ?CustomerUser $user = null): void {
                 // kart()->cart()
             },
@@ -313,6 +332,9 @@ App::plugin(
             'kart.wishlist.clear' => function (?CustomerUser $user = null): void {
                 // kart()->wishlist()
             },
+            'kart.ratelimit.hit' => function (string $ip, string $key, int $count, int $limit): void{
+                // Ratelimit::check()
+            }
         ],
         'fieldMethods' => [
             /**
