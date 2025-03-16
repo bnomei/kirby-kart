@@ -517,5 +517,22 @@ return function (App $kirby) {
                 Response::go($url);
             },
         ],
+        [
+            'pattern' => '(:all)',
+            'action' => function ($path) {
+                if ($r = Router::denied([
+                    Router::class.'::hasRatelimit',
+                ], exclusive: true)) {
+                    return $r;
+                }
+
+                if (kirby()->request()->header('Accept') === 'application/json' &&
+                    in_array($path, kart()->option('router.snippets'))) {
+                    return Router::go();
+                }
+
+                $this->next();
+            },
+        ],
     ];
 };

@@ -8,7 +8,7 @@ $product ??= $page;
         <?= $product->title() ?>
     </a>
     <div><?= $product->formattedPrice() ?></div>
-    <?php snippet('kart/buy', [
+    <?php snippet('kart/cart-buy', [
         'product' => $product,
         'redirect' => kart()->urls()->cart(), // go to cart and be ready for checkout
     ]) ?>

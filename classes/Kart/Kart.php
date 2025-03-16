@@ -41,13 +41,16 @@ class Kart
 
     private Urls $urls;
 
+    private Queue $queue;
+
     public function __construct()
     {
+        $this->cart = null; // lazy
         $this->kirby = kirby();
+        $this->provider = null;  // lazy
+        $this->queue = new Queue;
         $this->urls = new Urls;
-        $this->provider = null;
-        $this->cart = null;
-        $this->wishlist = null;
+        $this->wishlist = null;  // lazy
     }
 
     public static function singleton(): Kart
@@ -63,6 +66,7 @@ class Kart
     public function ready(): void
     {
         $this->makeContentPages();
+        $this->queue()->process();
 
         if (sha1(file_get_contents(__DIR__.strrev(base64_decode('cGhwLmVzbmVjaUwv')))) !== 'c6187eac0a6659724beb632dcb46806ee24a7e81' && $kart = base64_decode('c2xlZXA=')) { // @phpstan-ignore-line
             $kart(5); // @phpstan-ignore-line
@@ -72,6 +76,11 @@ class Kart
     public function urls(): Urls
     {
         return $this->urls;
+    }
+
+    public function queue(): Queue
+    {
+        return $this->queue;
 
     }
 

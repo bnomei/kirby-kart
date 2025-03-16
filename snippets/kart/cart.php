@@ -33,7 +33,7 @@
     <form method="POST" action="<?= kart()->urls()->cart_checkout() ?>">
         <?php // TODO: You should add an invisible CAPTCHA here, like...?>
         <?php // snippet('kart/turnstile-form')?>
-        <input type="hidden" name="redirect" value="<?= $page->url() ?>">
+        <input type="hidden" name="redirect" value="<?= $page?->url() ?>">
         <button type="submit" onclick="this.disabled=true;this.form.submit();" <?= kart()->cart()->canCheckout() === false ? 'disabled' : '' ?>>Checkout</button>
     </form>
 </fieldset>

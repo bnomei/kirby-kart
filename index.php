@@ -1,6 +1,7 @@
 <?php
 
 use Bnomei\Kart\Cart;
+use Bnomei\Kart\CartLine;
 use Bnomei\Kart\Kart;
 use Bnomei\Kart\License;
 use Bnomei\Kart\MagicLinkChallenge;
@@ -39,6 +40,7 @@ App::plugin(
                 'gravatar' => true,
                 'orders' => true,
                 'products' => true,
+                'queue' => true,
                 'ratelimit' => true,
                 'stats' => true,
                 'stocks' => true,
@@ -80,8 +82,12 @@ App::plugin(
                     'uuid' => fn (?ProductsPage $products, array $props) => 'pr-'.Kart::hash(A::get($props, 'id')),
                 ],
             ],
+            'queues' => [
+                'locking' => true, // with flock while reading
+            ],
             'stocks' => [
                 'enabled' => true,
+                'queue' => true, // instead of calling $page->increment() it will queue them which is better when dealing with concurrent requests
                 'page' => 'stocks',
                 'stock' => [
                     'uuid' => fn (?StocksPage $stocks, array $props) => 'st-'.Kart::nonAmbiguousUuid(13),
@@ -97,12 +103,18 @@ App::plugin(
                 ],
                 'snippets' => [
                     // define the snippets that are allowed to be called
-                    'kart/add',
+                    'kart/cart-add',
+                    'kart/cart-buy',
+                    'kart/cart-later', // dummy
+                    'kart/cart-remove', // dummy
                     'kart/captcha',
                     'kart/login',
                     'kart/login-magic',
                     'kart/signup-magic',
                     'kart/wish-or-forget',
+                    'kart/wishlist-add',  // dummy
+                    'kart/wishlist-now',  // dummy
+                    'kart/wishlist-remove',  // dummy
                     // overwrite to change or set your own
                 ],
             ],
@@ -183,10 +195,10 @@ App::plugin(
         ],
         'routes' => require_once __DIR__.'/routes.php',
         'snippets' => [
-            'kart/add' => __DIR__.'/snippets/kart/add.php',
-            'kart/buy' => __DIR__.'/snippets/kart/buy.php',
             'kart/captcha' => __DIR__.'/snippets/kart/captcha.php',
             'kart/cart' => __DIR__.'/snippets/kart/cart.php',
+            'kart/cart-add' => __DIR__.'/snippets/kart/cart-add.php',
+            'kart/cart-buy' => __DIR__.'/snippets/kart/cart-buy.php',
             'kart/checkout-json-ld' => __DIR__.'/snippets/kart/checkout-json-ld.php',
             'kart/email-login-magic' => __DIR__.'/snippets/kart/email-login-magic.php',
             'kart/email-login-magic.html' => __DIR__.'/snippets/kart/email-login-magic.html.php',
@@ -291,8 +303,9 @@ App::plugin(
                     $newPage->updateInvoiceNumber();
                 }
             },
+            /*
             // KART
-            'kart.cart.completed' => function (?CustomerUser $user = null, ?OrderPage $order = null): void {
+            'kart.cart.completed' => function (?User $user = null, ?OrderPage $order = null): void {
                 // fulfillment hook of Cart::complete()
             },
             'kart.provider.*.checkout' => function (): void {
@@ -307,34 +320,35 @@ App::plugin(
             'kart.stock.updated' => function (StockPage $stock, int $amount): void {
                 // StockPage::updateStock()
             },
-            'kart.user.created' => function (?CustomerUser $user = null): void {
+            'kart.user.created' => function (?User $user = null): void {
                 // kart()->wishlist()
                 // TIP: use default kirby hook to track delete
             },
-            'kart.user.signup' => function (?CustomerUser $user = null): void {
+            'kart.user.signup' => function (?User $user = null): void {
                 // kart()->wishlist()
             },
-            'kart.cart.add' => function (\Bnomei\Kart\CartLine $item, ProductPage $product, int $count, ?CustomerUser $user = null): void {
+            'kart.cart.add' => function (ProductPage $product, int $count, ?CartLine $item = null, ?User $user = null): void {
                 // kart()->cart()
             },
-            'kart.cart.remove' => function (\Bnomei\Kart\CartLine $item, ProductPage $product, int $count, ?CustomerUser $user = null): void {
+            'kart.cart.remove' => function (ProductPage $product, int $count, ?CartLine $item = null, ?User $user = null): void {
                 // kart()->cart()
             },
-            'kart.cart.clear' => function (?CustomerUser $user = null): void {
+            'kart.cart.clear' => function (?User $user = null): void {
                 // kart()->cart()
             },
-            'kart.wishlist.add' => function (\Bnomei\Kart\CartLine $item, ProductPage $product, int $count, ?CustomerUser $user = null): void {
+            'kart.wishlist.add' => function (ProductPage $product, int $count, ?CartLine $item = null, ?User $user = null): void {
                 // kart()->wishlist()
             },
-            'kart.wishlist.remove' => function (\Bnomei\Kart\CartLine $item, ProductPage $product, int $count, ?CustomerUser $user = null): void {
+            'kart.wishlist.remove' => function (ProductPage $product, int $count, ?CartLine $item = null, ?User $user = null): void {
                 // kart()->wishlist()
             },
-            'kart.wishlist.clear' => function (?CustomerUser $user = null): void {
+            'kart.wishlist.clear' => function (?User $user = null): void {
                 // kart()->wishlist()
             },
-            'kart.ratelimit.hit' => function (string $ip, string $key, int $count, int $limit): void{
+            'kart.ratelimit.hit' => function (string $ip, string $key, int $count, int $limit): void {
                 // Ratelimit::check()
-            }
+            },
+            */
         ],
         'fieldMethods' => [
             /**

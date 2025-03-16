@@ -12,7 +12,7 @@ $product ??= $page;
         <h1><?= $product->title() ?></h1>
         <?= $product->description()->kirbytext() ?>
         <div><?= $product->formattedPrice() ?></div>
-        <?php snippet('kart/add') ?>
+        <?php snippet('kart/cart-add') ?>
         <?php snippet('kart/wish-or-forget') ?>
     </article>
 </main>

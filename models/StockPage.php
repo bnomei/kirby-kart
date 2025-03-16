@@ -101,21 +101,32 @@ class StockPage extends Page
         return str_pad($this->stock()->value(), $length, '0', STR_PAD_LEFT);
     }
 
-    public function updateStock(int $amount = 0): int
+    public function updateStock(int $amount = 0, bool $queue = true): ?int
     {
         if ($amount === 0) {
             return 0;
         }
 
-        // TODO: prevent race conditions between different requests by adding memcached/redis that can do locking itself
-        // locking with sleep to wait for unlock. without locking one request could overwrite another
-        // (not file cache NOT fast enough)
+        if ($queue && kart()->option('stocks.queue')) {
+            kart()->queue()->push([
+                'page' => $this->uuid()->toString(),
+                'method' => 'updateStock',
+                'payload' => [
+                    'amount' => $amount,
+                    'queue' => false,
+                ],
+            ]);
+
+            return null;
+        }
+
         return $this->kirby()->impersonate('kirby', function () use ($amount) {
             $stock = $this->increment('stock', $amount);
             kirby()->trigger('kart.stocks.updated', [
                 'stock' => $stock,
                 'amount' => $amount,
             ]);
+
             return $stock;
         })->stock()->toInt();
     }

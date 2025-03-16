@@ -16,21 +16,21 @@ class Router
     use Captcha;
     use Turnstile;
 
-    const ACCOUNT_DELETE = 'kart/account/delete';
+    const ACCOUNT_DELETE = 'kart/account-delete';
 
     const CAPTCHA = 'kart/captcha';
 
     const CART = 'cart';
 
-    const CART_ADD = 'kart/cart/add';
+    const CART_ADD = 'kart/cart-add';
 
-    const CART_BUY = 'kart/cart/buy';
+    const CART_BUY = 'kart/cart-buy';
 
-    const CART_CHECKOUT = 'kart/cart/checkout';
+    const CART_CHECKOUT = 'kart/cart-checkout';
 
-    const CART_LATER = 'kart/cart/later';
+    const CART_LATER = 'kart/cart-later';
 
-    const CART_REMOVE = 'kart/cart/remove';
+    const CART_REMOVE = 'kart/cart-remove';
 
     const CSRF = 'kart/csrf';
 
@@ -44,23 +44,23 @@ class Router
 
     const MAGIC_LINK = 'kart/magic-link';
 
-    const PROVIDER_CANCEL = 'kart/provider/cancel';
+    const PROVIDER_CANCEL = 'kart/provider-cancel';
 
-    const PROVIDER_PAYMENT = 'kart/provider/payment';
+    const PROVIDER_PAYMENT = 'kart/provider-payment';
 
-    const PROVIDER_PORTAL = 'kart/provider/portal';
+    const PROVIDER_PORTAL = 'kart/provider-portal';
 
-    const PROVIDER_SUCCESS = 'kart/provider/success';
+    const PROVIDER_SUCCESS = 'kart/provider-success';
 
-    const PROVIDER_SYNC = 'kart/provider/sync';
+    const PROVIDER_SYNC = 'kart/provider-sync';
 
     const SIGNUP_MAGIC = 'kart/signup';
 
-    const WISHLIST_ADD = 'kart/wishlist/add';
+    const WISHLIST_ADD = 'kart/wishlist-add';
 
-    const WISHLIST_NOW = 'kart/wishlist/now';
+    const WISHLIST_NOW = 'kart/wishlist-now';
 
-    const WISHLIST_REMOVE = 'kart/wishlist/remove';
+    const WISHLIST_REMOVE = 'kart/wishlist-remove';
 
     public static function denied(array $check = [], bool $exclusive = false): ?Response
     {
@@ -147,7 +147,7 @@ class Router
 
     public static function hasCsrf(): ?int
     {
-        if (! kart()->option('csrf.enabled')) {
+        if (! kart()->option('middlewares.csrf')) {
             return null;
         }
 
@@ -192,6 +192,8 @@ class Router
     ): ?Response {
         $mode = kart()->option('router.mode');
 
+        $code ??= 200;
+
         if (kirby()->request()->header(kart()->option('router.header.htmx'))) {
             $mode = 'htmx';
         }
@@ -206,18 +208,18 @@ class Router
 
         if ($mode === 'go') {
             $url = strval(Router::get('redirect', $url ?? '/'));
-            Response::go($url, $code ?? 200);
+            Response::go($url, $code);
         }
 
         if ($mode === 'json') {
-            if (empty($json)) {
+            if ($code < 300 && empty($json)) {
                 // the snippet could also set a header with a different code, echo and die itself
                 // instead of just returning a string and defaulting to the 200 status code below
-                $snippet = Router::get('snippet', kirby()->request()->path());
-                if (in_array($snippet, kart()->option('router.snippets', []))) {
+                $snippet = Router::get('snippet', kirby()->request()->path()->toString());
+                if (in_array($snippet, kart()->option('router.snippets'))) {
                     $json = snippet(
                         $snippet, // NOTE: snippet(null) yields ''
-                        data: kirby()->request()->data(),
+                        data: array_merge(kirby()->request()->data(), Router::resolveModelsFromRequest()),
                         return: true
                     );
                 }
@@ -236,14 +238,17 @@ class Router
             if ($code) {
                 header('HTTP/1.1 '.$code.' '.$http_response_header[0]);
             }
-            $snippet = Router::get('snippet', kirby()->request()->path());
-            if (in_array($snippet, kart()->option('router.snippets', []))) {
-                $html ?? snippet(
-                    $snippet, // NOTE: snippet(null) yields ''
-                    data: kirby()->request()->data(),
-                    return: true
-                );
+            if ($code < 300) {
+                $snippet = Router::get('snippet', kirby()->request()->path()->toString());
+                if (in_array($snippet, kart()->option('router.snippets', []))) {
+                    $html ?? snippet(
+                        $snippet, // NOTE: snippet(null) yields ''
+                        data: array_merge(kirby()->request()->data(), Router::resolveModelsFromRequest()),
+                        return: true
+                    );
+                }
             }
+
             exit;
         }
 
@@ -261,7 +266,7 @@ class Router
     {
         return Uri::index()->clone([
             'path' => $path,
-            'query' => static::queryCsrf() + self::encrypt($query) + $params,
+            'query' => static::queryCsrf() + self::encrypt(self::modelsFromRequest() + $query) + $params,
         ])->toString();
     }
 
@@ -453,5 +458,39 @@ class Router
         return self::factory(self::SIGNUP_MAGIC, params: array_filter([
             'email' => $email,
         ]));
+    }
+
+    public static function modelsFromRequest(): array
+    {
+        return [
+            'page' => page(kirby()->request()->path()->toString())?->uuid()->id(),
+        ];
+    }
+
+    public static function resolveModelsFromRequest(): array
+    {
+        $models = [
+            'page' => null,
+            'product' => null,
+            'user' => kirby()->user(),
+            'site' => kirby()->site(),
+            'kirby' => kirby(),
+        ];
+        foreach (kirby()->request()->data() as $key => $value) {
+            switch ($key) {
+                case 'page':
+                    $models['page'] = kirby()->page('page://'.$value);
+                    break;
+                case 'product':
+                    $models['product'] = kirby()->page('page://'.$value);
+                    break;
+                case 'user':
+                    $models['user'] ??= kirby()->user($value);
+                    break;
+                default: break;
+            }
+        }
+
+        return $models;
     }
 }
