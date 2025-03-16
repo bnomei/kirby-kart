@@ -22,7 +22,6 @@ use Kirby\Uuid\Uuid;
 use NumberFormatter;
 use OrderPage;
 use ProductPage;
-use StockPage;
 
 class Kart
 {
@@ -535,6 +534,9 @@ class Kart
     private function getCategories(?string $path = null): array
     {
         $products = kart()->page(ContentPageEnum::PRODUCTS);
+        if (! $products) {
+            return [];
+        }
         $categories = $products->children()->pluck('categories', ',', true);
         $tags = $products->children()->pluck('tags', ',', true);
         sort($categories);
@@ -562,7 +564,7 @@ class Kart
     }
 
     /**
-     * @return Collection<string, Category>
+     * @return Collection<Category>
      */
     public function categories(?string $path = null): Collection
     {
@@ -576,13 +578,11 @@ class Kart
             $categories = $this->getCategories($path);
         }
 
-        return new Collection(array_map(fn ($c) => new Category($c), $categories));
+        return new Collection(array_map(fn ($c) => new Category($c), $categories));  // @phpstan-ignore-line
     }
 
     /**
      * @kql-allowed
-     *
-     * @return Pages<string, ProductPage>
      */
     public function productsWithTag(string|array $tags, bool $any = true): Pages
     {
@@ -611,6 +611,9 @@ class Kart
     private function getTags(?string $path = null): array
     {
         $products = kart()->page(ContentPageEnum::PRODUCTS);
+        if (! $products) {
+            return [];
+        }
         $categories = $products->children()->pluck('categories', ',', true);
         $tags = $products->children()->pluck('tags', ',', true);
         sort($tags);
@@ -638,7 +641,7 @@ class Kart
     }
 
     /**
-     * @return Collection<string, Tag>
+     * @return Collection<Tag>
      */
     public function tags(?string $path = null): Collection
     {
@@ -652,13 +655,11 @@ class Kart
             $tags = $this->getTags($path);
         }
 
-        return new Collection(array_map(fn ($c) => new Tag($c), $tags));
+        return new Collection(array_map(fn ($c) => new Tag($c), $tags)); // @phpstan-ignore-line
     }
 
     /**
      * @kql-allowed
-     *
-     * @return Pages<string, StockPage>
      */
     public function stocks(): Pages
     {
