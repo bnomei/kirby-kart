@@ -53,6 +53,7 @@ class MagicLinkChallenge extends Challenge
             'site' => $kirby->system()->title(),
             'code' => $link,
             'link' => $link,
+            'preview' => t('login.code.label.login'),
             'formatted' => $formatted,
             'timeout' => round($options['timeout'] / 60),
         ];

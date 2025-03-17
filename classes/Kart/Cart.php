@@ -280,7 +280,7 @@ class Cart
         $stocks?->updateStocks($data);
 
         $this->kirby->trigger('kart.cart.completed', [
-            'customer' => $customer,
+            'user' => $customer,
             'order' => $order,
         ]);
 
