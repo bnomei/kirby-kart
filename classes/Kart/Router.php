@@ -343,7 +343,7 @@ class Router
     public static function cart_add(ProductPage $product): string
     {
         return self::factory(
-            self::CART_ADD,
+            self::current().'/'.self::CART_ADD,
             [
                 'product' => $product->uuid()->id(),
             ]
@@ -373,7 +373,7 @@ class Router
     public static function cart_buy(ProductPage $product): string
     {
         return self::factory(
-            self::CART_BUY,
+            self::current().'/'.self::CART_BUY,
             [
                 'product' => $product->uuid()->id(),
             ]
@@ -383,7 +383,7 @@ class Router
     public static function cart_remove(ProductPage $product): string
     {
         return self::factory(
-            self::CART_REMOVE,
+            self::current().'/'.self::CART_REMOVE,
             [
                 'product' => $product->uuid()->id(),
             ]
@@ -393,7 +393,7 @@ class Router
     public static function cart_later(ProductPage $product): string
     {
         return self::factory(
-            self::CART_LATER,
+            self::current().'/'.self::CART_LATER,
             [
                 'product' => $product->uuid()->id(),
             ]
@@ -403,7 +403,7 @@ class Router
     public static function wishlist_add(ProductPage $product): string
     {
         return self::factory(
-            self::WISHLIST_ADD,
+            self::current().'/'.self::WISHLIST_ADD,
             [
                 'product' => $product->uuid()->id(),
             ]
@@ -413,7 +413,7 @@ class Router
     public static function wishlist_remove(ProductPage $product): string
     {
         return self::factory(
-            self::WISHLIST_REMOVE,
+            self::current().'/'.self::WISHLIST_REMOVE,
             [
                 'product' => $product->uuid()->id(),
             ]
@@ -423,7 +423,7 @@ class Router
     public static function wishlist_now(ProductPage $product): string
     {
         return self::factory(
-            self::WISHLIST_NOW,
+            self::current().'/'.self::WISHLIST_NOW,
             [
                 'product' => $product->uuid()->id(),
             ]
