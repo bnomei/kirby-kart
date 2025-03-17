@@ -249,7 +249,7 @@ class Router
             if ($code < 300) {
                 $snippet = Router::get('snippet', kirby()->request()->path()->toString());
                 if (in_array($snippet, (array) kart()->option('router.snippets', []))) {
-                    $html ?? strval(snippet(
+                    echo ! empty($html) ? $html : strval(snippet(
                         $snippet, // NOTE: snippet(null) yields ''
                         data: array_merge(kirby()->request()->data(), Router::resolveModelsFromRequest()),
                         return: true
@@ -343,7 +343,7 @@ class Router
     public static function cart_add(ProductPage $product): string
     {
         return self::factory(
-            self::current().'/'.self::CART_ADD,
+            self::CART_ADD,
             [
                 'product' => $product->uuid()->id(),
             ]
@@ -362,7 +362,7 @@ class Router
 
     public static function cart(): string
     {
-        return self::factory(self::current().'/'.self::CART);
+        return self::factory(self::CART);
     }
 
     public static function kart(): string
@@ -373,7 +373,7 @@ class Router
     public static function cart_buy(ProductPage $product): string
     {
         return self::factory(
-            self::current().'/'.self::CART_BUY,
+            self::CART_BUY,
             [
                 'product' => $product->uuid()->id(),
             ]
@@ -383,7 +383,7 @@ class Router
     public static function cart_remove(ProductPage $product): string
     {
         return self::factory(
-            self::current().'/'.self::CART_REMOVE,
+            self::CART_REMOVE,
             [
                 'product' => $product->uuid()->id(),
             ]
@@ -393,7 +393,7 @@ class Router
     public static function cart_later(ProductPage $product): string
     {
         return self::factory(
-            self::current().'/'.self::CART_LATER,
+            self::CART_LATER,
             [
                 'product' => $product->uuid()->id(),
             ]
@@ -403,7 +403,7 @@ class Router
     public static function wishlist_add(ProductPage $product): string
     {
         return self::factory(
-            self::current().'/'.self::WISHLIST_ADD,
+            self::WISHLIST_ADD,
             [
                 'product' => $product->uuid()->id(),
             ]
@@ -413,7 +413,7 @@ class Router
     public static function wishlist_remove(ProductPage $product): string
     {
         return self::factory(
-            self::current().'/'.self::WISHLIST_REMOVE,
+            self::WISHLIST_REMOVE,
             [
                 'product' => $product->uuid()->id(),
             ]
@@ -423,7 +423,7 @@ class Router
     public static function wishlist_now(ProductPage $product): string
     {
         return self::factory(
-            self::current().'/'.self::WISHLIST_NOW,
+            self::WISHLIST_NOW,
             [
                 'product' => $product->uuid()->id(),
             ]
@@ -489,7 +489,12 @@ class Router
             'site' => kirby()->site(),
             'kirby' => kirby(),
         ];
-        foreach (kirby()->request()->data() as $key => $value) {
+        foreach ($models as $key => $value) {
+            $value = self::get($key); // might be encrypted
+            if (empty($value)) {
+                continue;
+            }
+
             switch ($key) {
                 case 'page':
                     $models['page'] = kirby()->page('page://'.$value);
