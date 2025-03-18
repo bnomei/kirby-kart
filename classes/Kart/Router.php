@@ -9,6 +9,7 @@ use Kirby\Cms\Page;
 use Kirby\Cms\Response;
 use Kirby\Http\Uri;
 use Kirby\Toolkit\A;
+use Kirby\Toolkit\Str;
 use ProductPage;
 
 class Router
@@ -223,10 +224,9 @@ class Router
             if ($code < 300 && empty($json)) {
                 // the snippet could also set a header with a different code, echo and die itself
                 // instead of just returning a string and defaulting to the 200 status code below
-                $snippet = Router::get('snippet', kirby()->request()->path()->toString());
-                if (in_array($snippet, (array) kart()->option('router.snippets'))) {
+                if ($snippet = Router::getSnippet()) {
                     $json = strval(snippet(
-                        $snippet, // NOTE: snippet(null) yields ''
+                        $snippet, // NOTE: snippet(null|unknown) yields ''
                         data: array_merge(kirby()->request()->data(), Router::resolveModelsFromRequest()),
                         return: true
                     ));
@@ -247,10 +247,9 @@ class Router
                 header('HTTP/1.1 '.$code);
             }
             if ($code < 300) {
-                $snippet = Router::get('snippet', kirby()->request()->path()->toString());
-                if (in_array($snippet, (array) kart()->option('router.snippets', []))) {
+                if ($snippet = Router::getSnippet()) {
                     echo ! empty($html) ? $html : strval(snippet(
-                        $snippet, // NOTE: snippet(null) yields ''
+                        $snippet, // NOTE: snippet(null|unknown) yields ''
                         data: array_merge(kirby()->request()->data(), Router::resolveModelsFromRequest()),
                         return: true
                     ));
@@ -258,6 +257,23 @@ class Router
             }
 
             exit;
+        }
+
+        return null;
+    }
+
+    public static function getSnippet(?string $path = null): ?string
+    {
+        $path ??= Router::get('snippet', kirby()->request()->path()->toString());
+        $path = '/'.$path; // avoid matching /some-[not-value] at /not-value
+        $map = (array) kart()->option('router.snippets', []);
+        foreach ($map as $key => $value) {
+            if (is_numeric($key)) {
+                $key = $value;
+            }
+            if (is_string($value) && Str::endsWith($path, '/'.$key)) {
+                return $value;
+            }
         }
 
         return null;

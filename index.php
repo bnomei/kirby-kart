@@ -112,9 +112,9 @@ App::plugin(
                     'kart/login-magic',
                     'kart/signup-magic',
                     'kart/wish-or-forget',
-                    'kart/wishlist-add',  // htmx
+                    'kart/wishlist-add' => 'kart/wish-or-forget.htmx',  // htmx
                     'kart/wishlist-now',  // dummy
-                    'kart/wishlist-remove',  // htmx
+                    'kart/wishlist-remove' => 'kart/wish-or-forget.htmx',  // htmx
                     // overwrite to change or set your own
                 ],
             ],
@@ -217,9 +217,8 @@ App::plugin(
             'kart/turnstile-form' => __DIR__.'/snippets/kart/turnstile-form.php',
             'kart/turnstile-widget' => __DIR__.'/snippets/kart/turnstile-widget.php',
             'kart/wish-or-forget' => __DIR__.'/snippets/kart/wish-or-forget.php',
+            'kart/wish-or-forget.htmx' => __DIR__.'/snippets/kart/wish-or-forget.htmx.php',
             'kart/wishlist' => __DIR__.'/snippets/kart/wishlist.php',
-            'kart/wishlist-add' => __DIR__.'/snippets/kart/wishlist-add.php',
-            'kart/wishlist-remove' => __DIR__.'/snippets/kart/wishlist-remove.php',
         ],
         'authChallenges' => [
             'kart-magic-link' => MagicLinkChallenge::class,
