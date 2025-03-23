@@ -31,6 +31,7 @@ return function (App $kirby) {
                 }
 
                 header('Content-Type: image/jpeg');
+                header('Cache-Control: no-cache, no-store, must-revalidate'); // bust caches
                 kart()->option('captcha.set')(inline: false);
                 exit();
             },
