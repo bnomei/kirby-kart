@@ -201,6 +201,9 @@ class ProductPage extends Page
         ];
     }
 
+    /**
+     * @kql-allowed
+     */
     public function inStock(): bool
     {
         $stock = $this->stock();
@@ -211,6 +214,9 @@ class ProductPage extends Page
         return is_numeric($stock) && $stock > 0;
     }
 
+    /**
+     * @kql-allowed
+     */
     public function stock(): int|string
     {
         /** @var StocksPage $stocks */
@@ -345,11 +351,17 @@ class ProductPage extends Page
         return [];
     }
 
+    /**
+     * @kql-allowed
+     */
     public function firstGalleryImage(): ?File
     {
         return $this->gallery()->toFile();
     }
 
+    /**
+     * @kql-allowed
+     */
     public function firstGalleryImageUrl(): ?string
     {
         return $this->firstGalleryImage()?->resize(1920)->url();
