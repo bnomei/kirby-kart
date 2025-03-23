@@ -33,7 +33,7 @@ App::plugin(
     name: 'bnomei/kart',
     extends: [
         'options' => [
-            'license' => '', // set your license from https://buy-kart.bnomei.com code in the config `bnomei.kart.license`
+            'license' => fn () => class_exists('\Bnomei\DotEnv') ? \Bnomei\DotEnv::getenv('KART_LICENSE_KEY') : '', // set your license from https://buy-kart.bnomei.com code in the config `bnomei.kart.license`
             'cache' => [
                 'categories' => true,
                 'crypto' => true,
@@ -148,7 +148,7 @@ App::plugin(
                 'paypal' => [],
                 'snipcart' => [],
                 'stripe' => [
-                    'secret_key' => fn () => function_exists('env') ? env('STRIPE_SECRET_KEY') : null,
+                    'secret_key' => fn () => class_exists('\Bnomei\DotEnv') ? \Bnomei\DotEnv::getenv('STRIPE_SECRET_KEY') : null,
                     'checkout_options' => function (Kart $kart) {
                         // configure the checkout based on current kart instance
                         // https://docs.stripe.com/api/checkout/sessions/create
@@ -159,8 +159,8 @@ App::plugin(
             ],
             'turnstile' => [
                 'endpoint' => 'https://challenges.cloudflare.com/turnstile/v0/siteverify',
-                'sitekey' => fn () => function_exists('env') ? env('TURNSTILE_SITE_KEY') : null,
-                'secretkey' => fn () => function_exists('env') ? env('TURNSTILE_SECRET_KEY') : null,
+                'sitekey' => fn () => class_exists('\Bnomei\DotEnv') ? \Bnomei\DotEnv::getenv('TURNSTILE_SITE_KEY') : null,
+                'secretkey' => fn () => class_exists('\Bnomei\DotEnv') ? \Bnomei\DotEnv::getenv('TURNSTILE_SECRET_KEY') : null,
             ],
             'captcha' => [
                 'current' => function () {
