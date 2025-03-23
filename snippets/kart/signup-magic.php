@@ -15,8 +15,8 @@
         <?php // TODO: You should add a CAPTCHA here, like...?>
         <?php // snippet('kart/turnstile-form') // or?>
         <?php snippet('kart/captcha') ?>
-        <input type="hidden" name="redirect" value="<?= url(\Bnomei\Kart\Router::SIGNUP_MAGIC) ?>?status=sent">
-        <input type="hidden" name="success_url" value="<?= url(\Bnomei\Kart\Router::KART) ?>?msg=Welcome">
+        <input type="hidden" name="redirect" value="<?= url('kart/signup') ?>?status=sent">
+        <input type="hidden" name="success_url" value="<?= url('kart') ?>?msg=Welcome">
         <button type="submit">Sign up with magic link</button>
     </form>
 <?php }
