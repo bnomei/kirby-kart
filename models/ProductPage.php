@@ -27,6 +27,7 @@ use Kirby\Toolkit\Str;
  * @method Field raw()
  * @method Field categories()
  * @method Field tags()
+ * @method Field maxapo()
  */
 class ProductPage extends Page
 {
@@ -190,6 +191,8 @@ class ProductPage extends Page
                                     // 'min' => 0, // allow stock to be negative when updating from orders
                                     'step' => 1,
                                     'translate' => false,
+                                    'width' => '1/4',
+                                    'help' => '{{ site.kart.option("orders.order.maxapo") }}',
                                 ],
                                 'raw' => [
                                     'type' => 'hidden',
@@ -386,6 +389,6 @@ class ProductPage extends Page
      */
     public function maxAmountPerOrder(): ?int
     {
-        return $this->maxapo()->isEmpty() ? null : $this->maxapo()->toInt();
+        return $this->maxapo()->isEmpty() ? intval(kart()->option('orders.order.maxapo')) : $this->maxapo()->toInt();
     }
 }

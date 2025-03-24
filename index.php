@@ -79,6 +79,7 @@ App::plugin(
                 'order' => [
                     'uuid' => fn (?OrdersPage $orders, array $props) => 'or-'.Kart::nonAmbiguousUuid(7), // aka order id
                     'create-missing-zips' => true,
+                    'maxapo' => 10, // max amount of this product per order, keep this low to prevent stock hostages, set per product instead
                 ],
             ],
             'products' => [
