@@ -61,7 +61,7 @@ class StockPage extends Page
                     'label' => 'bnomei.kart.stock',
                     'type' => 'number',
                     'required' => true,
-                    'min' => 0,
+                    // 'min' => 0, // allow stock to be negative when updating from orders
                     'step' => 1,
                     'default' => 0,
                     'translate' => false,

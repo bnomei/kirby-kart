@@ -48,12 +48,21 @@ class Queue
     {
         $locking = kart()->option('queues.locking');
 
+        $jobs = [];
+        $files = [];
+        $lockTime = F::exists($this->dir.'/.lock') ? intval(F::read($this->dir.'/.lock')) : null;
+
+        // only lock for n seconds max, 5 sec same as SQLite PDO::ATTR_TIMEOUT
+        if ($lockTime && $lockTime + 5 > time()) {
+            return;
+        }
+
+        $foundLock = false; // abort if any file is currently locked
+        F::write($this->dir.'/.lock', time());
+
         foreach (Dir::files($this->dir, absolute: true) as $file) {
-            // file might have been deleted between the dir index
-            // and the iteration of the loop by another request
             if (F::exists($file) && F::extension($file) === 'json') {
-                // be as quick as possible to remove a job to avoid issues
-                // on concurrent requests. delay json decoding for that reason.
+                $files[] = $file;
 
                 if ($locking) {
                     $fileHandle = fopen($file, 'r');
@@ -65,30 +74,44 @@ class Queue
                         $job = fread($fileHandle, $fs);
                         flock($fileHandle, LOCK_UN);
                         fclose($fileHandle);
-                        @unlink($file);
                     } elseif ($fileHandle) {
-                        // Handle error if unable to lock file:
-                        // some other process is handling it
-                        // so this process will not
-                        fclose($fileHandle);
-
-                        continue;
+                        // unable to lock file
+                        @fclose($fileHandle);
+                        $foundLock = true;
+                        break;
                     } else {
                         continue;
                     }
                 } else {
                     $job = F::read($file);
-                    F::remove($file);
                 }
 
                 if (empty($job)) {
                     continue;
                 }
 
-                $job = json_decode($job, true);
-                if (is_array($job) && ! $this->handle($job)) {
-                    $this->failed($job); // no retries
-                }
+                $jobs[] = $job;
+            }
+        }
+
+        // if encountering a single lock assume not to be the process in charge
+        if ($foundLock) {
+            return;
+        }
+
+        // remove jobs
+        foreach ($files as $file) {
+            @unlink($file);
+        }
+
+        // remove the global lock file
+        @unlink($this->dir.'/.lock');
+
+        // process all jobs now in sequence
+        foreach ($jobs as $job) {
+            $job = json_decode($job, true);
+            if (is_array($job) && ! $this->handle($job)) {
+                $this->failed($job); // no retries
             }
         }
     }
