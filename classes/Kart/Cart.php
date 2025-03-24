@@ -337,8 +337,11 @@ class Cart
     private function releaseStock(array $data): bool
     {
         $expire = kart()->option('stocks.hold');
-        $hasOne = false;
+        if (! is_numeric($expire)) {
+            return false;
+        }
 
+        $hasOne = false;
         foreach ($data['items'] as $item) {
             $product = $this->kirby->page('page://'.$item['key']);
             if (! $product) {
