@@ -177,6 +177,13 @@ class ProductPage extends Page
                                     'translate' => false,
                                     // 'virtual' => true,
                                 ],
+                                'maxapo' => [
+                                    'label' => 'bnomei.kart.max-amount-per-order',
+                                    'type' => 'number',
+                                    // 'min' => 0, // allow stock to be negative when updating from orders
+                                    'step' => 1,
+                                    'translate' => false,
+                                ],
                                 'raw' => [
                                     'type' => 'hidden',
                                     'translate' => false,
@@ -217,12 +224,12 @@ class ProductPage extends Page
     /**
      * @kql-allowed
      */
-    public function stock(): int|string
+    public function stock(bool $withHold = false): int|string
     {
         /** @var StocksPage $stocks */
         $stocks = kart()->page(ContentPageEnum::STOCKS);
 
-        return $stocks->stock($this->uuid()->toString()) ?? '∞';
+        return $stocks->stock($this->uuid()->toString(), $withHold) ?? '∞';
     }
 
     public function stockUrl(): ?string
@@ -365,5 +372,13 @@ class ProductPage extends Page
     public function firstGalleryImageUrl(): ?string
     {
         return $this->firstGalleryImage()?->resize(1920)->url();
+    }
+
+    /**
+     * @kql-allowed
+     */
+    public function maxAmountPerOrder(): ?int
+    {
+        return $this->maxapo()->isEmpty() ? null : $this->maxapo()->toInt();
     }
 }

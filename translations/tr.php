@@ -22,6 +22,7 @@ return [
     'bnomei.kart.latest-order' => 'Son Sipariş',
     'bnomei.kart.local-storage' => 'Yerel',
     'bnomei.kart.login' => 'Giriş yap',
+    'bnomei.kart.max-amount-per-order' => 'Max amount per order',
     'bnomei.kart.note' => 'Not',
     'bnomei.kart.now' => 'Şimdi',
     'bnomei.kart.orders' => 'Siparişler',

@@ -98,7 +98,7 @@ class Cart
          * @var CartLine $line
          */
         foreach ($this->lines() as $line) {
-            $stock = $line->product()?->stock();
+            $stock = $line->product()?->stock(withHold: true);
             if (is_int($stock) && $stock < $line->quantity()) {
                 kart()->message('bnomei.kart.out-of-stock', 'checkout');
 
@@ -290,5 +290,28 @@ class Cart
             'kart.redirect.success',
             $order ? $order->url() : $this->kirby->site()->url()
         );
+    }
+
+    public function holdStock(): bool
+    {
+        $expire = kart()->option('stocks.hold');
+        if (! is_numeric($expire)) {
+            return false;
+        }
+
+        foreach ($this->lines as $line) {
+            $product = $line->product();
+            if (! $product) {
+                continue;
+            }
+            $holdKey = 'hold-'.Kart::hash($product->uuid()->toString());
+            $holds = $this->kirby->cache('bnomei.kart.stocks')->get($holdKey, []);
+            $holds = array_filter($holds, fn ($hold) => $hold['expires'] > time()); // keep not outdated
+
+            // TODO: continue here
+
+        }
+
+        return true;
     }
 }

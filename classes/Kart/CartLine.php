@@ -18,14 +18,29 @@ class CartLine
 
     public function increment(int $amount = 1): int
     {
-        $this->quantity += $amount;
+        $new = $this->quantity + $amount;
+        $max = $this->product()?->maxAmountPerOrder();
+
+        if ($max && $new > $max) {
+            $new = $max;
+        }
+
+        $this->quantity = $new;
 
         return $this->quantity;
     }
 
     public function decrement(int $amount = 1): int
     {
-        $this->quantity -= $amount;
+        $new = $this->quantity - $amount;
+        $max = $this->product()?->maxAmountPerOrder();
+
+        if ($max && $new > $max) {
+            $new = $max;
+        }
+
+        $this->quantity = $new;
+
         if ($this->quantity <= 0) {
             $this->quantity = 0;
         }
@@ -53,7 +68,7 @@ class CartLine
 
     public function hasStockForQuantity(): bool
     {
-        $stock = $this->product()?->stock();
+        $stock = $this->product()?->stock(withHold: true);
 
         if (is_string($stock)) { // unknown stock = unlimited
             return true;

@@ -8,7 +8,7 @@
             <li>
                 <a href="<?= $product->url() ?>"><?= $product->title() ?></a>
                 <?php if ($line->hasStockForQuantity() === false) { ?>
-                    <span><?= $product->stock() ?> of <?= $line->quantity() ?>x</span>
+                    <span><?= $product->stock(withHold: true) ?> of <?= $line->quantity() ?>x</span>
                 <?php } else { ?>
                     <span><?= $line->quantity() ?>x</span>
                 <?php } ?>

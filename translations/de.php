@@ -22,6 +22,7 @@ return [
     'bnomei.kart.latest-order' => 'Aktuelle Bestellung',
     'bnomei.kart.local-storage' => 'Lokal',
     'bnomei.kart.login' => 'Anmelden',
+    'bnomei.kart.max-amount-per-order' => 'Maximale Anzahl pro Bestellung',
     'bnomei.kart.note' => 'Notiz',
     'bnomei.kart.now' => 'Jetzt',
     'bnomei.kart.orders' => 'Bestellungen',

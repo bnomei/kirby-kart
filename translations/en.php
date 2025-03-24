@@ -22,6 +22,7 @@ return [
     'bnomei.kart.latest-order' => 'Latest Order',
     'bnomei.kart.local-storage' => 'Local',
     'bnomei.kart.login' => 'Log in',
+    'bnomei.kart.max-amount-per-order' => 'Max amount per order',
     'bnomei.kart.note' => 'Note',
     'bnomei.kart.now' => 'Now',
     'bnomei.kart.orders' => 'Orders',

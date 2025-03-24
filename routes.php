@@ -399,7 +399,8 @@ return function (App $kirby) {
                 }
 
                 kart()->cart()->add(
-                    page('page://'.Router::get('product'))
+                    page('page://'.Router::get('product')),
+                    max(1, intval(Router::get('amount', 1)))
                 );
 
                 return Router::go(Router::idWithParams(Router::CART_ADD));
@@ -417,7 +418,8 @@ return function (App $kirby) {
                 }
 
                 kart()->cart()->add(
-                    page('page://'.Router::get('product'))
+                    page('page://'.Router::get('product')),
+                    max(1, intval(Router::get('amount', 1)))
                 );
 
                 if (! kart()->cart()->canCheckout()) {
@@ -439,7 +441,8 @@ return function (App $kirby) {
                 }
 
                 kart()->cart()->remove(
-                    page('page://'.Router::get('product'))
+                    page('page://'.Router::get('product')),
+                    max(1, intval(Router::get('amount', 1)))
                 );
 
                 return Router::go(Router::idWithParams(Router::CART_REMOVE));

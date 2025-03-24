@@ -1,5 +1,6 @@
 <?php
 
+use Bnomei\Kart\Kart;
 use Kirby\Cms\Page;
 use Kirby\Cms\Pages;
 use Kirby\Toolkit\A;
@@ -88,11 +89,11 @@ class StocksPage extends Page
     /**
      * @kql-allowed
      */
-    public function stock(?string $id = null): ?int
+    public function stock(?string $id = null, bool $withHold = false): ?int
     {
         $expire = kart()->option('expire');
         if (is_int($expire)) {
-            $stocks = kirby()->cache('bnomei.kart.stocks')->getOrSet('stocks', function () {
+            $stocks = $this->kirby()->cache('bnomei.kart.stocks')->getOrSet('stocks', function () {
                 $stocks = [];
                 /** @var StockPage $stockPage */
                 foreach ($this->stockPages() as $stockPage) {
@@ -106,13 +107,28 @@ class StocksPage extends Page
                 return $stocks;
             }, $expire);
 
-            return A::get($stocks, $id);
+            $stock = A::get($stocks, $id);
+        } else {
+            // slowish...
+            $stocks = $this->stockPages($id);
+            $stock = $stocks->count() ? $stocks->sumField('stock')->toInt() : null;
         }
 
-        // slowish...
-        $stocks = $this->stockPages($id);
+        if ($stock === null) {
+            return null;
+        }
 
-        return $stocks->count() ? $stocks->sumField('stock')->toInt() : null;
+        // decrement by stock in hold
+        if ($withHold && $id && kart()->option('stocks.hold')) {
+            foreach ($this->kirby()->cache('bnomei.kart.stocks')->get('holds-'.Kart::hash($id), []) as $hold) {
+                if ($hold['expires'] < time()) {
+                    continue; // will be removed on next set
+                }
+                $stock -= $hold['quantity'];
+            }
+        }
+
+        return $stock;
     }
 
     public function updateStocks(array $data): ?int

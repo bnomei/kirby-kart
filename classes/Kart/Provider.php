@@ -244,6 +244,9 @@ abstract class Provider
             Router::get('redirect')
         );
 
+        // put stock into hold
+        kart()->cart()->holdStock();
+
         $this->kirby()->trigger('kart.provider.'.$this->name.'.checkout');
 
         if (! $this->kirby()->environment()->isLocal() && $this->kirby()->plugin('bnomei/kart')->license()->status()->value() !== 'active') {
