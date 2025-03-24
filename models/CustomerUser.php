@@ -45,10 +45,10 @@ class CustomerUser extends User
                 'users' => false,
             ],
             'fields' => [
-                'cart' => [
+                'kart_cart' => [
                     'type' => 'hidden',
                 ],
-                'wishlist' => [
+                'kart_wishlist' => [
                     'type' => 'hidden',
                 ],
             ],
