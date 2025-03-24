@@ -9,8 +9,12 @@
 /tests/kirby
 /tests/logs
 /tests/site/accounts
-/tests/cache
+/tests/site/sessions
+/tests/site/cache
 /tests/media
+/tests/content/orders
+/tests/content/stocks
+/tests/content/products
 
 # files of Composer dependencies that are not needed for the plugin
 /vendor/**/.*
@@ -27,6 +31,7 @@
 /vendor/**/VERSION
 /vendor/**/docs/*
 /vendor/**/example/*
+/vendor/**/examples.png
 /vendor/**/examples/*
 /vendor/**/test/*
 /vendor/**/tests/*

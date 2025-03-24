@@ -26,6 +26,9 @@ tabs:
         fields:
           line:
             type: line
+          description:
+            label: bnomei.kart.description
+            type: textarea
           price:
             label: bnomei.kart.price
             type: number
@@ -43,10 +46,24 @@ tabs:
             default: now
             translate: false
             width: 1/2
-          description:
-            label: bnomei.kart.description
-            type: textarea
-            virtual: true
+          categories:
+            label: bnomei.kart.categories
+            type: tags
+            options:
+              type: query
+              query: >
+                page.siblings.pluck("categories", ",",
+                true)
+            width: 1/2
+            translate: false
+          tags:
+            label: bnomei.kart.tags
+            type: tags
+            options:
+              type: query
+              query: page.siblings.pluck("tags", ",", true)
+            width: 1/2
+            translate: false
           gallery:
             label: bnomei.kart.gallery
             type: files
@@ -63,24 +80,6 @@ tabs:
               parent: page.parent
             width: 1/2
             translate: false
-          categories:
-            label: bnomei.kart.categories
-            type: tags
-            options:
-              type: query
-              query: >
-                page.siblings.pluck("categories", ",",
-                true)
-            translate: false
-            virtual: true
-          tags:
-            label: bnomei.kart.tags
-            type: tags
-            options:
-              type: query
-              query: page.siblings.pluck("tags", ",", true)
-            translate: false
-            virtual: true
           raw:
             type: hidden
             translate: false

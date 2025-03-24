@@ -19,7 +19,7 @@ sections:
         value: '{{ page.formattedSubtotal }}'
         info: '+ {{ page.formattedTax }}'
       - 
-        label: Items
+        label: bnomei.kart.items
         value: '{{ page.items.toStructure.count }}'
   order:
     type: fields
