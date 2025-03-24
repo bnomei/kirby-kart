@@ -224,8 +224,13 @@ App::plugin(
             'kart-magic-link' => MagicLinkChallenge::class,
         ],
         'translations' => [
-            'en' => require_once __DIR__.'/translations/en.php',
+            'da' => require_once __DIR__.'/translations/da.php',
             'de' => require_once __DIR__.'/translations/de.php',
+            'en' => require_once __DIR__.'/translations/en.php',
+            'es_ES' => require_once __DIR__.'/translations/es_ES.php',
+            'fr' => require_once __DIR__.'/translations/fr.php',
+            'it' => require_once __DIR__.'/translations/it.php',
+            'tr' => require_once __DIR__.'/translations/tr.php',
         ],
         'blueprints' => [
             'users/customer' => CustomerUser::phpBlueprint(),
