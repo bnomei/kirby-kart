@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Copyright (c) 2025 Bruno Meilick
  * All rights reserved.
@@ -284,6 +285,7 @@ class Cart
         $order?->createZipWithFiles();
 
         /** @var \StocksPage|null $stocks */
+        $this->releaseStock($data);
         $stocks = $this->kart->page(ContentPageEnum::STOCKS);
         $stocks?->updateStocks($data);
 
@@ -319,6 +321,7 @@ class Cart
             $holds = array_filter($holds, fn ($hold) => $hold['expires'] > time()); // discard outdated
             $sid = $this->kirby->session()->token() ?? Uuid::generate();
             $holds[$sid] = [
+                'product' => $product->uuid()->id(),
                 'expires' => time() + $expire * 60,
                 'quantity' => $line->quantity(),
             ];
@@ -326,6 +329,37 @@ class Cart
             // the cache does not have to live longer than the expiry of each line
             $this->kirby->cache('bnomei.kart.stocks')->set($holdKey, $holds, $expire);
             $hasOne = true;
+        }
+
+        return $hasOne;
+    }
+
+    private function releaseStock(array $data): bool
+    {
+        $expire = kart()->option('stocks.hold');
+        $hasOne = false;
+
+        foreach ($data['items'] as $item) {
+            $product = $this->kirby->page('page://'.$item['key']);
+            if (! $product) {
+                continue;
+            }
+            $holdKey = 'hold-'.Kart::hash($product->uuid()->toString());
+            $holds = $this->kirby->cache('bnomei.kart.stocks')->get($holdKey, []);
+            $sid = $this->kirby->session()->token();
+            if (array_key_exists($sid, $holds)) {
+                unset($holds[$sid]);
+                $hasOne = true;
+            } else {
+                // find by product and quantity, sort by expiry desc (as the best guess)
+                $holds = array_filter($holds, fn ($hold) => $hold['product'] === $product->uuid()->id() && $hold['quantity'] === intval($item['quantity']));
+                $holds = A::sort($holds, 'expires', 'desc');
+                if (count($holds) > 0) {
+                    array_shift($holds);
+                    $hasOne = true;
+                }
+            }
+            $this->kirby->cache('bnomei.kart.stocks')->set($holdKey, $holds, $expire);
         }
 
         return $hasOne;

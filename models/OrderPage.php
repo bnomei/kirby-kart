@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Copyright (c) 2025 Bruno Meilick
  * All rights reserved.
