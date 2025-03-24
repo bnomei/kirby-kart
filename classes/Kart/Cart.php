@@ -1,4 +1,11 @@
 <?php
+/**
+ * Copyright (c) 2025 Bruno Meilick
+ * All rights reserved.
+ *
+ * This file is part of Kirby Kart and is proprietary software.
+ * Unauthorized copying, modification, or distribution is prohibited.
+ */
 
 namespace Bnomei\Kart;
 
@@ -7,6 +14,7 @@ use Kirby\Cms\Collection;
 use Kirby\Cms\User;
 use Kirby\Content\Field;
 use Kirby\Toolkit\A;
+use Kirby\Uuid\Uuid;
 use ProductPage;
 
 class Cart
@@ -299,19 +307,27 @@ class Cart
             return false;
         }
 
+        $hasOne = false;
         foreach ($this->lines as $line) {
             $product = $line->product();
             if (! $product) {
                 continue;
             }
+
             $holdKey = 'hold-'.Kart::hash($product->uuid()->toString());
             $holds = $this->kirby->cache('bnomei.kart.stocks')->get($holdKey, []);
-            $holds = array_filter($holds, fn ($hold) => $hold['expires'] > time()); // keep not outdated
+            $holds = array_filter($holds, fn ($hold) => $hold['expires'] > time()); // discard outdated
+            $sid = $this->kirby->session()->token() ?? Uuid::generate();
+            $holds[$sid] = [
+                'expires' => time() + $expire * 60,
+                'quantity' => $line->quantity(),
+            ];
 
-            // TODO: continue here
-
+            // the cache does not have to live longer than the expiry of each line
+            $this->kirby->cache('bnomei.kart.stocks')->set($holdKey, $holds, $expire);
+            $hasOne = true;
         }
 
-        return true;
+        return $hasOne;
     }
 }

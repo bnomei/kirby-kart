@@ -1,7 +1,13 @@
 <?php
+/**
+ * Copyright (c) 2025 Bruno Meilick
+ * All rights reserved.
+ *
+ * This file is part of Kirby Kart and is proprietary software.
+ * Unauthorized copying, modification, or distribution is prohibited.
+ */
 
 use Bnomei\Kart\Cart;
-use Bnomei\Kart\CartLine;
 use Bnomei\Kart\Kart;
 use Bnomei\Kart\License;
 use Bnomei\Kart\MagicLinkChallenge;
