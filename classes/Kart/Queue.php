@@ -58,17 +58,23 @@ class Queue
 
         $jobs = [];
         $files = [];
-        $lockTime = F::exists($this->dir.'/.lock') ? intval(F::read($this->dir.'/.lock')) : null;
+        $l = F::read($this->dir.'/.lock');
+        $lockTime = $l !== false ? (int) $l : false;
 
         // only lock for n seconds max, 5 sec same as SQLite PDO::ATTR_TIMEOUT
         if ($lockTime && $lockTime + 5 > time()) {
             return;
         }
 
+        $index = Dir::files($this->dir, absolute: true);
+        if (empty($index)) {
+            return;
+        }
+
         $foundLock = false; // abort if any file is currently locked
         F::write($this->dir.'/.lock', time());
 
-        foreach (Dir::files($this->dir, absolute: true) as $file) {
+        foreach ($index as $file) {
             if (F::exists($file) && F::extension($file) === 'json') {
                 $files[] = $file;
 
