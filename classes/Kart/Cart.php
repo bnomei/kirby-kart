@@ -334,7 +334,7 @@ class Cart
         return $hasOne;
     }
 
-    private function releaseStock(array $data): bool
+    public function releaseStock(array $data): bool
     {
         $expire = kart()->option('stocks.hold');
         if (! is_numeric($expire)) {
