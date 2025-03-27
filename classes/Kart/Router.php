@@ -272,14 +272,14 @@ class Router
 
     public static function getSnippet(?string $path = null): ?string
     {
-        $path ??= Router::get('snippet', kirby()->request()->path()->toString());
+        $path ??= strval(Router::get('snippet', kirby()->request()->path()->toString()));
         $path = '/'.$path; // avoid matching /some-[not-value] at /not-value
         $map = (array) kart()->option('router.snippets', []);
         foreach ($map as $key => $value) {
             if (is_numeric($key)) {
                 $key = $value;
             }
-            if (is_string($value) && Str::endsWith($path, '/'.$key)) {
+            if (is_string($key) && is_string($value) && Str::endsWith($path, '/'.$key)) {
                 return $value;
             }
         }
@@ -515,7 +515,7 @@ class Router
         ];
         foreach ($models as $key => $value) {
             $value = self::get($key); // might be encrypted
-            if (empty($value)) {
+            if (empty($value) || ! is_string($value)) {
                 continue;
             }
 

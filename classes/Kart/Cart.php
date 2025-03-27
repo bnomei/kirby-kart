@@ -284,8 +284,8 @@ class Cart
         $order = $orders?->createOrder($data, $customer);
         $order?->createZipWithFiles();
 
-        /** @var \StocksPage|null $stocks */
         $this->releaseStock($data);
+        /** @var \StocksPage|null $stocks */
         $stocks = $this->kart->page(ContentPageEnum::STOCKS);
         $stocks?->updateStocks($data);
 
@@ -327,7 +327,7 @@ class Cart
             ];
 
             // the cache does not have to live longer than the expiry of each line
-            $this->kirby->cache('bnomei.kart.stocks')->set($holdKey, $holds, $expire);
+            $this->kirby->cache('bnomei.kart.stocks')->set($holdKey, $holds, intval($expire));
             $hasOne = true;
         }
 
@@ -350,7 +350,7 @@ class Cart
             $holdKey = 'hold-'.Kart::hash($product->uuid()->toString());
             $holds = $this->kirby->cache('bnomei.kart.stocks')->get($holdKey, []);
             $sid = $this->kirby->session()->token();
-            if (array_key_exists($sid, $holds)) {
+            if ($sid && array_key_exists($sid, $holds)) {
                 unset($holds[$sid]);
                 $hasOne = true;
             } else {
@@ -362,7 +362,7 @@ class Cart
                     $hasOne = true;
                 }
             }
-            $this->kirby->cache('bnomei.kart.stocks')->set($holdKey, $holds, $expire);
+            $this->kirby->cache('bnomei.kart.stocks')->set($holdKey, $holds, intval($expire));
         }
 
         return $hasOne;
