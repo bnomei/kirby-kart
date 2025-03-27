@@ -107,10 +107,14 @@ class Cart
          * @var CartLine $line
          */
         foreach ($this->lines() as $line) {
+            if ($line->quantity() > $line->product()->maxAmountPerOrder()) {
+                kart()->message('bnomei.kart.max-amount-per-order', 'checkout');
+                return false;
+            }
+
             $stock = $line->product()?->stock(withHold: true);
             if (is_int($stock) && $stock < $line->quantity()) {
                 kart()->message('bnomei.kart.out-of-stock', 'checkout');
-
                 return false;
             }
         }

@@ -366,9 +366,11 @@ class Kart
         }
 
         // update user
-        return $this->provider()->setUserData([
+        $customer = $this->provider()->setUserData([
             'customerId' => $id, // customerId to align with KLUB
-        ]);
+        ], $customer);
+
+        return $customer;
     }
 
     /**

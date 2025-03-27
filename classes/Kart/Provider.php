@@ -75,9 +75,9 @@ abstract class Provider
         return A::get($this->getUserData(), $key);
     }
 
-    public function getUserData(): array
+    public function getUserData(?User $user): array
     {
-        $user = $this->kirby->user();
+        $user ??= $this->kirby->user();
 
         if (! $user || $user->isCustomer() === false) {
             return [];
@@ -88,9 +88,9 @@ abstract class Provider
         return $user->$field()->isNotEmpty() ? Yaml::decode($user->$field()->value()) : [];
     }
 
-    public function setUserData(array $data): ?User
+    public function setUserData(array $data, ?User $user): ?User
     {
-        $user = $this->kirby->user();
+        $user ??= $this->kirby->user();
         $data = array_filter($data);
 
         if (empty($data) || ! $user || $user->isCustomer() === false) {

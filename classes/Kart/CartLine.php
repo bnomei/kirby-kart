@@ -31,6 +31,7 @@ class CartLine
 
         if ($max && $new > $max) {
             $new = $max;
+            kart()->message('bnomei.kart.max-amount-per-order', 'cart');
         }
 
         $this->quantity = $new;
@@ -45,6 +46,7 @@ class CartLine
 
         if ($max && $new > $max) {
             $new = $max;
+            kart()->message('bnomei.kart.max-amount-per-order', 'cart');
         }
 
         $this->quantity = $new;
