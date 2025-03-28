@@ -109,12 +109,14 @@ class Cart
         foreach ($this->lines() as $line) {
             if ($line->quantity() > $line->product()->maxAmountPerOrder()) {
                 kart()->message('bnomei.kart.max-amount-per-order', 'checkout');
+
                 return false;
             }
 
             $stock = $line->product()?->stock(withHold: true);
             if (is_int($stock) && $stock < $line->quantity()) {
                 kart()->message('bnomei.kart.out-of-stock', 'checkout');
+
                 return false;
             }
         }
@@ -309,7 +311,7 @@ class Cart
     public function holdStock(): bool
     {
         $expire = kart()->option('stocks.hold');
-        if (! is_numeric($expire)) {
+        if (! is_numeric($expire) || ! kirby()->user()?->isCustomer()) {
             return false;
         }
 
@@ -338,16 +340,21 @@ class Cart
         return $hasOne;
     }
 
-    public function releaseStock(array $data): bool
+    public function releaseStock(?array $data = null): bool
     {
+        if (! $data) {
+            $data = ['items' => $this->lines->toArray(
+                fn ($line) => ['key' => [$line->product()->uuid()->id()]]
+            )];
+        }
         $expire = kart()->option('stocks.hold');
-        if (! is_numeric($expire)) {
+        if (! is_numeric($expire) || ! kirby()->user()?->isCustomer()) {
             return false;
         }
 
         $hasOne = false;
         foreach ($data['items'] as $item) {
-            $product = $this->kirby->page('page://'.$item['key']);
+            $product = $this->kirby->page('page://'.$item['key'][0]);
             if (! $product) {
                 continue;
             }

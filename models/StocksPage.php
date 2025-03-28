@@ -128,7 +128,7 @@ class StocksPage extends Page
 
         // decrement by stock in hold
         if ($withHold && $id && kart()->option('stocks.hold')) {
-            foreach ($this->kirby()->cache('bnomei.kart.stocks')->get('holds-'.Kart::hash($id), []) as $hold) {
+            foreach ($this->kirby()->cache('bnomei.kart.stocks')->get('hold-'.Kart::hash($id), []) as $hold) {
                 if ($hold['expires'] < time()) {
                     continue; // will be removed on next set
                 }

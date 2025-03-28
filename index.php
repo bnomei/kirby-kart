@@ -96,7 +96,7 @@ App::plugin(
             'stocks' => [
                 'enabled' => true,
                 'queue' => true, // instead of calling $page->increment() it will queue them which is better when dealing with concurrent requests
-                'hold' => false, // null/false or time in minutes as integer
+                'hold' => false, // null/false or time in minutes as integer (only for logged-in users!)
                 'page' => 'stocks',
                 'stock' => [
                     'uuid' => fn (?StocksPage $stocks, array $props) => 'st-'.Kart::nonAmbiguousUuid(13),

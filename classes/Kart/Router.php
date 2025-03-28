@@ -353,14 +353,15 @@ class Router
         );
     }
 
-    public static function provider_payment(array $query = []): string
+    public static function provider_payment(array $params = []): string
     {
         return self::factory(
             self::PROVIDER_PAYMENT,
+            [], // no encypted values for payment provider needed
             array_merge([
                 'success_url' => url(Router::PROVIDER_SUCCESS).'?session_id={CHECKOUT_SESSION_ID}',
                 'cancel_url' => url(Router::PROVIDER_CANCEL),
-            ], $query)
+            ], $params)
         );
     }
 

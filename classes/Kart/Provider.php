@@ -267,6 +267,7 @@ abstract class Provider
     public function canceled(): string
     {
         kirby()->trigger('kart.provider.'.$this->name.'.canceled');
+        kart()->cart()->releaseStock();
 
         return $this->kirby()->session()->pull('kart.redirect.canceled', $this->kirby()->site()->url());
     }
