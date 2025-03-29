@@ -22,12 +22,12 @@ $order ??= $page;
         <table>
             <?php foreach ($order->orderLines() as $line) {
                 /** @var \Bnomei\Kart\OrderLine $line */
-                /** @var ProductPage $product */
+                /** @var ProductPage|null $product */
                 $product = $line->product();
                 ?>
                 <tr>
-                    <td><img src="<?= $product->gallery()->toFile()?->url() ?>" alt=""></td>
-                    <td><a href="<?= $product->url() ?>"><?= $product->title() ?></a></td>
+                    <td><img src="<?= $product?->gallery()->toFile()?->url() ?>" alt=""></td>
+                    <td><a href="<?= $product?->url() ?>"><?= $product?->title() ?></a></td>
                     <td><?= $line->quantity() ?>x</td>
                     <td><?= $line->formattedPrice() ?></td>
                     <td><?= $line->formattedTotal() ?></td>

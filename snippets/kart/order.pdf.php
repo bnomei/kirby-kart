@@ -26,14 +26,14 @@
     </table>
 
     <table>
-        <?php /** @var ProductPage $product */
+        <?php /** @var ProductPage|null $product */
         /** @var \Bnomei\Kart\OrderLine $line */
         foreach ($order->orderLines() as $line) {
             $product = $line->key()->toPage();
             ?>
             <tr>
-                <td><img src="<?= $product->gallery()->toFile()?->resize(128)->url() ?>" alt=""></td>
-                <td><?= $product->title() ?></td>
+                <td><img src="<?= $product?->gallery()->toFile()?->resize(128)->url() ?>" alt=""></td>
+                <td><?= $product?->title() ?></td>
                 <td><?= $line->quantity() ?>x</td>
                 <td><?= $line->formattedPrice() ?></td>
                 <td><?= $line->formattedTotal() ?></td>

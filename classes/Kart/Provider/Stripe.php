@@ -43,7 +43,7 @@ class Stripe extends Provider
                 'customer_email' => $this->kirby->user()?->email(),
                 'success_url' => url(Router::PROVIDER_SUCCESS).'?session_id={CHECKOUT_SESSION_ID}',
                 'cancel_url' => url(Router::PROVIDER_CANCEL),
-                'invoice_creation' => ['enabled' => true],
+                'invoice_creation' => ['enabled' => 'true'],
                 'line_items' => $this->kart->cart()->lines()->values(fn (CartLine $l) => [
                     'price' => A::get($l->product()?->raw()->yaml(), 'default_price.id'), // @phpstan-ignore-line
                     'quantity' => $l->quantity(),
@@ -106,9 +106,10 @@ class Stripe extends Provider
         }
 
         $json = $remote->json();
+        $uuid = kart()->option('products.product.uuid');
         foreach (A::get($json, 'data') as $line) {
             $data['items'][] = [
-                'key' => A::get($line, 'price.product'),
+                'key' => 'page://'.$uuid(null, ['id' => A::get($line, 'price.product')]),
                 'quantity' => A::get($line, 'quantity'),
                 'price' => round(A::get($line, 'price.unit_amount', 0) / 100.0, 2),
                 // these values include the multiplication with quantity

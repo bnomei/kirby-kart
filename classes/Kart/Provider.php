@@ -75,7 +75,7 @@ abstract class Provider
         return A::get($this->getUserData(), $key);
     }
 
-    public function getUserData(?User $user): array
+    public function getUserData(?User $user = null): array
     {
         $user ??= $this->kirby->user();
 

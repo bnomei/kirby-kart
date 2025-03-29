@@ -477,11 +477,10 @@ class Kart
         $expire = kart()->option('expire');
         if (is_int($expire)) {
             $key = Kart::hash(implode(',', $params));
-            $products = kirby()->cache('bnomei.kart.products')->getOrSet('products-'.$key, function () use ($params) {
-                return array_values($this->getProductsByParam($params)->toArray(fn (ProductPage $product) => $product->uuid()->toString()));
-            });
 
-            return new Pages($products);
+            return new Pages(array_filter(kirby()->cache('bnomei.kart.products')->getOrSet('products-'.$key, function () use ($params) {
+                return array_values($this->getProductsByParam($params)->toArray(fn (ProductPage $product) => $product->uuid()->toString()));
+            }), fn ($id) => $this->kirby()->page($id)));
         }
 
         return $this->getProductsByParam($params);
@@ -529,12 +528,12 @@ class Kart
         if (is_int($expire)) {
             $key = 'categories-'.Kart::hash(implode(',', $categories)).($any ? '-any' : '-all');
 
-            return new Pages(kirby()->cache('bnomei.kart.products')->getOrSet($key, function () use ($categories, $any) {
+            return new Pages(array_filter(kirby()->cache('bnomei.kart.products')->getOrSet($key, function () use ($categories, $any) {
                 $products = $any ? $this->products()->filterBy('categories', 'in', $categories, ',') :
                     $this->products()->filterBy(fn ($product) => count(array_diff($categories, $product->tags()->split())) === 0);
 
                 return array_values($products->toArray(fn (ProductPage $product) => $product->uuid()->toString()));
-            }, $expire));
+            }, $expire)), fn ($id) => $this->kirby()->page($id));
         }
 
         return $any ? $this->products()->filterBy('categories', 'in', $categories, ',') :
@@ -606,12 +605,12 @@ class Kart
         if (is_int($expire)) {
             $key = 'tags-'.Kart::hash(implode(',', $tags)).($any ? '-any' : '-all');
 
-            return new Pages(kirby()->cache('bnomei.kart.products')->getOrSet($key, function () use ($tags, $any) {
+            return new Pages(array_filter(kirby()->cache('bnomei.kart.products')->getOrSet($key, function () use ($tags, $any) {
                 $products = $any ? $this->products()->filterBy('tags', 'in', $tags, ',') :
                     $this->products()->filterBy(fn ($product) => count(array_diff($tags, $product->tags()->split())) === 0);
 
                 return array_values($products->toArray(fn (ProductPage $product) => $product->uuid()->toString()));
-            }, $expire));
+            }, $expire)), fn ($id) => $this->kirby()->page($id));
         }
 
         return $any ? $this->products()->filterBy('tags', 'in', $tags, ',') :

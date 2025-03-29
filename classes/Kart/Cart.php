@@ -23,8 +23,6 @@ class Cart
     /** @var Collection<CartLine> */
     private Collection $lines;
 
-    private ?User $user = null;
-
     private string $id; // this will match the field on the user content (cart, wishlist)
 
     private App $kirby;
@@ -91,7 +89,7 @@ class Cart
             'product' => $product,
             'count' => $this->lines->count(),
             'item' => $item,
-            'user' => $this->user,
+            'user' => $this->kirby->user(),
         ]);
 
         return $item->quantity();
@@ -127,11 +125,11 @@ class Cart
     public function save(): void
     {
         $this->kirby->session()->set($this->id, $this->lines->toArray());
-        $user = $this->kirby->user();
-        if ($user?->isCustomer()) {
-            $this->user = $user;
-        }
-        $this->user?->update([
+
+        // NOTE: no impersonation as that would shift to the kirby user.
+        // retrieve a mutable copy now, just $this->kirby->user() fails.
+        $user = $this->kirby->user() ? $this->kirby->user($this->kirby->user()->id()) : null;
+        $user?->update([
             'kart_'.$this->id => $this->lines->toArray(),
         ]);
     }
@@ -214,7 +212,7 @@ class Cart
             'product' => $product,
             'count' => $this->lines->count(),
             'item' => $item,
-            'user' => $this->user,
+            'user' => $this->kirby->user(),
         ]);
 
         return $item?->quantity() ?? 0;
@@ -232,7 +230,7 @@ class Cart
         $this->save();
 
         $this->kirby->trigger('kart.'.$this->id.'.clear', [
-            'user' => $this->user,
+            'user' => $this->kirby->user(),
         ]);
     }
 
@@ -254,8 +252,6 @@ class Cart
         if ($user->isCustomer() === false) {
             return false; // no merging for customers
         }
-
-        $this->user = $user;
 
         $cartname = 'kart_'.$this->id;
         $cart = $user->$cartname();

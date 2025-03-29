@@ -572,12 +572,12 @@ App::plugin(
             'orders' => function (): Pages {
                 $expire = kart()->option('expire');
                 if (is_int($expire)) {
-                    return new Pages(kirby()->cache('bnomei.kart.orders')->getOrSet($this->id(), function () {
+                    return new Pages(array_filter(kirby()->cache('bnomei.kart.orders')->getOrSet($this->id(), function () {
                         return array_values(kart()->orders()
                             ->filterBy(fn (OrderPage $order) => $order->customer()->toUser()?->id() === $this->id())
                             ->sortBy('paidDate', 'desc')
                             ->toArray(fn (OrderPage $order) => $order->uuid()->toString()));
-                    }, $expire));
+                    }, $expire), fn ($id) => $this->kirby()->page($id)));
                 }
 
                 return kart()->orders()
