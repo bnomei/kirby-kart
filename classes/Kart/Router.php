@@ -303,7 +303,7 @@ class Router
     {
         return Uri::index()->clone([
             'path' => $path,
-            'query' => static::queryCsrf() + self::encrypt(self::modelsFromRequest() + $query) + $params,
+            'query' => array_merge(static::queryCsrf(), self::encrypt(array_merge(self::modelsFromRequest(), $query)), $params),
         ])->toString();
     }
 

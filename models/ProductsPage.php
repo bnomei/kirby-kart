@@ -99,11 +99,12 @@ class ProductsPage extends Page
         }
 
         $this->children = parent::children();
+        $uuids = $this->children->toArray(fn ($p) => $p->uuid()->id());
 
-        $this->kirby()->impersonate('kirby', function () {
+        $this->kirby()->impersonate('kirby', function () use ($uuids) {
             $uuid = kart()->option('products.product.uuid');
             foreach (kart()->provider()->products() as $product) {
-                if ($this->children->findByUuid('page://'.$uuid($this, $product))) {
+                if (in_array($uuid($this, $product), $uuids)) {
                     continue;
                 }
                 $this->createChild($product);

@@ -38,7 +38,7 @@ trait Options
             'orders.order.uuid',
             'products.product.uuid',
             'stocks.stock.uuid',
-            'provider.stripe.checkout_options',
+            'providers.stripe.checkout_options',
         ])) {
             $option = $option();
             $this->options[$key] = $option;

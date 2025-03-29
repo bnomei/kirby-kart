@@ -19,13 +19,13 @@ tabs:
         label: bnomei.kart.summary
         type: stats
         reports:
-          - 
+          -
             label: bnomei.kart.products
             value: '{{ page.children.count }}'
-          - 
+          -
             label: bnomei.kart.provider
             value: '{{ site.kart.provider.title }}'
-          - 
+          -
             label: bnomei.kart.last-sync
             value: '{{ site.kart.provider.updatedAt("products") }}'
       meta:

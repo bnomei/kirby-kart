@@ -489,7 +489,9 @@ App::plugin(
                 return kart();
             },
             'dump' => function (?string $field = null, int $maxWidth = 140): string {
-                $content = $this->content->toArray();
+                /** @var Page $page */
+                $page = $this;
+                $content = $page->content()->toArray();
                 if ($field) {
                     $content = A::get($content, $field, []);
                     try { // if the field is a yaml/json content
