@@ -35,7 +35,7 @@ class OrderLine
         private float $tax = 0,
         private float $discount = 0,
     ) {
-        $this->product = kirby()->page($this->id); // @phpstan-ignore-line
+        $this->product = kirby()->page($this->id);
     }
 
     public function __call(string $name, array $arguments): mixed
@@ -58,9 +58,9 @@ class OrderLine
         return $this->product()?->uuid()->id() ?? $this->id;
     }
 
-    public function product(): ProductPage|Page|null
+    public function product(): ?ProductPage
     {
-        return $this->product;
+        return $this->product; // @phpstan-ignore-line
     }
 
     public function formattedPrice(): string

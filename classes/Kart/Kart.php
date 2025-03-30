@@ -366,9 +366,9 @@ class Kart
         }
 
         // update user
-        $customer = $this->provider()->setUserData([
+        $customer = $customer instanceof User ? $this->provider()->setUserData([
             'customerId' => $id, // customerId to align with KLUB
-        ], $customer);
+        ], $customer) : null;
 
         return $customer;
     }
@@ -480,7 +480,7 @@ class Kart
 
             return new Pages(array_filter(kirby()->cache('bnomei.kart.products')->getOrSet('products-'.$key, function () use ($params) {
                 return array_values($this->getProductsByParam($params)->toArray(fn (ProductPage $product) => $product->uuid()->toString()));
-            }), fn ($id) => $this->kirby()->page($id)));
+            }), fn ($id) => $this->kirby()->page($id) !== null));
         }
 
         return $this->getProductsByParam($params);
@@ -533,7 +533,7 @@ class Kart
                     $this->products()->filterBy(fn ($product) => count(array_diff($categories, $product->tags()->split())) === 0);
 
                 return array_values($products->toArray(fn (ProductPage $product) => $product->uuid()->toString()));
-            }, $expire)), fn ($id) => $this->kirby()->page($id));
+            }, $expire)), fn ($id) => $this->kirby()->page($id) !== null);
         }
 
         return $any ? $this->products()->filterBy('categories', 'in', $categories, ',') :
@@ -610,7 +610,7 @@ class Kart
                     $this->products()->filterBy(fn ($product) => count(array_diff($tags, $product->tags()->split())) === 0);
 
                 return array_values($products->toArray(fn (ProductPage $product) => $product->uuid()->toString()));
-            }, $expire)), fn ($id) => $this->kirby()->page($id));
+            }, $expire)), fn ($id) => $this->kirby()->page($id) !== null);
         }
 
         return $any ? $this->products()->filterBy('tags', 'in', $tags, ',') :

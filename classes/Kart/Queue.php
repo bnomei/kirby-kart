@@ -137,7 +137,7 @@ class Queue
 
         // process all jobs now in sequence
         foreach ($jobs as $key => $job) {
-            $job = json_decode($job, true);
+            $job = $job ? json_decode($job, true) : false;
             if (is_array($job)) {
                 $success = false;
                 try {
@@ -163,15 +163,15 @@ class Queue
     public function handle(array $job): bool
     {
         if ($page = A::get($job, 'page')) {
-            return $this->handlePage($page, $job);
+            return $this->handlePage(strval($page), $job);
         } elseif ($class = A::get($job, 'class')) {
-            return $this->handleClass($class, $job);
+            return $this->handleClass(strval($class), $job);
         }
 
         return false;
     }
 
-    private function handlePage(mixed $page, array $job): bool
+    private function handlePage(string $page, array $job): bool
     {
         if ($page = page($page)) { // retrieves the mutable version every time
             $method = A::get($job, 'method');
@@ -190,7 +190,7 @@ class Queue
         return false;
     }
 
-    private function handleClass(mixed $class, array $job): bool
+    private function handleClass(string $class, array $job): bool
     {
         if (! class_exists($class)) {
             return false;

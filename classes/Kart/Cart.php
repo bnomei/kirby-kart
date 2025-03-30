@@ -29,7 +29,7 @@ class Cart
 
     private Kart $kart;
 
-    public function __construct(?string $id = 'cart', array $items = [])
+    public function __construct(string $id = 'cart', array $items = [])
     {
         $this->id = $id;
         $this->kirby = kirby();
@@ -110,7 +110,7 @@ class Cart
          * @var CartLine $line
          */
         foreach ($this->lines() as $line) {
-            if ($line->quantity() > $line->product()->maxAmountPerOrder()) {
+            if ($line->quantity() > ($line->product()?->maxAmountPerOrder() ?? intval(kart()->option('orders.order.maxapo')))) {
                 kart()->message('bnomei.kart.max-amount-per-order', 'checkout');
 
                 return false;

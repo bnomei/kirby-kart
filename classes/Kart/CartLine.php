@@ -18,13 +18,13 @@ class CartLine
     private ?Page $product = null;
 
     public function __construct(
-        private ProductPage|Page|string|null $uuid, // need to be named `id` for Collections to use it as key
+        private ProductPage|Page|string $uuid, // need to be named `id` for Collections to use it as key
         private int $quantity = 1,
     ) {
         if ($this->uuid instanceof ProductPage) {
             $this->product = $this->uuid;
             // id is expected to be the uuid in all cases!
-            $this->uuid = $uuid->uuid()->id();
+            $this->uuid = $uuid->uuid()->id(); // @phpstan-ignore-line
         } elseif (is_string($this->uuid)) {
             $this->product = page('page://'.$this->uuid) instanceof ProductPage ? page('page://'.$this->uuid) : null;
         }
@@ -72,13 +72,13 @@ class CartLine
         return $this->product()?->uuid()->id() ?? $this->uuid;
     }
 
-    public function product(bool $refresh = false): ProductPage|Page|null
+    public function product(bool $refresh = false): ?ProductPage
     {
         if ($refresh) {
             $this->product = page('page://'.$this->uuid) instanceof ProductPage ? page('page://'.$this->uuid) : null;
         }
 
-        return $this->product;
+        return $this->product; // @phpstan-ignore-line
     }
 
     public function hasStockForQuantity(): bool

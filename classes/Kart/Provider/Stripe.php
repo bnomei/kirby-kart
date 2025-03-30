@@ -107,6 +107,10 @@ class Stripe extends Provider
 
         $json = $remote->json();
         $uuid = kart()->option('products.product.uuid');
+        if ($uuid instanceof \Closure === false) {
+            return [];
+        }
+
         foreach (A::get($json, 'data') as $line) {
             $data['items'][] = [
                 'key' => 'page://'.$uuid(null, ['id' => A::get($line, 'price.product')]),
