@@ -10,6 +10,7 @@
 
 namespace Bnomei\Kart;
 
+use Kirby\Cms\Page;
 use ProductPage;
 
 /**
@@ -23,7 +24,7 @@ use ProductPage;
  */
 class OrderLine
 {
-    private ?ProductPage $product;
+    private ?Page $product;
 
     public function __construct(
         private string $id, // need to be named `id` for Collections to use it as key
@@ -34,7 +35,7 @@ class OrderLine
         private float $tax = 0,
         private float $discount = 0,
     ) {
-        $this->product = page($this->id); // @phpstan-ignore-line
+        $this->product = kirby()->page($this->id); // @phpstan-ignore-line
     }
 
     public function __call(string $name, array $arguments): mixed
@@ -57,7 +58,7 @@ class OrderLine
         return $this->product()?->uuid()->id() ?? $this->id;
     }
 
-    public function product(): ?ProductPage
+    public function product(): ProductPage|Page|null
     {
         return $this->product;
     }

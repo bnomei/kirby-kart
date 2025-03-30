@@ -11,19 +11,21 @@ class Testing
 {
     public static function beforeAll(): void
     {
-        kirby()->impersonate('kirby');
-        page('products')?->delete(true);
-        page('stocks')?->delete(true);
-        page('orders')?->delete(true);
-        kart()->makeContentPages();
-        kart()->tmnt();
+        kirby()->impersonate('kirby', function () {
+            page('products')?->children()->map(fn ($p) => $p->delete(true));
+            page('stocks')?->children()->map(fn ($p) => $p->delete(true));
+            page('orders')?->children()->map(fn ($p) => $p->delete(true));
+            kart()->makeContentPages();
+            kart()->tmnt();
+        });
     }
 
     public static function afterAll(): void
     {
-        kirby()->impersonate('kirby');
-        page('products')?->delete(true);
-        page('stocks')?->delete(true);
-        page('orders')?->delete(true);
+        kirby()->impersonate('kirby', function () {
+            page('products')?->children()->map(fn ($p) => $p->delete(true));
+            page('stocks')?->children()->map(fn ($p) => $p->delete(true));
+            page('orders')?->children()->map(fn ($p) => $p->delete(true));
+        });
     }
 }

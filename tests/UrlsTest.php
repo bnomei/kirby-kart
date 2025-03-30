@@ -15,5 +15,6 @@ it('has a helper object to get urls from the router builder functions', function
 
     $u = new Urls;
     expect($u->cart())->toBeString()
+        ->and($u->doesNotExit())->toBeNull()
         ->and($u->login_magic())->toBe($u->magiclink());
 });
