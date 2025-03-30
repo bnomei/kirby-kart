@@ -392,4 +392,12 @@ class ProductPage extends Page
     {
         return $this->maxapo()->isEmpty() ? intval(kart()->option('orders.order.maxapo')) : $this->maxapo()->toInt();
     }
+
+    public function updateStock(int $quantity, bool $set = false): ?int
+    {
+        /** @var StocksPage $stocks */
+        $stocks = kart()->page(ContentPageEnum::STOCKS);
+
+        return $stocks->updateStock($this, $quantity, $set);
+    }
 }

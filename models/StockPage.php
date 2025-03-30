@@ -109,7 +109,7 @@ class StockPage extends Page
         return str_pad($this->stock()->value(), $length, '0', STR_PAD_LEFT);
     }
 
-    public function updateStock(int $amount = 0, bool $queue = true): ?int
+    public function updateStock(int $amount = 0, bool $queue = true, bool $set = false): ?int
     {
         if ($amount === 0) {
             return 0;
@@ -122,14 +122,18 @@ class StockPage extends Page
                 'payload' => [
                     'amount' => $amount,
                     'queue' => false,
+                    'set' => $set,
                 ],
             ]);
 
             return null;
         }
 
-        return $this->kirby()->impersonate('kirby', function () use ($amount) {
-            $stock = $this->increment('stock', $amount);
+        return $this->kirby()->impersonate('kirby', function () use ($amount, $set) {
+            $stock = $set ?
+                $this->update(['stock' => $amount]) :
+                $this->increment('stock', $amount);
+
             kirby()->trigger('kart.stocks.updated', [
                 'stock' => $stock,
                 'amount' => $amount,

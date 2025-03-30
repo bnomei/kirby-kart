@@ -29,9 +29,4 @@ return [
 
     // 'bnomei.kart.router.encryption' => false,
     // 'bnomei.kart.expire' => null, // disable caching
-    // 'bnomei.kart.provider' => 'stripe',
-
-    // barebones single value .env-loaders
-    'bnomei.kart.providers.stripe.secret_key' => fn () => trim(file_get_contents(__DIR__.'/../../.env.stripe.secret_key')),
-
 ];

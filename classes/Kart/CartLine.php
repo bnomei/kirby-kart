@@ -10,38 +10,39 @@
 
 namespace Bnomei\Kart;
 
+use Kirby\Cms\Page;
 use ProductPage;
 
 class CartLine
 {
-    private ?ProductPage $product;
+    private ?Page $product = null;
 
     public function __construct(
-        private string $id, // need to be named `id` for Collections to use it as key
+        private ProductPage|Page|string|null $uuid, // need to be named `id` for Collections to use it as key
         private int $quantity = 1,
     ) {
-        // id is expected to be the uuid in all cases!
-        $this->product = page('page://'.$this->id); // @phpstan-ignore-line
+        if ($uuid instanceof ProductPage) {
+            $this->product = $uuid;
+            // id is expected to be the uuid in all cases!
+            $this->uuid = $uuid->uuid()->id();
+        } elseif (is_string($uuid)) {
+            $this->product = page('page://'.$this->uuid)->template()->name() === 'product' ? page('page://'.$this->uuid) : null;
+        }
     }
 
     public function increment(int $amount = 1): int
     {
-        $new = $this->quantity + $amount;
-        $max = $this->product()?->maxAmountPerOrder();
-
-        if ($max && $new > $max) {
-            $new = $max;
-            kart()->message('bnomei.kart.max-amount-per-order', 'cart');
-        }
-
-        $this->quantity = $new;
-
-        return $this->quantity;
+        return $this->setQuantity($this->quantity + $amount);
     }
 
     public function decrement(int $amount = 1): int
     {
-        $new = $this->quantity - $amount;
+        return $this->setQuantity($this->quantity - $amount);
+    }
+
+    public function setQuantity(int $amount = 1): int
+    {
+        $new = $amount;
         $max = $this->product()?->maxAmountPerOrder();
 
         if ($max && $new > $max) {
@@ -51,7 +52,7 @@ class CartLine
 
         $this->quantity = $new;
 
-        if ($this->quantity <= 0) {
+        if ($this->quantity < 0) {
             $this->quantity = 0;
         }
 
@@ -68,11 +69,15 @@ class CartLine
      */
     public function id(): string
     {
-        return $this->product()?->uuid()->id() ?? $this->id;
+        return $this->product()?->uuid()->id() ?? $this->uuid;
     }
 
-    public function product(): ?ProductPage
+    public function product(bool $refresh = false): ProductPage|Page|null
     {
+        if ($refresh) {
+            $this->product = page('page://'.$this->uuid)->template()->name() === 'product' ? page('page://'.$this->uuid) : null;
+        }
+
         return $this->product;
     }
 
@@ -90,7 +95,7 @@ class CartLine
     public function toArray(): array
     {
         return [
-            // 'id' => $this->id(), // can be inferred from key of array
+            // 'id' => $this->id(), // can be inferred from key of array in the CART (not cartline)
             'quantity' => $this->quantity(),
         ];
     }

@@ -320,6 +320,11 @@ App::plugin(
                     $newPage->updateInvoiceNumber();
                 }
             },
+            'page.delete:after' => function (bool $status, Kirby\Cms\Page $page) {
+                if ($page instanceof StockPage) {
+                    kirby()->cache('bnomei.kart.stocks')->flush();
+                }
+            },
             /*
             // KART
             'kart.cart.completed' => function (?User $user = null, ?OrderPage $order = null): void {

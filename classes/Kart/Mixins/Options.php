@@ -26,8 +26,9 @@ trait Options
             return $this->options;
         }
 
-        $option = A::get($this->options, $key);
-        if (! $option) {
+        $notSet = '%%UNDEFINED%%';
+        $option = A::get($this->options, $key, $notSet);
+        if ($option === $notSet) {
             $option = kirby()->option('bnomei.kart.'.$key, $default);
             $this->options[$key] = $option;
         }
@@ -45,5 +46,10 @@ trait Options
         }
 
         return $option;
+    }
+
+    public function setOption(string $key, mixed $value): void
+    {
+        $this->options[$key] = $value;
     }
 }

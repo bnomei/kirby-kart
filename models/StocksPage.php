@@ -84,10 +84,13 @@ class StocksPage extends Page
     /**
      * @kql-allowed
      */
-    public function stockPages(?string $id = null): Pages
+    public function stockPages(ProductPage|string|null $id = null): Pages
     {
         $c = $this->children();
         if ($id !== null) {
+            if ($id instanceof ProductPage) {
+                $id = $id->uuid()->toString();
+            }
             $c = $c->filterBy(fn ($page) => $page->page()->toPage()?->uuid()->toString() === $id);
         }
 
@@ -161,7 +164,7 @@ class StocksPage extends Page
         return $count > 0;
     }
 
-    public function updateStock(ProductPage $product, int $quantity): ?int
+    public function updateStock(ProductPage $product, int $quantity, bool $set = false): ?int
     {
         /** @var StockPage $stockPage */
         $stockPage = $this->stockPages($product->uuid()->toString())->first();
@@ -169,6 +172,6 @@ class StocksPage extends Page
             return null;
         }
 
-        return $stockPage->updateStock($quantity);
+        return $stockPage->updateStock($quantity, true, $set);
     }
 }
