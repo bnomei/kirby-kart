@@ -10,4 +10,10 @@
 
 namespace Bnomei\Kart;
 
-class Wishlist extends Cart {}
+class Wishlist extends Cart
+{
+    public function __construct(?string $id = 'wishlist', array $items = [])
+    {
+        parent::__construct($id, $items);
+    }
+}

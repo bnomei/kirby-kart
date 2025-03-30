@@ -119,7 +119,7 @@ class StockPage extends Page
             kart()->queue()->push([
                 'page' => $this->uuid()->toString(),
                 'method' => 'updateStock',
-                'payload' => [
+                'data' => [
                     'amount' => $amount,
                     'queue' => false,
                     'set' => $set,

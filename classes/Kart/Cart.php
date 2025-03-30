@@ -29,7 +29,7 @@ class Cart
 
     private Kart $kart;
 
-    public function __construct(string $id, array $items = [])
+    public function __construct(?string $id = 'cart', array $items = [])
     {
         $this->id = $id;
         $this->kirby = kirby();
