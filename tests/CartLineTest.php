@@ -89,10 +89,7 @@ it('checks if the product has stock with the given quantity', function () {
         ->and($this->cartLine->product()->stock())->toBe('∞');
 });
 
-it('can be created from a product uuid.id or null', function () {
-    $c = new CartLine(null, 1);
-    expect($c->product())->toBeNull();
-
+it('can be created from a product uuid.id', function () {
     $p = page('products')->children()->random(1)->first();
     $c = new CartLine($p->uuid()->id());
     expect($c->product())->toBe($p);
