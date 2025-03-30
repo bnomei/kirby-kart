@@ -24,6 +24,7 @@
     <source>
         <include>
             <directory suffix=".php">classes</directory>
+            <directory suffix=".php">models</directory>
         </include>
     </source>
 </phpunit>
