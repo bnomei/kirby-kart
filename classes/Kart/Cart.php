@@ -52,6 +52,11 @@ class Cart
         ]);
     }
 
+    public function id(): string
+    {
+        return $this->id;
+    }
+
     public function add(ProductPage|array|string|null $product, int $amount = 1): int
     {
         // Merx compatibility

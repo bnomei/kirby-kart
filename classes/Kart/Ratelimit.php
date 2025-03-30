@@ -17,7 +17,7 @@ class Ratelimit
     public static function check(Visitor|string|null $ip): bool
     {
         $kirby = kirby();
-        if (! kart()->option('ratelimit.enabled')) {
+        if (! kart()->option('middlewares.ratelimit.enabled')) {
             return true;
         }
 
@@ -29,7 +29,7 @@ class Ratelimit
         $rateLimitResetIntervalInSeconds = 60;
 
         $ip = $ip ?? strval($kirby->visitor()->ip());
-        $limit = intval(kart()->option('ratelimit.limit')); // 12 per minute within 1 hour
+        $limit = intval(kart()->option('middlewares.ratelimit.limit')); // 12 per minute within 1 hour
         $key = sha1(__DIR__.$ip.date('Ymd'));
         [$expireAt, $count] = $kirby->cache('bnomei.kart.ratelimit')->get(
             $key,
@@ -58,5 +58,14 @@ class Ratelimit
         $kirby->cache('bnomei.kart.ratelimit')->set($key, [$expireAt, $count], $cacheDurationInMinutes); // store for 1 hour
 
         return true;
+    }
+
+    public static function flush(?string $ip = null): void
+    {
+        $kirby = kirby();
+        $ip = $ip ?? strval($kirby->visitor()->ip());
+        $key = sha1(__DIR__.$ip.date('Ymd'));
+
+        $kirby->cache('bnomei.kart.ratelimit')->remove($key);
     }
 }
