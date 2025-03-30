@@ -21,12 +21,12 @@ class CartLine
         private ProductPage|Page|string|null $uuid, // need to be named `id` for Collections to use it as key
         private int $quantity = 1,
     ) {
-        if ($uuid instanceof ProductPage) {
-            $this->product = $uuid;
+        if ($this->uuid instanceof ProductPage) {
+            $this->product = $this->uuid;
             // id is expected to be the uuid in all cases!
             $this->uuid = $uuid->uuid()->id();
-        } elseif (is_string($uuid)) {
-            $this->product = page('page://'.$this->uuid)->template()->name() === 'product' ? page('page://'.$this->uuid) : null;
+        } elseif (is_string($this->uuid)) {
+            $this->product = page('page://'.$this->uuid) instanceof ProductPage ? page('page://'.$this->uuid) : null;
         }
     }
 
@@ -75,7 +75,7 @@ class CartLine
     public function product(bool $refresh = false): ProductPage|Page|null
     {
         if ($refresh) {
-            $this->product = page('page://'.$this->uuid)->template()->name() === 'product' ? page('page://'.$this->uuid) : null;
+            $this->product = page('page://'.$this->uuid) instanceof ProductPage ? page('page://'.$this->uuid) : null;
         }
 
         return $this->product;

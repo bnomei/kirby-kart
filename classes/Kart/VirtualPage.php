@@ -53,7 +53,6 @@ class VirtualPage extends Obj
         $this->content([]);
         $this->raw([]);
         $this->template('default'); // => model
-        $this->title(''); // => slug & id
         // $this->uuid(Uuid::generate()); // handled externally
 
         // load
@@ -76,8 +75,6 @@ class VirtualPage extends Obj
         } elseif ($path instanceof Closure) {
             return $path($data);
         }
-
-        return null; // @phpstan-ignore-line
     }
 
     public function __get(string $property): mixed
@@ -106,6 +103,7 @@ class VirtualPage extends Obj
                 $this->content ?? [],
                 $value
             );
+            ksort($this->content);
         } else {
             $this->$property = $value;
         }
@@ -145,6 +143,8 @@ class VirtualPage extends Obj
                 $result['content'][$key] = Yaml::encode($value);
             }
         }
+
+        ksort($result['content']);
 
         unset($result['parent']); // do not expose the parent
 
