@@ -13,7 +13,6 @@ namespace Bnomei\Kart;
 use Kirby\Cms\App;
 use Kirby\Cms\Collection;
 use Kirby\Cms\User;
-use Kirby\Content\Field;
 use Kirby\Toolkit\A;
 use Kirby\Uuid\Uuid;
 use ProductPage;
