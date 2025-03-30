@@ -1,0 +1,38 @@
+name: stocks
+options:
+  preview: false
+  changeSlug: false
+  changeStatus: false
+  changeTemplate: false
+  delete: false
+  duplicate: false
+  move: false
+  sort: false
+sections:
+  stats:
+    label: bnomei.kart.summary
+    type: stats
+    reports:
+      - 
+        label: bnomei.kart.products
+        value: '{{ page.children.count }}'
+        link: '{{ site.kart.page("products").panel.url }}'
+      - 
+        label: bnomei.kart.stocks
+        value: '{{ page.children.sumField("stock").toInt }}'
+      - 
+        label: bnomei.kart.latest
+        value: '{{ page.children.sortBy("timestamp", "desc").first.timestamp }}'
+  meta:
+    type: fields
+    fields:
+      line:
+        type: line
+  stocks:
+    label: bnomei.kart.stocks
+    type: pages
+    search: true
+    template: stock
+    sortBy: timestamp desc
+    text: '[{{ page.stockPad(3) }}] {{ page.page.toPage.title }}'
+    info: '{{ page.title }} ・ {{ page.timestamp }}'
