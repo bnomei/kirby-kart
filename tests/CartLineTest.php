@@ -82,7 +82,9 @@ it('checks if the product has stock with the given quantity', function () {
     // infinite stock
     /** @var StocksPage $stocks */
     $stocks = kart()->page(\Bnomei\Kart\ContentPageEnum::STOCKS);
-    $stocks->stockPages($this->cartLine->product())->first()?->delete(true); // none = infinite
+    kirby()->impersonate('kirby', function () use ($stocks) {
+        $stocks->stockPages($this->cartLine->product())->first()?->delete(true); // none = infinite
+    });
     expect($this->cartLine->hasStockForQuantity())->toBeTrue()
         ->and($this->cartLine->product()->stock())->toBe('∞');
 });

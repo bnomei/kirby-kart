@@ -94,7 +94,7 @@ it('can handle jobs on pages', function () {
     $this->q->push([
         'page' => 'home',
         'method' => 'changeStatus',
-        'data' => ['listed'],
+        'data' => ['unlisted'],
     ]);
     $this->q->push([
         'page' => 'home',
@@ -102,7 +102,7 @@ it('can handle jobs on pages', function () {
     ]);
     $this->q->process();
     expect($this->q->count())->toBe(0)
-        ->and($this->q->count(true))->toBe(2); // because of missing impersonate
+        ->and($this->q->count(true))->toBe(1); // because of missing impersonate
 });
 
 it('can handle jobs on classes', function () {
