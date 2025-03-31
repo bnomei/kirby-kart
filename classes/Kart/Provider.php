@@ -113,7 +113,7 @@ abstract class Provider
         return $this->kirby;
     }
 
-    public function sync(ContentPageEnum|string|null $sync): int
+    public function sync(ContentPageEnum|string|null $sync = null): int
     {
         $all = array_map(fn ($c) => $c->value, ContentPageEnum::cases());
 
@@ -146,7 +146,7 @@ abstract class Provider
         return $this->kirby()->cache('bnomei.kart.'.$this->name);
     }
 
-    public function updatedAt(ContentPageEnum|string|null $sync): string
+    public function updatedAt(ContentPageEnum|string|null $sync = null): string
     {
         $u = 'updatedAt';
         if ($sync instanceof ContentPageEnum) {

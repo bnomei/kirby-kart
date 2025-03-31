@@ -1,0 +1,16 @@
+name: deleted
+title: Soft Deleted User
+icon: cancel
+permissions:
+  access: false
+  files: false
+  languages: false
+  pages: false
+  site: false
+  user: false
+  users: false
+fields:
+  cart:
+    type: hidden
+  wishlist:
+    type: hidden

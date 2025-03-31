@@ -92,11 +92,6 @@ class Router
         return null;
     }
 
-    public static function back(): ?string
-    {
-        return kirby()->request()->header('referer');
-    }
-
     public static function middlewares(array $middlewares = []): ?int
     {
         if (count($middlewares) === 0) {
@@ -119,83 +114,6 @@ class Router
         }
 
         return null;
-    }
-
-    public static function hasUser(): ?int
-    {
-        $user = kirby()->user();
-        if (! $user) {
-            return 401;
-        }
-
-        return null;
-    }
-
-    public static function hasAdmin(): ?int
-    {
-        $user = kirby()->user();
-        if (! $user || $user->isAdmin() === false) {
-            return 401;
-        }
-
-        return null;
-    }
-
-    public static function hasMagicLink(): ?int
-    {
-        if (A::has((array) kirby()->option('auth.methods', []), 'kart-magic-link') === false) {
-            return 405;
-        }
-
-        return null;
-    }
-
-    public static function hasRatelimit(): ?int
-    {
-        if (! kart()->option('ratelimit.enabled')) {
-            return null;
-        }
-
-        return Ratelimit::check(kirby()->visitor()->ip()) ? null : 429;
-    }
-
-    public static function hasCsrf(): ?int
-    {
-        if (! kart()->option('middlewares.csrf')) {
-            return null;
-        }
-
-        $token = self::get('token');
-
-        // prefer from header if it exists
-        $token = kirby()->request()->header(
-            strval(kart()->option('router.header.csrf')),
-            $token
-        );
-
-        return is_string($token) && csrf($token) ? null : 401;
-    }
-
-    public static function get(string $key, mixed $default = null): mixed
-    {
-        $request = kirby()->request();
-        $value = $request->get($key, $default);
-
-        $decrypted = self::decrypt($request->get(self::ENCRYPTED_QUERY));
-        if (is_array($decrypted)) {
-            $value = A::get($decrypted, $key, $value);
-        }
-
-        return $value;
-    }
-
-    public static function decrypt(?string $props = null): mixed
-    {
-        if (empty($props)) {
-            return null;
-        }
-
-        return Kart::decrypt($props, kart()->option('router.encryption'), true); // @phpstan-ignore-line
     }
 
     public static function go(
@@ -270,6 +188,28 @@ class Router
         return null;
     }
 
+    public static function get(string $key, mixed $default = null): mixed
+    {
+        $request = kirby()->request();
+        $value = $request->get($key, $default);
+
+        $decrypted = self::decrypt($request->get(self::ENCRYPTED_QUERY));
+        if (is_array($decrypted)) {
+            $value = A::get($decrypted, $key, $value);
+        }
+
+        return $value;
+    }
+
+    public static function decrypt(?string $props = null): mixed
+    {
+        if (empty($props)) {
+            return null;
+        }
+
+        return Kart::decrypt($props, kart()->option('router.encryption'), true); // @phpstan-ignore-line
+    }
+
     public static function getSnippet(?string $path = null): ?string
     {
         $path ??= strval(Router::get('snippet', kirby()->request()->path()->toString()));
@@ -287,16 +227,101 @@ class Router
         return null;
     }
 
+    public static function resolveModelsFromRequest(): array
+    {
+        $models = [
+            'page' => null,
+            'product' => null,
+            'user' => kirby()->user(),
+            'site' => kirby()->site(),
+            'kirby' => kirby(),
+        ];
+        foreach ($models as $key => $value) {
+            $value = self::get($key); // might be encrypted
+            if (empty($value) || ! is_string($value)) {
+                continue;
+            }
+
+            switch ($key) {
+                case 'page':
+                    $models['page'] = kirby()->page('page://'.$value);
+                    break;
+                case 'product':
+                    $models['product'] = kirby()->page('page://'.$value);
+                    break;
+                case 'user':
+                    $models['user'] ??= kirby()->user($value);
+                    break;
+                default: break;
+            }
+        }
+
+        return $models;
+    }
+
+    public static function back(): ?string
+    {
+        return kirby()->request()->header('referer');
+    }
+
+    public static function hasUser(): ?int
+    {
+        $user = kirby()->user();
+        if (! $user) {
+            return 401;
+        }
+
+        return null;
+    }
+
+    public static function hasAdmin(): ?int
+    {
+        $user = kirby()->user();
+        if (! $user || $user->isAdmin() === false) {
+            return 401;
+        }
+
+        return null;
+    }
+
+    public static function hasMagicLink(): ?int
+    {
+        if (A::has((array) kirby()->option('auth.methods', []), 'kart-magic-link') === false) {
+            return 405;
+        }
+
+        return null;
+    }
+
+    public static function hasRatelimit(): ?int
+    {
+        if (! kart()->option('ratelimit.enabled')) {
+            return null;
+        }
+
+        return Ratelimit::check(kirby()->visitor()->ip()) ? null : 429;
+    }
+
+    public static function hasCsrf(): ?int
+    {
+        if (! kart()->option('middlewares.csrf')) {
+            return null;
+        }
+
+        $token = self::get('token');
+
+        // prefer from header if it exists
+        $token = kirby()->request()->header(
+            strval(kart()->option('router.header.csrf')),
+            $token
+        );
+
+        return is_string($token) && csrf($token) ? null : 401;
+    }
+
     public static function account_delete(): string
     {
         return self::factory(self::ACCOUNT_DELETE);
-    }
-
-    public static function login(?string $email = null): string
-    {
-        return self::factory(self::LOGIN, params: array_filter([
-            'email' => $email,
-        ]));
     }
 
     public static function factory(string $path, array $query = [], array $params = []): string
@@ -333,6 +358,20 @@ class Router
         return [
             self::ENCRYPTED_QUERY => Kart::encrypt($query, $password, true),
         ];
+    }
+
+    public static function modelsFromRequest(): array
+    {
+        return [
+            'page' => page(kirby()->request()->path()->toString())?->uuid()->id(),
+        ];
+    }
+
+    public static function login(?string $email = null): string
+    {
+        return self::factory(self::LOGIN, params: array_filter([
+            'email' => $email,
+        ]));
     }
 
     public static function logout(): string
@@ -496,44 +535,5 @@ class Router
         return self::factory(self::SIGNUP_MAGIC, params: array_filter([
             'email' => $email,
         ]));
-    }
-
-    public static function modelsFromRequest(): array
-    {
-        return [
-            'page' => page(kirby()->request()->path()->toString())?->uuid()->id(),
-        ];
-    }
-
-    public static function resolveModelsFromRequest(): array
-    {
-        $models = [
-            'page' => null,
-            'product' => null,
-            'user' => kirby()->user(),
-            'site' => kirby()->site(),
-            'kirby' => kirby(),
-        ];
-        foreach ($models as $key => $value) {
-            $value = self::get($key); // might be encrypted
-            if (empty($value) || ! is_string($value)) {
-                continue;
-            }
-
-            switch ($key) {
-                case 'page':
-                    $models['page'] = kirby()->page('page://'.$value);
-                    break;
-                case 'product':
-                    $models['product'] = kirby()->page('page://'.$value);
-                    break;
-                case 'user':
-                    $models['user'] ??= kirby()->user($value);
-                    break;
-                default: break;
-            }
-        }
-
-        return $models;
     }
 }

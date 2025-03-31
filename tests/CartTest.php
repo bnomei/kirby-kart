@@ -39,10 +39,14 @@ it('can be initialized with products and quantities', function () {
         ->and($this->cart->count())->toBe(3)
         ->and($this->cart->quantity())->toBeGreaterThan(0)
         ->and($this->cart->isEmpty())->toBeFalse()
-        ->and($this->cart->isNotEmpty())->toBeTrue();
+        ->and($this->cart->isNotEmpty())->toBeTrue()
+        ->and($this->cart->subtotal())->toBeGreaterThan(0)
+        ->and($this->cart->formattedSubtotal())->toBeString();
 
-    $p = $this->cart->lines()->first()->product();
-    expect($this->cart->has($p))->toBeTrue();
+    $f = $this->cart->lines()->first();
+    $p = $f->product();
+    expect($this->cart->has($f))->toBeTrue()
+        ->and($this->cart->has($p))->toBeTrue();
 
     $this->cart->remove($p, 999);
     expect($this->cart->count())->toBe(2)
@@ -255,4 +259,11 @@ it('can merge with the cart of the user', function () {
     });
 });
 
-it('can complete a cart', function () {})->todo();
+it('can complete a cart', function () {
+    $this->cart = new Cart(
+        'cart',
+        page('products')->children()->random(3)->toArray(fn ($p) => rand(1, 5))
+    );
+
+    expect($this->cart->complete())->toBeString();
+});

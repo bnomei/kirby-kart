@@ -23,7 +23,7 @@ class Kirby extends Provider
 {
     protected string $name = ProviderEnum::KIRBY->value;
 
-    public function updatedAt(ContentPageEnum|string|null $sync): string
+    public function updatedAt(ContentPageEnum|string|null $sync = null): string
     {
         return strval(t('bnomei.kart.now'));
     }
@@ -40,7 +40,7 @@ class Kirby extends Provider
 
     public function completed(array $data = []): array
     {
-        $sessionId = get('session_id');
+        $sessionId = A::get($data, 'session_id', get('session_id'));
         if (! $sessionId || $sessionId !== $this->kirby->session()->get('bnomei.kart.'.$this->name.'.session_id')) {
             return [];
         }
