@@ -14,9 +14,9 @@ beforeAll(function () {
     Testing::beforeAll();
 });
 
-afterAll(function () {
-    Testing::afterAll();
-});
+// afterAll(function () {
+//    Testing::afterAll();
+// });
 
 beforeEach(function () {
     $this->cartLine = new CartLine(

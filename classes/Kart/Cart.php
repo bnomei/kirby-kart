@@ -28,6 +28,8 @@ class Cart
 
     private Kart $kart;
 
+    private ?string $sid = null;
+
     public function __construct(string $id = 'cart', array $items = [])
     {
         $this->id = $id;
@@ -41,10 +43,16 @@ class Cart
         $this->lines = new Collection;
         foreach ($items as $uuid => $line) {
             $this->add(
-                $this->kirby->page('page://'.$uuid),
+                $this->kirby->page($uuid) ?? $this->kirby->page('page://'.$uuid),
                 A::get($line, 'quantity')
             );
         }
+        // NOTE: do NOT save here, handled separately
+        /*
+        if ($this->lines->count()) {
+            $this->save();
+        }
+        */
 
         kirby()->trigger('kart.'.$this->id.'.created', [
             $this->id => $this,
@@ -56,16 +64,29 @@ class Cart
         return $this->id;
     }
 
+    public function sessionToken(?string $token = null): string
+    {
+        if ($token) {
+            $this->sid = $token;
+        }
+
+        if (! $this->sid) {
+            $this->sid = $this->kirby->session()->token() ?? Uuid::generate();
+        }
+
+        return $this->sid;
+    }
+
     public function add(ProductPage|array|string|null $product, int $amount = 1): int
     {
         // Merx compatibility
         if (is_array($product)) {
+            $amount = intval(A::get($product, 'quantity', $amount));
             $product = $this->kirby->page($product['id']);
-            $amount = A::get($product, 'quantity', $amount);
         }
 
         if (is_string($product)) {
-            $product = $this->kirby->page($product);
+            $product = $this->kirby->page($product) ?? $this->kirby->page('page://'.$product);
         }
 
         if (! $product) {
@@ -78,7 +99,8 @@ class Cart
         } else {
             $item = new CartLine(
                 $product->uuid()->id(),
-                $amount
+                $amount,
+                $this
             );
             $this->lines->add($item);
         }
@@ -87,7 +109,7 @@ class Cart
             $this->lines = $this->lines->flip()->slice(0, 1);
         }
 
-        $this->save();
+        // $this->save(); // responsibility deferred to callee
 
         $this->kirby->trigger('kart.'.$this->id.'.add', [
             'product' => $product,
@@ -99,8 +121,17 @@ class Cart
         return $item->quantity();
     }
 
+    public function fix(): void
+    {
+        /** @var CartLine $line */
+        foreach ($this->lines as $line) {
+            $line->fix();
+        }
+    }
+
     public function canCheckout(): bool
     {
+
         if ($this->lines()->count() === 0) {
             return false;
         }
@@ -115,7 +146,7 @@ class Cart
                 return false;
             }
 
-            $stock = $line->product()?->stock(withHold: true);
+            $stock = $line->product()?->stock(withHold: $this->sessionToken());
             if (is_int($stock) && $stock < $line->quantity()) {
                 kart()->message('bnomei.kart.out-of-stock', 'checkout');
 
@@ -126,14 +157,14 @@ class Cart
         return true;
     }
 
-    public function save(): void
+    public function save(bool $writeToUser = true): void
     {
         $this->kirby->session()->set($this->id, $this->lines->toArray());
 
         // NOTE: no impersonation as that would shift to the kirby user.
         // retrieve a mutable copy now, just $this->kirby->user() fails.
         $user = $this->kirby->user() ? $this->kirby->user($this->kirby->user()->id()) : null;
-        $user?->update([
+        $writeToUser && $user?->update([
             'kart_'.$this->id => $this->lines->toArray(),
         ]);
     }
@@ -141,6 +172,16 @@ class Cart
     public function count(): int
     {
         return $this->lines()->count();
+    }
+
+    public function isEmpty(): bool
+    {
+        return $this->lines()->count() === 0;
+    }
+
+    public function isNotEmpty(): bool
+    {
+        return ! $this->isEmpty();
     }
 
     /**
@@ -187,12 +228,12 @@ class Cart
     {
         // Merx compatibility
         if (is_array($product)) {
-            $product = $this->kirby->page($product['id']);
-            $amount = A::get($product, 'quantity', $amount);
+            $amount = intval(A::get($product, 'quantity', $amount));
+            $product = $this->kirby->page($product['id']) ?? $this->kirby->page('page://'.$product['id']);
         }
 
         if (is_string($product)) {
-            $product = $this->kirby->page($product);
+            $product = $this->kirby->page($product) ?? $this->kirby->page('page://'.$product);
         }
 
         if (! $product) {
@@ -210,7 +251,7 @@ class Cart
             $item = null;
         }
 
-        $this->save();
+        // $this->save(); // responsibility deferred to callee
 
         $this->kirby->trigger('kart.'.$this->id.'.remove', [
             'product' => $product,
@@ -231,7 +272,7 @@ class Cart
     public function clear(): void
     {
         $this->lines = new Collection;
-        $this->save();
+        // $this->save(); // responsibility deferred to callee
 
         $this->kirby->trigger('kart.'.$this->id.'.clear', [
             'user' => $this->kirby->user(),
@@ -257,6 +298,9 @@ class Cart
             return false; // no merging for customers
         }
 
+        // refresh the user in case the cart changed
+        $user = $this->kirby->user($user->id());
+
         $cartname = 'kart_'.$this->id;
         $cart = $user->$cartname();
         if ($cart->isEmpty()) {
@@ -270,10 +314,16 @@ class Cart
 
         foreach ($lines as $uuid => $line) {
             $this->add(
-                $this->kirby->page('page://'.$uuid),
+                $this->kirby->page($uuid) ?? $this->kirby->page('page://'.$uuid),
                 A::get($line, 'quantity')
             );
         }
+        // NOTE: done by callee
+        /*
+        if ($this->lines()->count()) {
+            $this->save();
+        }
+        */
 
         return true;
     }
@@ -301,6 +351,7 @@ class Cart
         ]);
 
         $this->clear();
+        $this->save();
 
         return $this->kirby->session()->pull(
             'kart.redirect.success',
@@ -323,9 +374,9 @@ class Cart
             }
 
             $holdKey = 'hold-'.Kart::hash($product->uuid()->toString());
-            $holds = $this->kirby->cache('bnomei.kart.stocks')->get($holdKey, []);
+            $holds = $this->kirby->cache('bnomei.kart.stocks-holds')->get($holdKey, []);
             $holds = array_filter($holds, fn ($hold) => $hold['expires'] > time()); // discard outdated
-            $sid = $this->kirby->session()->token() ?? Uuid::generate();
+            $sid = $this->sessionToken();
             $holds[$sid] = [
                 'product' => $product->uuid()->id(),
                 'expires' => time() + $expire * 60,
@@ -333,7 +384,7 @@ class Cart
             ];
 
             // the cache does not have to live longer than the expiry of each line
-            $this->kirby->cache('bnomei.kart.stocks')->set($holdKey, $holds, intval($expire));
+            $this->kirby->cache('bnomei.kart.stocks-holds')->set($holdKey, $holds, intval($expire));
             $hasOne = true;
         }
 
@@ -344,7 +395,10 @@ class Cart
     {
         if (! $data) {
             $data = ['items' => $this->lines->toArray(
-                fn ($line) => ['key' => [$line->product()->uuid()->id()]]
+                fn ($line) => [
+                    'key' => [$line->product()->uuid()->id()],
+                    'quantity' => $line->quantity(),
+                ]
             )];
         }
         $expire = kart()->option('stocks.hold');
@@ -354,14 +408,14 @@ class Cart
 
         $hasOne = false;
         foreach ($data['items'] as $item) {
-            $product = $this->kirby->page('page://'.$item['key'][0]);
+            $product = $this->kirby->page($item['key'][0]) ?? $this->kirby->page('page://'.$item['key'][0]);
             if (! $product) {
                 continue;
             }
             $holdKey = 'hold-'.Kart::hash($product->uuid()->toString());
-            $holds = $this->kirby->cache('bnomei.kart.stocks')->get($holdKey, []);
-            $sid = $this->kirby->session()->token();
-            if ($sid && array_key_exists($sid, $holds)) {
+            $holds = $this->kirby->cache('bnomei.kart.stocks-holds')->get($holdKey, []);
+            $sid = $this->sessionToken();
+            if (array_key_exists($sid, $holds)) {
                 unset($holds[$sid]);
                 $hasOne = true;
             } else {
@@ -373,7 +427,7 @@ class Cart
                     $hasOne = true;
                 }
             }
-            $this->kirby->cache('bnomei.kart.stocks')->set($holdKey, $holds, intval($expire));
+            $this->kirby->cache('bnomei.kart.stocks-holds')->set($holdKey, $holds, intval($expire));
         }
 
         return $hasOne;

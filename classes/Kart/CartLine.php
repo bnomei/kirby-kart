@@ -20,6 +20,7 @@ class CartLine
     public function __construct(
         private ProductPage|Page|string $uuid, // need to be named `id` for Collections to use it as key
         private int $quantity = 1,
+        private ?Cart $cart = null,
     ) {
         if ($this->uuid instanceof ProductPage) {
             $this->product = $this->uuid;
@@ -40,12 +41,12 @@ class CartLine
         return $this->setQuantity($this->quantity - $amount);
     }
 
-    public function setQuantity(int $amount = 1): int
+    public function setQuantity(int $amount = 1, bool $force = false): int
     {
         $new = $amount;
         $max = $this->product()?->maxAmountPerOrder();
 
-        if ($max && $new > $max) {
+        if (! $force && $max && $new > $max) {
             $new = $max;
             kart()->message('bnomei.kart.max-amount-per-order', 'cart');
         }
@@ -57,6 +58,20 @@ class CartLine
         }
 
         return $this->quantity;
+    }
+
+    public function fix(): bool
+    {
+        $old = $this->quantity();
+        $new = $old;
+
+        if (! $this->hasStockForQuantity()) {
+            $new = $this->setQuantity($this->product()?->stock(withHold: $this->cart?->sessionToken()));
+        }
+
+        $updated = $this->setQuantity($new); // call will enforce maxapo even with same quantity
+
+        return $old !== $updated;
     }
 
     public function key(): string // Merx
@@ -83,7 +98,7 @@ class CartLine
 
     public function hasStockForQuantity(): bool
     {
-        $stock = $this->product()?->stock(withHold: true);
+        $stock = $this->product()?->stock(withHold: $this->cart?->sessionToken());
 
         if (is_string($stock)) { // unknown stock = unlimited
             return true;

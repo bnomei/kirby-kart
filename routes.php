@@ -310,6 +310,7 @@ return function (App $kirby) {
                 kart()->wishlist()->add(
                     page('page://'.Router::get('product'))
                 );
+                kart()->wishlist()->save();
 
                 return Router::go(Router::idWithParams(Router::WISHLIST_ADD));
             },
@@ -329,6 +330,7 @@ return function (App $kirby) {
                     page('page://'.Router::get('product')),
                     999
                 );
+                kart()->wishlist()->save();
 
                 return Router::go(Router::idWithParams(Router::WISHLIST_REMOVE));
             },
@@ -347,10 +349,12 @@ return function (App $kirby) {
                 kart()->cart()->add(
                     page('page://'.Router::get('product'))
                 );
+                kart()->cart()->save();
                 kart()->wishlist()->remove(
                     page('page://'.Router::get('product')),
                     999
                 );
+                kart()->wishlist()->save();
 
                 return Router::go(Router::idWithParams(Router::WISHLIST_NOW));
             },
@@ -402,6 +406,7 @@ return function (App $kirby) {
                     page('page://'.Router::get('product')),
                     max(1, intval(Router::get('amount', 1)))
                 );
+                kart()->cart()->save();
 
                 return Router::go(Router::idWithParams(Router::CART_ADD));
             },
@@ -421,6 +426,7 @@ return function (App $kirby) {
                     page('page://'.Router::get('product')),
                     max(1, intval(Router::get('amount', 1)))
                 );
+                kart()->cart()->save();
 
                 if (! kart()->cart()->canCheckout()) {
                     Router::go($id);
@@ -444,6 +450,7 @@ return function (App $kirby) {
                     page('page://'.Router::get('product')),
                     max(1, intval(Router::get('amount', 1)))
                 );
+                kart()->cart()->save();
 
                 return Router::go(Router::idWithParams(Router::CART_REMOVE));
             },
@@ -481,9 +488,11 @@ return function (App $kirby) {
                     page('page://'.Router::get('product')),
                     999 // aka all
                 );
+                kart()->cart()->save();
                 kart()->wishlist()->add(
                     page('page://'.Router::get('product'))
                 );
+                kart()->wishlist()->save();
 
                 return Router::go(Router::idWithParams(Router::CART_LATER));
             },

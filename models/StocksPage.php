@@ -100,7 +100,7 @@ class StocksPage extends Page
     /**
      * @kql-allowed
      */
-    public function stock(?string $id = null, bool $withHold = false): ?int
+    public function stock(?string $id = null, ?string $withHold = null): ?int
     {
         $expire = kart()->option('expire');
         if (is_int($expire)) {
@@ -131,7 +131,11 @@ class StocksPage extends Page
 
         // decrement by stock in hold
         if ($withHold && $id && kart()->option('stocks.hold')) {
-            foreach ($this->kirby()->cache('bnomei.kart.stocks')->get('hold-'.Kart::hash($id), []) as $hold) {
+            foreach ($this->kirby()->cache('bnomei.kart.stocks-holds')->get('hold-'.Kart::hash($id), []) as $sid => $hold) {
+                if (strval($sid) === $withHold) {
+
+                    continue; // ignore own holds
+                }
                 if ($hold['expires'] < time()) {
                     continue; // will be removed on next set
                 }

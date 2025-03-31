@@ -235,7 +235,7 @@ class ProductPage extends Page
     /**
      * @kql-allowed
      */
-    public function stock(bool $withHold = false): int|string
+    public function stock(?string $withHold = null): int|string
     {
         /** @var StocksPage $stocks */
         $stocks = kart()->page(ContentPageEnum::STOCKS);
@@ -360,16 +360,6 @@ class ProductPage extends Page
     }
 
     /**
-     * @todo Not implemented
-     */
-    public function priceIds(): array
-    {
-        // return a list of all know priceIds for this product
-        // uses to find of the product was purchased with a given priceId
-        return [];
-    }
-
-    /**
      * @kql-allowed
      */
     public function firstGalleryImage(): ?File
@@ -393,11 +383,13 @@ class ProductPage extends Page
         return $this->maxapo()->isEmpty() ? intval(kart()->option('orders.order.maxapo')) : $this->maxapo()->toInt();
     }
 
-    public function updateStock(int $quantity, bool $set = false): ?int
+    public function updateStock(int $quantity, bool $set = false): ProductPage
     {
         /** @var StocksPage $stocks */
         $stocks = kart()->page(ContentPageEnum::STOCKS);
 
-        return $stocks->updateStock($this, $quantity, $set);
+        $stocks->updateStock($this, $quantity, $set);
+
+        return $this;
     }
 }

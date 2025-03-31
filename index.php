@@ -8,6 +8,7 @@
  * Unauthorized copying, modification, or distribution is prohibited.
  */
 
+use Bnomei\DotEnv;
 use Bnomei\Kart\Cart;
 use Bnomei\Kart\Kart;
 use Bnomei\Kart\License;
@@ -40,7 +41,7 @@ App::plugin(
     name: 'bnomei/kart',
     extends: [
         'options' => [
-            'license' => fn () => class_exists('\Bnomei\DotEnv') ? \Bnomei\DotEnv::getenv('KART_LICENSE_KEY') : '', // set your license from https://buy-kart.bnomei.com code in the config `bnomei.kart.license`
+            'license' => fn () => class_exists('\Bnomei\DotEnv') ? DotEnv::getenv('KART_LICENSE_KEY') : '', // set your license from https://buy-kart.bnomei.com code in the config `bnomei.kart.license`
             'cache' => [
                 'categories' => true,
                 'crypto' => true,
@@ -51,6 +52,7 @@ App::plugin(
                 'ratelimit' => true,
                 'stats' => true,
                 'stocks' => true,
+                'stocks-holds' => true,
                 'tags' => true,
 
                 // providers
@@ -157,7 +159,7 @@ App::plugin(
                 'paypal' => [],
                 'snipcart' => [],
                 'stripe' => [
-                    'secret_key' => fn () => class_exists('\Bnomei\DotEnv') ? \Bnomei\DotEnv::getenv('STRIPE_SECRET_KEY') : null,
+                    'secret_key' => fn () => class_exists('\Bnomei\DotEnv') ? DotEnv::getenv('STRIPE_SECRET_KEY') : null,
                     'checkout_options' => function (Kart $kart) {
                         // configure the checkout based on current kart instance
                         // https://docs.stripe.com/api/checkout/sessions/create
@@ -168,8 +170,8 @@ App::plugin(
             ],
             'turnstile' => [
                 'endpoint' => 'https://challenges.cloudflare.com/turnstile/v0/siteverify',
-                'sitekey' => fn () => class_exists('\Bnomei\DotEnv') ? \Bnomei\DotEnv::getenv('TURNSTILE_SITE_KEY') : null,
-                'secretkey' => fn () => class_exists('\Bnomei\DotEnv') ? \Bnomei\DotEnv::getenv('TURNSTILE_SECRET_KEY') : null,
+                'sitekey' => fn () => class_exists('\Bnomei\DotEnv') ? DotEnv::getenv('TURNSTILE_SITE_KEY') : null,
+                'secretkey' => fn () => class_exists('\Bnomei\DotEnv') ? DotEnv::getenv('TURNSTILE_SECRET_KEY') : null,
             ],
             'captcha' => [
                 'current' => function () {
@@ -281,11 +283,16 @@ App::plugin(
             },
             'user.login:after' => function (User $user, Session $session) {
                 kart()->cart()->merge($user);
+                kart()->cart()->save();
                 kart()->wishlist()->merge($user);
+                kart()->wishlist()->save();
             },
             'user.logout:after' => function (User $user, Session $session) {
+                kart()->cart()->releaseStock();
                 kart()->cart()->clear();
+                kart()->cart()->save(false);
                 kart()->wishlist()->clear();
+                kart()->wishlist()->save(false);
             },
             'user.create:after' => function (User $user) {
                 kirby()->cache('bnomei.kart.stats')->remove('customers');
@@ -295,6 +302,18 @@ App::plugin(
             },
             'user.delete:after' => function (bool $status, User $user) {
                 kirby()->cache('bnomei.kart.stats')->remove('customers');
+            },
+            'page.created:after' => function (Page $page) {
+                if ($page instanceof StocksPage) {
+                    kirby()->cache('bnomei.kart.stocks')->flush();
+                    kirby()->cache('bnomei.kart.stocks-holds')->flush();
+                } elseif ($page instanceof OrdersPage) {
+                    kirby()->cache('bnomei.kart.orders')->flush();
+                } elseif ($page instanceof ProductsPage) {
+                    kirby()->cache('bnomei.kart.categories')->flush();
+                    kirby()->cache('bnomei.kart.products')->flush();
+                    kirby()->cache('bnomei.kart.tags')->flush();
+                }
             },
             'page.update:before' => function (Page $page, array $values, array $strings): void {
                 if ($page instanceof StockPage) {
@@ -320,7 +339,7 @@ App::plugin(
                     $newPage->updateInvoiceNumber();
                 }
             },
-            'page.delete:after' => function (bool $status, Kirby\Cms\Page $page) {
+            'page.delete:after' => function (bool $status, Page $page) {
                 if ($page instanceof StockPage) {
                     kirby()->cache('bnomei.kart.stocks')->flush();
                 }
