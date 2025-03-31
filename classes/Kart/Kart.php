@@ -119,11 +119,11 @@ class Kart
 
     public static function encrypt(mixed $data, ?string $password = null, bool $json = false): string
     {
-        $password ??= option('crypto.password');
+        $password ??= kart()->option('crypto.password');
         if ($password instanceof Closure) {
             $password = $password();
         }
-        if ($password && is_string($password) && SymmetricCrypto::isAvailable()) {
+        if (! empty($password) && is_string($password) && SymmetricCrypto::isAvailable()) {
             if ($json || is_array($data)) {
                 $data = json_encode($data) ?: '';
             }
@@ -313,7 +313,7 @@ class Kart
         return $this->urls()->logout();
     }
 
-    public function sync(Page|string|null $page): string
+    public function sync(Page|string|null $page = null): string
     {
         return $this->urls()->sync($page);
     }

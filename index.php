@@ -73,6 +73,9 @@ App::plugin(
                 'enabled' => true,
                 'roles' => ['customer', 'member', 'admin'], // does NOT include `deleted`
             ],
+            'crypto' => [
+                'password' => fn () => class_exists('\Bnomei\DotEnv') ? DotEnv::getenv('CRYPTO_PASSWORD') : null,
+            ],
             'locale' => 'en_EN', // or current locale on multilanguage setups
             'currency' => 'EUR', // uppercase 3-letter code
             'successPage' => null, // id of the page to redirect to after checkout flow, defaults to page of order

@@ -8,7 +8,7 @@
         <testsuite name="PLUGIN">
             <directory suffix="Test.php">./tests</directory>
             <exclude>./tests/kirby</exclude>
-            <exclude>./vendor</exclude>
+            <exclude>./vendor/league/color-extractor/tests</exclude>
         </testsuite>
     </testsuites>
     <php>
