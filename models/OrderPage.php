@@ -242,6 +242,7 @@ class OrderPage extends Page
             if (! $key || $item->key()->toPage()?->id() === $key || $item->key()->toPage()?->uuid()->toString() === $key) {
                 $sum += $item->quantity()->toInt();
                 if ($oneIsEnough) {
+
                     return $sum;
                 }
             }

@@ -98,7 +98,7 @@ class OrdersPage extends Page
         );
     }
 
-    public function createOrder(array $data, ?User $customer): ?Page
+    public function createOrder(array $data, ?User $customer = null): ?Page
     {
         if (! $this->kart()->option('orders.enabled')) {
             return null;

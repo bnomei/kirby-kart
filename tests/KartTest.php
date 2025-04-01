@@ -8,7 +8,15 @@
  * Unauthorized copying, modification, or distribution is prohibited.
  */
 
+use Bnomei\Kart\Cart;
+use Bnomei\Kart\ContentPageEnum;
 use Bnomei\Kart\Kart;
+use Bnomei\Kart\Provider;
+use Bnomei\Kart\Queue;
+use Bnomei\Kart\Urls;
+use Bnomei\Kart\Wishlist;
+use Kirby\Cms\App;
+use Kirby\Cms\Pages;
 use Kirby\Toolkit\Str;
 
 beforeAll(function () {
@@ -16,7 +24,7 @@ beforeAll(function () {
 });
 
 afterAll(function () {
-    Testing::afterAll();
+    // Testing::afterAll();
 });
 
 it('has a singleton', function () {
@@ -24,7 +32,7 @@ it('has a singleton', function () {
 });
 
 it('has an url collection', function () {
-    expect(kart()->urls())->toBeInstanceOf(\Bnomei\Kart\Urls::class);
+    expect(kart()->urls())->toBeInstanceOf(Urls::class);
 });
 
 it('has various shorthands for urls', function () {
@@ -35,20 +43,20 @@ it('has various shorthands for urls', function () {
 });
 
 it('has a queue', function () {
-    expect(kart()->queue())->toBeInstanceOf(\Bnomei\Kart\Queue::class);
+    expect(kart()->queue())->toBeInstanceOf(Queue::class);
 });
 
 it('has a kirby ref', function () {
-    expect(kart()->kirby())->toBeInstanceOf(\Kirby\Cms\App::class);
+    expect(kart()->kirby())->toBeInstanceOf(App::class);
 });
 
 it('has a cart and a wishlist', function () {
-    expect(kart()->cart())->toBeInstanceOf(\Bnomei\Kart\Cart::class)
-        ->and(kart()->wishlist())->toBeInstanceOf(\Bnomei\Kart\Wishlist::class);
+    expect(kart()->cart())->toBeInstanceOf(Cart::class)
+        ->and(kart()->wishlist())->toBeInstanceOf(Wishlist::class);
 });
 
 it('has the current provider', function () {
-    expect(kart()->provider())->toBeInstanceOf(\Bnomei\Kart\Provider::class);
+    expect(kart()->provider())->toBeInstanceOf(Provider::class);
 });
 
 it('can flush caches', function () {
@@ -132,12 +140,67 @@ it('can create or update a customer', function () {
 });
 
 it('can get the kart root collections', function () {
-    expect(kart()->orders())->toBeInstanceOf(\Kirby\Cms\Pages::class)
-        ->and(kart()->products())->toBeInstanceOf(\Kirby\Cms\Pages::class)
-        ->and(kart()->stocks())->toBeInstanceOf(\Kirby\Cms\Pages::class);
+    expect(kart()->orders())->toBeInstanceOf(Pages::class)
+        ->and(kart()->products())->toBeInstanceOf(Pages::class)
+        ->and(kart()->stocks())->toBeInstanceOf(Pages::class);
 });
 
 it('can get the kart root pages', function () {
-    expect(kart()->page(\Bnomei\Kart\ContentPageEnum::PRODUCTS))->toBeInstanceOf(ProductsPage::class)
+    expect(kart()->page(ContentPageEnum::PRODUCTS))->toBeInstanceOf(ProductsPage::class)
         ->and(kart()->page('orders'))->toBeInstanceOf(OrdersPage::class);
+});
+
+it('can find products with no stock', function () {
+    kart()->setOption('stocks.queue', false);
+
+    /** @var ProductPage $p */
+    $p = kart()->products()->first();
+    $p = $p->updateStock(0, true);
+
+    expect($p->stock())->toBe(0)
+        ->and(kart()->productsWithoutStocks()->count())->toBe(0)
+        ->and(kart()->products()->filter(fn (ProductPage $page) => $page->stock() === 0)->count())->toBeGreaterThan(0);
+});
+
+it('can find related products', function () {
+    /** @var ProductPage $p */
+    $p = kart()->products()->first();
+    $r = kart()->productsRelated($p);
+
+    expect($r)->toBeInstanceOf(Pages::class)
+        ->and($r->count())->toBe(9)
+        ->and($p->tags()->split())->toHaveCount(1)
+        ->and($p->categories()->split())->toHaveCount(1)
+        ->and(kart()->tags()->count())->toBe(19)
+        ->and(kart()->categories()->count())->toBe(4);
+});
+
+it('can find orders', function () {
+    $p = kart()->products()->first();
+    $customer = kirby()->impersonate('kirby', function () {
+        return kirby()->users()->create([
+            'email' => Str::random(5).'@kart.test',
+            'role' => 'customer',
+        ]);
+    });
+    expect($customer->isCustomer())->toBeTrue();
+    kirby()->impersonate($customer);
+
+    /** @var OrdersPage $orders */
+    $orders = kart()->page('orders');
+    /** @var OrderPage $o */
+    $o = $orders->createOrder([
+        'paymentComplete' => true,
+        'items' => [
+            [
+                'key' => [$p->uuid()->toString()],
+                'quantity' => 1,
+            ],
+        ],
+    ], $customer);
+
+    expect($o->hasProduct($p))->toBeTrue()
+        ->and(kart()->ordersWithProduct($p)->count())->toBeGreaterThan(0)
+        ->and(kart()->ordersWithCustomer($customer)->count())->toBe(1)
+        ->and(kart()->ordersWithInvoiceNumber($o->invnumber()->toInt())->id())->toBe($o->id());
 });

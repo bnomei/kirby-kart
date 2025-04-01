@@ -111,7 +111,7 @@ class StockPage extends Page
 
     public function updateStock(int $amount = 0, bool $queue = true, bool $set = false): ?int
     {
-        if ($amount === 0) {
+        if ($amount === 0 && ! $set) {
             return 0;
         }
 
