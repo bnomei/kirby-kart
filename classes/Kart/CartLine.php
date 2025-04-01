@@ -20,7 +20,7 @@ class CartLine
     public function __construct(
         private ProductPage|Page|string $uuid, // need to be named `id` for Collections to use it as key
         private int $quantity = 1,
-        private ?Cart $cart = null,
+        private readonly ?Cart $cart = null,
     ) {
         if ($this->uuid instanceof ProductPage) {
             $this->product = $this->uuid;
@@ -31,14 +31,26 @@ class CartLine
         }
     }
 
+    /**
+     * makes the product unique in the cart line collection
+     */
+    public function id(): string
+    {
+        return $this->product()?->uuid()->id() ?? $this->uuid;
+    }
+
+    public function product(bool $refresh = false): ?ProductPage
+    {
+        if ($refresh) {
+            $this->product = page('page://'.$this->uuid) instanceof ProductPage ? page('page://'.$this->uuid) : null;
+        }
+
+        return $this->product; // @phpstan-ignore-line
+    }
+
     public function increment(int $amount = 1): int
     {
         return $this->setQuantity($this->quantity + $amount);
-    }
-
-    public function decrement(int $amount = 1): int
-    {
-        return $this->setQuantity($this->quantity - $amount);
     }
 
     public function setQuantity(int $amount = 1, bool $force = false): int
@@ -60,6 +72,11 @@ class CartLine
         return $this->quantity;
     }
 
+    public function decrement(int $amount = 1): int
+    {
+        return $this->setQuantity($this->quantity - $amount);
+    }
+
     public function fix(): bool
     {
         $old = $this->quantity();
@@ -74,26 +91,9 @@ class CartLine
         return $old !== $updated;
     }
 
-    public function key(): string // Merx
+    public function quantity(): int
     {
-        return $this->id();
-    }
-
-    /**
-     * makes the product unique in the cart line collection
-     */
-    public function id(): string
-    {
-        return $this->product()?->uuid()->id() ?? $this->uuid;
-    }
-
-    public function product(bool $refresh = false): ?ProductPage
-    {
-        if ($refresh) {
-            $this->product = page('page://'.$this->uuid) instanceof ProductPage ? page('page://'.$this->uuid) : null;
-        }
-
-        return $this->product; // @phpstan-ignore-line
+        return $this->quantity;
     }
 
     public function hasStockForQuantity(): bool
@@ -107,6 +107,11 @@ class CartLine
         return is_numeric($stock) && $stock >= $this->quantity;
     }
 
+    public function key(): string // Merx
+    {
+        return $this->id();
+    }
+
     public function toArray(): array
     {
         return [
@@ -115,9 +120,9 @@ class CartLine
         ];
     }
 
-    public function quantity(): int
+    public function formattedPrice(): string
     {
-        return $this->quantity;
+        return Kart::formatCurrency($this->price());
     }
 
     public function price(): float
@@ -125,18 +130,13 @@ class CartLine
         return $this->product() ? $this->product()->price()->toFloat() : 0;
     }
 
-    public function subtotal(): float
-    {
-        return $this->price() * $this->quantity();
-    }
-
-    public function formattedPrice(): string
-    {
-        return Kart::formatCurrency($this->price());
-    }
-
     public function formattedSubtotal(): string
     {
         return Kart::formatCurrency($this->subtotal());
+    }
+
+    public function subtotal(): float
+    {
+        return $this->price() * $this->quantity();
     }
 }

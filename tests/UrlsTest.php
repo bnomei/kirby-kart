@@ -10,7 +10,7 @@
 
 use Bnomei\Kart\Urls;
 
-it('has a helper object to get urls from the router builder functions', function () {
+it('has a helper object to get urls from the router builder functions', function (): void {
     expect(Urls::class)->toBeString();
 
     $u = new Urls;

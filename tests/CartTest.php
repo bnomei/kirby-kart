@@ -11,27 +11,27 @@
 use Bnomei\Kart\Cart;
 use Kirby\Toolkit\Str;
 
-// beforeAll(function () {
-//    Testing::beforeAll();
-// });
+beforeAll(function () {
+    Testing::beforeAll();
+});
 
-afterAll(function () {
+afterAll(function (): void {
     Testing::afterAll();
 });
 
-beforeEach(function () {
+beforeEach(function (): void {
     $this->cart = new Cart;
 });
 
-it('has an id', function () {
+it('has an id', function (): void {
     expect($this->cart->id())->toBe('cart');
 });
 
-it('can be initialized with products and quantities', function () {
+it('can be initialized with products and quantities', function (): void {
     $this->cart = new Cart(
         'cart',
-        page('products')->children()->random(3)->toArray(fn ($p) => rand(1, 5)) + [
-            'doesnotexits' => 1,
+        page('products')->children()->random(3)->toArray(fn ($p) => ['quantity' => random_int(1, 5)]) + [
+            'doesnotexits' => ['quantity' => 1],
         ]
     );
 
@@ -64,7 +64,7 @@ it('can be initialized with products and quantities', function () {
     expect($this->cart->isEmpty())->toBeTrue();
 });
 
-it('can check if it can checkout (stock)', function () {
+it('can check if it can checkout (stock)', function (): void {
     kart()->setOption('stocks.queue', false);
 
     $products = page('products')->children()->random(3);
@@ -79,7 +79,7 @@ it('can check if it can checkout (stock)', function () {
 
     $this->cart = new Cart(
         'cart',
-        $products->toArray(fn ($p) => 2)
+        $products->toArray(fn ($p) => ['quantity' => 2])
     );
 
     expect($this->cart->quantity())->toBe(6)
@@ -95,7 +95,7 @@ it('can check if it can checkout (stock)', function () {
     expect($this->cart->canCheckout())->toBeFalse();
 });
 
-it('can check if it can checkout (maxapo)', function () {
+it('can check if it can checkout (maxapo)', function (): void {
     kart()->setOption('stocks.queue', false);
 
     $products = page('products')->children()->random(4);
@@ -112,7 +112,7 @@ it('can check if it can checkout (maxapo)', function () {
     $products->map(fn (ProductPage $p) => $p->updateStock(20, true));
     $this->cart = new Cart(
         'cart',
-        $products->toArray(fn ($p) => $limit + 1)
+        $products->toArray(fn ($p) => ['quantity' => $limit + 1])
     );
 
     // maxapo is NOT enforced by constructor
@@ -133,7 +133,7 @@ it('can check if it can checkout (maxapo)', function () {
     expect($this->cart->canCheckout())->toBeTrue();
 });
 
-it('will load items from the current session matching the same ID', function () {
+it('will load items from the current session matching the same ID', function (): void {
     $this->cart = new Cart('some');
     expect($this->cart->lines()->count())->toBe(0);
     $this->cart->add(page('products')->children()->random(1)->first());
@@ -144,17 +144,15 @@ it('will load items from the current session matching the same ID', function () 
     expect($this->cart->lines()->count())->toBe(1);
 });
 
-it('can check if it can checkout (hold)', function () {
+it('can check if it can checkout (hold)', function (): void {
     kart()->setOption('stocks.queue', false);
     kart()->setOption('stocks.hold', 5);
 
     // holds need a customer
-    $customer = kirby()->impersonate('kirby', function () {
-        return kirby()->users()->create([
-            'email' => Str::random(5).'@kart.test',
-            'role' => 'customer',
-        ]);
-    });
+    $customer = kirby()->impersonate('kirby', fn () => kirby()->users()->create([
+        'email' => Str::random(5).'@kart.test',
+        'role' => 'customer',
+    ]));
     expect($customer->isCustomer())->toBeTrue();
     kirby()->impersonate($customer);
 
@@ -172,7 +170,7 @@ it('can check if it can checkout (hold)', function () {
 
     $cart2 = new Cart(
         'cart2',
-        $products->toArray(fn ($p) => 10) // 5 over
+        $products->toArray(fn ($p) => ['quantity' => 10]) // 5 over
     );
 
     expect($cart1->lines()->count())->toBe(2)
@@ -184,7 +182,7 @@ it('can check if it can checkout (hold)', function () {
 
     $cart2 = new Cart(
         'cart2',
-        $products->toArray(fn ($p) => 5) // 0 left
+        $products->toArray(fn ($p) => ['quantity' => 5]) // 0 left
     );
     $cart2->sessionToken('2');
     $cart2->holdStock();
@@ -200,13 +198,11 @@ it('can check if it can checkout (hold)', function () {
     //    });
 });
 
-it('can merge with the cart of the user', function () {
-    $customer = kirby()->impersonate('kirby', function () {
-        return kirby()->users()->create([
-            'email' => Str::random(5).'@kart.test',
-            'role' => 'customer',
-        ]);
-    });
+it('can merge with the cart of the user', function (): void {
+    $customer = kirby()->impersonate('kirby', fn () => kirby()->users()->create([
+        'email' => Str::random(5).'@kart.test',
+        'role' => 'customer',
+    ]));
     expect($customer->isCustomer())->toBeTrue();
     kirby()->impersonate($customer);
 
@@ -227,7 +223,7 @@ it('can merge with the cart of the user', function () {
     $cart2 = new Cart(
         'cart', // same id but virtual!
         [
-            $p2->id() => 3,
+            $p2->id() => ['quantity' => 3],
         ]
     );
     // no save() HERE or inside the constructor
@@ -254,15 +250,15 @@ it('can merge with the cart of the user', function () {
     // that does not need to be tested here.
 
     // clean up
-    kirby()->impersonate('kirby', function () use ($customer) {
+    kirby()->impersonate('kirby', function () use ($customer): void {
         kirby()->user($customer->id())?->delete();
     });
 });
 
-it('can complete a cart', function () {
+it('can complete a cart', function (): void {
     $this->cart = new Cart(
         'cart',
-        page('products')->children()->random(3)->toArray(fn ($p) => rand(1, 5))
+        page('products')->children()->random(3)->toArray(fn ($p) => ['quantity' => random_int(1, 5)])
     );
 
     expect($this->cart->complete())->toBeString();

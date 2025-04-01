@@ -9,7 +9,7 @@
  */
 use Bnomei\Kart\ProviderEnum;
 
-it('has provider enum', function () {
+it('has provider enum', function (): void {
     expect(ProviderEnum::class)->toBeString()
         ->and(ProviderEnum::cases())->toHaveCount(11);
 });

@@ -7,6 +7,9 @@
  * This file is part of Kirby Kart and is proprietary software.
  * Unauthorized copying, modification, or distribution is prohibited.
  */
-it('has a blueprint from PHP', function () {
-    expect(\Kirby\Data\Yaml::encode(OrdersPage::phpBlueprint()))->toMatchSnapshot();
+
+use Kirby\Data\Yaml;
+
+it('has a blueprint from PHP', function (): void {
+    expect(Yaml::encode(OrdersPage::phpBlueprint()))->toMatchSnapshot();
 });

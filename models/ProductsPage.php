@@ -92,6 +92,15 @@ class ProductsPage extends Page
         ];
     }
 
+    /**
+     * @todo Not implemented
+     */
+    public function withPriceId(string $priceId): ?ProductPage
+    {
+        return $this->children()
+            ->filterBy(fn (ProductPage $p) => in_array($priceId, $p->priceIds()))->first();
+    }
+
     public function children(): Pages
     {
         if ($this->children instanceof Pages) {
@@ -101,7 +110,7 @@ class ProductsPage extends Page
         $this->children = parent::children();
         $uuids = $this->children->toArray(fn ($p) => $p->uuid()->id());
 
-        $this->kirby()->impersonate('kirby', function () use ($uuids) {
+        $this->kirby()->impersonate('kirby', function () use ($uuids): void {
             $uuid = kart()->option('products.product.uuid');
             foreach (kart()->provider()->products() as $product) {
                 if (in_array($uuid($this, $product), $uuids)) {
@@ -112,14 +121,5 @@ class ProductsPage extends Page
         });
 
         return $this->children;
-    }
-
-    /**
-     * @todo Not implemented
-     */
-    public function withPriceId(string $priceId): ?ProductPage
-    {
-        return $this->children()
-            ->filterBy(fn (ProductPage $p) => in_array($priceId, $p->priceIds()))->first();
     }
 }

@@ -209,7 +209,7 @@ if (! kirby()->environment()->isLocal()) {
     <?php if ($msg = get('msg', kart()->message())) { ?>
         <dialog>
             <p><strong>Hi <?= kirby()->user()?->nameOrEmail() ?></strong>,</p>
-            <p><?= strip_tags(urldecode($msg)) ?></p>
+            <p><?= strip_tags(urldecode((string) $msg)) ?></p>
             <form method="dialog">
                 <button autofocus><?= t('close') ?></button>
             </form>

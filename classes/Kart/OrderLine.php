@@ -24,16 +24,16 @@ use ProductPage;
  */
 class OrderLine
 {
-    private ?Page $product;
+    private readonly ?Page $product;
 
     public function __construct(
-        private string $id, // need to be named `id` for Collections to use it as key
-        private float $price = 0,
-        private int $quantity = 0,
-        private float $total = 0,
-        private float $subtotal = 0,
-        private float $tax = 0,
-        private float $discount = 0,
+        private readonly string $id, // need to be named `id` for Collections to use it as key
+        private readonly float $price = 0,
+        private readonly int $quantity = 0,
+        private readonly float $total = 0,
+        private readonly float $subtotal = 0,
+        private readonly float $tax = 0,
+        private readonly float $discount = 0,
     ) {
         $this->product = kirby()->page($this->id);
     }

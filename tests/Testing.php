@@ -1,5 +1,7 @@
 <?php
 
+use Kirby\Filesystem\Dir;
+
 /**
  * Copyright (c) 2025 Bruno Meilick
  * All rights reserved.
@@ -11,7 +13,7 @@ class Testing
 {
     public static function beforeAll(): void
     {
-        kirby()->impersonate('kirby', function () {
+        kirby()->impersonate('kirby', function (): void {
             //            page('products')?->children()->map(function ($p) {
             //                $p->delete(true);
             //
@@ -31,13 +33,13 @@ class Testing
             kart()->tmnt();
             kart()->cart()->clear();
             kart()->cart()->save();
-            \Kirby\Filesystem\Dir::remove(kirby()->cache('bnomei.kart')->root());
+            Dir::remove(kirby()->cache('bnomei.kart')->root());
         });
     }
 
     public static function afterAll(): void
     {
-        kirby()->impersonate('kirby', function () {
+        kirby()->impersonate('kirby', function (): void {
             page('products')?->children()->map(function ($p) {
                 $p->delete(true);
 
@@ -56,7 +58,7 @@ class Testing
 
             kart()->cart()->clear();
             kart()->cart()->save();
-            \Kirby\Filesystem\Dir::remove(kirby()->cache('bnomei.kart')->root());
+            Dir::remove(kirby()->cache('bnomei.kart')->root());
         });
     }
 }

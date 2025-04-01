@@ -70,33 +70,6 @@ class StocksPage extends Page
         ];
     }
 
-    public function children(): Pages
-    {
-        if ($this->children instanceof Pages) {
-            return $this->children;
-        }
-
-        return $this->children = parent::children()->merge(
-            Pages::factory(kart()->provider()->stocks(), $this)
-        );
-    }
-
-    /**
-     * @kql-allowed
-     */
-    public function stockPages(ProductPage|string|null $id = null): Pages
-    {
-        $c = $this->children();
-        if ($id !== null) {
-            if ($id instanceof ProductPage) {
-                $id = $id->uuid()->toString();
-            }
-            $c = $c->filterBy(fn ($page) => $page->page()->toPage()?->uuid()->toString() === $id);
-        }
-
-        return $c;
-    }
-
     /**
      * @kql-allowed
      */
@@ -144,6 +117,33 @@ class StocksPage extends Page
         }
 
         return $stock;
+    }
+
+    /**
+     * @kql-allowed
+     */
+    public function stockPages(ProductPage|string|null $id = null): Pages
+    {
+        $c = $this->children();
+        if ($id !== null) {
+            if ($id instanceof ProductPage) {
+                $id = $id->uuid()->toString();
+            }
+            $c = $c->filterBy(fn ($page) => $page->page()->toPage()?->uuid()->toString() === $id);
+        }
+
+        return $c;
+    }
+
+    public function children(): Pages
+    {
+        if ($this->children instanceof Pages) {
+            return $this->children;
+        }
+
+        return $this->children = parent::children()->merge(
+            Pages::factory(kart()->provider()->stocks(), $this)
+        );
     }
 
     public function updateStocks(array $data): ?int

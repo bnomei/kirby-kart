@@ -10,6 +10,8 @@
 
 namespace Bnomei\Kart;
 
+use Closure;
+use Exception;
 use Kirby\Cms\Language;
 use Kirby\Content\PlainTextStorage;
 use Kirby\Content\VersionId;
@@ -25,8 +27,8 @@ class ProductStorage extends PlainTextStorage
         // hydrate with provider
         if (kart()->provider()->virtual()) {
             $uuid = kart()->option('products.product.uuid');
-            if ($uuid instanceof \Closure === false) {
-                throw new \Exception('kart.products.product.uuid must be a closure');
+            if ($uuid instanceof Closure === false) {
+                throw new Exception('kart.products.product.uuid must be a closure');
             }
             foreach (kart()->provider()->products() as $product) {
                 if (A::get($content, 'uuid', time()) === $uuid(null, $product)) {

@@ -28,7 +28,7 @@ trait ContentPages
             $pages = [];
         }
 
-        $this->kirby->impersonate('kirby', function () use ($pages) {
+        $this->kirby->impersonate('kirby', function () use ($pages): void {
             foreach ($pages as $key => $id) {
                 $props = [
                     'id' => $id,

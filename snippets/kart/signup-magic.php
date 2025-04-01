@@ -5,7 +5,7 @@
         <label>
             <input type="email" name="email" required
                placeholder="<?= t('email') ?>" autocomplete="email"
-               value="<?= urldecode(get('email', '')) ?>">
+               value="<?= urldecode((string) get('email', '')) ?>">
         </label>
         <label>
             <input type="text" name="name" required

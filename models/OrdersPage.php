@@ -104,18 +104,16 @@ class OrdersPage extends Page
             return null;
         }
 
-        return kirby()->impersonate('kirby', function () use ($data, $customer) {
-            return OrderPage::create([
-                // id, title, slug and uuid are automatically generated
-                'content' => A::get($data, [
-                    'paidDate',
-                    'paymentMethod',
-                    'paymentComplete',
-                    'items',
-                ]) + [
-                    'customer' => [$customer?->uuid()->toString()], // kirby user field expects an array
-                ],
-            ]);
-        });
+        return kirby()->impersonate('kirby', fn () => OrderPage::create([
+            // id, title, slug and uuid are automatically generated
+            'content' => A::get($data, [
+                'paidDate',
+                'paymentMethod',
+                'paymentComplete',
+                'items',
+            ]) + [
+                'customer' => [$customer?->uuid()->toString()], // kirby user field expects an array
+            ],
+        ]));
     }
 }

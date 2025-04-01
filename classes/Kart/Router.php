@@ -106,7 +106,7 @@ class Router
             if ($middleware instanceof Closure) {
                 return $middleware();
             }
-            [$class, $method] = explode('::', $middleware);
+            [$class, $method] = explode('::', (string) $middleware);
             $code = $class::$method();
             if (! is_null($code)) {
                 return $code;

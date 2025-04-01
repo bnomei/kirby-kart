@@ -31,7 +31,7 @@ class StockPage extends Page
             $uuid = $uuid($parent, $props);
             $props['slug'] = Str::slug($uuid);
             $props['content']['uuid'] = $uuid;
-            $props['content']['title'] = strtoupper($uuid);
+            $props['content']['title'] = strtoupper((string) $uuid);
         }
 
         $props['parent'] = $parent;
@@ -106,7 +106,7 @@ class StockPage extends Page
      */
     public function stockPad(int $length): string
     {
-        return str_pad($this->stock()->value(), $length, '0', STR_PAD_LEFT);
+        return str_pad((string) $this->stock()->value(), $length, '0', STR_PAD_LEFT);
     }
 
     public function updateStock(int $amount = 0, bool $queue = true, bool $set = false): ?int

@@ -8,19 +8,20 @@
  * Unauthorized copying, modification, or distribution is prohibited.
  */
 use Bnomei\Kart\VirtualPage;
+use Kirby\Data\Yaml;
 
-beforeEach(function () {
+beforeEach(function (): void {
     $this->map = [
         'title' => 'content.title',
         'content' => 'content',
     ];
 });
 
-it('has a virtual page', function () {
+it('has a virtual page', function (): void {
     expect(VirtualPage::class)->toBeString();
 });
 
-it('can instantiate VirtualPage with dummy properties', function () {
+it('can instantiate VirtualPage with dummy properties', function (): void {
     $v = new VirtualPage([
         'content' => [
             'title' => 'Dummy Title',
@@ -42,7 +43,7 @@ it('can instantiate VirtualPage with dummy properties', function () {
         ])->and($v->toArray())->toBe([
             'num' => null,
             'content' => [
-                'arr' => \Kirby\Data\Yaml::encode(['a' => 1]),
+                'arr' => Yaml::encode(['a' => 1]),
                 'dummy' => 'Dummy Content',
                 'title' => 'Dummy Title',
             ],
@@ -60,7 +61,7 @@ it('can instantiate VirtualPage with dummy properties', function () {
         ->and($v->model)->toBe('product');
 });
 
-it('can have a parent to infer its full id', function () {
+it('can have a parent to infer its full id', function (): void {
     $parent = 'par/ent';
     $v = new VirtualPage([
         'content' => [
@@ -74,7 +75,7 @@ it('can have a parent to infer its full id', function () {
         ->and($v->id)->toBe('par/ent/dummy-title');
 });
 
-it('can handle more complex mappings', function () {
+it('can handle more complex mappings', function (): void {
     $v = new VirtualPage([
         'content' => [
             'title' => 'Dummy Title',

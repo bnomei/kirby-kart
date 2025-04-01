@@ -7,17 +7,17 @@
  * This file is part of Kirby Kart and is proprietary software.
  * Unauthorized copying, modification, or distribution is prohibited.
  */
-beforeAll(function () {
+beforeAll(function (): void {
     Testing::beforeAll();
 });
 
-afterAll(function () {
+afterAll(function (): void {
     Testing::afterAll();
 });
 
 use Bnomei\Kart\OrderLine;
 
-it('can create orderlines', function () {
+it('can create orderlines', function (): void {
     $product = page('products')->children()->random(1)->first();
 
     $o = new OrderLine(

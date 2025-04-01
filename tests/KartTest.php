@@ -19,51 +19,51 @@ use Kirby\Cms\App;
 use Kirby\Cms\Pages;
 use Kirby\Toolkit\Str;
 
-beforeAll(function () {
+beforeAll(function (): void {
     Testing::beforeAll();
 });
 
-afterAll(function () {
+afterAll(function (): void {
     // Testing::afterAll();
 });
 
-it('has a singleton', function () {
+it('has a singleton', function (): void {
     expect(Kart::singleton())->toBeInstanceOf(Kart::class);
 });
 
-it('has an url collection', function () {
+it('has an url collection', function (): void {
     expect(kart()->urls())->toBeInstanceOf(Urls::class);
 });
 
-it('has various shorthands for urls', function () {
+it('has various shorthands for urls', function (): void {
     expect(kart()->checkout())->toBeString()
         ->and(kart()->login('x@kart.test'))->toBeString()
         ->and(kart()->logout())->toBeString()
         ->and(kart()->sync())->toBeString();
 });
 
-it('has a queue', function () {
+it('has a queue', function (): void {
     expect(kart()->queue())->toBeInstanceOf(Queue::class);
 });
 
-it('has a kirby ref', function () {
+it('has a kirby ref', function (): void {
     expect(kart()->kirby())->toBeInstanceOf(App::class);
 });
 
-it('has a cart and a wishlist', function () {
+it('has a cart and a wishlist', function (): void {
     expect(kart()->cart())->toBeInstanceOf(Cart::class)
         ->and(kart()->wishlist())->toBeInstanceOf(Wishlist::class);
 });
 
-it('has the current provider', function () {
+it('has the current provider', function (): void {
     expect(kart()->provider())->toBeInstanceOf(Provider::class);
 });
 
-it('can flush caches', function () {
+it('can flush caches', function (): void {
     expect(kart()->flush())->toBeTrue();
 });
 
-it('can encrypt and decrypt', function () {
+it('can encrypt and decrypt', function (): void {
     kart()->flush('crypto');
     // kart()->setOption('crypto.password', 'kart');
 
@@ -77,29 +77,29 @@ it('can encrypt and decrypt', function () {
         ->and(Kart::decrypt($e, 'kart', true))->toBe($data);
 });
 
-it('can hash', function () {
+it('can hash', function (): void {
     expect(Kart::hash('hello'))->toBe('9555e8555c62dcfd');
 });
 
-it('can zero pad', function () {
+it('can zero pad', function (): void {
     expect(Kart::zeroPad('123', 5))->toBe('00123');
 });
 
-it('can format a number', function () {
+it('can format a number', function (): void {
     expect(Kart::formatNumber(123.9))->toBe('123.9');
 });
 
-it('can format a currency value', function () {
+it('can format a currency value', function (): void {
     expect(Kart::formatCurrency(123.9))->toBe('€123.90')
         ->and(kart()->currency())->toBe('EUR');
 });
 
-it('can create non ambiguous uuids', function () {
+it('can create non ambiguous uuids', function (): void {
     expect(Kart::nonAmbiguousUuid(3))->toHaveLength(3)
         ->not()->toContain('o', 'O', 'l', 'L', 'I', 'i', 'B', 'S', 's');
 });
 
-it('can sanitize data', function () {
+it('can sanitize data', function (): void {
     expect(Kart::sanitize('<?= $foo'))->toBe('')
         ->and(Kart::sanitize([
             '<b>foo' => '<?php $bar',
@@ -110,7 +110,7 @@ it('can sanitize data', function () {
         ]);
 });
 
-it('can set and get a message with channels', function () {
+it('can set and get a message with channels', function (): void {
     kart()->message('foo');
     expect(kart()->message())->toBe('foo')
         ->and(kart()->message(channel: 'default'))->toBeNull();
@@ -119,7 +119,7 @@ it('can set and get a message with channels', function () {
     expect(kart()->message(channel: 'world'))->toBe('hello');
 });
 
-it('can create or update a customer', function () {
+it('can create or update a customer', function (): void {
     $email = Str::lower(Str::random(5).'@kart.test');
     $c = kirby()->user($email);
     expect($c)->toBeNull();
@@ -139,18 +139,18 @@ it('can create or update a customer', function () {
         ]);
 });
 
-it('can get the kart root collections', function () {
+it('can get the kart root collections', function (): void {
     expect(kart()->orders())->toBeInstanceOf(Pages::class)
         ->and(kart()->products())->toBeInstanceOf(Pages::class)
         ->and(kart()->stocks())->toBeInstanceOf(Pages::class);
 });
 
-it('can get the kart root pages', function () {
+it('can get the kart root pages', function (): void {
     expect(kart()->page(ContentPageEnum::PRODUCTS))->toBeInstanceOf(ProductsPage::class)
         ->and(kart()->page('orders'))->toBeInstanceOf(OrdersPage::class);
 });
 
-it('can find products with no stock', function () {
+it('can find products with no stock', function (): void {
     kart()->setOption('stocks.queue', false);
 
     /** @var ProductPage $p */
@@ -162,7 +162,7 @@ it('can find products with no stock', function () {
         ->and(kart()->products()->filter(fn (ProductPage $page) => $page->stock() === 0)->count())->toBeGreaterThan(0);
 });
 
-it('can find related products', function () {
+it('can find related products', function (): void {
     /** @var ProductPage $p */
     $p = kart()->products()->first();
     $r = kart()->productsRelated($p);
@@ -175,14 +175,12 @@ it('can find related products', function () {
         ->and(kart()->categories()->count())->toBe(4);
 });
 
-it('can find orders', function () {
+it('can find orders', function (): void {
     $p = kart()->products()->first();
-    $customer = kirby()->impersonate('kirby', function () {
-        return kirby()->users()->create([
-            'email' => Str::random(5).'@kart.test',
-            'role' => 'customer',
-        ]);
-    });
+    $customer = kirby()->impersonate('kirby', fn () => kirby()->users()->create([
+        'email' => Str::random(5).'@kart.test',
+        'role' => 'customer',
+    ]));
     expect($customer->isCustomer())->toBeTrue();
     kirby()->impersonate($customer);
 

@@ -16,6 +16,7 @@ use Bnomei\Kart\Provider;
 use Bnomei\Kart\ProviderEnum;
 use Bnomei\Kart\Router;
 use Bnomei\Kart\VirtualPage;
+use Closure;
 use Kirby\Http\Remote;
 use Kirby\Toolkit\A;
 
@@ -26,7 +27,7 @@ class Stripe extends Provider
     public function checkout(): string
     {
         $options = $this->option('checkout_options', false);
-        if ($options instanceof \Closure) {
+        if ($options instanceof Closure) {
             $options = $options($this->kart);
         }
 
@@ -107,7 +108,7 @@ class Stripe extends Provider
 
         $json = $remote->json();
         $uuid = kart()->option('products.product.uuid');
-        if ($uuid instanceof \Closure === false) {
+        if ($uuid instanceof Closure === false) {
             return [];
         }
 
@@ -166,9 +167,9 @@ class Stripe extends Provider
             }
         }
 
-        return array_map(function (array $data) {
+        return array_map(fn (array $data) =>
             // NOTE: changes here require a cache flush to take effect
-            return (new VirtualPage(
+            (new VirtualPage(
                 $data,
                 [
                     // MAP: kirby <=> stripe
@@ -189,8 +190,7 @@ class Stripe extends Provider
                     ],
                 ],
                 $this->kart->page(ContentPageEnum::PRODUCTS))
-            )->mixinProduct($data)->toArray();
-        }, $products);
+        )->mixinProduct($data)->toArray(), $products);
     }
 
     public function portal(?string $returnUrl = null): ?string

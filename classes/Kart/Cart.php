@@ -15,24 +15,24 @@ use Kirby\Cms\Collection;
 use Kirby\Cms\User;
 use Kirby\Toolkit\A;
 use Kirby\Uuid\Uuid;
+use OrderPage;
+use OrdersPage;
 use ProductPage;
+use StocksPage;
 
 class Cart
 {
     /** @var Collection<CartLine> */
-    private Collection $lines;
+    private Collection $lines; // this will match the field on the user content (cart, wishlist)
 
-    private string $id; // this will match the field on the user content (cart, wishlist)
+    private readonly App $kirby;
 
-    private App $kirby;
-
-    private Kart $kart;
+    private readonly Kart $kart;
 
     private ?string $sid = null;
 
-    public function __construct(string $id = 'cart', array $items = [])
+    public function __construct(private readonly string $id = 'cart', array $items = [])
     {
-        $this->id = $id;
         $this->kirby = kirby();
         $this->kart = kirby()->site()->kart();
 
@@ -57,24 +57,6 @@ class Cart
         kirby()->trigger('kart.'.$this->id.'.created', [
             $this->id => $this,
         ]);
-    }
-
-    public function id(): string
-    {
-        return $this->id;
-    }
-
-    public function sessionToken(?string $token = null): string
-    {
-        if ($token) {
-            $this->sid = $token;
-        }
-
-        if (! $this->sid) {
-            $this->sid = $this->kirby->session()->token() ?? Uuid::generate();
-        }
-
-        return $this->sid;
     }
 
     public function add(ProductPage|array|string|null $product, int $amount = 1): int
@@ -121,6 +103,31 @@ class Cart
         return $item->quantity();
     }
 
+    public function id(): string
+    {
+        return $this->id;
+    }
+
+    public function count(): int
+    {
+        return $this->lines()->count();
+    }
+
+    /**
+     * @return Collection<CartLine>
+     */
+    public function lines(): Collection
+    {
+        return $this->lines;
+    }
+
+    public function quantity(): int
+    {
+        return (int) array_sum($this->lines->values(
+            fn (CartLine $item) => $item->quantity()
+        ));
+    }
+
     public function fix(): void
     {
         /** @var CartLine $line */
@@ -157,26 +164,17 @@ class Cart
         return true;
     }
 
-    public function save(bool $writeToUser = true): void
+    public function sessionToken(?string $token = null): string
     {
-        $this->kirby->session()->set($this->id, $this->lines->toArray());
+        if ($token) {
+            $this->sid = $token;
+        }
 
-        // NOTE: no impersonation as that would shift to the kirby user.
-        // retrieve a mutable copy now, just $this->kirby->user() fails.
-        $user = $this->kirby->user() ? $this->kirby->user($this->kirby->user()->id()) : null;
-        $writeToUser && $user?->update([
-            'kart_'.$this->id => $this->lines->toArray(),
-        ]);
-    }
+        if (! $this->sid) {
+            $this->sid = $this->kirby->session()->token() ?? Uuid::generate();
+        }
 
-    public function count(): int
-    {
-        return $this->lines()->count();
-    }
-
-    public function isEmpty(): bool
-    {
-        return $this->lines()->count() === 0;
+        return $this->sid;
     }
 
     public function isNotEmpty(): bool
@@ -184,19 +182,9 @@ class Cart
         return ! $this->isEmpty();
     }
 
-    /**
-     * @return Collection<CartLine>
-     */
-    public function lines(): Collection
+    public function isEmpty(): bool
     {
-        return $this->lines;
-    }
-
-    public function quantity(): int
-    {
-        return (int) array_sum($this->lines->values(
-            fn (CartLine $item) => $item->quantity()
-        ));
+        return $this->lines()->count() === 0;
     }
 
     public function allInStock(): bool
@@ -334,14 +322,14 @@ class Cart
 
         $customer = $this->kart->createOrUpdateCustomer($data);
 
-        /** @var \OrdersPage|null $orders */
+        /** @var OrdersPage|null $orders */
         $orders = $this->kart->page(ContentPageEnum::ORDERS);
-        /** @var \OrderPage|null $order */
+        /** @var OrderPage|null $order */
         $order = $orders?->createOrder($data, $customer);
         $order?->createZipWithFiles();
 
         $this->releaseStock($data);
-        /** @var \StocksPage|null $stocks */
+        /** @var StocksPage|null $stocks */
         $stocks = $this->kart->page(ContentPageEnum::STOCKS);
         $stocks?->updateStocks($data);
 
@@ -357,38 +345,6 @@ class Cart
             'kart.redirect.success',
             $order ? $order->url() : $this->kirby->site()->url()
         );
-    }
-
-    public function holdStock(): bool
-    {
-        $expire = kart()->option('stocks.hold');
-        if (! is_numeric($expire) || ! kirby()->user()?->isCustomer()) {
-            return false;
-        }
-
-        $hasOne = false;
-        foreach ($this->lines as $line) {
-            $product = $line->product();
-            if (! $product) {
-                continue;
-            }
-
-            $holdKey = 'hold-'.Kart::hash($product->uuid()->toString());
-            $holds = $this->kirby->cache('bnomei.kart.stocks-holds')->get($holdKey, []);
-            $holds = array_filter($holds, fn ($hold) => $hold['expires'] > time()); // discard outdated
-            $sid = $this->sessionToken();
-            $holds[$sid] = [
-                'product' => $product->uuid()->id(),
-                'expires' => time() + $expire * 60,
-                'quantity' => $line->quantity(),
-            ];
-
-            // the cache does not have to live longer than the expiry of each line
-            $this->kirby->cache('bnomei.kart.stocks-holds')->set($holdKey, $holds, intval($expire));
-            $hasOne = true;
-        }
-
-        return $hasOne;
     }
 
     public function releaseStock(?array $data = null): bool
@@ -428,6 +384,50 @@ class Cart
                 }
             }
             $this->kirby->cache('bnomei.kart.stocks-holds')->set($holdKey, $holds, intval($expire));
+        }
+
+        return $hasOne;
+    }
+
+    public function save(bool $writeToUser = true): void
+    {
+        $this->kirby->session()->set($this->id, $this->lines->toArray());
+
+        // NOTE: no impersonation as that would shift to the kirby user.
+        // retrieve a mutable copy now, just $this->kirby->user() fails.
+        $user = $this->kirby->user() ? $this->kirby->user($this->kirby->user()->id()) : null;
+        $writeToUser && $user?->update([
+            'kart_'.$this->id => $this->lines->toArray(),
+        ]);
+    }
+
+    public function holdStock(): bool
+    {
+        $expire = kart()->option('stocks.hold');
+        if (! is_numeric($expire) || ! kirby()->user()?->isCustomer()) {
+            return false;
+        }
+
+        $hasOne = false;
+        foreach ($this->lines as $line) {
+            $product = $line->product();
+            if (! $product) {
+                continue;
+            }
+
+            $holdKey = 'hold-'.Kart::hash($product->uuid()->toString());
+            $holds = $this->kirby->cache('bnomei.kart.stocks-holds')->get($holdKey, []);
+            $holds = array_filter($holds, fn ($hold) => $hold['expires'] > time()); // discard outdated
+            $sid = $this->sessionToken();
+            $holds[$sid] = [
+                'product' => $product->uuid()->id(),
+                'expires' => time() + $expire * 60,
+                'quantity' => $line->quantity(),
+            ];
+
+            // the cache does not have to live longer than the expiry of each line
+            $this->kirby->cache('bnomei.kart.stocks-holds')->set($holdKey, $holds, intval($expire));
+            $hasOne = true;
         }
 
         return $hasOne;

@@ -18,7 +18,7 @@ trait TMNT
 {
     public function tmnt(): void
     {
-        kirby()->impersonate('kirby', function () {
+        kirby()->impersonate('kirby', function (): void {
             // create generic products for the demo
             $prods = $this->page(ContentPageEnum::PRODUCTS);
             $stocks = $this->page(ContentPageEnum::STOCKS);
@@ -55,7 +55,7 @@ trait TMNT
                     'template' => 'stock',
                     'content' => [
                         'page' => Yaml::encode([$product->uuid()->toString()]),
-                        'stock' => rand(0, 10),
+                        'stock' => random_int(0, 10),
                     ],
                 ]);
             }

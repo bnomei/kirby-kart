@@ -9,7 +9,7 @@
  */
 use Bnomei\Kart\Tag;
 
-it('has a tag helper', function () {
+it('has a tag helper', function (): void {
     $c = new Tag([
         'id' => 'id',
         'text' => 'text',

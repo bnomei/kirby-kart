@@ -73,12 +73,14 @@
     "laravel/pint": "^1.13",
     "pestphp/pest": "^v3.5.1",
     "spatie/ray": "^1.39",
-    "getkirby/cli": "^1.5"
+    "getkirby/cli": "^1.5",
+    "rector/rector": "^2.0"
   },
   "scripts": {
     "stan": "./vendor/bin/phpstan",
     "fix": "./vendor/bin/pint",
     "test": "./vendor/bin/pest --profile",
+    "rector": "./vendor/bin/rector",
     "dist": [
       "composer fix",
       "vendor/bin/kirby kart:blueprints-publish",

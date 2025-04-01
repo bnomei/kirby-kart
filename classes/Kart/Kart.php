@@ -82,11 +82,6 @@ class Kart
         }
     }
 
-    public function urls(): Urls
-    {
-        return $this->urls;
-    }
-
     public function queue(): Queue
     {
         return $this->queue;
@@ -111,7 +106,7 @@ class Kart
             }
 
             return true;
-        } catch (Exception $e) {
+        } catch (Exception) {
             // if given a cache that does not exist or is not flushable
             return false;
         }
@@ -132,9 +127,7 @@ class Kart
             $expire = kart()->option('expire');
             if (is_int($expire)) {
                 $key = Kart::hash(strval($data));
-                $data = kirby()->cache('bnomei.kart.crypto')->getOrSet($key, function () use ($data, $password) {
-                    return is_string($data) ? (new SymmetricCrypto(password: $password))->encrypt($data) : $data;
-                }, $expire);
+                $data = kirby()->cache('bnomei.kart.crypto')->getOrSet($key, fn () => is_string($data) ? (new SymmetricCrypto(password: $password))->encrypt($data) : $data, $expire);
             } else {
                 $data = is_string($data) ? (new SymmetricCrypto(password: $password))->encrypt($data) : $data;
             }
@@ -166,15 +159,13 @@ class Kart
                 $expire = kart()->option('expire');
                 if (is_int($expire)) {
                     $key = Kart::hash($data);
-                    $data = kirby()->cache('bnomei.kart.crypto')->getOrSet($key, function () use ($data, $password) {
-                        return (new SymmetricCrypto(password: $password))->decrypt($data);
-                    }, $expire);
+                    $data = kirby()->cache('bnomei.kart.crypto')->getOrSet($key, fn () => (new SymmetricCrypto(password: $password))->decrypt($data), $expire);
                 } else {
                     $data = (new SymmetricCrypto(password: $password))->decrypt($data);
                 }
             }
             if ($json) {
-                $data = json_decode($data, true);
+                $data = json_decode((string) $data, true);
             }
         }
 
@@ -259,31 +250,6 @@ class Kart
         return $data;
     }
 
-    public function provider(): Provider
-    {
-        if (! $this->provider) {
-            $class = strval($this->option('provider'));
-            // try finding provider from string if it's not a class yet
-            if (in_array(strtolower($class), array_map(fn ($i) => $i->value, ProviderEnum::cases()))) {
-                $c = ucfirst(strtolower($class));
-                $class = "\\Bnomei\\Kart\\Provider\\{$c}";
-            }
-            if (class_exists($class)) {
-                $this->provider = new $class($this->kirby()); // @phpstan-ignore-line
-            }
-            if (! $this->provider instanceof Provider) {
-                $this->provider = new Kirby($this->kirby());
-            }
-        }
-
-        return $this->provider;
-    }
-
-    public function kirby(): App
-    {
-        return $this->kirby;
-    }
-
     public function wishlist(): Wishlist
     {
         if (! $this->wishlist) {
@@ -301,6 +267,11 @@ class Kart
     public function checkout(): string
     {
         return $this->urls()->cart_checkout();
+    }
+
+    public function urls(): Urls
+    {
+        return $this->urls;
     }
 
     public function login(?string $email = null): string
@@ -338,6 +309,11 @@ class Kart
         return null;
     }
 
+    public function kirby(): App
+    {
+        return $this->kirby;
+    }
+
     public function createOrUpdateCustomer(array $credentials): ?User
     {
         $email = A::get($credentials, 'customer.email');
@@ -345,23 +321,20 @@ class Kart
 
         $customer = null;
         if ($id) {
-            $customer = $this->kirby()->users()->filterBy(function ($user) use ($id) {
+            $customer = $this->kirby()->users()->filterBy(fn ($user) =>
                 // customerId to align with KLUB
-                return $user->isCustomer() && $user->userData('customerId') === $id;
-            })->first();
+                $user->isCustomer() && $user->userData('customerId') === $id)->first();
         }
         if (! $customer) {
             $customer = $this->kirby()->users()->findBy('email', $email);
         }
         if (! $customer && V::email($email) && $this->option('customers.enabled')) {
-            $customer = $this->kirby()->impersonate('kirby', function () use ($credentials, $email) {
-                return $this->kirby()->users()->create([
-                    'email' => $email,
-                    'name' => A::get($credentials, 'customer.name', ''),
-                    'password' => Str::random(16),
-                    'role' => ((array) $this->option('customers.roles'))[0],
-                ]);
-            });
+            $customer = $this->kirby()->impersonate('kirby', fn () => $this->kirby()->users()->create([
+                'email' => $email,
+                'name' => A::get($credentials, 'customer.name', ''),
+                'password' => Str::random(16),
+                'role' => ((array) $this->option('customers.roles'))[0],
+            ]));
             $this->kirby()->trigger('kart.user.created', ['user' => $customer]);
         }
 
@@ -371,6 +344,26 @@ class Kart
         ], $customer) : null;
 
         return $customer;
+    }
+
+    public function provider(): Provider
+    {
+        if (! $this->provider) {
+            $class = strval($this->option('provider'));
+            // try finding provider from string if it's not a class yet
+            if (in_array(strtolower($class), array_map(fn ($i) => $i->value, ProviderEnum::cases()))) {
+                $c = ucfirst(strtolower($class));
+                $class = "\\Bnomei\\Kart\\Provider\\{$c}";
+            }
+            if (class_exists($class)) {
+                $this->provider = new $class($this->kirby()); // @phpstan-ignore-line
+            }
+            if (! $this->provider instanceof Provider) {
+                $this->provider = new Kirby($this->kirby());
+            }
+        }
+
+        return $this->provider;
     }
 
     /**
@@ -438,26 +431,6 @@ class Kart
         )->first();
     }
 
-    private function getProductsByParam(array $params = []): Pages
-    {
-        $products = $this->products();
-
-        if ($category = A::get($params, 'category')) {
-            $products = $products->filterBy('categories', $category, ',');
-        }
-        if ($categories = A::get($params, 'categories')) {
-            $products = $products->filterBy('categories', 'in', explode(',', $categories), ',');
-        }
-        if ($tag = A::get($params, 'tag')) {
-            $products = $products->filterBy('tags', $tag, ',');
-        }
-        if ($tags = A::get($params, 'tags')) {
-            $products = $products->filterBy('tags', 'in', explode(',', $tags), ',');
-        }
-
-        return $products;
-    }
-
     /**
      * @kql-allowed
      */
@@ -478,9 +451,7 @@ class Kart
         if (is_int($expire)) {
             $key = Kart::hash(implode(',', $params));
 
-            return new Pages(array_filter(kirby()->cache('bnomei.kart.products')->getOrSet('products-'.$key, function () use ($params) {
-                return array_values($this->getProductsByParam($params)->toArray(fn (ProductPage $product) => $product->uuid()->toString()));
-            }), fn ($id) => $this->kirby()->page($id) !== null));
+            return new Pages(array_filter(kirby()->cache('bnomei.kart.products')->getOrSet('products-'.$key, fn () => array_values($this->getProductsByParam($params)->toArray(fn (ProductPage $product) => $product->uuid()->toString()))), fn ($id) => $this->kirby()->page($id) !== null));
         }
 
         return $this->getProductsByParam($params);
@@ -492,6 +463,26 @@ class Kart
     public function products(): Pages
     {
         return kart()->page(ContentPageEnum::PRODUCTS)?->children() ?: new Pages;
+    }
+
+    private function getProductsByParam(array $params = []): Pages
+    {
+        $products = $this->products();
+
+        if ($category = A::get($params, 'category')) {
+            $products = $products->filterBy('categories', $category, ',');
+        }
+        if ($categories = A::get($params, 'categories')) {
+            $products = $products->filterBy('categories', 'in', explode(',', (string) $categories), ',');
+        }
+        if ($tag = A::get($params, 'tag')) {
+            $products = $products->filterBy('tags', $tag, ',');
+        }
+        if ($tags = A::get($params, 'tags')) {
+            $products = $products->filterBy('tags', 'in', explode(',', (string) $tags), ',');
+        }
+
+        return $products;
     }
 
     /**
@@ -540,81 +531,20 @@ class Kart
             $this->products()->filterBy(fn ($product) => count(array_diff($categories, $product->categories()->split())) === 0);
     }
 
-    private function getCategories(?string $path = null): array
-    {
-        $products = kart()->page(ContentPageEnum::PRODUCTS);
-        if (! $products) {
-            return [];
-        }
-        $categories = $products->children()->pluck('categories', ',', true);
-        $tags = $products->children()->pluck('tags', ',', true);
-        sort($categories);
-
-        $category = param('category');
-        $tag = param('tag');
-
-        return array_map(fn ($c) => [
-            'id' => $c,
-            'label' => t('category.'.$c, $c),
-            'title' => t('category.'.$c, $c),
-            'text' => t('category.'.$c, $c),
-            'value' => $c,
-            'count' => $products->children()->filterBy('categories', $c, ',')->filterBy('tags', 'in', $tag ? [$tag] : $tags, ',')->count(),
-            'isActive' => $c === $category,
-            'url' => ($path ? url($path) : $products->url()).'?category='.$c,
-            'urlWithParams' => url(
-                $path ?? $products->id(),
-                ['params' => [
-                    'category' => $c === $category ? null : $c,
-                    'tag' => $tag,
-                ]]
-            ),
-        ], $categories);
-    }
-
     /**
-     * @return Collection<Category>
+     * @return Collection<Tag>
      */
-    public function categories(?string $path = null): Collection
+    public function tags(?string $path = null): Collection
     {
         $expire = kart()->option('expire');
         if (is_int($expire)) {
             $key = Kart::hash(implode(',', array_filter([$path, param('category'), param('tag')])));
-            $categories = kirby()->cache('bnomei.kart.categories')->getOrSet('categories-'.$key, function () use ($path) {
-                return $this->getCategories($path);
-            }, $expire);
+            $tags = kirby()->cache('bnomei.kart.tags')->getOrSet('tags-'.$key, fn () => $this->getTags($path), $expire);
         } else {
-            $categories = $this->getCategories($path);
+            $tags = $this->getTags($path);
         }
 
-        return new Collection(array_map(fn ($c) => new Category($c), $categories));  // @phpstan-ignore-line
-    }
-
-    /**
-     * @kql-allowed
-     */
-    public function productsWithTag(string|array $tags, bool $any = true): Pages
-    {
-        if (is_string($tags)) {
-            $tags = [$tags];
-        }
-        sort($tags);
-        $tags = array_unique($tags);
-
-        $expire = kart()->option('expire');
-        if (is_int($expire)) {
-            $key = 'tags-'.Kart::hash(implode(',', $tags)).($any ? '-any' : '-all');
-
-            return new Pages(array_filter(kirby()->cache('bnomei.kart.products')->getOrSet($key, function () use ($tags, $any) {
-                $products = $any ? $this->products()->filterBy('tags', 'in', $tags, ',') :
-                    $this->products()->filterBy(fn ($product) => count(array_diff($tags, $product->tags()->split())) === 0);
-
-                return array_values($products->toArray(fn (ProductPage $product) => $product->uuid()->toString()));
-            }, $expire)), fn ($id) => $this->kirby()->page($id) !== null);
-        }
-
-        return $any ? $this->products()->filterBy('tags', 'in', $tags, ',') :
-            $this->products()->filterBy(fn ($product) => count(array_diff($tags, $product->tags()->split())) === 0);
+        return new Collection(array_map(fn ($c) => new Tag($c), $tags)); // @phpstan-ignore-line
     }
 
     private function getTags(?string $path = null): array
@@ -650,21 +580,78 @@ class Kart
     }
 
     /**
-     * @return Collection<Tag>
+     * @return Collection<Category>
      */
-    public function tags(?string $path = null): Collection
+    public function categories(?string $path = null): Collection
     {
         $expire = kart()->option('expire');
         if (is_int($expire)) {
             $key = Kart::hash(implode(',', array_filter([$path, param('category'), param('tag')])));
-            $tags = kirby()->cache('bnomei.kart.tags')->getOrSet('tags-'.$key, function () use ($path) {
-                return $this->getTags($path);
-            }, $expire);
+            $categories = kirby()->cache('bnomei.kart.categories')->getOrSet('categories-'.$key, fn () => $this->getCategories($path), $expire);
         } else {
-            $tags = $this->getTags($path);
+            $categories = $this->getCategories($path);
         }
 
-        return new Collection(array_map(fn ($c) => new Tag($c), $tags)); // @phpstan-ignore-line
+        return new Collection(array_map(fn ($c) => new Category($c), $categories));  // @phpstan-ignore-line
+    }
+
+    private function getCategories(?string $path = null): array
+    {
+        $products = kart()->page(ContentPageEnum::PRODUCTS);
+        if (! $products) {
+            return [];
+        }
+        $categories = $products->children()->pluck('categories', ',', true);
+        $tags = $products->children()->pluck('tags', ',', true);
+        sort($categories);
+
+        $category = param('category');
+        $tag = param('tag');
+
+        return array_map(fn ($c) => [
+            'id' => $c,
+            'label' => t('category.'.$c, $c),
+            'title' => t('category.'.$c, $c),
+            'text' => t('category.'.$c, $c),
+            'value' => $c,
+            'count' => $products->children()->filterBy('categories', $c, ',')->filterBy('tags', 'in', $tag ? [$tag] : $tags, ',')->count(),
+            'isActive' => $c === $category,
+            'url' => ($path ? url($path) : $products->url()).'?category='.$c,
+            'urlWithParams' => url(
+                $path ?? $products->id(),
+                ['params' => [
+                    'category' => $c === $category ? null : $c,
+                    'tag' => $tag,
+                ]]
+            ),
+        ], $categories);
+    }
+
+    /**
+     * @kql-allowed
+     */
+    public function productsWithTag(string|array $tags, bool $any = true): Pages
+    {
+        if (is_string($tags)) {
+            $tags = [$tags];
+        }
+        sort($tags);
+        $tags = array_unique($tags);
+
+        $expire = kart()->option('expire');
+        if (is_int($expire)) {
+            $key = 'tags-'.Kart::hash(implode(',', $tags)).($any ? '-any' : '-all');
+
+            return new Pages(array_filter(kirby()->cache('bnomei.kart.products')->getOrSet($key, function () use ($tags, $any) {
+                $products = $any ? $this->products()->filterBy('tags', 'in', $tags, ',') :
+                    $this->products()->filterBy(fn ($product) => count(array_diff($tags, $product->tags()->split())) === 0);
+
+                return array_values($products->toArray(fn (ProductPage $product) => $product->uuid()->toString()));
+            }, $expire)), fn ($id) => $this->kirby()->page($id) !== null);
+        }
+
+        return $any ? $this->products()->filterBy('tags', 'in', $tags, ',') :
+            $this->products()->filterBy(fn ($product) => count(array_diff($tags, $product->tags()->split())) === 0);
     }
 
     /**

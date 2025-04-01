@@ -10,21 +10,23 @@
 
 namespace Bnomei\Kart\Mixins;
 
+use Closure;
+
 trait Captcha
 {
     public static function hasCaptcha(?string $response = null): ?int
     {
         $current = kart()->option('captcha.current');
-        if ($current instanceof \Closure) {
+        if ($current instanceof Closure) {
             $current = $current();
         }
-        $response = $response ?? $current;
+        $response ??= $current;
         if (! $response) {
             return null;
         }
 
         $secret = kart()->option('captcha.get');
-        if ($secret instanceof \Closure) {
+        if ($secret instanceof Closure) {
             $secret = $secret();
         }
         if (! $secret) {

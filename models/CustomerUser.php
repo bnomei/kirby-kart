@@ -8,6 +8,7 @@
  * Unauthorized copying, modification, or distribution is prohibited.
  */
 
+use Bnomei\Kart\Kart;
 use Kirby\Cms\Pages;
 use Kirby\Cms\User;
 use Kirby\Content\Field;
@@ -26,7 +27,7 @@ use Kirby\Content\Field;
  * @method Field stripe()
  * @method bool isCustomer()
  * @method string gravatar()
- * @method \Bnomei\Kart\Kart kart()
+ * @method Kart kart()
  * @method bool hasPurchased(ProductPage|string $product)
  * @method bool hasMadePaymentFor(string $provider, ProductPage $productPage)
  * @method Pages<string, OrderPage> orders()

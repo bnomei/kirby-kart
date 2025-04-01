@@ -1,5 +1,7 @@
 <?php
 
+use Kirby\Cms\App;
+
 const KIRBY_HELPER_DUMP = false;
 const KIRBY_HELPER_E = false;
 
@@ -9,7 +11,7 @@ require __DIR__.'/Testing.php';
 
 $_SERVER['SERVER_NAME'] = 'kart.test'; // k->env->isLocal()
 
-$kirby = new \Kirby\Cms\App;
+$kirby = new App;
 $render = $kirby->render();
 
 echo $render;

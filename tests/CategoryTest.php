@@ -9,7 +9,7 @@
  */
 use Bnomei\Kart\Category;
 
-it('has a category helper', function () {
+it('has a category helper', function (): void {
     $c = new Category([
         'id' => 'id',
         'text' => 'text',

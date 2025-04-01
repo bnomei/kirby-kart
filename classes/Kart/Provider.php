@@ -24,18 +24,15 @@ abstract class Provider
 {
     protected string $name;
 
-    protected App $kirby;
-
     protected Kart $kart;
 
     private array $options;
 
     private array $cache;
 
-    public function __construct(App $kirby)
+    public function __construct(protected App $kirby)
     {
-        $this->kirby = $kirby;
-        $this->kart = $kirby->site()->kart();
+        $this->kart = $this->kirby->site()->kart();
         $this->cache = [];
         $this->options = [];
     }
@@ -68,6 +65,11 @@ abstract class Provider
         $this->options[$key] = $option;
 
         return $option;
+    }
+
+    public function kirby(): App
+    {
+        return $this->kirby;
     }
 
     public function userData(string $key): mixed
@@ -106,11 +108,6 @@ abstract class Provider
                 $field => Yaml::encode($data),
             ]);
         });
-    }
-
-    public function kirby(): App
-    {
-        return $this->kirby;
     }
 
     public function sync(ContentPageEnum|string|null $sync = null): int
@@ -170,6 +167,11 @@ abstract class Provider
         ));
     }
 
+    public function name(): string
+    {
+        return $this->name;
+    }
+
     public function findFilesFromUrls(array $urls): array
     {
         // media pool in the products page
@@ -180,11 +182,6 @@ abstract class Provider
             fn ($url) => Str::startsWith($url, 'file://') ? $url : $images->filter('name', F::name($url))->first()?->uuid()->toString(), // slower but better results
             $urls
         ));
-    }
-
-    public function name(): string
-    {
-        return $this->name;
     }
 
     public function portal(?string $returnUrl = null): ?string

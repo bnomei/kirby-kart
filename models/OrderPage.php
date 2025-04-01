@@ -56,6 +56,45 @@ class OrderPage extends Page
         return $p->updateInvoiceNumber();
     }
 
+    public function updateInvoiceNumber(): Page
+    {
+        $page = $this;
+        $pageId = $this->id();
+        $current = $page->invnumber()->isEmpty() ? null : $page->invnumber()->toInt();
+
+        // if this order does have a num (from Merx) use that
+        if ($page->num() !== null) {
+            $current = $page->num();
+            if ($this->invnumber()->toInt() !== $current) {
+                $this->kirby()->impersonate('kirby', fn () => page($pageId)->update([
+                    'invnumber' => $current,
+                ]));
+            }
+        }
+
+        // if the current is higher than the tracker in the parent then update the parent with current
+        if ($current && $page->parent()->invnumber()->toInt() <= $current) {
+            $this->kirby()->impersonate('kirby', function () use ($pageId, $current): void {
+                page($pageId)->parent()->update([
+                    'invnumber' => $current,
+                ]);
+            });
+        }
+
+        // if the order does not have an invoice number increment and fetch from parent
+        if ($page->invnumber()->isEmpty()) {
+            $page = $this->kirby()->impersonate('kirby', function () use ($pageId) {
+                $next = page($pageId)->parent()->increment('invnumber', 1)->invnumber()->toInt();
+
+                return page($pageId)->update([
+                    'invnumber' => $next,
+                ]);
+            });
+        }
+
+        return $page;
+    }
+
     public static function phpBlueprint(): array
     {
         return [
@@ -251,6 +290,22 @@ class OrderPage extends Page
         return $sum;
     }
 
+    /**
+     * @kql-allowed
+     */
+    public function formattedDiscount(): string
+    {
+        return Kart::formatCurrency($this->discount());
+    }
+
+    /**
+     * @kql-allowed
+     */
+    public function discount(): float
+    {
+        return $this->itemsSum('discount');
+    }
+
     public function itemsSum(string $field): float
     {
         $sum = 0.0;
@@ -264,65 +319,17 @@ class OrderPage extends Page
     /**
      * @kql-allowed
      */
-    public function total(): float
-    {
-        return $this->itemsSum('total');
-    }
-
-    /**
-     * @kql-allowed
-     */
-    public function sumtax(): float // Merx
-    {
-        return $this->itemsSum('total');
-    }
-
-    /**
-     * @kql-allowed
-     */
-    public function discount(): float
-    {
-        return $this->itemsSum('discount');
-    }
-
-    /**
-     * @kql-allowed
-     */
-    public function subtotal(): float
-    {
-        return $this->itemsSum('subtotal');
-    }
-
-    /**
-     * @kql-allowed
-     */
-    public function sum(): float // Merx
-    {
-        return $this->itemsSum('subtotal');
-    }
-
-    /**
-     * @kql-allowed
-     */
-    public function tax(): float
-    {
-        return $this->itemsSum('tax'); // this in NOT Merx compatible, which stored taxrate
-    }
-
-    /**
-     * @kql-allowed
-     */
-    public function formattedDiscount(): string
-    {
-        return Kart::formatCurrency($this->discount());
-    }
-
-    /**
-     * @kql-allowed
-     */
     public function formattedTotal(): string
     {
         return Kart::formatCurrency($this->total());
+    }
+
+    /**
+     * @kql-allowed
+     */
+    public function total(): float
+    {
+        return $this->itemsSum('total');
     }
 
     /**
@@ -336,9 +343,25 @@ class OrderPage extends Page
     /**
      * @kql-allowed
      */
+    public function subtotal(): float
+    {
+        return $this->itemsSum('subtotal');
+    }
+
+    /**
+     * @kql-allowed
+     */
     public function formattedSum(): string
     {
         return Kart::formatCurrency($this->sum());
+    }
+
+    /**
+     * @kql-allowed
+     */
+    public function sum(): float // Merx
+    {
+        return $this->itemsSum('subtotal');
     }
 
     /**
@@ -352,6 +375,14 @@ class OrderPage extends Page
     /**
      * @kql-allowed
      */
+    public function tax(): float
+    {
+        return $this->itemsSum('tax'); // this in NOT Merx compatible, which stored taxrate
+    }
+
+    /**
+     * @kql-allowed
+     */
     public function formattedSumTax(): string
     {
         return Kart::formatCurrency($this->sumtax());
@@ -360,56 +391,24 @@ class OrderPage extends Page
     /**
      * @kql-allowed
      */
-    public function invoiceNumber(): string
+    public function sumtax(): float // Merx
     {
-        // $page = $this->updateInvoiceNumber(); // this would auto-fix Merx pages but it's not needed otherwise
-
-        return str_pad($this->invnumber()->value(), 5, 0, STR_PAD_LEFT);
+        return $this->itemsSum('total');
     }
 
     /*
      * takes care of migrating the Merx invoiceNumber from their
      * virtual 0000x of $page->num to a persisted value.
      */
-    public function updateInvoiceNumber(): Page
+
+    /**
+     * @kql-allowed
+     */
+    public function invoiceNumber(): string
     {
-        $page = $this;
-        $pageId = $this->id();
-        $current = $page->invnumber()->isEmpty() ? null : $page->invnumber()->toInt();
+        // $page = $this->updateInvoiceNumber(); // this would auto-fix Merx pages but it's not needed otherwise
 
-        // if this order does have a num (from Merx) use that
-        if ($page->num() !== null) {
-            $current = $page->num();
-            if ($this->invnumber()->toInt() !== $current) {
-                $this->kirby()->impersonate('kirby', function () use ($pageId, $current) {
-                    return page($pageId)->update([
-                        'invnumber' => $current,
-                    ]);
-                });
-            }
-        }
-
-        // if the current is higher than the tracker in the parent then update the parent with current
-        if ($current && $page->parent()->invnumber()->toInt() <= $current) {
-            $this->kirby()->impersonate('kirby', function () use ($pageId, $current) {
-                page($pageId)->parent()->update([
-                    'invnumber' => $current,
-                ]);
-            });
-        }
-
-        // if the order does not have an invoice number increment and fetch from parent
-        if ($page->invnumber()->isEmpty()) {
-            $page = $this->kirby()->impersonate('kirby', function () use ($pageId) {
-                $next = page($pageId)->parent()->increment('invnumber', 1)->invnumber()->toInt();
-
-                return page($pageId)->update([
-                    'invnumber' => $next,
-                ]);
-            });
-        }
-
-        return $page;
+        return str_pad((string) $this->invnumber()->value(), 5, 0, STR_PAD_LEFT);
     }
 
     /**
@@ -464,7 +463,7 @@ class OrderPage extends Page
 
             if (is_array($files)) {
                 foreach ($files as $file) {
-                    F::copy($file, $tmpDir.'/'.basename($file));
+                    F::copy($file, $tmpDir.'/'.basename((string) $file));
                 }
             }
 
@@ -476,7 +475,7 @@ class OrderPage extends Page
                 return null;
             }
 
-            if (count($existingFiles) === 1 && pathinfo($existingFiles[0], PATHINFO_EXTENSION) === 'zip') {
+            if (count($existingFiles) === 1 && pathinfo((string) $existingFiles[0], PATHINFO_EXTENSION) === 'zip') {
                 $zipFile = $tmpDir.'/'.$existingFiles[0];
             } else {
                 $zipFile = $tmpDir.'.zip';
@@ -493,12 +492,10 @@ class OrderPage extends Page
                 }
             }
 
-            $file = kirby()->impersonate('kirby', function () use ($zipFile, $zipFilename, $tmpId) {
-                return $this->createFile([
-                    'filename' => $zipFilename ?? md5($tmpId).'.zip', // make unguessable
-                    'source' => $zipFile,
-                ], move: true);
-            });
+            $file = kirby()->impersonate('kirby', fn () => $this->createFile([
+                'filename' => $zipFilename ?? md5($tmpId).'.zip', // make unguessable
+                'source' => $zipFile,
+            ], move: true));
 
             Dir::remove($tmpDir);
 

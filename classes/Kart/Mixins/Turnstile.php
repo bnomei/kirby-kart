@@ -21,7 +21,7 @@ trait Turnstile
             return null;
         }
 
-        $response = $response ?? get('cf-turnstile-response');
+        $response ??= get('cf-turnstile-response');
         if (empty($response)) {
             return null;
         }

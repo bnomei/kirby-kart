@@ -56,13 +56,6 @@ class ProductPage extends Page
         return $p;
     }
 
-    public function storage(): Storage
-    {
-        $this->storage ??= new ProductStorage(model: $this);
-
-        return $this->storage;
-    }
-
     public static function phpBlueprint(): array
     {
         return [
@@ -219,6 +212,13 @@ class ProductPage extends Page
         ];
     }
 
+    public function storage(): Storage
+    {
+        $this->storage ??= new ProductStorage(model: $this);
+
+        return $this->storage;
+    }
+
     /**
      * @kql-allowed
      */
@@ -268,14 +268,6 @@ class ProductPage extends Page
         return Kart::formatCurrency($this->price()->toFloat());
     }
 
-    /**
-     * @kql-allowed
-     */
-    public function add(): string
-    {
-        return Router::cart_add($this);
-    }
-
     public function addToCart(): string
     {
         return $this->add();
@@ -284,9 +276,9 @@ class ProductPage extends Page
     /**
      * @kql-allowed
      */
-    public function buy(): string
+    public function add(): string
     {
-        return Router::cart_buy($this);
+        return Router::cart_add($this);
     }
 
     public function buyNow(): string
@@ -297,9 +289,9 @@ class ProductPage extends Page
     /**
      * @kql-allowed
      */
-    public function remove(): string
+    public function buy(): string
     {
-        return Router::cart_remove($this);
+        return Router::cart_buy($this);
     }
 
     public function removeFromCart(): string
@@ -310,9 +302,9 @@ class ProductPage extends Page
     /**
      * @kql-allowed
      */
-    public function later(): string
+    public function remove(): string
     {
-        return Router::cart_later($this);
+        return Router::cart_remove($this);
     }
 
     public function moveFromCartToWishlist(): string
@@ -323,9 +315,9 @@ class ProductPage extends Page
     /**
      * @kql-allowed
      */
-    public function wish(): string
+    public function later(): string
     {
-        return Router::wishlist_add($this);
+        return Router::cart_later($this);
     }
 
     public function addToWishlist(): string
@@ -336,9 +328,9 @@ class ProductPage extends Page
     /**
      * @kql-allowed
      */
-    public function forget(): string
+    public function wish(): string
     {
-        return Router::wishlist_remove($this);
+        return Router::wishlist_add($this);
     }
 
     public function removeFromWishlist(): string
@@ -349,9 +341,9 @@ class ProductPage extends Page
     /**
      * @kql-allowed
      */
-    public function now(): string
+    public function forget(): string
     {
-        return Router::wishlist_now($this);
+        return Router::wishlist_remove($this);
     }
 
     public function moveFromWishlistToCart(): string
@@ -362,9 +354,9 @@ class ProductPage extends Page
     /**
      * @kql-allowed
      */
-    public function firstGalleryImage(): ?File
+    public function now(): string
     {
-        return $this->gallery()->toFile();
+        return Router::wishlist_now($this);
     }
 
     /**
@@ -373,6 +365,14 @@ class ProductPage extends Page
     public function firstGalleryImageUrl(): ?string
     {
         return $this->firstGalleryImage()?->resize(1920)->url();
+    }
+
+    /**
+     * @kql-allowed
+     */
+    public function firstGalleryImage(): ?File
+    {
+        return $this->gallery()->toFile();
     }
 
     /**

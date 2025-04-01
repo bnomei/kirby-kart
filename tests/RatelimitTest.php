@@ -10,16 +10,16 @@
 
 use Bnomei\Kart\Ratelimit;
 
-beforeEach(function () {
+beforeEach(function (): void {
     $this->ip = '1.1.1.1';
     Ratelimit::flush($this->ip);
 });
 
-afterEach(function () {
+afterEach(function (): void {
     Ratelimit::flush($this->ip);
 });
 
-it('has a ratelimit helper class', function () {
+it('has a ratelimit helper class', function (): void {
     expect(Ratelimit::class)->toBeString()
         ->and(kart()->option('middlewares.ratelimit.enabled'))->toBeTrue()
         ->and(Ratelimit::check($this->ip))->toBeTrue();

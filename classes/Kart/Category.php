@@ -11,6 +11,7 @@
 namespace Bnomei\Kart;
 
 use Kirby\Toolkit\Obj;
+use Stringable;
 
 /**
  * @method string id()
@@ -21,7 +22,7 @@ use Kirby\Toolkit\Obj;
  * @method string url()
  * @method string urlWithParams()
  */
-class Category extends Obj
+class Category extends Obj implements Stringable
 {
     public function __toString(): string
     {

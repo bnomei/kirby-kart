@@ -11,7 +11,7 @@
 use Bnomei\Kart\Cart;
 use Bnomei\Kart\Wishlist;
 
-it('has a wishlist that is just like a cart', function () {
+it('has a wishlist that is just like a cart', function (): void {
     $w = new Wishlist('wishlist');
     expect($w)->toBeInstanceOf(Cart::class)
         ->and($w->id())->toBe('wishlist');

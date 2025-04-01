@@ -28,7 +28,7 @@ class Ratelimit
         $cacheDurationInMinutes = 60;
         $rateLimitResetIntervalInSeconds = 60;
 
-        $ip = $ip ?? strval($kirby->visitor()->ip());
+        $ip ??= strval($kirby->visitor()->ip());
         $limit = intval(kart()->option('middlewares.ratelimit.limit')); // 12 per minute within 1 hour
         $key = sha1(__DIR__.$ip.date('Ymd'));
         [$expireAt, $count] = $kirby->cache('bnomei.kart.ratelimit')->get(
@@ -63,7 +63,7 @@ class Ratelimit
     public static function flush(?string $ip = null): void
     {
         $kirby = kirby();
-        $ip = $ip ?? strval($kirby->visitor()->ip());
+        $ip ??= strval($kirby->visitor()->ip());
         $key = sha1(__DIR__.$ip.date('Ymd'));
 
         $kirby->cache('bnomei.kart.ratelimit')->remove($key);

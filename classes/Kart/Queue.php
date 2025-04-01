@@ -16,10 +16,11 @@ use Kirby\Filesystem\F;
 use Kirby\Toolkit\A;
 use Kirby\Toolkit\Str;
 use Kirby\Uuid\Uuid;
+use Throwable;
 
 class Queue
 {
-    private string $dir;
+    private readonly string $dir;
 
     public function __construct()
     {
@@ -37,6 +38,11 @@ class Queue
         Dir::make($this->dir);
     }
 
+    public function remove(string $key): bool
+    {
+        return F::remove($this->dir.'/'.$key.'.json');
+    }
+
     public function count(bool $failed = false): int
     {
         return count(Dir::files($this->dir.($failed ? '/failed' : '')));
@@ -49,19 +55,6 @@ class Queue
         $job['createdAt'] = date('Y-m-d H:i:s u');
 
         return F::write($this->dir.'/'.$key.'.json', json_encode($job)) ? $key : null;
-    }
-
-    public function failed(array $job): bool
-    {
-        $key = $job['key'];
-        $job['failedAt'] = date('Y-m-d H:i:s u');
-
-        return F::write($this->dir.'/failed/'.$key.'.json', json_encode($job));
-    }
-
-    public function remove(string $key): bool
-    {
-        return F::remove($this->dir.'/'.$key.'.json');
     }
 
     public function process(bool $lock = true, bool $unlock = true): ?int
@@ -90,7 +83,7 @@ class Queue
         foreach ($index as $file) {
             if (F::exists($file) && F::extension($file) === 'json') {
                 $files[] = $file;
-                $key = basename($file, '.json');
+                $key = basename((string) $file, '.json');
 
                 if ($locking) {
                     $fileHandle = fopen($file, 'r');
@@ -142,7 +135,7 @@ class Queue
                 $success = false;
                 try {
                     $success = $this->handle($job);
-                } catch (\Throwable $e) {
+                } catch (Throwable) {
                     // ray($e->getMessage(), $job);
                 } finally {
                     if (! $success) {
@@ -198,7 +191,7 @@ class Queue
 
         $method = A::get($job, 'method');
         if (Str::startsWith($method, '::')) {
-            $method = substr($method, 2);
+            $method = substr((string) $method, 2);
             if ($data = A::get($job, 'data')) {
                 $class::$method(...$data);
 
@@ -225,5 +218,13 @@ class Queue
 
             return true;
         }
+    }
+
+    public function failed(array $job): bool
+    {
+        $key = $job['key'];
+        $job['failedAt'] = date('Y-m-d H:i:s u');
+
+        return F::write($this->dir.'/failed/'.$key.'.json', json_encode($job));
     }
 }
