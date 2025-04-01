@@ -79,9 +79,12 @@
   "scripts": {
     "stan": "./vendor/bin/phpstan",
     "fix": "./vendor/bin/pint",
+    "testBefore": "env KIRBY_HOST=kart.test vendor/bin/kirby testing:beforeAll",
+    "testAfter": "env KIRBY_HOST=kart.test vendor/bin/kirby testing:afterAll",
     "test": "./vendor/bin/pest --profile",
     "rector": "./vendor/bin/rector",
     "dist": [
+      "@testAfter",
       "composer fix",
       "vendor/bin/kirby kart:blueprints-publish",
       "composer install --no-dev --optimize-autoloader",

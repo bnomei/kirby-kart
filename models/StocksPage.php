@@ -135,8 +135,14 @@ class StocksPage extends Page
         return $c;
     }
 
+    /*
+     * @todo
+     */
     public function children(): Pages
     {
+        return parent::children();
+
+        /*
         if ($this->children instanceof Pages) {
             return $this->children;
         }
@@ -144,11 +150,17 @@ class StocksPage extends Page
         return $this->children = parent::children()->merge(
             Pages::factory(kart()->provider()->stocks(), $this)
         );
+        */
     }
 
-    public function updateStocks(array $data): ?int
+    public function updateStocks(array $data, int $mod = 1): ?int
     {
         $count = 0;
+        if ($mod >= 1) {
+            $mod = 1;
+        } else {
+            $mod = -1;
+        }
         foreach (A::get($data, 'items', []) as $item) {
             if (! is_array($item['key']) || count($item['key']) !== 1) {
                 continue;
@@ -160,12 +172,12 @@ class StocksPage extends Page
                 continue;
             }
 
-            if ($this->updateStock($product, intval($item['quantity']) * -1) !== null) {
+            if ($this->updateStock($product, intval($item['quantity']) * $mod) !== null) {
                 $count++;
             }
         }
 
-        return $count > 0;
+        return kart()->option('stocks.queue') ? null : $count;
     }
 
     public function updateStock(ProductPage $product, int $quantity, bool $set = false): ?int

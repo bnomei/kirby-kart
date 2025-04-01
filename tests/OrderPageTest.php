@@ -15,10 +15,13 @@ it('has a blueprint from PHP', function (): void {
 });
 
 it('is an order page', function (): void {
+    /** @var ProductPage $p */
     $p = kart()->products()->first();
+    /** @var ProductPage $l */
     $l = kart()->products()->last();
     /** @var OrdersPage $orders */
     $orders = kart()->page('orders');
+
     /** @var OrderPage $o */
     $o = $orders->createOrder([
         'paymentComplete' => true,
@@ -61,7 +64,9 @@ it('is an order page', function (): void {
         ->and($o->discount())->toBe(5.0)
         ->and($o->formattedDiscount())->toBe('€5.00')
         ->and($o->total())->toBe(87.0)
-        ->and($o->formattedTotal())->toBe('€87.00');
+        ->and($o->formattedTotal())->toBe('€87.00')
+        ->and($p->sold())->toBe(2)
+        ->and($l->sold())->toBe(3);
 
     // create zip file
     touch($o->root().'/hello.jpg');

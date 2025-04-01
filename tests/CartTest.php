@@ -11,14 +11,6 @@
 use Bnomei\Kart\Cart;
 use Kirby\Toolkit\Str;
 
-beforeAll(function () {
-    Testing::beforeAll();
-});
-
-afterAll(function (): void {
-    Testing::afterAll();
-});
-
 beforeEach(function (): void {
     $this->cart = new Cart;
 });

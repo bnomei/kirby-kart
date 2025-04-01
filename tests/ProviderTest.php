@@ -11,14 +11,6 @@
 use Bnomei\Kart\ContentPageEnum;
 use Kirby\Toolkit\Str;
 
-beforeAll(function (): void {
-    Testing::beforeAll();
-});
-
-afterAll(function (): void {
-    Testing::afterAll();
-});
-
 beforeEach(function (): void {
     $this->p = new Bnomei\Kart\Provider\Kirby(kirby());
 });

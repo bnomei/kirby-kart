@@ -7,13 +7,6 @@
  * This file is part of Kirby Kart and is proprietary software.
  * Unauthorized copying, modification, or distribution is prohibited.
  */
-beforeAll(function (): void {
-    Testing::beforeAll();
-});
-
-afterAll(function (): void {
-    Testing::afterAll();
-});
 
 use Bnomei\Kart\OrderLine;
 

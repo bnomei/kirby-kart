@@ -92,15 +92,6 @@ class ProductsPage extends Page
         ];
     }
 
-    /**
-     * @todo Not implemented
-     */
-    public function withPriceId(string $priceId): ?ProductPage
-    {
-        return $this->children()
-            ->filterBy(fn (ProductPage $p) => in_array($priceId, $p->priceIds()))->first();
-    }
-
     public function children(): Pages
     {
         if ($this->children instanceof Pages) {

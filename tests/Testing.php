@@ -14,21 +14,21 @@ class Testing
     public static function beforeAll(): void
     {
         kirby()->impersonate('kirby', function (): void {
-            //            page('products')?->children()->map(function ($p) {
-            //                $p->delete(true);
-            //
-            //                return $p;
-            //            });
-            //            page('stocks')?->children()->map(function ($p) {
-            //                $p->delete(true);
-            //
-            //                return $p;
-            //            });
-            //            page('orders')?->children()->map(function ($p) {
-            //                $p->delete(true);
-            //
-            //                return $p;
-            //            });
+            page('products')?->children()->map(function ($p) {
+                $p->delete(true);
+
+                return $p;
+            });
+            page('stocks')?->children()->map(function ($p) {
+                $p->delete(true);
+
+                return $p;
+            });
+            page('orders')?->children()->map(function ($p) {
+                $p->delete(true);
+
+                return $p;
+            });
             kart()->makeContentPages();
             kart()->tmnt();
             kart()->cart()->clear();

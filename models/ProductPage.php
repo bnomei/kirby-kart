@@ -111,7 +111,7 @@ class ProductPage extends Page
                                     'translate' => false,
                                     'virtual' => true,
                                 ],
-                                /* tax and taxrate are better of handles by the checkout flow
+                                /* tax and taxrate are handled by the checkout flow
                                 'taxrate' => [
                                     'label' => 'bnomei.kart.taxrate',
                                     'type' => 'number',

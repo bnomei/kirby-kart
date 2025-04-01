@@ -19,14 +19,6 @@ use Kirby\Cms\App;
 use Kirby\Cms\Pages;
 use Kirby\Toolkit\Str;
 
-beforeAll(function (): void {
-    // Testing::beforeAll();
-});
-
-afterAll(function (): void {
-    // Testing::afterAll();
-});
-
 it('has a singleton', function (): void {
     expect(Kart::singleton())->toBeInstanceOf(Kart::class);
 });
@@ -158,9 +150,9 @@ it('can find products with no stock', function (): void {
     $p = $p->updateStock(0, true);
 
     expect($p->stock())->toBe(0)
-        ->and(kart()->productsWithoutStocks()->count())->toBe(0)
+        ->and(kart()->productsWithoutStocks()->count())->toBe(1) // @see ONE_INFINITE_STOCK
         ->and(kart()->products()->filter(fn (ProductPage $page) => $page->stock() === 0)->count())->toBeGreaterThan(0);
-})->skipOnLinux(); // does not work when called bundled with all other tests due to missing pages
+});
 
 it('can find related products', function (): void {
     /** @var ProductPage $p */
@@ -177,10 +169,10 @@ it('can find related products', function (): void {
             'category' => $p->categories()->split()[0],
             'tag' => $p->tags()->split()[0],
         ])->count())->toBe(1); // human hero
-})->skipOnLinux(); // does not work when called bundled with all other tests due to missing pages
+});
 
 it('can find orders', function (): void {
-    $p = kart()->products()->first();
+    $p = kart()->products()->nth(2);
     $customer = kirby()->impersonate('kirby', fn () => kirby()->users()->create([
         'email' => Str::random(5).'@kart.test',
         'role' => 'customer',
@@ -205,4 +197,4 @@ it('can find orders', function (): void {
         ->and(kart()->ordersWithProduct($p)->count())->toBeGreaterThan(0)
         ->and(kart()->ordersWithCustomer($customer)->count())->toBe(1)
         ->and(kart()->ordersWithInvoiceNumber($o->invnumber()->toInt())->id())->toBe($o->id());
-})->skipOnLinux(); // does not work when called bundled with all other tests due to missing pages
+});

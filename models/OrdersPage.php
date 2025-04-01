@@ -87,8 +87,14 @@ class OrdersPage extends Page
         ];
     }
 
+    /*
+     * @todo
+     */
     public function children(): Pages
     {
+        return parent::children();
+
+        /*
         if ($this->children instanceof Pages) {
             return $this->children;
         }
@@ -96,6 +102,7 @@ class OrdersPage extends Page
         return $this->children = parent::children()->merge(
             Pages::factory(kart()->provider()->orders(), $this)
         );
+        */
     }
 
     public function createOrder(array $data, ?User $customer = null): ?Page

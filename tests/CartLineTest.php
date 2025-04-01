@@ -11,17 +11,9 @@
 use Bnomei\Kart\CartLine;
 use Bnomei\Kart\ContentPageEnum;
 
-beforeAll(function (): void {
-    Testing::beforeAll();
-});
-
-// afterAll(function () {
-//    Testing::afterAll();
-// });
-
 beforeEach(function (): void {
     $this->cartLine = new CartLine(
-        page('products')->children()->random(1)->first(), 2
+        page('products')->children()->last(), 2
     );
 });
 
@@ -84,6 +76,7 @@ it('checks if the product has stock with the given quantity', function (): void 
     /** @var StocksPage $stocks */
     $stocks = kart()->page(ContentPageEnum::STOCKS);
     kirby()->impersonate('kirby', function () use ($stocks): void {
+        // @see ONE_INFINITE_STOCK
         $stocks->stockPages($this->cartLine->product())->first()?->delete(true); // none = infinite
     });
     expect($this->cartLine->hasStockForQuantity())->toBeTrue()

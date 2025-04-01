@@ -13,3 +13,14 @@ use Kirby\Data\Yaml;
 it('has a blueprint from PHP', function (): void {
     expect(Yaml::encode(OrdersPage::phpBlueprint()))->toMatchSnapshot();
 });
+
+it('can disable order creation', function (): void {
+    kart()->setOption('orders.enabled', false);
+
+    /** @var OrdersPage $orders */
+    $orders = kart()->page('orders');
+
+    /** @var OrderPage $o */
+    $o = $orders->createOrder([]);
+    expect($o)->toBeNull();
+});

@@ -331,7 +331,7 @@ class Cart
         $this->releaseStock($data);
         /** @var StocksPage|null $stocks */
         $stocks = $this->kart->page(ContentPageEnum::STOCKS);
-        $stocks?->updateStocks($data);
+        $stocks?->updateStocks($data, -1);
 
         $this->kirby->trigger('kart.cart.completed', [
             'user' => $customer,

@@ -55,7 +55,7 @@ trait TMNT
                     'template' => 'stock',
                     'content' => [
                         'page' => Yaml::encode([$product->uuid()->toString()]),
-                        'stock' => random_int(0, 10),
+                        'stock' => random_int(1, 10),
                     ],
                 ]);
             }
