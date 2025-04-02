@@ -63,7 +63,6 @@ App::plugin(
                 'lemonsqueeze' => true,
                 'mollie' => true,
                 'paddle' => true,
-                'payone' => true,
                 'paypal' => true,
                 'snipcart' => true,
                 'stripe' => true,
@@ -158,7 +157,6 @@ App::plugin(
                 'lemonsqueeze' => [],
                 'mollie' => [],
                 'paddle' => [],
-                'payone' => [],
                 'paypal' => [],
                 'snipcart' => [],
                 'stripe' => [
