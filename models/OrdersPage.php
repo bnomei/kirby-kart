@@ -35,7 +35,7 @@ class OrdersPage extends Page
             ],
             'sections' => [
                 'stats' => [
-                    'label' => t('bnomei.kart.summary'),
+                    'label' => 'bnomei.kart.summary',
                     'type' => 'stats',
                     'reports' => [
                         [
