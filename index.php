@@ -638,10 +638,13 @@ App::plugin(
                 return false;
             },
             /**
+             * @todo
+             *
              * @kql-allowed
              */
+            /*
             'hasMadePaymentFor' => function (string $provider, ProductPage $productPage): bool {
-                /** @var CustomerUser $user */
+                /** @var CustomerUser $user * /
                 $user = $this;
                 if ($this->$provider()->isEmpty()) {
                     return false;
@@ -655,6 +658,7 @@ App::plugin(
                     A::get($data, 'payments', [])
                 )) > 0;
             },
+            */
             /**
              * @kql-allowed
              */

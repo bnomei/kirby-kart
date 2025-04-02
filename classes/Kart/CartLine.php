@@ -83,7 +83,8 @@ class CartLine
         $new = $old;
 
         if (! $this->hasStockForQuantity()) {
-            $new = $this->setQuantity($this->product()?->stock(withHold: $this->cart?->sessionToken()));
+            $stock = $this->product()?->stock(withHold: $this->cart?->sessionToken());
+            $new = is_numeric($stock) ? $this->setQuantity(intval($stock)) : $old;
         }
 
         $updated = $this->setQuantity($new); // call will enforce maxapo even with same quantity
