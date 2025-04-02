@@ -18,7 +18,6 @@ fields:
     label: bnomei.kart.stock
     type: number
     required: true
-    min: 0
     step: 1
     default: 0
     translate: false

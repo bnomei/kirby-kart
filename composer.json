@@ -73,8 +73,7 @@
     "laravel/pint": "^1.13",
     "pestphp/pest": "^v3.5.1",
     "spatie/ray": "^1.39",
-    "getkirby/cli": "^1.5",
-    "rector/rector": "^2.0"
+    "getkirby/cli": "^1.5"
   },
   "scripts": {
     "stan": "./vendor/bin/phpstan",

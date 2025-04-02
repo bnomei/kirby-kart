@@ -80,6 +80,13 @@ tabs:
               parent: page.parent
             width: 1/2
             translate: false
+          maxapo:
+            label: bnomei.kart.max-amount-per-order
+            type: number
+            step: 1
+            translate: false
+            width: 1/4
+            help: '{{ site.kart.option("orders.order.maxapo") }}'
           raw:
             type: hidden
             translate: false

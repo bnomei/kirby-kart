@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "0b4a90d8ca6c77d6790e4f32c53ff9b9",
+    "content-hash": "313bd76840df0322f0403e2512a961e4",
     "packages": [
         {
             "name": "getkirby/composer-installer",
@@ -1509,7 +1509,7 @@
         },
         {
             "name": "illuminate/bus",
-            "version": "v12.4.1",
+            "version": "v12.5.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/illuminate/bus.git",
@@ -1562,7 +1562,7 @@
         },
         {
             "name": "illuminate/collections",
-            "version": "v12.4.1",
+            "version": "v12.5.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/illuminate/collections.git",
@@ -1618,7 +1618,7 @@
         },
         {
             "name": "illuminate/conditionable",
-            "version": "v12.4.1",
+            "version": "v12.5.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/illuminate/conditionable.git",
@@ -1664,7 +1664,7 @@
         },
         {
             "name": "illuminate/console",
-            "version": "v12.4.1",
+            "version": "v12.5.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/illuminate/console.git",
@@ -1730,7 +1730,7 @@
         },
         {
             "name": "illuminate/container",
-            "version": "v12.4.1",
+            "version": "v12.5.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/illuminate/container.git",
@@ -1781,7 +1781,7 @@
         },
         {
             "name": "illuminate/contracts",
-            "version": "v12.4.1",
+            "version": "v12.5.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/illuminate/contracts.git",
@@ -1829,16 +1829,16 @@
         },
         {
             "name": "illuminate/database",
-            "version": "v12.4.1",
+            "version": "v12.5.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/illuminate/database.git",
-                "reference": "a88e2fb138b83f15699a12cd5efdb36df0fd7aef"
+                "reference": "55200b85a3ff7588addc2fd4902ae1f9a7dce252"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/illuminate/database/zipball/a88e2fb138b83f15699a12cd5efdb36df0fd7aef",
-                "reference": "a88e2fb138b83f15699a12cd5efdb36df0fd7aef",
+                "url": "https://api.github.com/repos/illuminate/database/zipball/55200b85a3ff7588addc2fd4902ae1f9a7dce252",
+                "reference": "55200b85a3ff7588addc2fd4902ae1f9a7dce252",
                 "shasum": ""
             },
             "require": {
@@ -1894,11 +1894,11 @@
                 "issues": "https://github.com/laravel/framework/issues",
                 "source": "https://github.com/laravel/framework"
             },
-            "time": "2025-03-29T17:44:28+00:00"
+            "time": "2025-03-31T14:05:51+00:00"
         },
         {
             "name": "illuminate/events",
-            "version": "v12.4.1",
+            "version": "v12.5.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/illuminate/events.git",
@@ -1953,7 +1953,7 @@
         },
         {
             "name": "illuminate/filesystem",
-            "version": "v12.4.1",
+            "version": "v12.5.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/illuminate/filesystem.git",
@@ -2020,7 +2020,7 @@
         },
         {
             "name": "illuminate/http",
-            "version": "v12.4.1",
+            "version": "v12.5.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/illuminate/http.git",
@@ -2081,7 +2081,7 @@
         },
         {
             "name": "illuminate/macroable",
-            "version": "v12.4.1",
+            "version": "v12.5.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/illuminate/macroable.git",
@@ -2127,7 +2127,7 @@
         },
         {
             "name": "illuminate/pipeline",
-            "version": "v12.4.1",
+            "version": "v12.5.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/illuminate/pipeline.git",
@@ -2175,7 +2175,7 @@
         },
         {
             "name": "illuminate/session",
-            "version": "v12.4.1",
+            "version": "v12.5.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/illuminate/session.git",
@@ -2232,16 +2232,16 @@
         },
         {
             "name": "illuminate/support",
-            "version": "v12.4.1",
+            "version": "v12.5.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/illuminate/support.git",
-                "reference": "884946c2f30b57cf4f94de19e9a0a95e0b0149b8"
+                "reference": "241fc61bd52a86841ce54c254a8859574c92ff72"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/illuminate/support/zipball/884946c2f30b57cf4f94de19e9a0a95e0b0149b8",
-                "reference": "884946c2f30b57cf4f94de19e9a0a95e0b0149b8",
+                "url": "https://api.github.com/repos/illuminate/support/zipball/241fc61bd52a86841ce54c254a8859574c92ff72",
+                "reference": "241fc61bd52a86841ce54c254a8859574c92ff72",
                 "shasum": ""
             },
             "require": {
@@ -2305,11 +2305,11 @@
                 "issues": "https://github.com/laravel/framework/issues",
                 "source": "https://github.com/laravel/framework"
             },
-            "time": "2025-03-27T19:06:10+00:00"
+            "time": "2025-04-01T14:17:57+00:00"
         },
         {
             "name": "illuminate/view",
-            "version": "v12.4.1",
+            "version": "v12.5.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/illuminate/view.git",
@@ -5201,65 +5201,6 @@
                 }
             ],
             "time": "2024-04-27T21:32:50+00:00"
-        },
-        {
-            "name": "rector/rector",
-            "version": "2.0.11",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/rectorphp/rector.git",
-                "reference": "059b827cc648929711606e9824337e41e2f9ed92"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/rectorphp/rector/zipball/059b827cc648929711606e9824337e41e2f9ed92",
-                "reference": "059b827cc648929711606e9824337e41e2f9ed92",
-                "shasum": ""
-            },
-            "require": {
-                "php": "^7.4|^8.0",
-                "phpstan/phpstan": "^2.1.9"
-            },
-            "conflict": {
-                "rector/rector-doctrine": "*",
-                "rector/rector-downgrade-php": "*",
-                "rector/rector-phpunit": "*",
-                "rector/rector-symfony": "*"
-            },
-            "suggest": {
-                "ext-dom": "To manipulate phpunit.xml via the custom-rule command"
-            },
-            "bin": [
-                "bin/rector"
-            ],
-            "type": "library",
-            "autoload": {
-                "files": [
-                    "bootstrap.php"
-                ]
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "description": "Instant Upgrade and Automated Refactoring of any PHP code",
-            "keywords": [
-                "automation",
-                "dev",
-                "migration",
-                "refactoring"
-            ],
-            "support": {
-                "issues": "https://github.com/rectorphp/rector/issues",
-                "source": "https://github.com/rectorphp/rector/tree/2.0.11"
-            },
-            "funding": [
-                {
-                    "url": "https://github.com/tomasvotruba",
-                    "type": "github"
-                }
-            ],
-            "time": "2025-03-28T10:25:17+00:00"
         },
         {
             "name": "sebastian/cli-parser",

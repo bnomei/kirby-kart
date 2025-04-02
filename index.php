@@ -349,6 +349,9 @@ App::plugin(
             },
             /*
             // KART
+            'kart.log' => function ($ex): void {
+                //
+            },
             'kart.cart.completed' => function (?User $user = null, ?OrderPage $order = null): void {
                 // fulfillment hook of Cart::complete()
             },
