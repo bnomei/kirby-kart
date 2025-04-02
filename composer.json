@@ -68,7 +68,7 @@
     "s1syphos/php-simple-captcha": "^2.3"
   },
   "require-dev": {
-    "getkirby/cms": "dev-v5/develop as 5.0.0",
+    "getkirby/cms": "5.0.0-beta.4",
     "larastan/larastan": "^v3.0.0",
     "laravel/pint": "^1.13",
     "pestphp/pest": "^v3.5.1",
