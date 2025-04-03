@@ -33,7 +33,8 @@ it('can be initialized with products and quantities', function (): void {
         ->and($this->cart->isEmpty())->toBeFalse()
         ->and($this->cart->isNotEmpty())->toBeTrue()
         ->and($this->cart->subtotal())->toBeGreaterThan(0)
-        ->and($this->cart->formattedSubtotal())->toBeString();
+        ->and($this->cart->formattedSubtotal())->toBeString()
+        ->and($this->cart->hash())->toBeString();
 
     $f = $this->cart->lines()->first();
     $p = $f->product();

@@ -45,7 +45,7 @@ class ProductPage extends Page
         }
 
         $props['parent'] = $parent;
-        $props['isDraft'] = false;
+        // $props['isDraft'] = false;
         $props['template'] = kart()->option('products.product.template', 'product');
         $props['model'] = kart()->option('products.product.model', 'product');
 

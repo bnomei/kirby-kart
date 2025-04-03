@@ -84,7 +84,8 @@ App::plugin(
                 'order' => [
                     'uuid' => fn (?OrdersPage $orders, array $props) => 'or-'.Kart::nonAmbiguousUuid(7), // aka order id
                     'create-missing-zips' => true,
-                    'maxapo' => 10, // max amount of this product per order, keep this low to prevent stock hostages, set per product instead
+                    'maxapo' => 10, // max amount of a single product per order, keep this low to prevent stock hostages, set per product instead
+                    'maxlpo' => 10, // max different products per order aka lines in cart
                 ],
             ],
             'products' => [
@@ -157,7 +158,17 @@ App::plugin(
                 'lemonsqueeze' => [],
                 'mollie' => [],
                 'paddle' => [],
-                'paypal' => [],
+                'paypal' => [
+                    'endpoint' => fn () => class_exists('\Bnomei\DotEnv') ? DotEnv::getenv('PAYPAL_ENDPOINT') : 'https://api-m.sandbox.paypal.com',
+                    'client_id' => fn () => class_exists('\Bnomei\DotEnv') ? DotEnv::getenv('PAYPAL_CLIENT_ID') : null,
+                    'client_secret' => fn () => class_exists('\Bnomei\DotEnv') ? DotEnv::getenv('PAYPAL_CLIENT_SECRET') : null,
+                    'checkout_options' => function (Kart $kart) {
+                        // configure the checkout based on current kart instance
+                        // https://developer.paypal.com/docs/api/orders/v2/#orders_create
+                        return [];
+                    },
+                    'virtual' => ['title', 'description', 'gallery'],
+                ],
                 'snipcart' => [],
                 'stripe' => [
                     'secret_key' => fn () => class_exists('\Bnomei\DotEnv') ? DotEnv::getenv('STRIPE_SECRET_KEY') : null,
@@ -166,7 +177,7 @@ App::plugin(
                         // https://docs.stripe.com/api/checkout/sessions/create
                         return [];
                     },
-                    'virtual' => 'prune', // 'prune', // do not write pure virtual fields to file
+                    'virtual' => true,
                 ],
             ],
             'turnstile' => [

@@ -31,6 +31,7 @@ return [
     'bnomei.kart.paidDate' => 'Ödeme Tarihi',
     'bnomei.kart.payment' => 'Ödeme',
     'bnomei.kart.paymentcomplete' => 'Ödeme Tamamlandı',
+    'bnomei.kart.paymentid' => 'Ödeme-ID',
     'bnomei.kart.paymentmethod' => 'Ödeme Yöntemi',
     'bnomei.kart.price' => 'Fiyat',
     'bnomei.kart.product' => 'Ürün',

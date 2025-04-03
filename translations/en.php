@@ -31,6 +31,7 @@ return [
     'bnomei.kart.paidDate' => 'Paid Date',
     'bnomei.kart.payment' => 'Payment',
     'bnomei.kart.paymentcomplete' => 'Payment Complete',
+    'bnomei.kart.paymentid' => 'Payment-ID',
     'bnomei.kart.paymentmethod' => 'Payment Method',
     'bnomei.kart.price' => 'Price',
     'bnomei.kart.product' => 'Product',

@@ -44,9 +44,10 @@ class ProductStorage extends PlainTextStorage
 
     protected function write(VersionId $versionId, Language $language, array $fields): void
     {
-        // remove virtual fields
-        if (kart()->provider()->virtual() === 'prune') {
-            $virtualFields = array_keys(A::filter(
+        // remove (all or some) virtual fields
+        $virtual = kart()->provider()->virtual();
+        if ($virtual !== false) {
+            $virtualFields = is_array($virtual) ? $virtual : array_keys(A::filter(
                 $this->model()->blueprint()->fields(),
                 fn ($field) => A::get($field, 'virtual') === true
             ));

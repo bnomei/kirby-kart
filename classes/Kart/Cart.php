@@ -75,9 +75,12 @@ class Cart
             return 0;
         }
 
+        $maxLines = intval(kart()->option('orders.order.maxlpo'));
         if ($item = $this->lines->get($product->uuid()->id())) {
             /** @var CartLine $item */
             $item->increment($amount);
+        } elseif ($this->lines->count() >= $maxLines) {
+            $this->lines = $this->lines->slice(0, $maxLines);
         } else {
             $item = new CartLine(
                 $product->uuid()->id(),
@@ -106,6 +109,11 @@ class Cart
     public function id(): string
     {
         return $this->id;
+    }
+
+    public function hash(): string
+    {
+        return Kart::hash($this->lines()->toJson());
     }
 
     public function count(): int

@@ -42,10 +42,10 @@ abstract class Provider
         return implode(' ', array_map('ucfirst', (explode('_', $this->name))));
     }
 
-    public function virtual(): bool|string
+    public function virtual(): bool|array
     {
         $virtual = $this->kirby()->option("bnomei.kart.providers.{$this->name}.virtual", true);
-        if (is_string($virtual) || is_bool($virtual)) {
+        if (is_array($virtual) || is_bool($virtual)) {
             return $virtual;
         }
 
@@ -155,8 +155,12 @@ abstract class Provider
         return $this->cache()->get($u, '?');
     }
 
-    public function findImagesFromUrls(array $urls): array
+    public function findImagesFromUrls(string|array $urls): array
     {
+        if (is_string($urls)) {
+            $urls = [$urls];
+        }
+
         // media pool in the products page
         $images = $this->kirby()->site()->kart()->page(ContentPageEnum::PRODUCTS)->images();
 
@@ -172,8 +176,12 @@ abstract class Provider
         return $this->name;
     }
 
-    public function findFilesFromUrls(array $urls): array
+    public function findFilesFromUrls(string|array $urls): array
     {
+        if (is_string($urls)) {
+            $urls = [$urls];
+        }
+
         // media pool in the products page
         $images = $this->kirby()->site()->kart()->page(ContentPageEnum::PRODUCTS)->files();
 

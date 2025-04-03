@@ -39,6 +39,7 @@ trait Options
             'orders.order.uuid',
             'products.product.uuid',
             'stocks.stock.uuid',
+            'providers.paypal.checkout_options',
             'providers.stripe.checkout_options',
         ])) {
             $option = $option();

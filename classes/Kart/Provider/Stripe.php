@@ -92,6 +92,7 @@ class Stripe extends Provider
             'paymentMethod' => implode(',', A::get($json, 'payment_method_types', [])),
             'paymentComplete' => A::get($json, 'payment_status') === 'paid',
             'invoiceurl' => A::get($json, 'invoice'),
+            'paymentId' => A::get($json, 'id'),
         ]));
 
         $remote = Remote::get('https://api.stripe.com/v1/checkout/sessions/'.$sessionId.'/line_items', [

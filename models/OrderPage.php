@@ -28,6 +28,7 @@ use Kirby\Toolkit\Str;
  * @method Field items()
  * @method Field paymentComplete()
  * @method Field paymentMethod()
+ * @method Field paymentId()
  * @method Field notes()
  */
 class OrderPage extends Page
@@ -175,6 +176,11 @@ class OrderPage extends Page
                             'default' => 'now',
                             'translate' => false,
                             'width' => '1/3',
+                        ],
+                        'paymentId' => [
+                            'label' => 'bnomei.kart.paymentid',
+                            'type' => 'text',
+                            'translate' => false,
                         ],
                         'invoiceurl' => [
                             'label' => 'bnomei.kart.invoice',

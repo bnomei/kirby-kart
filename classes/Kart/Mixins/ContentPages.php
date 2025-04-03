@@ -56,7 +56,6 @@ trait ContentPages
                         'uuid' => $key, // match key to make them easier to find
                     ];
                 }
-                ray($props);
                 Page::create($props);
             }
         });
