@@ -164,6 +164,7 @@ App::plugin(
                 'paddle' => [
                     // https://developer.paddle.com/api-reference/overview
                     'endpoint' => fn () => class_exists('\Bnomei\DotEnv') ? DotEnv::getenv('PADDLE_ENDPOINT', 'https://sandbox-api.paddle.com') : 'https://sandbox-api.paddle.com',
+                    'public_token' => fn () => class_exists('\Bnomei\DotEnv') ? DotEnv::getenv('PADDLE_PUBLIC_TOKEN') : null,
                     'secret_key' => fn () => class_exists('\Bnomei\DotEnv') ? DotEnv::getenv('PADDLE_SECRET_KEY') : null,
                     'checkout_options' => function (Kart $kart) {
                         // configure the checkout based on current kart instance
@@ -250,6 +251,7 @@ App::plugin(
             'kart/login-magic' => __DIR__.'/snippets/kart/login-magic.php',
             'kart/logout' => __DIR__.'/snippets/kart/logout.php',
             'kart/order.pdf' => __DIR__.'/snippets/kart/order.pdf.php',
+            'kart/paddle-checkout' => __DIR__.'/snippets/kart/paddle-checkout.php',
             'kart/product-card' => __DIR__.'/snippets/kart/product-card.php',
             'kart/product-json-ld' => __DIR__.'/snippets/kart/product-json-ld.php',
             'kart/profile' => __DIR__.'/snippets/kart/profile.php',
