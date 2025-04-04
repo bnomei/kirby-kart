@@ -64,6 +64,7 @@ App::plugin(
                 'mollie' => true,
                 'paddle' => true,
                 'paypal' => true,
+                'payone' => true,
                 'snipcart' => true,
                 'stripe' => true,
             ],
@@ -85,7 +86,7 @@ App::plugin(
                     'uuid' => fn (?OrdersPage $orders, array $props) => 'or-'.Kart::nonAmbiguousUuid(7), // aka order id
                     'create-missing-zips' => true,
                     'maxapo' => 10, // max amount of a single product per order, keep this low to prevent stock hostages, set per product instead
-                    'maxlpo' => 10, // max different products per order aka lines in cart
+                    'maxlpo' => 10, // max different products per order aka lines in cart, check your providers API docs before increasing this
                 ],
             ],
             'products' => [
@@ -150,16 +151,30 @@ App::plugin(
             'provider' => 'kirby_cms', // see ProviderEnum (kirby_cms, stripe, mollie, paddle, ...) or use \Kart\Provider\Kirby::class etc.
             'providers' => [
                 'fastspring' => [],
-                'gumroad' => [],
+                'gumroad' => [
+                    'access_token' => fn () => class_exists('\Bnomei\DotEnv') ? DotEnv::getenv('GUMROAD_ACCESS_TOKEN') : null,
+                    'virtual' => true,
+                ],
                 'invoice_ninja' => [],
                 'kirby_cms' => [
                     'virtual' => false,
                 ],
                 'lemonsqueeze' => [],
                 'mollie' => [],
-                'paddle' => [],
+                'paddle' => [
+                    // https://developer.paddle.com/api-reference/overview
+                    'endpoint' => fn () => class_exists('\Bnomei\DotEnv') ? DotEnv::getenv('PADDLE_ENDPOINT', 'https://sandbox-api.paddle.com') : 'https://sandbox-api.paddle.com',
+                    'secret_key' => fn () => class_exists('\Bnomei\DotEnv') ? DotEnv::getenv('PADDLE_SECRET_KEY') : null,
+                    'checkout_options' => function (Kart $kart) {
+                        // configure the checkout based on current kart instance
+                        // https://developer.paddle.com/api-reference/transactions/create-transaction
+                        return [];
+                    },
+                    'virtual' => true,
+                ],
+                'payone' => [],
                 'paypal' => [
-                    'endpoint' => fn () => class_exists('\Bnomei\DotEnv') ? DotEnv::getenv('PAYPAL_ENDPOINT') : 'https://api-m.sandbox.paypal.com',
+                    'endpoint' => fn () => class_exists('\Bnomei\DotEnv') ? DotEnv::getenv('PAYPAL_ENDPOINT', 'https://api-m.sandbox.paypal.com') : 'https://api-m.sandbox.paypal.com',
                     'client_id' => fn () => class_exists('\Bnomei\DotEnv') ? DotEnv::getenv('PAYPAL_CLIENT_ID') : null,
                     'client_secret' => fn () => class_exists('\Bnomei\DotEnv') ? DotEnv::getenv('PAYPAL_CLIENT_SECRET') : null,
                     'checkout_options' => function (Kart $kart) {
@@ -169,7 +184,9 @@ App::plugin(
                     },
                     'virtual' => ['title', 'description', 'gallery'],
                 ],
-                'snipcart' => [],
+                'snipcart' => [
+
+                ],
                 'stripe' => [
                     'secret_key' => fn () => class_exists('\Bnomei\DotEnv') ? DotEnv::getenv('STRIPE_SECRET_KEY') : null,
                     'checkout_options' => function (Kart $kart) {

@@ -157,6 +157,10 @@ abstract class Provider
 
     public function findImagesFromUrls(string|array $urls): array
     {
+        if (empty($urls)) {
+            return [];
+        }
+
         if (is_string($urls)) {
             $urls = [$urls];
         }
@@ -178,6 +182,10 @@ abstract class Provider
 
     public function findFilesFromUrls(string|array $urls): array
     {
+        if (empty($urls)) {
+            return [];
+        }
+
         if (is_string($urls)) {
             $urls = [$urls];
         }

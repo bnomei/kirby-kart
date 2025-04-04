@@ -77,8 +77,8 @@ class ProductPage extends Page
                                     'value' => '{{ page.formattedPrice() }}',
                                 ],
                                 [
-                                    'label' => 'bnomei.kart.sold',
-                                    'value' => '{{ page.sold }}',
+                                    'label' => 'bnomei.kart.sales-count',
+                                    'value' => '{{ page.salesCount }}',
                                     'link' => '{{ site.kart.page("orders").url }}',
                                 ],
                                 [
@@ -253,7 +253,7 @@ class ProductPage extends Page
     /**
      * @kql-allowed
      */
-    public function sold(): ?int
+    public function salesCount(): ?int
     {
         return array_sum(kart()->orders()->toArray(
             fn (OrderPage $order) => $order->productsCount($this)
@@ -391,5 +391,10 @@ class ProductPage extends Page
         $stocks->updateStock($this, $quantity, $set);
 
         return $this;
+    }
+
+    public function gumroadUrl(): ?string
+    {
+        return A::get($this->raw()->yaml(), 'short_url');
     }
 }

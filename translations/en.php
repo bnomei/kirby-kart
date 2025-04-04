@@ -9,7 +9,7 @@ return [
     'bnomei.kart.customers' => 'Customers',
     'bnomei.kart.description' => 'Description',
     'bnomei.kart.discount' => 'Discount',
-    'bnomei.kart.dowloads' => 'Downloads',
+    'bnomei.kart.downloads' => 'Downloads',
     'bnomei.kart.gallery' => 'Gallery',
     'bnomei.kart.goodbye' => 'So long and thanks for all the fish', // https://en.wikipedia.org/wiki/So_Long,_and_Thanks_for_All_the_Fish
     'bnomei.kart.invoice' => 'Invoice',
@@ -42,6 +42,7 @@ return [
     'bnomei.kart.raw-values' => 'Provider data',
     'bnomei.kart.register' => 'Register',
     'bnomei.kart.revenue-30' => 'Revenue (30 days)',
+    'bnomei.kart.sales-count' => 'Sales Count',
     'bnomei.kart.signup' => 'Sign up',
     'bnomei.kart.sold' => 'Sold',
     'bnomei.kart.stock' => 'Stock',

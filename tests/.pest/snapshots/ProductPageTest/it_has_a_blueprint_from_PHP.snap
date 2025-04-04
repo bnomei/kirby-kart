@@ -11,13 +11,13 @@ tabs:
         label: bnomei.kart.summary
         type: stats
         reports:
-          - 
+          -
             value: '{{ page.formattedPrice() }}'
-          - 
-            label: bnomei.kart.sold
-            value: '{{ page.sold }}'
+          -
+            label: bnomei.kart.sales-count
+            value: '{{ page.salesCount }}'
             link: '{{ site.kart.page("orders").url }}'
-          - 
+          -
             label: bnomei.kart.stock
             value: '{{ page.stock }}'
             link: '{{ page.stockUrl }}'

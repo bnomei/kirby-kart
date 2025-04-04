@@ -39,7 +39,15 @@ trait Options
             'orders.order.uuid',
             'products.product.uuid',
             'stocks.stock.uuid',
+            'providers.fastspring.checkout_options',
+            'providers.invoice_ninja.checkout_options',
+            'providers.kirby_cms.checkout_options',
+            'providers.lemonsqueeze.checkout_options',
+            'providers.mollie.checkout_options',
+            'providers.paddle.checkout_options',
+            'providers.payone.checkout_options',
             'providers.paypal.checkout_options',
+            'providers.snipcart.checkout_options',
             'providers.stripe.checkout_options',
         ])) {
             $option = $option();

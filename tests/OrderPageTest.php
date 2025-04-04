@@ -65,8 +65,8 @@ it('is an order page', function (): void {
         ->and($o->formattedDiscount())->toBe('€5.00')
         ->and($o->total())->toBe(87.0)
         ->and($o->formattedTotal())->toBe('€87.00')
-        ->and($p->sold())->toBe(2)
-        ->and($l->sold())->toBe(3);
+        ->and($p->salesCount())->toBe(2)
+        ->and($l->salesCount())->toBe(3);
 
     // create zip file
     touch($o->root().'/hello.jpg');
