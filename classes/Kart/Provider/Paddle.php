@@ -153,7 +153,7 @@ class Paddle extends Provider
         foreach (A::get($json, 'data.details.line_items') as $line) {
             $price_id = A::get($line, 'price_id');
             $price = [];
-            foreach(A::get($json, 'data.items', []) as $item) {
+            foreach (A::get($json, 'data.items', []) as $item) {
                 if ($item['price']['id'] === $price_id) {
                     $price = $item['price'];
                     break;
