@@ -58,7 +58,7 @@ class Paddle extends Provider
                     }
 
                     return [
-                        'price_id' => $price_id, // @phpstan-ignore-line
+                        'price_id' => $price_id,
                         'quantity' => $l->quantity(),
                     ];
                 }),
@@ -113,6 +113,7 @@ class Paddle extends Provider
             ],
         ]);
         if ($remote->code() === 200) {
+            // NOTE: valid for 1h
             $invoice_url = A::get($remote->json(), 'data.url');
         }
 
