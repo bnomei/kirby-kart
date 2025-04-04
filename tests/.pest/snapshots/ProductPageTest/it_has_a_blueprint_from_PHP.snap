@@ -86,7 +86,7 @@ tabs:
             step: 1
             translate: false
             width: 1/4
-            help: '{{ site.kart.option("orders.order.maxapo") }}'
+            placeholder: '{{ site.kart.option("orders.order.maxapo") }}'
           raw:
             type: hidden
             translate: false

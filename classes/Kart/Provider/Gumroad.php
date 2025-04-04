@@ -23,7 +23,10 @@ class Gumroad extends Provider
 
     public function checkout(): string
     {
-        return '/';
+        $product = $this->kart->cart()->lines()->first()?->product();
+
+        return parent::checkout() && $product ?
+            A::get($product->raw()->yaml(), 'short_url') : '/';
     }
 
     public function fetchProducts(): array

@@ -186,7 +186,7 @@ class ProductPage extends Page
                                     'step' => 1,
                                     'translate' => false,
                                     'width' => '1/4',
-                                    'help' => '{{ site.kart.option("orders.order.maxapo") }}',
+                                    'placeholder' => '{{ site.kart.option("orders.order.maxapo") }}',
                                 ],
                                 'raw' => [
                                     'type' => 'hidden',
@@ -393,8 +393,19 @@ class ProductPage extends Page
         return $this;
     }
 
+    /**
+     * @kql-allowed
+     */
     public function gumroadUrl(): ?string
     {
         return A::get($this->raw()->yaml(), 'short_url');
+    }
+
+    /**
+     * @kql-allowed
+     */
+    public function lemonsqueezeUrl(): ?string
+    {
+        return A::get($this->raw()->yaml(), 'buy_now_url');
     }
 }

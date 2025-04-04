@@ -162,6 +162,13 @@ class VirtualPage extends Obj
         $this->model('product');
 
         // store raw data as yaml encoded array
+        $deepKsort = function (&$a) use (&$deepKsort) {
+            if (is_array($a)) {
+                ksort($a);
+                array_walk($a, fn(&$v) => $deepKsort($v));
+            }
+        };
+        $deepKsort($data);
         $this->raw($data);
 
         return $this;

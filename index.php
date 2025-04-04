@@ -159,7 +159,16 @@ App::plugin(
                 'kirby_cms' => [
                     'virtual' => false,
                 ],
-                'lemonsqueeze' => [],
+                'lemonsqueeze' => [
+                    'store_id' => fn () => class_exists('\Bnomei\DotEnv') ? DotEnv::getenv('LEMONSQUEEZE_STORE_ID') : null,
+                    'secret_key' => fn () => class_exists('\Bnomei\DotEnv') ? DotEnv::getenv('LEMONSQUEEZE_SECRET_KEY') : null,
+                    'checkout_options' => function (Kart $kart) {
+                        // configure the checkout based on current kart instance
+                        // https://docs.lemonsqueezy.com/api/checkouts/create-checkout
+                        return [];
+                    },
+                    'virtual' => true,
+                ],
                 'mollie' => [],
                 'paddle' => [
                     // https://developer.paddle.com/api-reference/overview
