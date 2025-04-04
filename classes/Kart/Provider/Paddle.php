@@ -128,8 +128,6 @@ class Paddle extends Provider
             $customer = A::get($remote->json(), 'data');
         }
 
-        ray($json, $customer)->orange();
-
         $data = array_merge($data, array_filter([
             // 'session_id' => $sessionId,
             'email' => A::get($customer, 'email'),
