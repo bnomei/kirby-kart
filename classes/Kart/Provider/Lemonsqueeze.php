@@ -69,7 +69,7 @@ class Lemonsqueeze extends Provider
                     'attributes' => array_filter(array_merge([
                         'product_options' => [
                             'enabled_variants' => [A::get($product->raw()->yaml(), 'variants.0.id')],
-                            'redirect_url' => url(Router::PROVIDER_SUCCESS),
+                            'redirect_url' => url(Router::PROVIDER_SUCCESS).'?order_id=[order_id]',
                         ],
                         'checkout_data' => array_filter([
                             'email' => $this->kirby->user()?->email(),
@@ -82,14 +82,71 @@ class Lemonsqueeze extends Provider
             ]),
         ]);
 
+        $session_id = $remote->json()['data']['id'];
+        $this->kirby->session()->set('bnomei.kart.'.$this->name.'.session_id', $session_id);
+
         return parent::checkout() && in_array($remote->code(), [200, 201]) ?
             $remote->json()['data']['attributes']['url'] : '/';
     }
 
     public function completed(array $data = []): array
     {
-        // TODO
-        return [];
+        // get session from current session id param
+        $sessionId = $this->kirby->session()->get('bnomei.kart.'.$this->name.'.session_id');
+        if (! $sessionId || ! is_string($sessionId)) {
+            return [];
+        }
+
+        $orderId = get('order_id');
+        if (! $orderId || ! is_string($orderId)) {
+            return [];
+        }
+
+        $remote = Remote::get('https://api.lemonsqueezy.com/v1/orders/'.$orderId, [
+            'headers' => [
+                'Content-Type' => 'application/vnd.api+json',
+                'Authorization' => 'Bearer '.strval($this->option('secret_key')),
+            ],
+        ]);
+
+        if ($remote->code() !== 200) {
+            return [];
+        }
+
+        $json = $remote->json();
+
+        $data = array_merge($data, array_filter([
+            // 'session_id' => $sessionId,
+            'email' => A::get($json, 'data.attributes.user_email'),
+            'customer' => [
+                'id' => A::get($json, 'data.attributes.customer_id'),
+                'email' => A::get($json, 'data.attributes.user_email'),
+                'name' => A::get($json, 'data.attributes.user_name'),
+            ],
+            'paidDate' => date('Y-m-d H:i:s', strtotime(A::get($json, 'data.attributes.created_at'))),
+            // 'paymentMethod' => implode(',', A::get($json, 'payment_method_types', [])),
+            'paymentComplete' => A::get($json, 'data.attributes.status') === 'paid',
+            'invoiceurl' => A::get($json, 'data.attributes.urls.receipt'), // NOTE: only set for subscriptions
+            'paymentId' => A::get($json, 'data.id'),
+        ]));
+
+        $uuid = kart()->option('products.product.uuid');
+        if ($uuid instanceof Closure === false) {
+            return [];
+        }
+
+        $data['items'][] = [
+            'key' => ['page://'.$uuid(null, ['id' => A::get($json, 'data.attributes.first_order_item.product_id')])],  // pages field expect an array
+            'quantity' => 1, // lemonsqueeze ever only sells one item at a time
+            'price' => round(A::get($json, 'data.attributes.first_order_item.price', 0) / 100.0, 2),
+            // these values include the multiplication with quantity
+            'total' => round(A::get($json, 'data.attributes.total', 0) / 100.0, 2),
+            'subtotal' => round(A::get($json, 'data.attributes.subtotal', 0) / 100.0, 2),
+            'tax' => round(A::get($json, 'data.attributes.tax', 0) / 100.0, 2),
+            'discount' => round(A::get($json, 'data.attributes.discount_total', 0) / 100.0, 2),
+        ];
+
+        return parent::completed($data);
     }
 
     public function fetchProducts(): array
@@ -177,5 +234,14 @@ class Lemonsqueeze extends Provider
             ],
             $this->kart->page(ContentPageEnum::PRODUCTS))
         )->mixinProduct($data)->toArray(), $products);
+    }
+
+    public function portal(?string $returnUrl = null): string
+    {
+        // subscriptions
+        // 'https://'.$this->option('store_id').'.lemonsqueezy.com/billing';
+
+        // one-time orders
+        return 'https://app.lemonsqueezy.com/my-orders';
     }
 }
