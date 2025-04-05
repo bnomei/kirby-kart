@@ -151,7 +151,18 @@ App::plugin(
             ],
             'provider' => 'kirby_cms', // see ProviderEnum (kirby_cms, stripe, mollie, paddle, ...) or use \Kart\Provider\Kirby::class etc.
             'providers' => [
-                'fastspring' => [],
+                'fastspring' => [
+                    // https://developer.fastspring.com/docs/storefront-urls#link-to-your-checkouts-with-the-api
+                    'store_url' => fn () => class_exists('\Bnomei\DotEnv') ? DotEnv::getenv('FASTSPRING_STORE_URL') : 'https://acme.onfastspring.com',
+                    'username' => fn () => class_exists('\Bnomei\DotEnv') ? DotEnv::getenv('FASTSPRING_USERNAME') : null,
+                    'password' => fn () => class_exists('\Bnomei\DotEnv') ? DotEnv::getenv('FASTSPRING_PASSWORD') : null,
+                    'checkout_options' => function (Kart $kart) {
+                        // configure the checkout based on current kart instance
+                        // https://developer.paypal.com/docs/api/orders/v2/#orders_create
+                        return [];
+                    },
+                    'virtual' => ['title', 'description', 'gallery'],
+                ],
                 'gumroad' => [
                     'access_token' => fn () => class_exists('\Bnomei\DotEnv') ? DotEnv::getenv('GUMROAD_ACCESS_TOKEN') : null,
                     'virtual' => true,
@@ -199,6 +210,7 @@ App::plugin(
                 'snipcart' => [
                     'public_key' => fn () => class_exists('\Bnomei\DotEnv') ? DotEnv::getenv('SNIPCART_PUBLIC_KEY') : null,
                     'secret_key' => fn () => class_exists('\Bnomei\DotEnv') ? DotEnv::getenv('SNIPCART_SECRET_KEY') : null,
+                    'virtual' => false,
                 ],
                 'stripe' => [
                     'secret_key' => fn () => class_exists('\Bnomei\DotEnv') ? DotEnv::getenv('STRIPE_SECRET_KEY') : null,
