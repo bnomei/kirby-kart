@@ -45,8 +45,6 @@ class Snipcart extends Provider
 
     public function fetchProducts(): array
     {
-        return [];
-
         $products = [];
         $offset = 0;
         $limit = 50;

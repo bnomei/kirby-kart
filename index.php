@@ -65,6 +65,7 @@ App::plugin(
                 'paddle' => true,
                 'paypal' => true,
                 'payone' => true,
+                'shopify' => true,
                 'snipcart' => true,
                 'stripe' => true,
             ],
@@ -194,6 +195,7 @@ App::plugin(
                     },
                     'virtual' => ['title', 'description', 'gallery'],
                 ],
+                'shopify' => [],
                 'snipcart' => [
                     'public_key' => fn () => class_exists('\Bnomei\DotEnv') ? DotEnv::getenv('SNIPCART_PUBLIC_KEY') : null,
                     'secret_key' => fn () => class_exists('\Bnomei\DotEnv') ? DotEnv::getenv('SNIPCART_SECRET_KEY') : null,

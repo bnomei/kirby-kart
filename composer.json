@@ -31,11 +31,14 @@
     "order",
     "paddle",
     "payment",
+    "payone",
     "paypal",
     "provider",
     "sell",
     "shop",
+    "shopify",
     "snipcart",
+    "stripe",
     "stock"
   ],
   "autoload": {

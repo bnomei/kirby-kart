@@ -21,6 +21,7 @@ enum ProviderEnum: string
     case PADDLE = 'paddle';
     case PAYPAL = 'paypal';
     case PAYONE = 'payone';
+    case SHOPIFY = 'shopify';
     case SNIPCART = 'snipcart';
     case STRIPE = 'stripe';
 }
