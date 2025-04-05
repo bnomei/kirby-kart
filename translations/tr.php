@@ -25,6 +25,7 @@ return [
     'bnomei.kart.max-amount-per-order' => 'Max amount per order',
     'bnomei.kart.note' => 'Not',
     'bnomei.kart.now' => 'Şimdi',
+    'bnomei.kart.order' => 'Sipariş',
     'bnomei.kart.orders' => 'Siparişler',
     'bnomei.kart.orders-30' => 'Siparişler (30 gün)',
     'bnomei.kart.out-of-stock' => 'Ürün stokta yok',

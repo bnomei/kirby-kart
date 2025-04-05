@@ -25,6 +25,7 @@ return [
     'bnomei.kart.max-amount-per-order' => 'Max amount per order',
     'bnomei.kart.note' => 'Nota',
     'bnomei.kart.now' => 'Ahora',
+    'bnomei.kart.order' => 'Pedido',
     'bnomei.kart.orders' => 'Pedidos',
     'bnomei.kart.orders-30' => 'Pedidos (30 días)',
     'bnomei.kart.out-of-stock' => 'Artículo agotado',

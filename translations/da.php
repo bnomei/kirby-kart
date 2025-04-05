@@ -25,6 +25,7 @@ return [
     'bnomei.kart.max-amount-per-order' => 'Max amount per order',
     'bnomei.kart.note' => 'Notat',
     'bnomei.kart.now' => 'Nu',
+    'bnomei.kart.order' => 'Ordre',
     'bnomei.kart.orders' => 'Ordrer',
     'bnomei.kart.orders-30' => 'Ordrer (30 dage)',
     'bnomei.kart.out-of-stock' => 'Varen er udsolgt',

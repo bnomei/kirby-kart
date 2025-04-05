@@ -84,7 +84,7 @@ App::plugin(
                 'enabled' => true,
                 'page' => 'orders',
                 'order' => [
-                    'uuid' => fn (?OrdersPage $orders, array $props) => 'or-'.Kart::nonAmbiguousUuid(7), // aka order id
+                    'uuid' => fn (?OrdersPage $orders = null, array $props = []) => 'or-'.Kart::nonAmbiguousUuid(7), // aka order id
                     'create-missing-zips' => true,
                     'maxapo' => 10, // max amount of a single product per order, keep this low to prevent stock hostages, set per product instead
                     'maxlpo' => 10, // max different products per order aka lines in cart, check your providers API docs before increasing this
@@ -94,7 +94,7 @@ App::plugin(
                 'enabled' => true,
                 'page' => 'products',
                 'product' => [
-                    'uuid' => fn (?ProductsPage $products, array $props) => 'pr-'.Kart::hash(A::get($props, 'id')),
+                    'uuid' => fn (?ProductsPage $products = null, array $props = []) => 'pr-'.Kart::hash(A::get($props, 'id')),
                 ],
             ],
             'queues' => [
@@ -106,7 +106,7 @@ App::plugin(
                 'hold' => false, // null/false or time in minutes as integer (only for logged-in users!)
                 'page' => 'stocks',
                 'stock' => [
-                    'uuid' => fn (?StocksPage $stocks, array $props) => 'st-'.Kart::nonAmbiguousUuid(13),
+                    'uuid' => fn (?StocksPage $stocks = null, array $props = []) => 'st-'.Kart::nonAmbiguousUuid(13),
                 ],
             ],
             'router' => [
@@ -181,7 +181,15 @@ App::plugin(
                     },
                     'virtual' => true,
                 ],
-                'mollie' => [],
+                'mollie' => [
+                    'secret_key' => fn () => class_exists('\Bnomei\DotEnv') ? DotEnv::getenv('MOLLIE_SECRET_KEY') : null,
+                    'checkout_options' => function (Kart $kart) {
+                        // configure the checkout based on current kart instance
+                        // https://docs.mollie.com/reference/create-payment
+                        return [];
+                    },
+                    'virtual' => true,
+                ],
                 'paddle' => [
                     // https://developer.paddle.com/api-reference/overview
                     'endpoint' => fn () => class_exists('\Bnomei\DotEnv') ? DotEnv::getenv('PADDLE_ENDPOINT', 'https://sandbox-api.paddle.com') : 'https://sandbox-api.paddle.com',

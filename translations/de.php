@@ -25,6 +25,7 @@ return [
     'bnomei.kart.max-amount-per-order' => 'Maximale Anzahl pro Bestellung',
     'bnomei.kart.note' => 'Notiz',
     'bnomei.kart.now' => 'Jetzt',
+    'bnomei.kart.order' => 'Bestellung',
     'bnomei.kart.orders' => 'Bestellungen',
     'bnomei.kart.orders-30' => 'Bestellungen (30 Tage)',
     'bnomei.kart.out-of-stock' => 'Unzureichender Warenbestand',

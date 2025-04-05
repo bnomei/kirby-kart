@@ -40,7 +40,7 @@ class OrderPage extends Page
         // enforce unique but short slug with the option to overwrite it in a closure
         $uuid = kart()->option('orders.order.uuid');
         if ($uuid instanceof Closure) {
-            $uuid = $uuid($parent, $props);
+            $uuid = $props['content']['uuid'] ?? $uuid($parent, $props);
             $props['slug'] = Str::slug($uuid);
             $props['content']['uuid'] = $uuid;
             $props['content']['title'] = strtoupper($uuid);
