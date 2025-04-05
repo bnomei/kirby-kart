@@ -51,8 +51,8 @@ class Paypal extends Provider
     {
         return [
             'Content-Type' => 'application/json',
-            'Accept: application/json',
-            'Prefer: return=representation',
+            'Accept' => 'application/json',
+            'Prefer' => 'return=representation',
             'Authorization' => 'Bearer '.$this->token(),
         ];
     }

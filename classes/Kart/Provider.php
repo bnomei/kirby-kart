@@ -162,7 +162,7 @@ abstract class Provider
         }
 
         if (is_string($urls)) {
-            $urls = [$urls];
+            $urls = Str::contains($urls, ',') ? explode(',', $urls) : [$urls];
         }
 
         // media pool in the products page
@@ -187,7 +187,7 @@ abstract class Provider
         }
 
         if (is_string($urls)) {
-            $urls = [$urls];
+            $urls = Str::contains($urls, ',') ? explode(',', $urls) : [$urls];
         }
 
         // media pool in the products page

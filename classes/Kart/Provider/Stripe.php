@@ -180,8 +180,8 @@ class Stripe extends Provider
                         'created' => fn ($i) => date('Y-m-d H:i:s', $i['created']),
                         'description' => 'description',
                         'price' => fn ($i) => A::get($i, 'default_price.unit_amount', 0) / 100.0,
-                        'tags' => fn ($i) => A::get($i, 'metadata.tags', []),
-                        'categories' => fn ($i) => A::get($i, 'metadata.categories', []),
+                        'tags' => fn ($i) => A::get($i, 'metadata.tags', A::get($i, 'metadata.tag', '')),
+                        'categories' => fn ($i) => A::get($i, 'metadata.categories', A::get($i, 'metadata.category', '')),
                         'gallery' => fn ($i) => $this->findImagesFromUrls(
                             A::get($i, 'images', A::get($i, 'metadata.gallery', []))
                         ),

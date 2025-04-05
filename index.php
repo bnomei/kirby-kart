@@ -195,7 +195,8 @@ App::plugin(
                     'virtual' => ['title', 'description', 'gallery'],
                 ],
                 'snipcart' => [
-
+                    'public_key' => fn () => class_exists('\Bnomei\DotEnv') ? DotEnv::getenv('SNIPCART_PUBLIC_KEY') : null,
+                    'secret_key' => fn () => class_exists('\Bnomei\DotEnv') ? DotEnv::getenv('SNIPCART_SECRET_KEY') : null,
                 ],
                 'stripe' => [
                     'secret_key' => fn () => class_exists('\Bnomei\DotEnv') ? DotEnv::getenv('STRIPE_SECRET_KEY') : null,
@@ -265,6 +266,7 @@ App::plugin(
             'kart/product-json-ld' => __DIR__.'/snippets/kart/product-json-ld.php',
             'kart/profile' => __DIR__.'/snippets/kart/profile.php',
             'kart/signup-magic' => __DIR__.'/snippets/kart/signup-magic.php',
+            'kart/snipcart-checkout' => __DIR__.'/snippets/kart/snipcart-checkout.php',
             'kart/turnstile-form' => __DIR__.'/snippets/kart/turnstile-form.php',
             'kart/turnstile-widget' => __DIR__.'/snippets/kart/turnstile-widget.php',
             'kart/wish-or-forget' => __DIR__.'/snippets/kart/wish-or-forget.php',

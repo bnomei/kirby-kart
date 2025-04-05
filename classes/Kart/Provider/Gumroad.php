@@ -37,7 +37,7 @@ class Gumroad extends Provider
         $remote = Remote::get('https://api.gumroad.com/v2/products?access_token='.strval($this->option('access_token')), [
             'headers' => [
                 'Content-Type' => 'application/json',
-                'Accept: application/json',
+                'Accept' => 'application/json',
             ],
         ]);
 
