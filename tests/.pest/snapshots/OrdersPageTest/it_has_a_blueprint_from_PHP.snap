@@ -10,7 +10,7 @@ options:
   sort: false
 sections:
   stats:
-    label: Summary
+    label: bnomei.kart.summary
     type: stats
     reports:
       - 
