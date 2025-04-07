@@ -12,6 +12,7 @@ namespace Bnomei\Kart;
 
 enum ProviderEnum: string
 {
+    case CHECKOUT = 'checkout';
     case FASTSPRING = 'fastspring';
     case GUMROAD = 'gumroad';
     case INVOICE_NINJA = 'invoice_ninja';

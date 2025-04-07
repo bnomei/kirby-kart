@@ -57,6 +57,7 @@ App::plugin(
                 'tags' => true,
 
                 // providers
+                'checkout' => true,
                 'fastspring' => true,
                 'gumroad' => true,
                 'invoice_ninja' => true,
@@ -152,6 +153,7 @@ App::plugin(
             ],
             'provider' => 'kirby_cms', // see ProviderEnum (kirby_cms, stripe, mollie, paddle, ...) or use \Kart\Provider\Kirby::class etc.
             'providers' => [
+                'checkout' => [],
                 'fastspring' => [
                     // https://developer.fastspring.com/docs/storefront-urls#link-to-your-checkouts-with-the-api
                     'store_url' => fn () => class_exists('\Bnomei\DotEnv') ? DotEnv::getenv('FASTSPRING_STORE_URL') : 'https://acme.onfastspring.com',
