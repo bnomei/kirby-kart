@@ -82,6 +82,10 @@ class Lemonsqueeze extends Provider
             ]),
         ]);
 
+        if (! in_array($remote->code(), [200, 201])) {
+            throw new \Exception('Checkout failed', $remote->code());
+        }
+
         $session_id = $remote->json()['data']['id'];
         $this->kirby->session()->set('bnomei.kart.'.$this->name.'.session_id', $session_id);
 

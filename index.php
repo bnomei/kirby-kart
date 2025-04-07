@@ -10,6 +10,7 @@
 
 use Bnomei\DotEnv;
 use Bnomei\Kart\Cart;
+use Bnomei\Kart\CartLine;
 use Bnomei\Kart\Kart;
 use Bnomei\Kart\License;
 use Bnomei\Kart\MagicLinkChallenge;
@@ -188,6 +189,10 @@ App::plugin(
                         // https://docs.mollie.com/reference/create-payment
                         return [];
                     },
+                    'checkout_line' => function (Kart $kart, CartLine $line) {
+                        // add custom data to the current checkout line
+                        return [];
+                    },
                     'virtual' => true,
                 ],
                 'paddle' => [
@@ -200,6 +205,10 @@ App::plugin(
                         // https://developer.paddle.com/api-reference/transactions/create-transaction
                         return [];
                     },
+                    'checkout_line' => function (Kart $kart, CartLine $line) {
+                        // add custom data to the current checkout line
+                        return [];
+                    },
                     'virtual' => true,
                 ],
                 'payone' => [],
@@ -210,6 +219,10 @@ App::plugin(
                     'checkout_options' => function (Kart $kart) {
                         // configure the checkout based on current kart instance
                         // https://developer.paypal.com/docs/api/orders/v2/#orders_create
+                        return [];
+                    },
+                    'checkout_line' => function (Kart $kart, CartLine $line) {
+                        // add custom data to the current checkout line
                         return [];
                     },
                     'virtual' => ['title', 'description', 'gallery'],
@@ -225,6 +238,10 @@ App::plugin(
                     'checkout_options' => function (Kart $kart) {
                         // configure the checkout based on current kart instance
                         // https://docs.stripe.com/api/checkout/sessions/create
+                        return [];
+                    },
+                    'checkout_line' => function (Kart $kart, CartLine $line) {
+                        // add custom data to the current checkout line
                         return [];
                     },
                     'virtual' => true,

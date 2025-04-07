@@ -32,6 +32,10 @@ class Paddle extends Provider
         }
 
         $endpoint = $this->option('endpoint');
+        $lineItem = $this->option('checkout_line', false);
+        if ($lineItem instanceof Closure === false) {
+            $lineItem = fn ($kart, $item) => [];
+        }
 
         // https://developer.paddle.com/api-reference/transactions/create-transaction
         $remote = Remote::post($endpoint.'/transactions', [
@@ -43,7 +47,7 @@ class Paddle extends Provider
                 'collection_mode' => 'automatic',
                 'customer_id' => $this->userData('customerId'),
                 'currency_code' => $this->kart->currency(),
-                'items' => $this->kart->cart()->lines()->values(function (CartLine $l) {
+                'items' => $this->kart->cart()->lines()->values(function (CartLine $l) use ($lineItem) {
                     $price_id = null;
                     foreach (A::get($l->product()?->raw()->yaml(), 'prices', []) as $price) {
                         if (A::get($price, 'status') !== 'active') {
@@ -57,16 +61,16 @@ class Paddle extends Provider
                         break; // first active EUR price
                     }
 
-                    return [
+                    return array_merge([
                         'price_id' => $price_id,
                         'quantity' => $l->quantity(),
-                    ];
+                    ], $lineItem($this->kart, $l));
                 }),
             ], $options))),
         ]);
 
         if (! in_array($remote->code(), [200, 201])) {
-            return '/';
+            throw new \Exception('Checkout failed', $remote->code());
         }
 
         $session_id = $remote->json()['data']['id']; // txn_...

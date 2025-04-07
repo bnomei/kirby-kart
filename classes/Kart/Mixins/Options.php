@@ -32,6 +32,7 @@ trait Options
             $option = kirby()->option('bnomei.kart.'.$key, $default);
             $this->options[$key] = $option;
         }
+
         if (! is_string($option) && is_callable($option) && ! in_array($key, [
             'captcha.current',
             'captcha.get',
@@ -44,11 +45,15 @@ trait Options
             'providers.kirby_cms.checkout_options',
             'providers.lemonsqueeze.checkout_options',
             'providers.mollie.checkout_options',
+            'providers.mollie.checkout_line',
             'providers.paddle.checkout_options',
+            'providers.paddle.checkout_line',
             'providers.payone.checkout_options',
             'providers.paypal.checkout_options',
+            'providers.paypal.checkout_line',
             'providers.snipcart.checkout_options',
             'providers.stripe.checkout_options',
+            'providers.stripe.checkout_line',
         ])) {
             $option = $option();
             $this->options[$key] = $option;

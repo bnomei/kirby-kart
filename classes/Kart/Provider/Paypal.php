@@ -66,6 +66,17 @@ class Paypal extends Provider
 
         $endpoint = $this->option('endpoint');
         $currency = $this->kart->option('currency');
+
+        $uuid = kart()->option('orders.order.uuid');
+        if ($uuid instanceof Closure) {
+            $uuid = $uuid();
+        }
+
+        $lineItem = $this->option('checkout_line', false);
+        if ($lineItem instanceof Closure === false) {
+            $lineItem = fn ($kart, $item) => [];
+        }
+
         // https://developer.paypal.com/docs/api/orders/v2/#orders_create
         $remote = Remote::post($endpoint.'/v2/checkout/orders', [
             'headers' => $this->headers(),
@@ -85,32 +96,43 @@ class Paypal extends Provider
                     ],
                 ],
                 'purchase_units' => [
-                    // 'invoice_id' => '', // TODO: get next order invnum?
                     [
+                        'custom_id' => strtoupper($uuid),
+                        // 'invoice_id' => strtoupper($uuid), // TODO: get invnum for next? locking?
                         'amount' => [
                             'currency_code' => $currency,
                             'value' => number_format($this->kart->cart()->subtotal(), 2),
+                            // https://developer.paypal.com/docs/api/orders/v2/#orders_create!ct=application/json&path=purchase_units/amount/breakdown&t=request
                             'breakdown' => [
                                 'item_total' => [
                                     'currency_code' => $currency,
                                     'value' => number_format($this->kart->cart()->subtotal(), 2),
                                 ],
+                                'tax_total' => [
+                                    'currency_code' => $currency,
+                                    'value' => number_format(0, 2),
+                                ],
+                                'discount' => [
+                                    'currency_code' => $currency,
+                                    'value' => number_format(0, 2),
+                                ],
                                 // 'shipping' => [],
                             ],
                         ],
-                        'items' => $this->kart->cart()->lines()->values(fn (CartLine $l) => [
-                            'name' => $l->product()->title()->value(),
-                            'description' => $l->product()->description()->value(),
+                        'items' => $this->kart->cart()->lines()->values(fn (CartLine $l) => array_merge([
+                            'sku' => $l->product()?->uuid()->id(), // used on completed again to find the product
+                            'name' => $l->product()?->title()->value(),
+                            'description' => $l->product()?->description()->value(),
                             // 'type' => A::get($l->product()?->raw()->yaml(), 'type'),
                             // 'category' => A::get($l->product()?->raw()->yaml(), 'category'),
                             'unit_amount' => [
                                 'currency_code' => $currency,
-                                'value' => number_format($l->product()->price()->toFloat(), 2),
+                                'value' => number_format($l->product()?->price()->toFloat(), 2),
                             ],
                             'image_url' => A::get($l->product()?->raw()->yaml(), 'image_url', $l->product()?->firstGalleryImageUrl()),
                             'url' => $l->product()?->url(),
                             'quantity' => $l->quantity(),
-                        ]),
+                        ], $lineItem($this->kart, $l))),
                     ],
                 ],
             ], $options))),
@@ -119,6 +141,10 @@ class Paypal extends Provider
         if ($remote->code() === 200) {
             $this->kirby->session()->set('kart.paypal.order.id', $remote->json()['id']);
             $this->kirby->session()->set('kart.paypal.cart.hash', $this->kart->cart()->hash());
+        }
+
+        if (! in_array($remote->code(), [200, 201])) {
+            throw new \Exception('Checkout failed', $remote->code());
         }
 
         // https://www.sandbox.paypal.com/checkoutnow?token=...
@@ -147,6 +173,7 @@ class Paypal extends Provider
 
         $data = array_merge($data, array_filter([
             // 'session_id' => $sessionId,
+            'uuid' => A::get($json, 'purchase_units.0.custom_id'),
             'email' => A::get($json, 'payer.email_address'),
             'customer' => [
                 'id' => A::get($json, 'payer.payer_id'),
@@ -166,28 +193,19 @@ class Paypal extends Provider
             return [];
         }
 
-        // paypal seems to not allow us to store references to the products
-        // so we need to resolve them from the cart instead.
-        // TODO: improve this so paypal can return tax and discounts
-        // TODO: try mapping products by title?
-
-        // verify it is still the same cart and has not been altered.
-        $hash = $this->kirby->session()->get('kart.paypal.cart.hash');
-        if ($hash === $this->kart->cart()->hash()) {
-            /** @var CartLine $line */
-            foreach ($this->kart->cart()->lines() as $line) {
-                $data['items'][] = [
-                    'key' => [$line->product()?->uuid()->toString()],  // pages field expect an array
-                    'quantity' => $line->quantity(),
-                    'price' => round($line->price(), 2),
-                    // these values include the multiplication with quantity
-                    'total' => round($line->price() * $line->quantity(), 2), // TODO: paypal total with tax and discount
-                    'subtotal' => round($line->price() * $line->quantity(), 2),
-                    'tax' => round(0, 2), // TODO: paypal tax
-                    'discount' => round(0, 2), // TODO: paypal discount
-                ];
-            }
+        foreach (A::get($json, 'purchase_units.0.items') as $line) {
+            $data['items'][] = [
+                'key' => ['page://'.A::get($line, 'sku')],  // pages field expect an array
+                'quantity' => intval(A::get($line, 'quantity')),
+                'price' => round(floatval(A::get($line, 'unit_amount.value', 0)), 2),
+                // these values include the multiplication with quantity
+                'total' => round(floatval(A::get($line, 'unit_amount.value', 0)), 2) * intval(A::get($line, 'quantity')) + round(floatval(A::get($line, 'tax.value', 0)), 2),
+                'subtotal' => round(floatval(A::get($line, 'unit_amount.value', 0)), 2) * intval(A::get($line, 'quantity')),
+                'tax' => round(floatval(A::get($line, 'tax.value', 0)), 2),
+                'discount' => 0, // NOTE: paypal has no discount per item
+            ];
         }
+        // TODO: maybe add a line without a product linked if a global discount was set
 
         return parent::completed($data);
     }

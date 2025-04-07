@@ -31,6 +31,11 @@ class Stripe extends Provider
             $options = $options($this->kart);
         }
 
+        $lineItem = $this->option('checkout_line', false);
+        if ($lineItem instanceof Closure === false) {
+            $lineItem = fn ($kart, $item) => [];
+        }
+
         // https://docs.stripe.com/api/checkout/sessions/create?lang=curl
         $remote = Remote::post('https://api.stripe.com/v1/checkout/sessions', [
             'headers' => [
@@ -45,12 +50,16 @@ class Stripe extends Provider
                 'success_url' => url(Router::PROVIDER_SUCCESS).'?session_id={CHECKOUT_SESSION_ID}',
                 'cancel_url' => url(Router::PROVIDER_CANCEL),
                 'invoice_creation' => ['enabled' => 'true'],
-                'line_items' => $this->kart->cart()->lines()->values(fn (CartLine $l) => [
+                'line_items' => $this->kart->cart()->lines()->values(fn (CartLine $l) => array_merge([
                     'price' => A::get($l->product()?->raw()->yaml(), 'default_price.id'), // @phpstan-ignore-line
                     'quantity' => $l->quantity(),
-                ]),
+                ], $lineItem($this->kart, $l))),
             ], $options)),
         ]);
+
+        if (! in_array($remote->code(), [200, 201])) {
+            throw new \Exception('Checkout failed', $remote->code());
+        }
 
         return parent::checkout() && $remote->code() === 200 ?
             $remote->json()['url'] : '/';
