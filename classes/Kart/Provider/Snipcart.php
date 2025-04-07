@@ -101,10 +101,4 @@ class Snipcart extends Provider
             $this->kart->page(ContentPageEnum::PRODUCTS))
         )->mixinProduct($data)->toArray(), $products);
     }
-
-    public function fetchStocks(): array
-    {
-        // TODO: snipcart has stocks
-        return parent::fetchStocks();
-    }
 }

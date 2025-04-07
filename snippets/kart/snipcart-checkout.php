@@ -14,70 +14,44 @@ if (option('bnomei.kart.provider') === 'snipcart') { ?>
 
         window.LoadSnipcart();
 
-        document.addEventListener('snipcart.ready', async () => {
-
-            // set user information
-            Snipcart.api.cart.update({
-                email: '<?= kirby()->user()?->email() ?>',
-            });
-
-            // reset the cart
-            await Promise.all(Snipcart.api.cart.items.map(item => Snipcart.api.cart.items.remove(item.id)));
-
-            /*
-            try {
-                await Snipcart.api.cart.items.add({
-                    id: 'PRODUCT_ID',
-                    name: 'Product 1',
-                    price: 1.11,
-                    url: '/',
-                    quantity: 1,
-                },{
-                    id: 'PRODUCT2_ID',
-                    name: 'Product 2',
-                    price: 1.11,
-                    url: '/',
-                    quantity: 1,
-                });
-            } catch (error) {
-                console.log(error)
-            }
-            */
+        document.addEventListener('snipcart.ready', () => {
 
             setTimeout(async function () {
-                // add current items
-                const items = <?= json_encode(array_values(kart()->cart()->lines()->toArray(fn(\Bnomei\Kart\CartLine $line) => [
-                    'id' => $line->product()?->uuid()->id(),
-                    'name' => $line->product()?->title(),
-                    'price' => $line->product()?->price()->toFloat(),
-                    'url' => $line->product()?->url(),
-                    'quantity' => $line->quantity(),
-                ]))) ?>//;
-                for (const item of items) {
-                    try {
-                        await Snipcart.api.cart.items.add(item);
-                    } catch (e) {
-                        console.error(e);
+                try {
+                    const items = <?= json_encode(array_values(kart()->cart()->lines()->toArray(fn (\Bnomei\Kart\CartLine $line) => [
+                        'id' => $line->product()?->uuid()->id(),
+                        'name' => $line->product()?->title()->value(),
+                        'price' => $line->product()?->price()->toFloat(),
+                        'url' => $line->product()?->url(),
+                        'quantity' => $line->quantity(),
+                    ]))) ?>;
+
+                    for (const item of items) {
+                        try {
+                            await Snipcart.api.cart.items.add(item);
+                        } catch (e) {
+                            console.error(e);
+                        }
                     }
+
+                } catch (error) {
+                    console.log(error)
                 }
 
                 Snipcart.api.theme.cart.open();
-            }, 200);
+            }, 100);
 
             // https://docs.snipcart.com/v3/sdk/events#cartconfirmed
             Snipcart.events.on('cart.confirmed', (cartConfirmResponse) => {
-                // TODO: forward some session identifier from snipcart to get order in backend
-                console.log(cartConfirmResponse);
-                window.location.href = '<?= url(Router::PROVIDER_SUCCESS) ?>?session_id=<?= get('
-                session_id
-                ') ?>';
+               window.location.href = '<?= url(Router::PROVIDER_SUCCESS) ?>';
             });
 
+            // make the cancel buttons from snipcart return to shop
             document.addEventListener('click', (event) => {
-                if (event.target.closest('.snipcart-modal__close') || event.target.closest('.snipcart-base-button__label')) {
-                    event.preventDefault()
-                    window.location.href = '<?= url(Router::PROVIDER_CANCEL) ?>';
-                }
+               if (event.target.closest('.snipcart-modal__close') || event.target.closest('.snipcart-base-button__label')) {
+                   event.preventDefault()
+                   window.location.href = '<?= url(Router::PROVIDER_CANCEL) ?>';
+               }
             });
         });
     </script>

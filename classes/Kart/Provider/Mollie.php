@@ -70,6 +70,8 @@ class Mollie extends Provider
                     ],
                     'imageUrl' => $l->product()?->firstGalleryImageUrl(),
                     'productUrl' => $l->product()?->url(),
+                    'vatRate' => 0,
+                    'vatAmount' => 0,
                 ]),
             ], $options)),
         ]);
@@ -142,7 +144,7 @@ class Mollie extends Provider
                 'total' => round(floatval(A::get($line, 'totalAmount.value', 0)), 2),
                 'subtotal' => round(floatval(A::get($line, 'totalAmount.value', 0)), 2),
                 'tax' => 0, // TODO:
-                'discount' => 0, // TODO:
+                'discount' => 0, // TODO
             ];
         }
 

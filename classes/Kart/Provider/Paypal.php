@@ -173,22 +173,20 @@ class Paypal extends Provider
 
         // verify it is still the same cart and has not been altered.
         $hash = $this->kirby->session()->get('kart.paypal.cart.hash');
-        if ($hash !== $this->kart->cart()->hash()) {
-            return [];
-        }
-
-        /** @var CartLine $line */
-        foreach ($this->kart->cart()->lines() as $line) {
-            $data['items'][] = [
-                'key' => [$line->product()?->uuid()->toString()],  // pages field expect an array
-                'quantity' => $line->quantity(),
-                'price' => round($line->price(), 2),
-                // these values include the multiplication with quantity
-                'total' => round($line->price() * $line->quantity(), 2), // TODO: paypal total with tax and discount
-                'subtotal' => round($line->price() * $line->quantity(), 2),
-                'tax' => round(0, 2), // TODO: paypal tax
-                'discount' => round(0, 2), // TODO: paypal discount
-            ];
+        if ($hash === $this->kart->cart()->hash()) {
+            /** @var CartLine $line */
+            foreach ($this->kart->cart()->lines() as $line) {
+                $data['items'][] = [
+                    'key' => [$line->product()?->uuid()->toString()],  // pages field expect an array
+                    'quantity' => $line->quantity(),
+                    'price' => round($line->price(), 2),
+                    // these values include the multiplication with quantity
+                    'total' => round($line->price() * $line->quantity(), 2), // TODO: paypal total with tax and discount
+                    'subtotal' => round($line->price() * $line->quantity(), 2),
+                    'tax' => round(0, 2), // TODO: paypal tax
+                    'discount' => round(0, 2), // TODO: paypal discount
+                ];
+            }
         }
 
         return parent::completed($data);
