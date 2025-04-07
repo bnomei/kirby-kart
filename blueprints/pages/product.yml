@@ -11,13 +11,13 @@ tabs:
         label: bnomei.kart.summary
         type: stats
         reports:
-          -
+          - 
             value: '{{ page.formattedPrice() }}'
-          -
+          - 
             label: bnomei.kart.sales-count
-            value: '{{ page.sold }}'
+            value: '{{ page.salesCount }}'
             link: '{{ site.kart.page("orders").url }}'
-          -
+          - 
             label: bnomei.kart.stock
             value: '{{ page.stock }}'
             link: '{{ page.stockUrl }}'
@@ -86,7 +86,7 @@ tabs:
             step: 1
             translate: false
             width: 1/4
-            help: '{{ site.kart.option("orders.order.maxapo") }}'
+            placeholder: '{{ site.kart.option("orders.order.maxapo") }}'
           raw:
             type: hidden
             translate: false

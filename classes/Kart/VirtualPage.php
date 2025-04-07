@@ -165,7 +165,7 @@ class VirtualPage extends Obj
         $deepKsort = function (&$a) use (&$deepKsort) {
             if (is_array($a)) {
                 ksort($a);
-                array_walk($a, fn(&$v) => $deepKsort($v));
+                array_walk($a, fn (&$v) => $deepKsort($v));
             }
         };
         $deepKsort($data);

@@ -29,7 +29,7 @@ class Fastspring extends Provider
         return [
             'Content-Type' => 'application/json',
             'Accept' => 'application/json',
-            'Authorization' => 'Basic '.base64_encode(strval($this->option('username').':'.$this->option('password'))),
+            'Authorization' => 'Basic '.base64_encode(strval($this->option('username')).':'.strval($this->option('password'))),
         ];
     }
 
@@ -61,7 +61,7 @@ class Fastspring extends Provider
 
         //
         return parent::checkout() && $remote->code() === 200 && $session_id ?
-            $this->option('store_url').'/session/'.$session_id : '/';
+            strval($this->option('store_url')).'/session/'.$session_id : '/';
     }
 
     public function fetchProducts(): array
@@ -77,7 +77,7 @@ class Fastspring extends Provider
             return [];
         }
 
-        foreach ($remote->json()['products'] as $path) {
+        foreach (A::get($remote->json(), 'products', []) as $path) {
             // https://developer.fastspring.com/reference/retrieve-a-product
             $remote = Remote::get('https://api.fastspring.com/products/'.$path, [
                 'headers' => $this->headers(),

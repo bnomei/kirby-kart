@@ -31,7 +31,7 @@ class Paddle extends Provider
             $options = $options($this->kart);
         }
 
-        $endpoint = $this->option('endpoint');
+        $endpoint = strval($this->option('endpoint'));
         $lineItem = $this->option('checkout_line', false);
         if ($lineItem instanceof Closure === false) {
             $lineItem = fn ($kart, $item) => [];
@@ -89,7 +89,7 @@ class Paddle extends Provider
             return [];
         }
 
-        $endpoint = $this->option('endpoint');
+        $endpoint = strval($this->option('endpoint'));
 
         // https://developer.paddle.com/api-reference/transactions/get-transaction
         $remote = Remote::get($endpoint.'/transactions/'.$sessionId, [
@@ -181,7 +181,7 @@ class Paddle extends Provider
     {
         $products = [];
         $cursor = null;
-        $endpoint = $this->option('endpoint');
+        $endpoint = strval($this->option('endpoint'));
 
         while (true) {
             // https://developer.paddle.com/api-reference/products/list-products
@@ -260,11 +260,11 @@ class Paddle extends Provider
     public function portal(?string $returnUrl = null): ?string
     {
         $customer = $this->userData('customerId');
-        if (! $customer) {
+        if (! is_string($customer)) {
             return null;
         }
 
-        $endpoint = $this->option('endpoint');
+        $endpoint = strval($this->option('endpoint'));
 
         // https://developer.paddle.com/api-reference/customer-portals/create-customer-portal-session
         $remote = Remote::post("$endpoint/customers/$customer/portal-sessions", [

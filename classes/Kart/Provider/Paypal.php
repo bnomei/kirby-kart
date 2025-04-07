@@ -33,11 +33,11 @@ class Paypal extends Provider
         }
 
         // https://developer.paypal.com/api/rest/authentication/
-        $endpoint = $this->option('endpoint');
+        $endpoint = strval($this->option('endpoint'));
         $remote = Remote::post($endpoint.'/v1/oauth2/token?grant_type=client_credentials', [
             'headers' => [
                 'Content-Type' => 'application/x-www-form-urlencoded',
-                'Authorization' => 'Basic '.base64_encode(strval($this->option('client_id').':'.strval($this->option('client_secret')))),
+                'Authorization' => 'Basic '.base64_encode(strval($this->option('client_id')).':'.strval($this->option('client_secret'))),
             ],
         ]);
         if ($remote->code() === 200) {
@@ -64,7 +64,7 @@ class Paypal extends Provider
             $options = $options($this->kart);
         }
 
-        $endpoint = $this->option('endpoint');
+        $endpoint = strval($this->option('endpoint'));
         $currency = $this->kart->option('currency');
 
         $uuid = kart()->option('orders.order.uuid');
@@ -160,7 +160,7 @@ class Paypal extends Provider
             return [];
         }
 
-        $endpoint = $this->option('endpoint');
+        $endpoint = strval($this->option('endpoint'));
         // https://developer.paypal.com/docs/api/orders/v2/#orders_get
         $remote = Remote::get($endpoint.'/v2/checkout/orders/'.$sessionId, [
             'headers' => $this->headers(),
@@ -214,7 +214,7 @@ class Paypal extends Provider
     {
         $products = [];
         $page = 1;
-        $endpoint = $this->option('endpoint');
+        $endpoint = strval($this->option('endpoint'));
 
         while (true) {
             // https://developer.paypal.com/docs/api/catalog-products/v1/#products_list
@@ -267,6 +267,6 @@ class Paypal extends Provider
                 ],
             ],
             $this->kart->page(ContentPageEnum::PRODUCTS))
-        )->mixinProduct($data)->toArray(), $products);
+        )->mixinProduct($data)->toArray(), array_filter($products));
     }
 }

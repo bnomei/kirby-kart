@@ -79,8 +79,6 @@ class Cart
         if ($item = $this->lines->get($product->uuid()->id())) {
             /** @var CartLine $item */
             $item->increment($amount);
-        } elseif ($this->lines->count() >= $maxLines) {
-            $this->lines = $this->lines->slice(0, $maxLines);
         } else {
             $item = new CartLine(
                 $product->uuid()->id(),
@@ -88,6 +86,10 @@ class Cart
                 $this
             );
             $this->lines->add($item);
+        }
+
+        if ($this->lines->count() >= $maxLines) {
+            $this->lines = $this->lines->flip()->slice(0, $maxLines);
         }
 
         if (! $this->kirby->environment()->isLocal() && $this->kirby->plugin('bnomei/kart')->license()->status()->value() !== 'active') {

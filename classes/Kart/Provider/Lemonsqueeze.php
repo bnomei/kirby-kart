@@ -36,7 +36,7 @@ class Lemonsqueeze extends Provider
 
     public function checkout(): string
     {
-        $product = $this->kart->cart()->lines()->first()?->product();
+        $product = $this->kart->cart()->lines()->first()?->product(); // @phpstan-ignore-line
 
         $options = $this->option('checkout_options', false);
         if ($options instanceof Closure) {
@@ -62,13 +62,13 @@ class Lemonsqueeze extends Provider
                         'variant' => [
                             'data' => [
                                 'type' => 'variants',
-                                'id' => A::get($product->raw()->yaml(), 'variants.0.id'),
+                                'id' => $product ? A::get($product->raw()->yaml(), 'variants.0.id') : null,
                             ],
                         ],
                     ],
                     'attributes' => array_filter(array_merge([
                         'product_options' => [
-                            'enabled_variants' => [A::get($product->raw()->yaml(), 'variants.0.id')],
+                            'enabled_variants' => [$product ? A::get($product->raw()->yaml(), 'variants.0.id') : null],
                             'redirect_url' => url(Router::PROVIDER_SUCCESS).'?order_id=[order_id]',
                         ],
                         'checkout_data' => array_filter([

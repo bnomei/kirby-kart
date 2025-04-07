@@ -29,7 +29,7 @@ class Snipcart extends Provider
         return [
             'Content-Type' => 'application/json',
             'Accept' => 'application/json',
-            'Authorization' => 'Basic '.base64_encode(strval($this->option('secret_key').':')),
+            'Authorization' => 'Basic '.base64_encode(strval($this->option('secret_key')).':'),
         ];
     }
 

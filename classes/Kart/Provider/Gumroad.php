@@ -23,7 +23,7 @@ class Gumroad extends Provider
 
     public function checkout(): string
     {
-        $product = $this->kart->cart()->lines()->first()?->product();
+        $product = $this->kart->cart()->lines()->first()?->product(); // @phpstan-ignore-line
 
         return parent::checkout() && $product ?
             A::get($product->raw()->yaml(), 'short_url') : '/';

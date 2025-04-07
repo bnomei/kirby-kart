@@ -68,7 +68,7 @@ class Mollie extends Provider
                 'Authorization' => 'Bearer '.strval($this->option('secret_key')),
             ],
             'data' => array_filter(array_merge([
-                'description' => t('bnomei.kart.order').' '.strtoupper($uuid),
+                'description' => strval(t('bnomei.kart.order')).' '.strtoupper($uuid),
                 'metadata' => [
                     'order_id' => $uuid,
                 ],
@@ -82,12 +82,12 @@ class Mollie extends Provider
                     'value' => number_format($this->kart->cart()->subtotal(), 2),
                 ],
                 'billingAddress' => $this->kirby()->user() ? [
-                    'email' => $this->kirby()->user()?->email(),
+                    'email' => $this->kirby()->user()->email(),
                 ] : null,
                 'lines' => $this->kart->cart()->lines()->values(fn (CartLine $l) => array_merge([
                     'sku' => $l->product()?->uuid()->id(), // used on completed again to find the product
-                    'type' => $l->product()?->ptype()->isNotEmpty() ?
-                        $l->product()?->ptype()->value() : 'physical',
+                    'type' => $l->product()?->ptype()->isNotEmpty() ? // @phpstan-ignore-line
+                        $l->product()?->ptype()->value() : 'physical', // @phpstan-ignore-line
                     'description' => $l->product()?->title()->value(),
                     'quantity' => $l->quantity(),
                     'unitPrice' => [
