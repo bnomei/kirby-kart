@@ -1,7 +1,6 @@
 <?php
 
 return [
-    'login.email.magic-link.subject' => '{{ site.title }} için giriş bağlantınız',
     'bnomei.kart.cart' => 'Sepet',
     'bnomei.kart.categories' => 'Kategoriler',
     'bnomei.kart.created' => 'Oluşturulma tarihi',
@@ -43,6 +42,7 @@ return [
     'bnomei.kart.raw-values' => 'Sağlayıcı verileri',
     'bnomei.kart.register' => 'Kaydol',
     'bnomei.kart.revenue-30' => 'Gelir (30 gün)',
+    'bnomei.kart.rrprice' => 'RRP',
     'bnomei.kart.sales-count' => 'Sales Count',
     'bnomei.kart.signup' => 'Üye ol',
     'bnomei.kart.sold' => 'Satıldı',
@@ -57,4 +57,5 @@ return [
     'bnomei.kart.tax-rate' => 'Vergi oranı',
     'bnomei.kart.timestamp' => 'Zaman damgası',
     'bnomei.kart.total' => 'Toplam',
+    'login.email.magic-link.subject' => '{{ site.title }} için giriş bağlantınız',
 ];

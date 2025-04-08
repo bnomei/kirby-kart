@@ -107,9 +107,21 @@ class ProductPage extends Page
                                     'default' => 0,
                                     // 'required' => true, // does not work with pruning
                                     'after' => '{{ kirby.option("bnomei.kart.currency") }}',
-                                    'width' => '1/2',
+                                    'width' => '1/3',
                                     'translate' => false,
                                     'virtual' => true,
+                                ],
+                                'rrprice' => [
+                                    'label' => 'bnomei.kart.rrprice',
+                                    'type' => 'number',
+                                    'min' => 0,
+                                    'step' => 0.01,
+                                    'default' => 0,
+                                    // 'required' => true, // does not work with pruning
+                                    'after' => '{{ kirby.option("bnomei.kart.currency") }}',
+                                    'width' => '1/3',
+                                    'translate' => false,
+                                    'virtual' => false,
                                 ],
                                 /* tax and taxrate are handled by the checkout flow
                                 'taxrate' => [
@@ -130,7 +142,7 @@ class ProductPage extends Page
                                     'time' => true,
                                     'default' => 'now',
                                     'translate' => false,
-                                    'width' => '1/2',
+                                    'width' => '1/3',
                                     // 'virtual' => true, // needed for `num`
                                 ],
                                 'categories' => [

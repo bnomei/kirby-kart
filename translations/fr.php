@@ -1,7 +1,6 @@
 <?php
 
 return [
-    'login.email.magic-link.subject' => 'Votre lien de connexion pour {{ site.title }}',
     'bnomei.kart.cart' => 'Panier',
     'bnomei.kart.categories' => 'Catégories',
     'bnomei.kart.created' => 'Créé le',
@@ -43,6 +42,7 @@ return [
     'bnomei.kart.raw-values' => 'Données du fournisseur',
     'bnomei.kart.register' => 'S\'inscrire',
     'bnomei.kart.revenue-30' => 'Revenu (30 jours)',
+    'bnomei.kart.rrprice' => 'RRP',
     'bnomei.kart.sales-count' => 'Sales Count',
     'bnomei.kart.signup' => 'Inscription',
     'bnomei.kart.sold' => 'Vendu',
@@ -57,4 +57,5 @@ return [
     'bnomei.kart.tax-rate' => 'Taux de taxe',
     'bnomei.kart.timestamp' => 'Horodatage',
     'bnomei.kart.total' => 'Total',
+    'login.email.magic-link.subject' => 'Votre lien de connexion pour {{ site.title }}',
 ];
