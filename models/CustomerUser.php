@@ -18,7 +18,7 @@ use Kirby\Content\Field;
  * @method Field gumroad()
  * @method Field invoice_ninja()
  * @method Field kirby_cms()
- * @method Field lemonsqueeze()
+ * @method Field lemonsqueezy()
  * @method Field mollie()
  * @method Field paddle()
  * @method Field payone()

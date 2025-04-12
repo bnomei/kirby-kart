@@ -43,7 +43,7 @@ trait Options
             'providers.fastspring.checkout_options',
             'providers.invoice_ninja.checkout_options',
             'providers.kirby_cms.checkout_options',
-            'providers.lemonsqueeze.checkout_options',
+            'providers.lemonsqueezy.checkout_options',
             'providers.mollie.checkout_options',
             'providers.mollie.checkout_line',
             'providers.paddle.checkout_options',

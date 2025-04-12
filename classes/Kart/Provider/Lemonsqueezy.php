@@ -20,9 +20,9 @@ use Kirby\Http\Remote;
 use Kirby\Toolkit\A;
 use Kirby\Toolkit\Str;
 
-class Lemonsqueeze extends Provider
+class Lemonsqueezy extends Provider
 {
-    protected string $name = ProviderEnum::LEMONSQUEEZE->value;
+    protected string $name = ProviderEnum::LEMONSQUEEZY->value;
 
     /* Checkout but no redirect
     public function checkout(): string

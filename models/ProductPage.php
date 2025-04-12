@@ -416,7 +416,7 @@ class ProductPage extends Page
     /**
      * @kql-allowed
      */
-    public function lemonsqueezeUrl(): ?string
+    public function lemonsqueezyUrl(): ?string
     {
         return A::get($this->raw()->yaml(), 'buy_now_url');
     }

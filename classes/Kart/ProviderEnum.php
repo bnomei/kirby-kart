@@ -17,7 +17,7 @@ enum ProviderEnum: string
     case GUMROAD = 'gumroad';
     case INVOICE_NINJA = 'invoice_ninja';
     case KIRBY = 'kirby_cms';
-    case LEMONSQUEEZE = 'lemonsqueeze';
+    case LEMONSQUEEZY = 'lemonsqueezy';
     case MOLLIE = 'mollie';
     case PADDLE = 'paddle';
     case PAYPAL = 'paypal';

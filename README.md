@@ -7,7 +7,7 @@
 [![Coverage](https://flat.badgen.net/codeclimate/coverage/bnomei/kirby-kart?icon=codeclimate&label)](https://codeclimate.com/github/bnomei/kirby-kart)
 [![Maintainability](https://flat.badgen.net/codeclimate/maintainability/bnomei/kirby-kart?icon=codeclimate&label)](https://codeclimate.com/github/bnomei/kirby-kart/issues)
 [![Discord](https://flat.badgen.net/badge/discord/bnomei?color=7289da&icon=discord&label)](https://discordapp.com/users/bnomei)
-[![Buy License](https://flat.badgen.net/badge/icon/Buy%20License?icon=lemonsqueeze&color=FFC233&label=$)](https://buy-kart.bnomei.com)
+[![Buy License](https://flat.badgen.net/badge/icon/Buy%20License?icon=lemonsqueezy&color=FFC233&label=$)](https://buy-kart.bnomei.com)
 
 Streamlined E-Commerce Shopping Cart Solution
 
@@ -19,7 +19,9 @@ Streamlined E-Commerce Shopping Cart Solution
 
 ## Licensing
 
-Kirby Kart is a commercial plugin that requires a license. You can install and test the plugin locally without a license. However, production environments require a valid license. You can [purchase a license here](https://buy-kart.bnomei.com).
+Kirby Kart is a commercial plugin that requires a license. You can install and test the plugin locally without a
+license. However, production environments require a valid license. You
+can [purchase a license here](https://buy-kart.bnomei.com).
 
 ## Quickstart
 
@@ -39,7 +41,9 @@ You can find the full [documentation for Kirby Kart](https://kart.bnomei.com) on
 
 ## Disclaimer
 
-This plugin is provided "as is" with no guarantee. You can use it at your own risk and always test it before using it in a production environment. If you find any issues, please [create a new issue](https://github.com/bnomei/kirby-kart/issues/new).
+This plugin is provided "as is" with no guarantee. You can use it at your own risk and always test it before using it in
+a production environment. If you find any issues,
+please [create a new issue](https://github.com/bnomei/kirby-kart/issues/new).
 
 ## License
 

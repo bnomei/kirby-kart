@@ -62,7 +62,7 @@ App::plugin(
                 'gumroad' => true,
                 'invoice_ninja' => true,
                 'kirby_cms' => true,
-                'lemonsqueeze' => true,
+                'lemonsqueezy' => true,
                 'mollie' => true,
                 'paddle' => true,
                 'paypal' => true,
@@ -174,9 +174,9 @@ App::plugin(
                 'kirby_cms' => [
                     'virtual' => false,
                 ],
-                'lemonsqueeze' => [
-                    'store_id' => fn () => class_exists('\Bnomei\DotEnv') ? DotEnv::getenv('LEMONSQUEEZE_STORE_ID') : null,
-                    'secret_key' => fn () => class_exists('\Bnomei\DotEnv') ? DotEnv::getenv('LEMONSQUEEZE_SECRET_KEY') : null,
+                'lemonsqueezy' => [
+                    'store_id' => fn () => class_exists('\Bnomei\DotEnv') ? DotEnv::getenv('LEMONSQUEEZY_STORE_ID') : null,
+                    'secret_key' => fn () => class_exists('\Bnomei\DotEnv') ? DotEnv::getenv('LEMONSQUEEZY_SECRET_KEY') : null,
                     'checkout_options' => function (Kart $kart) {
                         // configure the checkout based on current kart instance
                         // https://docs.lemonsqueezy.com/api/checkouts/create-checkout
