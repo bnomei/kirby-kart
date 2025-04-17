@@ -14,12 +14,13 @@
  */
 
 use Kirby\Cms\Response;
+use Kirby\Content\Field;
 use Kirby\Toolkit\A;
 
 $page ??= kirby()->site()->page();
 $template ??= $page->intendedTemplate();
 $props ??= $page->toKerbs();
-if ($props instanceof \Kirby\Content\Field) {
+if ($props instanceof Field) {
     $props = [];
 }
 $request = kirby()->request();
