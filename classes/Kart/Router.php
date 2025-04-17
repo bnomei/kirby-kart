@@ -496,7 +496,9 @@ class Router
 
     public static function csrf(): string
     {
-        return self::factory(self::CSRF);
+        return Uri::index()->clone([
+            'path' => self::CSRF,
+        ])->toString();
     }
 
     public static function captcha(): string
