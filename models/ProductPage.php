@@ -10,6 +10,7 @@
 
 use Bnomei\Kart\ContentPageEnum;
 use Bnomei\Kart\Kart;
+use Bnomei\Kart\Kerbs;
 use Bnomei\Kart\ProductStorage;
 use Bnomei\Kart\Router;
 use Kirby\Cms\File;
@@ -30,7 +31,7 @@ use Kirby\Toolkit\Str;
  * @method Field tags()
  * @method Field maxapo()
  */
-class ProductPage extends Page
+class ProductPage extends Page implements Kerbs
 {
     public static function create(array $props): Page
     {
@@ -419,5 +420,15 @@ class ProductPage extends Page
     public function lemonsqueezyUrl(): ?string
     {
         return A::get($this->raw()->yaml(), 'buy_now_url');
+    }
+
+    public function toKerbs(): array
+    {
+        return [
+            'title' => $this->title()->value(),
+            'url' => $this->url(),
+            'price' => $this->price()->toFloat(),
+            'formattedPrice' => $this->formattedPrice(),
+        ];
     }
 }

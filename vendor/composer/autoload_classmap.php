@@ -12,6 +12,7 @@ return array(
     'Bnomei\\Kart\\Category' => $baseDir . '/classes/Kart/Category.php',
     'Bnomei\\Kart\\ContentPageEnum' => $baseDir . '/classes/Kart/ContentPageEnum.php',
     'Bnomei\\Kart\\Kart' => $baseDir . '/classes/Kart/Kart.php',
+    'Bnomei\\Kart\\Kerbs' => $baseDir . '/classes/Kart/Kerbs.php',
     'Bnomei\\Kart\\License' => $baseDir . '/classes/Kart/License.php',
     'Bnomei\\Kart\\MagicLinkChallenge' => $baseDir . '/classes/Kart/MagicLinkChallenge.php',
     'Bnomei\\Kart\\Mixins\\Captcha' => $baseDir . '/classes/Kart/Mixins/Captcha.php',

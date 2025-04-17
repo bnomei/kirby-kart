@@ -39,6 +39,13 @@ if (! function_exists('kart')) {
     }
 }
 
+if (! function_exists('kerbs')) {
+    function kerbs(?array $props = null, ?string $template = null): void
+    {
+        snippet('kart/kerbs', array_filter(['props' => $props, 'template' => $template]));
+    }
+}
+
 App::plugin(
     name: 'bnomei/kart',
     extends: [
@@ -305,6 +312,7 @@ App::plugin(
             'kart/input-csrf' => __DIR__.'/snippets/kart/input-csrf.php',
             'kart/input-csrf-defer' => __DIR__.'/snippets/kart/input-csrf-defer.php',
             'kart/kart' => __DIR__.'/snippets/kart/kart.php',
+            'kart/kerbs' => __DIR__.'/snippets/kart/kerbs.php',
             'kart/login' => __DIR__.'/snippets/kart/login.php',
             'kart/login-magic' => __DIR__.'/snippets/kart/login-magic.php',
             'kart/logout' => __DIR__.'/snippets/kart/logout.php',

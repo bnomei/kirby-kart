@@ -54,6 +54,7 @@ class ComposerStaticInit0b4a90d8ca6c77d6790e4f32c53ff9b9
         'Bnomei\\Kart\\Category' => __DIR__ . '/../..' . '/classes/Kart/Category.php',
         'Bnomei\\Kart\\ContentPageEnum' => __DIR__ . '/../..' . '/classes/Kart/ContentPageEnum.php',
         'Bnomei\\Kart\\Kart' => __DIR__ . '/../..' . '/classes/Kart/Kart.php',
+        'Bnomei\\Kart\\Kerbs' => __DIR__ . '/../..' . '/classes/Kart/Kerbs.php',
         'Bnomei\\Kart\\License' => __DIR__ . '/../..' . '/classes/Kart/License.php',
         'Bnomei\\Kart\\MagicLinkChallenge' => __DIR__ . '/../..' . '/classes/Kart/MagicLinkChallenge.php',
         'Bnomei\\Kart\\Mixins\\Captcha' => __DIR__ . '/../..' . '/classes/Kart/Mixins/Captcha.php',
