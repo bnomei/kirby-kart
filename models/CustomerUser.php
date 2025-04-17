@@ -14,6 +14,7 @@ use Kirby\Cms\User;
 use Kirby\Content\Field;
 
 /**
+ * @method array toKerbs()
  * @method Field fastspring()
  * @method Field gumroad()
  * @method Field invoice_ninja()

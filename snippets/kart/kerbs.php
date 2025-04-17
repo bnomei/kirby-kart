@@ -12,9 +12,9 @@ $request = kirby()->request();
 
 $inertia = array_filter([
     'component' => ucfirst($template->name()),
-    'props' => array_map(fn($value) => $value instanceof Closure ? $value() : $value, $props + option('bnomei.kart.kerbs.shared', [])),
+    'props' => array_map(fn($value) => $value instanceof Closure ? $value() : $value, $props + kart()->option('kerbs.shared')),
     'url' => $request->url()->toString(),
-    'version' => option('bnomei.kart.kerbs.version'), // TODO: read manifest file if it exists
+    'version' => kart()->option('kerbs.version'), // TODO: read manifest file if it exists
 ]);
 
 // return json when in inertia mode

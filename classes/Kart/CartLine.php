@@ -13,7 +13,7 @@ namespace Bnomei\Kart;
 use Kirby\Cms\Page;
 use ProductPage;
 
-class CartLine
+class CartLine implements Kerbs
 {
     private ?Page $product = null;
 
@@ -139,5 +139,18 @@ class CartLine
     public function subtotal(): float
     {
         return $this->price() * $this->quantity();
+    }
+
+    public function toKerbs(): array
+    {
+        return [
+            'quantity' => $this->quantity(),
+            'price' => $this->price(),
+            'formattedPrice' => $this->formattedPrice(),
+            'subtotal' => $this->subtotal(),
+            'formattedSubtotal' => $this->formattedSubtotal(),
+            'product' => $this->product()?->toKerbs(),
+            'hasStockForQuantity' => $this->hasStockForQuantity(),
+        ];
     }
 }

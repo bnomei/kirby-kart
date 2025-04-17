@@ -429,6 +429,11 @@ class ProductPage extends Page implements Kerbs
             'url' => $this->url(),
             'price' => $this->price()->toFloat(),
             'formattedPrice' => $this->formattedPrice(),
+            'stock' => $this->stock(withHold: true),
+            'addToCart' => $this->addToCart(),
+            'removeFromCart' => $this->removeFromCart(),
+            'addToWishlist' => $this->addToWishlist(),
+            'removeFromWishlist' => $this->removeFromWishlist(),
         ];
     }
 }

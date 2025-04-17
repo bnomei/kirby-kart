@@ -31,7 +31,7 @@ use NumberFormatter;
 use OrderPage;
 use ProductPage;
 
-class Kart
+class Kart implements Kerbs
 {
     use ContentPages;
     use Options;
@@ -689,5 +689,14 @@ class Kart
     public function stocks(): Pages
     {
         return kart()->page(ContentPageEnum::STOCKS)?->children() ?: new Pages;
+    }
+
+    public function toKerbs(): array
+    {
+        return [
+            'cart' => $this->cart()->toKerbs(),
+            'wishlist' => $this->wishlist()->toKerbs(),
+            'urls' => $this->urls()->toKerbs(),
+        ];
     }
 }

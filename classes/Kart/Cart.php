@@ -20,7 +20,7 @@ use OrdersPage;
 use ProductPage;
 use StocksPage;
 
-class Cart
+class Cart implements Kerbs
 {
     /** @var Collection<CartLine> */
     private Collection $lines; // this will match the field on the user content (cart, wishlist)
@@ -441,5 +441,20 @@ class Cart
         }
 
         return $hasOne;
+    }
+
+    public function toKerbs(): array
+    {
+        return [
+            'url' => page($this->id)?->url(),
+            'id' => $this->id,
+            'hash' => $this->hash(),
+            'count' => $this->lines()->count(),
+            'quantity' => $this->quantity(),
+            'subtotal' => $this->subtotal(),
+            'formattedSubtotal' => $this->formattedSubtotal(),
+            'lines' => $this->lines()->values(fn (CartLine $l) => $l->toKerbs()),
+            'canCheckout' => $this->canCheckout(),
+        ];
     }
 }
