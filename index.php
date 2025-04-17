@@ -8,7 +8,8 @@
  * Unauthorized copying, modification, or distribution is prohibited.
  */
 
-use Bnomei\DotEnv;
+// use Bnomei\DotEnv; // NOTE: would break if not installed
+use Bnomei\Kart\CaptchaBuilder;
 use Bnomei\Kart\Cart;
 use Bnomei\Kart\CartLine;
 use Bnomei\Kart\Kart;
@@ -28,7 +29,6 @@ use Kirby\Http\Remote;
 use Kirby\Session\Session;
 use Kirby\Toolkit\A;
 use Kirby\Toolkit\Str;
-use SimpleCaptcha\Builder;
 
 @include_once __DIR__.'/vendor/autoload.php';
 
@@ -43,7 +43,7 @@ App::plugin(
     name: 'bnomei/kart',
     extends: [
         'options' => [
-            'license' => fn () => class_exists('\Bnomei\DotEnv') ? DotEnv::getenv('KART_LICENSE_KEY') : '', // set your license from https://buy-kart.bnomei.com code in the config `bnomei.kart.license`
+            'license' => fn () => class_exists('\Bnomei\DotEnv') ? \Bnomei\DotEnv\DotEnv::getenv('KART_LICENSE_KEY') : '', // set your license from https://buy-kart.bnomei.com code in the config `bnomei.kart.license`
             'cache' => [
                 'categories' => true,
                 'crypto' => true,
@@ -79,9 +79,9 @@ App::plugin(
                 'roles' => ['customer', 'member', 'admin'], // does NOT include `deleted`
             ],
             'crypto' => [
-                'password' => fn () => class_exists('\Bnomei\DotEnv') ? DotEnv::getenv('CRYPTO_PASSWORD') : null,
+                'password' => fn () => class_exists('\Bnomei\DotEnv') ? \Bnomei\DotEnv\DotEnv::getenv('CRYPTO_PASSWORD') : null,
                 'salt' => fn () => class_exists('\Bnomei\DotEnv') ?
-                    DotEnv::getenv('CRYPTO_SALT', kirby()->cache('bnomei.kart.crypto')->getOrSet('salt', fn () => Str::random(64))) :
+                    \Bnomei\DotEnv\DotEnv::getenv('CRYPTO_SALT', kirby()->cache('bnomei.kart.crypto')->getOrSet('salt', fn () => Str::random(64))) :
                     kirby()->cache('bnomei.kart.crypto')->getOrSet('salt', fn () => Str::random(64)),
             ],
             'locale' => 'en_EN', // or current locale on multilanguage setups
@@ -119,7 +119,7 @@ App::plugin(
             'router' => [
                 'mode' => 'go', // go/json/html
                 'salt' => fn () => class_exists('\Bnomei\DotEnv') ?
-                    DotEnv::getenv('ROUTER_SALT', kirby()->cache('bnomei.kart.router')->getOrSet('salt', fn () => Str::random(64))) :
+                    \Bnomei\DotEnv\DotEnv::getenv('ROUTER_SALT', kirby()->cache('bnomei.kart.router')->getOrSet('salt', fn () => Str::random(64))) :
                     kirby()->cache('bnomei.kart.router')->getOrSet('salt', fn () => Str::random(64)), // or false
                 'csrf' => 'token', // null|false or name of form data
                 'header' => [
@@ -163,9 +163,9 @@ App::plugin(
                 'checkout' => [],
                 'fastspring' => [
                     // https://developer.fastspring.com/docs/storefront-urls#link-to-your-checkouts-with-the-api
-                    'store_url' => fn () => class_exists('\Bnomei\DotEnv') ? DotEnv::getenv('FASTSPRING_STORE_URL') : 'https://acme.onfastspring.com',
-                    'username' => fn () => class_exists('\Bnomei\DotEnv') ? DotEnv::getenv('FASTSPRING_USERNAME') : null,
-                    'password' => fn () => class_exists('\Bnomei\DotEnv') ? DotEnv::getenv('FASTSPRING_PASSWORD') : null,
+                    'store_url' => fn () => class_exists('\Bnomei\DotEnv') ? \Bnomei\DotEnv\DotEnv::getenv('FASTSPRING_STORE_URL') : 'https://acme.onfastspring.com',
+                    'username' => fn () => class_exists('\Bnomei\DotEnv') ? \Bnomei\DotEnv\DotEnv::getenv('FASTSPRING_USERNAME') : null,
+                    'password' => fn () => class_exists('\Bnomei\DotEnv') ? \Bnomei\DotEnv\DotEnv::getenv('FASTSPRING_PASSWORD') : null,
                     'checkout_options' => function (Kart $kart) {
                         // configure the checkout based on current kart instance
                         // https://developer.paypal.com/docs/api/orders/v2/#orders_create
@@ -174,7 +174,7 @@ App::plugin(
                     'virtual' => ['title', 'description', 'gallery'],
                 ],
                 'gumroad' => [
-                    'access_token' => fn () => class_exists('\Bnomei\DotEnv') ? DotEnv::getenv('GUMROAD_ACCESS_TOKEN') : null,
+                    'access_token' => fn () => class_exists('\Bnomei\DotEnv') ? \Bnomei\DotEnv\DotEnv::getenv('GUMROAD_ACCESS_TOKEN') : null,
                     'virtual' => true,
                 ],
                 'invoice_ninja' => [],
@@ -182,8 +182,8 @@ App::plugin(
                     'virtual' => false,
                 ],
                 'lemonsqueezy' => [
-                    'store_id' => fn () => class_exists('\Bnomei\DotEnv') ? DotEnv::getenv('LEMONSQUEEZY_STORE_ID') : null,
-                    'secret_key' => fn () => class_exists('\Bnomei\DotEnv') ? DotEnv::getenv('LEMONSQUEEZY_SECRET_KEY') : null,
+                    'store_id' => fn () => class_exists('\Bnomei\DotEnv') ? \Bnomei\DotEnv\DotEnv::getenv('LEMONSQUEEZY_STORE_ID') : null,
+                    'secret_key' => fn () => class_exists('\Bnomei\DotEnv') ? \Bnomei\DotEnv\DotEnv::getenv('LEMONSQUEEZY_SECRET_KEY') : null,
                     'checkout_options' => function (Kart $kart) {
                         // configure the checkout based on current kart instance
                         // https://docs.lemonsqueezy.com/api/checkouts/create-checkout
@@ -192,7 +192,7 @@ App::plugin(
                     'virtual' => true,
                 ],
                 'mollie' => [
-                    'secret_key' => fn () => class_exists('\Bnomei\DotEnv') ? DotEnv::getenv('MOLLIE_SECRET_KEY') : null,
+                    'secret_key' => fn () => class_exists('\Bnomei\DotEnv') ? \Bnomei\DotEnv\DotEnv::getenv('MOLLIE_SECRET_KEY') : null,
                     'checkout_options' => function (Kart $kart) {
                         // configure the checkout based on current kart instance
                         // https://docs.mollie.com/reference/create-payment
@@ -206,9 +206,9 @@ App::plugin(
                 ],
                 'paddle' => [
                     // https://developer.paddle.com/api-reference/overview
-                    'endpoint' => fn () => class_exists('\Bnomei\DotEnv') ? DotEnv::getenv('PADDLE_ENDPOINT', 'https://sandbox-api.paddle.com') : 'https://sandbox-api.paddle.com',
-                    'public_token' => fn () => class_exists('\Bnomei\DotEnv') ? DotEnv::getenv('PADDLE_PUBLIC_TOKEN') : null,
-                    'secret_key' => fn () => class_exists('\Bnomei\DotEnv') ? DotEnv::getenv('PADDLE_SECRET_KEY') : null,
+                    'endpoint' => fn () => class_exists('\Bnomei\DotEnv') ? \Bnomei\DotEnv\DotEnv::getenv('PADDLE_ENDPOINT', 'https://sandbox-api.paddle.com') : 'https://sandbox-api.paddle.com',
+                    'public_token' => fn () => class_exists('\Bnomei\DotEnv') ? \Bnomei\DotEnv\DotEnv::getenv('PADDLE_PUBLIC_TOKEN') : null,
+                    'secret_key' => fn () => class_exists('\Bnomei\DotEnv') ? \Bnomei\DotEnv\DotEnv::getenv('PADDLE_SECRET_KEY') : null,
                     'checkout_options' => function (Kart $kart) {
                         // configure the checkout based on current kart instance
                         // https://developer.paddle.com/api-reference/transactions/create-transaction
@@ -222,9 +222,9 @@ App::plugin(
                 ],
                 'payone' => [],
                 'paypal' => [
-                    'endpoint' => fn () => class_exists('\Bnomei\DotEnv') ? DotEnv::getenv('PAYPAL_ENDPOINT', 'https://api-m.sandbox.paypal.com') : 'https://api-m.sandbox.paypal.com',
-                    'client_id' => fn () => class_exists('\Bnomei\DotEnv') ? DotEnv::getenv('PAYPAL_CLIENT_ID') : null,
-                    'client_secret' => fn () => class_exists('\Bnomei\DotEnv') ? DotEnv::getenv('PAYPAL_CLIENT_SECRET') : null,
+                    'endpoint' => fn () => class_exists('\Bnomei\DotEnv') ? \Bnomei\DotEnv\DotEnv::getenv('PAYPAL_ENDPOINT', 'https://api-m.sandbox.paypal.com') : 'https://api-m.sandbox.paypal.com',
+                    'client_id' => fn () => class_exists('\Bnomei\DotEnv') ? \Bnomei\DotEnv\DotEnv::getenv('PAYPAL_CLIENT_ID') : null,
+                    'client_secret' => fn () => class_exists('\Bnomei\DotEnv') ? \Bnomei\DotEnv\DotEnv::getenv('PAYPAL_CLIENT_SECRET') : null,
                     'checkout_options' => function (Kart $kart) {
                         // configure the checkout based on current kart instance
                         // https://developer.paypal.com/docs/api/orders/v2/#orders_create
@@ -238,12 +238,12 @@ App::plugin(
                 ],
                 'shopify' => [],
                 'snipcart' => [
-                    'public_key' => fn () => class_exists('\Bnomei\DotEnv') ? DotEnv::getenv('SNIPCART_PUBLIC_KEY') : null,
-                    'secret_key' => fn () => class_exists('\Bnomei\DotEnv') ? DotEnv::getenv('SNIPCART_SECRET_KEY') : null,
+                    'public_key' => fn () => class_exists('\Bnomei\DotEnv') ? \Bnomei\DotEnv\DotEnv::getenv('SNIPCART_PUBLIC_KEY') : null,
+                    'secret_key' => fn () => class_exists('\Bnomei\DotEnv') ? \Bnomei\DotEnv\DotEnv::getenv('SNIPCART_SECRET_KEY') : null,
                     'virtual' => false,
                 ],
                 'stripe' => [
-                    'secret_key' => fn () => class_exists('\Bnomei\DotEnv') ? DotEnv::getenv('STRIPE_SECRET_KEY') : null,
+                    'secret_key' => fn () => class_exists('\Bnomei\DotEnv') ? \Bnomei\DotEnv\DotEnv::getenv('STRIPE_SECRET_KEY') : null,
                     'checkout_options' => function (Kart $kart) {
                         // configure the checkout based on current kart instance
                         // https://docs.stripe.com/api/checkout/sessions/create
@@ -258,8 +258,8 @@ App::plugin(
             ],
             'turnstile' => [
                 'endpoint' => 'https://challenges.cloudflare.com/turnstile/v0/siteverify',
-                'sitekey' => fn () => class_exists('\Bnomei\DotEnv') ? DotEnv::getenv('TURNSTILE_SITE_KEY') : null,
-                'secretkey' => fn () => class_exists('\Bnomei\DotEnv') ? DotEnv::getenv('TURNSTILE_SECRET_KEY') : null,
+                'sitekey' => fn () => class_exists('\Bnomei\DotEnv') ? \Bnomei\DotEnv\DotEnv::getenv('TURNSTILE_SITE_KEY') : null,
+                'secretkey' => fn () => class_exists('\Bnomei\DotEnv') ? \Bnomei\DotEnv\DotEnv::getenv('TURNSTILE_SECRET_KEY') : null,
             ],
             'captcha' => [
                 'current' => function () {
@@ -267,7 +267,7 @@ App::plugin(
                 },
                 'set' => function (bool $inline = true) {
                     // https://github.com/S1SYPHOS/php-simple-captcha
-                    $builder = new Builder;
+                    $builder = new CaptchaBuilder;
                     $builder->bgColor = '#FFFFFF';
                     $builder->lineColor = '#FFFFFF';
                     $builder->textColor = '#000000';

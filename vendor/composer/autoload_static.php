@@ -48,6 +48,7 @@ class ComposerStaticInit0b4a90d8ca6c77d6790e4f32c53ff9b9
     );
 
     public static $classMap = array (
+        'Bnomei\\Kart\\CaptchaBuilder' => __DIR__ . '/../..' . '/classes/Kart/CaptchaBuilder.php',
         'Bnomei\\Kart\\Cart' => __DIR__ . '/../..' . '/classes/Kart/Cart.php',
         'Bnomei\\Kart\\CartLine' => __DIR__ . '/../..' . '/classes/Kart/CartLine.php',
         'Bnomei\\Kart\\Category' => __DIR__ . '/../..' . '/classes/Kart/Category.php',

@@ -6,6 +6,7 @@ $vendorDir = dirname(__DIR__);
 $baseDir = dirname($vendorDir);
 
 return array(
+    'Bnomei\\Kart\\CaptchaBuilder' => $baseDir . '/classes/Kart/CaptchaBuilder.php',
     'Bnomei\\Kart\\Cart' => $baseDir . '/classes/Kart/Cart.php',
     'Bnomei\\Kart\\CartLine' => $baseDir . '/classes/Kart/CartLine.php',
     'Bnomei\\Kart\\Category' => $baseDir . '/classes/Kart/Category.php',
