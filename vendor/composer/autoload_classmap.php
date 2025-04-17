@@ -28,7 +28,7 @@ return array(
     'Bnomei\\Kart\\Provider\\Gumroad' => $baseDir . '/classes/Kart/Provider/Gumroad.php',
     'Bnomei\\Kart\\Provider\\Invoiceninja' => $baseDir . '/classes/Kart/Provider/Invoiceninja.php',
     'Bnomei\\Kart\\Provider\\Kirby' => $baseDir . '/classes/Kart/Provider/Kirby.php',
-    'Bnomei\\Kart\\Provider\\Lemonsqueeze' => $baseDir . '/classes/Kart/Provider/Lemonsqueeze.php',
+    'Bnomei\\Kart\\Provider\\Lemonsqueezy' => $baseDir . '/classes/Kart/Provider/Lemonsqueezy.php',
     'Bnomei\\Kart\\Provider\\Mollie' => $baseDir . '/classes/Kart/Provider/Mollie.php',
     'Bnomei\\Kart\\Provider\\Paddle' => $baseDir . '/classes/Kart/Provider/Paddle.php',
     'Bnomei\\Kart\\Provider\\Payone' => $baseDir . '/classes/Kart/Provider/Payone.php',

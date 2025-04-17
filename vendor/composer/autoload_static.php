@@ -70,7 +70,7 @@ class ComposerStaticInit0b4a90d8ca6c77d6790e4f32c53ff9b9
         'Bnomei\\Kart\\Provider\\Gumroad' => __DIR__ . '/../..' . '/classes/Kart/Provider/Gumroad.php',
         'Bnomei\\Kart\\Provider\\Invoiceninja' => __DIR__ . '/../..' . '/classes/Kart/Provider/Invoiceninja.php',
         'Bnomei\\Kart\\Provider\\Kirby' => __DIR__ . '/../..' . '/classes/Kart/Provider/Kirby.php',
-        'Bnomei\\Kart\\Provider\\Lemonsqueeze' => __DIR__ . '/../..' . '/classes/Kart/Provider/Lemonsqueeze.php',
+        'Bnomei\\Kart\\Provider\\Lemonsqueezy' => __DIR__ . '/../..' . '/classes/Kart/Provider/Lemonsqueezy.php',
         'Bnomei\\Kart\\Provider\\Mollie' => __DIR__ . '/../..' . '/classes/Kart/Provider/Mollie.php',
         'Bnomei\\Kart\\Provider\\Paddle' => __DIR__ . '/../..' . '/classes/Kart/Provider/Paddle.php',
         'Bnomei\\Kart\\Provider\\Payone' => __DIR__ . '/../..' . '/classes/Kart/Provider/Payone.php',

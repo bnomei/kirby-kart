@@ -141,7 +141,7 @@ return function (App $kirby) {
                 // create a virtual user to make kirby happily create
                 // the magic challenge even if NO user with that
                 // email exists.
-                $maybe = kirby()->user(get('email'));
+                $maybe = kirby()->user(A::get($data, 'email'));
                 if ($maybe) {
                     kart()->message(t('error.user.duplicate'));
                 }
@@ -158,7 +158,7 @@ return function (App $kirby) {
                         'email' => A::get($data, 'email'),
                         'name' => A::get($data, 'name'),
                         'signup' => 1,
-                        'success_url' => get('success_url'),
+                        'success_url' => A::get($data, 'success_url'),
                     ]);
                     if ($code) {
                         kirby()->session()->set('kirby.challenge.type', 'login');
@@ -216,6 +216,10 @@ return function (App $kirby) {
                     return $r;
                 }
 
+                if (Kart::checkSignature(get('signature'), kirby()->request()->url()) === false) {
+                    return Response::json([], 401);
+                }
+
                 if (get('prg') !== '1') {
                     $url = kirby()->request()->url().'&prg=1';
                     header('Refresh: 1; url='.$url);
@@ -225,12 +229,6 @@ return function (App $kirby) {
                 $data = Kart::sanitize(kirby()->request()->data());
 
                 $code = A::get($data, 'code');
-                $token = A::get($data, 'token');
-                $secret = MagicLinkChallenge::secret($code);
-
-                if ($token !== $secret) {
-                    return Response::json([], 401);
-                }
 
                 $user = null;
                 if (get('signup')) {
@@ -240,12 +238,13 @@ return function (App $kirby) {
                             'email' => A::get($data, 'email'),
                             'name' => A::get($data, 'name'),
                         ],
-                    ]);
+                    ], false); // do not trigger created since signup below will be used
+
                     kirby()->trigger('kart.user.signup', ['user' => $user]);
                 }
                 if (! $user) {
-                    // if not created because it exists then try finding
-                    $user = kirby()->user(get('email'));
+                    // if not created because it exists, then try finding
+                    $user = kirby()->user(A::get($data, 'email'));
                 }
 
                 if (! $user) {
@@ -253,6 +252,8 @@ return function (App $kirby) {
                 }
 
                 if ($user && MagicLinkChallenge::verify($user, $code)) {
+
+                    kirby()->session()->remove('kirby.challenge.code');
                     $user->loginPasswordless();
                 }
 

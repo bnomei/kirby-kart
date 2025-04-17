@@ -45,7 +45,6 @@ class MagicLinkChallenge extends Challenge
         $link = url(Router::MAGIC_LINK).'?'.implode('&', [
             'email='.urlencode($user->email() ?? ''),
             'code='.$code,
-            'token='.self::secret($code),
         ]);
         if (isset($options['signup'])) {
             $link .= '&signup='.$options['signup'];
@@ -56,6 +55,9 @@ class MagicLinkChallenge extends Challenge
         if (isset($options['name'])) {
             $link .= '&name='.urlencode($options['name']);
         }
+
+        $link .= '&signature='.Kart::signature($link);
+
         $data = [
             'user' => $user,
             'site' => $kirby->system()->title(),
@@ -81,10 +83,5 @@ class MagicLinkChallenge extends Challenge
         ]);
 
         return $code;
-    }
-
-    public static function secret(string $code): string
-    {
-        return sha1(__DIR__.$code.date('Y/m/d'));
     }
 }

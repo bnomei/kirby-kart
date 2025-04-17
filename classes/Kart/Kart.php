@@ -136,6 +136,33 @@ class Kart
         return base64_encode(strval($data));
     }
 
+    public static function signature(string|array $data, ?array $without = null): string
+    {
+        if (is_null($without)) {
+            $without = ['signature', 'prg'];
+        }
+
+        if (is_string($data)) {
+            $queryString = parse_url($data, PHP_URL_QUERY);
+            $data = [];
+            parse_str($queryString, $data);
+        }
+
+        return hash_hmac(
+            'sha256',
+            implode('', A::without($data, $without)),
+            kart()->option('crypto.salt')
+        );
+    }
+
+    public static function checkSignature(string $signature, string $url, ?array $without = null): bool
+    {
+        return hash_equals(
+            $signature,
+            self::signature($url, $without)
+        );
+    }
+
     public static function hash(string $value): string
     {
         return str_pad(hash('xxh3', $value), 16, '0', STR_PAD_LEFT);
@@ -150,7 +177,7 @@ class Kart
     {
         $data = base64_decode($data);
 
-        $password ??= option('router.encryption');
+        $password ??= kart()->option('crypto.password');
         if ($password instanceof Closure) {
             $password = $password();
         }
@@ -314,7 +341,7 @@ class Kart
         return $this->kirby;
     }
 
-    public function createOrUpdateCustomer(array $credentials): ?User
+    public function createOrUpdateCustomer(array $credentials, bool $events = true): ?User
     {
         $email = A::get($credentials, 'customer.email');
         $id = A::get($credentials, 'customer.id');
@@ -335,7 +362,9 @@ class Kart
                 'password' => Str::random(16),
                 'role' => ((array) $this->option('customers.roles'))[0],
             ]));
-            $this->kirby()->trigger('kart.user.created', ['user' => $customer]);
+            if ($events) {
+                $this->kirby()->trigger('kart.user.created', ['user' => $customer]);
+            }
         }
 
         // update user

@@ -27,6 +27,7 @@ use Kirby\Data\Yaml;
 use Kirby\Http\Remote;
 use Kirby\Session\Session;
 use Kirby\Toolkit\A;
+use Kirby\Toolkit\Str;
 use SimpleCaptcha\Builder;
 
 @include_once __DIR__.'/vendor/autoload.php';
@@ -49,6 +50,7 @@ App::plugin(
                 'gravatar' => true,
                 'orders' => true,
                 'products' => true,
+                'router' => true,
                 'queue' => true,
                 'ratelimit' => true,
                 'stats' => true,
@@ -78,6 +80,9 @@ App::plugin(
             ],
             'crypto' => [
                 'password' => fn () => class_exists('\Bnomei\DotEnv') ? DotEnv::getenv('CRYPTO_PASSWORD') : null,
+                'salt' => fn () => class_exists('\Bnomei\DotEnv') ?
+                    DotEnv::getenv('CRYPTO_SALT', kirby()->cache('bnomei.kart.crypto')->getOrSet('salt', fn () => Str::random(64))) :
+                    kirby()->cache('bnomei.kart.crypto')->getOrSet('salt', fn () => Str::random(64)),
             ],
             'locale' => 'en_EN', // or current locale on multilanguage setups
             'currency' => 'EUR', // uppercase 3-letter code
@@ -113,7 +118,9 @@ App::plugin(
             ],
             'router' => [
                 'mode' => 'go', // go/json/html
-                'encryption' => fn () => sha1(__DIR__), // or false
+                'salt' => fn () => class_exists('\Bnomei\DotEnv') ?
+                    DotEnv::getenv('ROUTER_SALT', kirby()->cache('bnomei.kart.router')->getOrSet('salt', fn () => Str::random(64))) :
+                    kirby()->cache('bnomei.kart.router')->getOrSet('salt', fn () => Str::random(64)), // or false
                 'csrf' => 'token', // null|false or name of form data
                 'header' => [
                     'csrf' => 'X-CSRF-TOKEN',
@@ -790,11 +797,11 @@ App::plugin(
             'sendMagicLink' => function (?string $success_url = null): void {
                 /** @var User $user */
                 $user = $this;
-                $code = MagicLinkChallenge::create($this, [
+                $code = MagicLinkChallenge::create($user, [
                     'mode' => 'login',
                     'timeout' => 10 * 60,
-                    'email' => $this->email(),
-                    'name' => $this->nameOrEmail(),
+                    'email' => $user->email(),
+                    'name' => $user->nameOrEmail(),
                     'success_url' => $success_url ?? url('/'),
                 ]);
                 if ($code) {

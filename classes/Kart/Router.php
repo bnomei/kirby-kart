@@ -207,7 +207,7 @@ class Router
             return null;
         }
 
-        return Kart::decrypt($props, kart()->option('router.encryption'), true); // @phpstan-ignore-line
+        return Kart::decrypt($props, kart()->option('router.salt'), true); // @phpstan-ignore-line
     }
 
     public static function getSnippet(?string $path = null): ?string
@@ -346,7 +346,7 @@ class Router
 
     public static function encrypt(array $query): array
     {
-        $password = kart()->option('router.encryption');
+        $password = kart()->option('router.salt');
         if ($password instanceof Closure) {
             $password = $password();
         }

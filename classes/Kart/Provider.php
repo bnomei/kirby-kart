@@ -101,13 +101,16 @@ abstract class Provider
 
         $data = array_merge($this->getUserData(), $data);
 
-        return kirby()->impersonate('kirby', function () use ($user, $data) { // @phpstan-ignore-line
+        kirby()->impersonate('kirby', function () use ($user, $data) { // @phpstan-ignore-line
             $field = $this->name; // no prefix to align with KLUB
 
             return $user->update([
                 $field => Yaml::encode($data),
             ]);
         });
+
+        // fetch most current model
+        return kirby()->user($user->email());
     }
 
     public function sync(ContentPageEnum|string|null $sync = null): int
