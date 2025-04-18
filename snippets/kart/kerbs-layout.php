@@ -13,8 +13,10 @@
         }
         body {
             font-family: "Geist", sans-serif;
+            --pico-font-family-sans-serif: "Geist", sans-serif;
         }
     </style>
+    <?= css('assets/css/pico.classless.min.css') ?>
 </head>
 <body>
 <?= $slot ?>

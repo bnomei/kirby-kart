@@ -51,7 +51,7 @@ if ($request->method() === 'GET' && $request->header('X-Inertia')) {
 snippet('kart/kerbs-layout', slots: true);
 ?>
     <!-- Kart Kerbs -->
-    <div id="<?= $appId ?? 'app' ?>" data-page='<?= json_encode($inertia) ?>'></div>
+    <main id="<?= $appId ?? 'app' ?>" data-page='<?= json_encode($inertia) ?>'></main>
     <script defer src="<?= kirby()->urls()->media() ?>/plugins/bnomei/kart/kerbs.iife.js"></script>
 
 <?php endsnippet();
