@@ -425,15 +425,24 @@ class ProductPage extends Page implements Kerbs
     public function toKerbs(): array
     {
         return [
+            'add' => $this->add(),
+            'buy' => $this->buy(),
+            'categories' => $this->categories()->split(),
+            'description' => $this->description()->kti(),
+            'firstGalleryImage' => $this->firstGalleryImage()?->toKerbs(),
+            'forget' => $this->forget(),
+            'formattedPrice' => $this->formattedPrice(),
+            'gallery' => $this->gallery()->toFiles()->values(fn(File $f) => $f->toKerbs()),
+            'later' => $this->later(),
+            'now' => $this->now(),
+            'price' => $this->price()->toFloat(),
+            'remove' => $this->remove(),
+            'stock' => $this->stock(withHold: true),
+            'tags' => $this->tags()->split(),
             'title' => $this->title()->value(),
             'url' => $this->url(),
-            'price' => $this->price()->toFloat(),
-            'formattedPrice' => $this->formattedPrice(),
-            'stock' => $this->stock(withHold: true),
-            'addToCart' => $this->addToCart(),
-            'removeFromCart' => $this->removeFromCart(),
-            'addToWishlist' => $this->addToWishlist(),
-            'removeFromWishlist' => $this->removeFromWishlist(),
+            // 'uuid' => $this->uuid()->id(),
+            'wish' => $this->wish(),
         ];
     }
 }

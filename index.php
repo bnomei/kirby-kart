@@ -306,6 +306,36 @@ App::plugin(
                         'kart' => kart()->toKerbs(),
                         'site' => kirby()->site()->toKerbs(),
                         'user' => kirby()->user()?->toKerbs(),
+                        'i18n' => A::get(kirby()->translation(kirby()->language()?->code() ?? 'en')->toArray()['data'], [
+                            'back',
+                            'cancel',
+                            'close',
+                            'confirm',
+                            'download',
+                            'edit',
+                            'email',
+                            'email.placeholder',
+                            'error',
+                            'info',
+                            'login',
+                            'logout',
+                            'menu',
+                            'more',
+                            'no',
+                            'off',
+                            'on',
+                            'yes',
+                            'password',
+                            'save',
+                            'saved',
+                            'search',
+                            'searching',
+                            'title',
+                            'url',
+                            'user',
+                            'welcome',
+                            'bnomei.kart.signup',
+                        ]),
                     ];
                 }
             ]
@@ -617,6 +647,17 @@ App::plugin(
 
                 return is_int($modified) ? date($format, $modified) : '?';
             },
+            'toKerbs' => function (): array {
+                return [
+                    'alt' => $this->alt()->value(),
+                    'caption' => $this->caption()->kti(),
+                    'ratio' => $this->ratio(),
+                    // 'url' => $this->url(),
+                    'blur' => $this->thumb('blurred')->url(),
+                    'thumb' => $this->thumb('default')->url(),
+                    'srcset' => $this->srcset('default'),
+                ];
+            }
         ],
         'pageMethods' => [
             /**
@@ -674,7 +715,7 @@ App::plugin(
                     'title' => $this->title()->value(),
                     'url' => $this->url(),
                 ];
-            }
+            },
         ],
         'usersMethods' => [
             /**

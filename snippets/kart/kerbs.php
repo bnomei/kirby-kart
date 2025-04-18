@@ -19,9 +19,14 @@ use Kirby\Toolkit\A;
 
 $page ??= kirby()->site()->page();
 $template ??= $page->intendedTemplate();
-$props ??= $page->toKerbs();
+$props ??= ['page' => $page->toKerbs()];
 if ($props instanceof Field) {
-    $props = [];
+    $props = [
+        'page' => [
+            'title' => $page->title(),
+            'url' => $page->url(),
+        ],
+    ];
 }
 $request = kirby()->request();
 

@@ -446,15 +446,15 @@ class Cart implements Kerbs
     public function toKerbs(): array
     {
         return [
-            'url' => page($this->id)?->url(),
-            'id' => $this->id,
-            'hash' => $this->hash(),
+            'canCheckout' => $this->canCheckout(),
             'count' => $this->lines()->count(),
+            'formattedSubtotal' => $this->formattedSubtotal(),
+            'hash' => $this->hash(),
+            'id' => $this->id,
+            'lines' => $this->lines()->values(fn (CartLine $l) => $l->toKerbs()),
             'quantity' => $this->quantity(),
             'subtotal' => $this->subtotal(),
-            'formattedSubtotal' => $this->formattedSubtotal(),
-            'lines' => $this->lines()->values(fn (CartLine $l) => $l->toKerbs()),
-            'canCheckout' => $this->canCheckout(),
+            'url' => page($this->id)?->url(),
         ];
     }
 }

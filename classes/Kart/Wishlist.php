@@ -22,11 +22,11 @@ class Wishlist extends Cart
     public function toKerbs(): array
     {
         return A::get(parent::toKerbs(), [
-            'url',
-            'id',
-            'hash',
             'count',
+            'hash',
+            'id',
             'lines',
+            'url',
         ]);
     }
 }

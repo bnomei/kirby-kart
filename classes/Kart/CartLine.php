@@ -144,13 +144,13 @@ class CartLine implements Kerbs
     public function toKerbs(): array
     {
         return [
-            'quantity' => $this->quantity(),
-            'price' => $this->price(),
             'formattedPrice' => $this->formattedPrice(),
-            'subtotal' => $this->subtotal(),
             'formattedSubtotal' => $this->formattedSubtotal(),
-            'product' => $this->product()?->toKerbs(),
             'hasStockForQuantity' => $this->hasStockForQuantity(),
+            'price' => $this->price(),
+            'product' => $this->product()?->toKerbs(),
+            'quantity' => $this->quantity(),
+            'subtotal' => $this->subtotal(),
         ];
     }
 }

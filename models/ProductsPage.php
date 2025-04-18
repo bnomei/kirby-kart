@@ -119,6 +119,7 @@ class ProductsPage extends Page implements Kerbs
     {
         return [
             'title' => $this->title()->value(),
+            'url' => $this->url(),
             'children' => $this->children()->values(fn (ProductPage $p) => $p->toKerbs()),
         ];
     }
