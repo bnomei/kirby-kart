@@ -300,7 +300,7 @@ App::plugin(
                 },
             ],
             'kerbs' => [
-                'version' => null, // TODO: read from manifest.json if it exists
+                'version' => fn() => Kart::hash(kirby()->plugin('bnomei/kart')->version()),
                 'shared' => function (): array {
                     return [
                         'kart' => kart()->toKerbs(),
@@ -324,6 +324,7 @@ App::plugin(
             'kart/input-csrf-defer' => __DIR__.'/snippets/kart/input-csrf-defer.php',
             'kart/kart' => __DIR__.'/snippets/kart/kart.php',
             'kart/kerbs' => __DIR__.'/snippets/kart/kerbs.php',
+            'kart/kerbs-layout' => __DIR__.'/snippets/kart/kerbs-layout.php',
             'kart/login' => __DIR__.'/snippets/kart/login.php',
             'kart/login-magic' => __DIR__.'/snippets/kart/login-magic.php',
             'kart/logout' => __DIR__.'/snippets/kart/logout.php',

@@ -48,16 +48,10 @@ if ($request->method() === 'GET' && $request->header('X-Inertia')) {
 }
 
 // otherwise render the app
-?><!DOCTYPE html>
-<html lang="<?= kirby()->language()?->code() ?? 'en' ?>">
-<head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title><?= page()->isHomePage() ? site()->title() : page()->title().' | '.site()->title() ?></title>
-</head>
-<body>
+snippet('kart/kerbs-layout', slots: true);
+?>
     <!-- Kart Kerbs -->
     <div id="<?= $appId ?? 'app' ?>" data-page='<?= json_encode($inertia) ?>'></div>
-    <script src="<?= kirby()->urls()->media() ?>/plugins/bnomei/kart/kerbs.iife.js"></script>
-</body>
-</html>
+    <script defer src="<?= kirby()->urls()->media() ?>/plugins/bnomei/kart/kerbs.iife.js"></script>
+
+<?php endsnippet();
