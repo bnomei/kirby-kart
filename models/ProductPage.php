@@ -23,6 +23,7 @@ use Kirby\Toolkit\Str;
 /**
  * @method Field description()
  * @method Field price()
+ * @method Field rrprice()
  * @method Field tax()
  * @method Field gallery()
  * @method Field downloads()
@@ -294,6 +295,14 @@ class ProductPage extends Page implements Kerbs
         return Router::cart_add($this);
     }
 
+    /**
+     * @kql-allowed
+     */
+    public function setAmountInCart(): string
+    {
+        return Router::cart_set_amount($this);
+    }
+
     public function buyNow(): string
     {
         return $this->buy();
@@ -428,7 +437,7 @@ class ProductPage extends Page implements Kerbs
             'add' => $this->add(),
             'buy' => $this->buy(),
             'categories' => $this->categories()->split(),
-            'description' => $this->description()->kti(),
+            'description' => $this->description()->kti()->value(),
             'firstGalleryImage' => $this->firstGalleryImage()?->toKerbs(),
             'forget' => $this->forget(),
             'formattedPrice' => $this->formattedPrice(),
@@ -436,7 +445,10 @@ class ProductPage extends Page implements Kerbs
             'later' => $this->later(),
             'now' => $this->now(),
             'price' => $this->price()->toFloat(),
+            'rrprice' => $this->rrprice()->isNotEmpty() ? $this->rrprice()->toFloat() : null,
+            'formattedRRPrice' => $this->rrprice()->isNotEmpty() ? $this->rrprice()->toFormattedCurrency() : null,
             'remove' => $this->remove(),
+            'setAmountInCart' => $this->setAmountInCart(),
             'stock' => $this->stock(withHold: true),
             'tags' => $this->tags()->split(),
             'title' => $this->title()->value(),

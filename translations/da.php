@@ -3,6 +3,7 @@
 return [
     'bnomei.kart.cart' => 'Kurv',
     'bnomei.kart.categories' => 'Kategorier',
+    'bnomei.kart.checkout' => 'Betalen',
     'bnomei.kart.created' => 'Oprettet den',
     'bnomei.kart.customer' => 'Kunde',
     'bnomei.kart.customers' => 'Kunder',
@@ -11,6 +12,7 @@ return [
     'bnomei.kart.downloads' => 'Downloads',
     'bnomei.kart.gallery' => 'Galleri',
     'bnomei.kart.goodbye' => 'Farvel og tak for alle fiskene',
+    'bnomei.kart.in-stock' => 'På lager',
     'bnomei.kart.invoice' => 'Faktura',
     'bnomei.kart.invoiceNumber' => 'Fakturanummer',
     'bnomei.kart.items' => 'Varer',

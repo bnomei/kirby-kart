@@ -336,8 +336,15 @@ App::plugin(
                             'user',
                             'welcome',
                             'bnomei.kart.categories',
+                            'bnomei.kart.checkout',
                             'bnomei.kart.tags',
                             'bnomei.kart.signup',
+                            'bnomei.kart.summary',
+                            'bnomei.kart.order',
+                            'bnomei.kart.orders',
+                            'bnomei.kart.subtotal',
+                            'bnomei.kart.in-stock',
+                            'bnomei.kart.out-of-stock',
                         ]),
                     ];
                 }

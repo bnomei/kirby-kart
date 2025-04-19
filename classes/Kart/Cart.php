@@ -59,7 +59,7 @@ class Cart implements Kerbs
         ]);
     }
 
-    public function add(ProductPage|array|string|null $product, int $amount = 1): int
+    public function add(ProductPage|array|string|null $product, int $amount = 1, bool $set = false): int
     {
         // Merx compatibility
         if (is_array($product)) {
@@ -78,7 +78,11 @@ class Cart implements Kerbs
         $maxLines = intval(kart()->option('orders.order.maxlpo'));
         if ($item = $this->lines->get($product->uuid()->id())) {
             /** @var CartLine $item */
-            $item->increment($amount);
+            if ($set) {
+                $item->setQuantity($amount);
+            } else {
+                $item->increment($amount);
+            }
         } else {
             $item = new CartLine(
                 $product->uuid()->id(),

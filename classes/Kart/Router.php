@@ -40,6 +40,7 @@ class Router
     const CART_LATER = 'kart/cart-later';
 
     const CART_REMOVE = 'kart/cart-remove';
+    const CART_SET_AMOUNT = 'kart/cart-set-amount';
 
     const CSRF = 'kart/csrf';
 
@@ -408,6 +409,16 @@ class Router
     {
         return self::factory(
             self::current().'/'.self::CART_ADD,
+            [
+                'product' => $product->uuid()->id(),
+            ]
+        );
+    }
+
+    public static function cart_set_amount(ProductPage $product): string
+    {
+        return self::factory(
+            self::current().'/'.self::CART_SET_AMOUNT,
             [
                 'product' => $product->uuid()->id(),
             ]

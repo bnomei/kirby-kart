@@ -4,6 +4,7 @@ return [
     'bnomei.kart.cart' => 'Cart',
     'bnomei.kart.categories' => 'Categories',
     'bnomei.kart.created' => 'Created at',
+    'bnomei.kart.checkout' => 'Checkout',
     'bnomei.kart.customer' => 'Customer',
     'bnomei.kart.customers' => 'Customers',
     'bnomei.kart.description' => 'Description',
@@ -11,6 +12,7 @@ return [
     'bnomei.kart.downloads' => 'Downloads',
     'bnomei.kart.gallery' => 'Gallery',
     'bnomei.kart.goodbye' => 'So long and thanks for all the fish', // https://en.wikipedia.org/wiki/So_Long,_and_Thanks_for_All_the_Fish
+    'bnomei.kart.in-stock' => 'In Stock',
     'bnomei.kart.invoice' => 'Invoice',
     'bnomei.kart.invoiceNumber' => 'Invoice Number',
     'bnomei.kart.items' => 'Items',

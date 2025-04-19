@@ -3,6 +3,7 @@
 return [
     'bnomei.kart.cart' => 'Sepet',
     'bnomei.kart.categories' => 'Kategoriler',
+    'bnomei.kart.checkout' => 'Ödeme',
     'bnomei.kart.created' => 'Oluşturulma tarihi',
     'bnomei.kart.customer' => 'Müşteri',
     'bnomei.kart.customers' => 'Müşteriler',
@@ -11,6 +12,7 @@ return [
     'bnomei.kart.downloads' => 'İndirmeler',
     'bnomei.kart.gallery' => 'Galeri',
     'bnomei.kart.goodbye' => 'Hoşça kal ve tüm balıklar için teşekkürler',
+    'bnomei.kart.in-stock' => 'Stokta var',
     'bnomei.kart.invoice' => 'Fatura',
     'bnomei.kart.invoiceNumber' => 'Fatura Numarası',
     'bnomei.kart.items' => 'Ürünler',

@@ -3,6 +3,7 @@
 return [
     'bnomei.kart.cart' => 'Carrito',
     'bnomei.kart.categories' => 'Categorías',
+    'bnomei.kart.checkout' => 'Finalizar compra',
     'bnomei.kart.created' => 'Creado el',
     'bnomei.kart.customer' => 'Cliente',
     'bnomei.kart.customers' => 'Clientes',
@@ -11,6 +12,7 @@ return [
     'bnomei.kart.downloads' => 'Descargas',
     'bnomei.kart.gallery' => 'Galería',
     'bnomei.kart.goodbye' => 'Hasta luego y gracias por todo el pescado',
+    'bnomei.kart.in-stock' => 'Disponible',
     'bnomei.kart.invoice' => 'Factura',
     'bnomei.kart.invoiceNumber' => 'Número de factura',
     'bnomei.kart.items' => 'Artículos',

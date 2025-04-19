@@ -394,6 +394,27 @@ return function (App $kirby) {
         ],
         [
             'pattern' => [
+                Router::CART_SET_AMOUNT,
+                '(:all)/'.Router::CART_SET_AMOUNT,
+            ],
+            'method' => 'POST',
+            'action' => function (?string $id = null) {
+                if ($r = Router::denied()) {
+                    return $r;
+                }
+
+                kart()->cart()->add(
+                    page('page://'.Router::get('product')),
+                    max(1, intval(Router::get('amount', 1))),
+                    true
+                );
+                kart()->cart()->save();
+
+                return Router::go(Router::idWithParams(Router::CART_SET_AMOUNT));
+            },
+        ],
+        [
+            'pattern' => [
                 Router::CART_ADD,
                 '(:all)/'.Router::CART_ADD,
             ],
