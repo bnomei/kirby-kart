@@ -1,0 +1,7 @@
+blueprint: page
+
+title: Default
+
+fields:
+  layouts:
+    type: layout
