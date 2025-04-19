@@ -449,7 +449,7 @@ class ProductPage extends Page implements Kerbs
             'formattedRRPrice' => $this->rrprice()->isNotEmpty() ? $this->rrprice()->toFormattedCurrency() : null,
             'remove' => $this->remove(),
             'setAmountInCart' => $this->setAmountInCart(),
-            'stock' => $this->stock(withHold: true),
+            // 'stock' => $this->stock(withHold: true),
             'tags' => $this->tags()->split(),
             'title' => $this->title()->value(),
             'url' => $this->url(),

@@ -775,6 +775,7 @@ App::plugin(
                     'url' => $this->isCustomer() ?
                         $this->orders()->first()?->url() :
                         $this->panel()->url(),
+                    'logout' => kart()->urls()->logout(),
                     'name' => $this->name()->value(),
                     'email' => $this->email(),
                     'gravatar' => $this->gravatar(),
