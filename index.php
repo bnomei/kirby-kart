@@ -43,7 +43,7 @@ if (! function_exists('kart')) {
 if (! function_exists('kerbs')) {
     function kerbs(?array $props = null, ?string $template = null): void
     {
-        snippet('kart/kerbs', array_filter(['props' => $props, 'template' => $template]));
+        snippet('kerbs/inertia', array_filter(['props' => $props, 'template' => $template]));
     }
 }
 
@@ -334,6 +334,8 @@ App::plugin(
                             'url',
                             'user',
                             'welcome',
+                            'bnomei.kart.categories',
+                            'bnomei.kart.tags',
                             'bnomei.kart.signup',
                         ]),
                     ];
@@ -353,8 +355,6 @@ App::plugin(
             'kart/input-csrf' => __DIR__.'/snippets/kart/input-csrf.php',
             'kart/input-csrf-defer' => __DIR__.'/snippets/kart/input-csrf-defer.php',
             'kart/kart' => __DIR__.'/snippets/kart/kart.php',
-            'kart/kerbs' => __DIR__.'/snippets/kart/kerbs.php',
-            'kart/kerbs-layout' => __DIR__.'/snippets/kart/kerbs-layout.php',
             'kart/login' => __DIR__.'/snippets/kart/login.php',
             'kart/login-magic' => __DIR__.'/snippets/kart/login-magic.php',
             'kart/logout' => __DIR__.'/snippets/kart/logout.php',
@@ -370,6 +370,10 @@ App::plugin(
             'kart/wish-or-forget' => __DIR__.'/snippets/kart/wish-or-forget.php',
             'kart/wish-or-forget.htmx' => __DIR__.'/snippets/kart/wish-or-forget.htmx.php',
             'kart/wishlist' => __DIR__.'/snippets/kart/wishlist.php',
+            'kerbs/inertia' => __DIR__.'/snippets/kerbs/inertia.php',
+            'kerbs/layout' => __DIR__.'/snippets/kerbs/layout.php',
+            'seo/head' => __DIR__.'/snippets/seo/head.php',
+            'seo/schemas' => __DIR__.'/snippets/seo/schemas.php',
         ],
         'authChallenges' => [
             'kart-magic-link' => MagicLinkChallenge::class,
@@ -702,6 +706,12 @@ App::plugin(
 
                 return '<code>'.$json.'</code>';
             },
+            'toKerbs' => function (): array {
+                return [
+                    'title' => $this->title()->value(),
+                    'url' => $this->url(),
+                ];
+            },
         ],
         'siteMethods' => [
             /**
@@ -711,9 +721,29 @@ App::plugin(
                 return kart();
             },
             'toKerbs' => function (): array {
+                /** @var \Kirby\Cms\Site $site */
+                $site = $this;
+                $page = $site->page();
+                // if has https://github.com/tobimori/kirby-seo
+                $metadata = $page->metadata();
+                if (is_object($metadata) && is_a($metadata,"\\tobimori\\Seo\\Meta")) {
+                    $metadata = $metadata->metaArray();
+                }
+                // else sane defaults
+                if ($metadata instanceof Field) {
+                    $metadata = [
+                        'title' => $page->isHomePage() ? $site->title() : $page->title().' | '.$site->title(),
+                        'description' => Str::esc($page->description()->kti()),
+                    ];
+                }
+
                 return [
                     'title' => $this->title()->value(),
                     'url' => $this->url(),
+                    'logo' => svg(kirby()->roots()->assets().'/logo.svg') ?: '[missing /assets/logo.svg]',
+                    'meta' => is_array($metadata) ? $metadata : [],
+                    'listed' => $site->children()->listed()->values(fn(Page $p) => $p->toKerbs()),
+                    'copyright' => $this->copyright()->kti()->value(),
                 ];
             },
         ],

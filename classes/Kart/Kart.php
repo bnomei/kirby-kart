@@ -697,6 +697,8 @@ class Kart implements Kerbs
             'cart' => $this->cart()->toKerbs(),
             'wishlist' => $this->wishlist()->toKerbs(),
             'urls' => $this->urls()->toKerbs(),
+            'categories' => $this->categories()->values(),
+            'tags' => $this->categories()->values(),
         ];
     }
 }
