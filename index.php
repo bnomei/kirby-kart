@@ -315,6 +315,7 @@ App::plugin(
                             'edit',
                             'email',
                             'email.placeholder',
+                            'name',
                             'error',
                             'info',
                             'login',
@@ -763,11 +764,14 @@ App::plugin(
                 return kart();
             },
             'toKerbs' => function (): array {
-                return [
-                    'name' => $this->name(),
+                return array_filter([
+                    'url' => $this->isCustomer() ?
+                        $this->orders()->first()?->url() :
+                        $this->panel()->url(),
+                    'name' => $this->name()->value(),
                     'email' => $this->email(),
                     'gravatar' => $this->gravatar(),
-                ];
+                ]);
             },
             /**
              * @kql-allowed
