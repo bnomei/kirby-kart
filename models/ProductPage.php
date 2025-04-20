@@ -450,6 +450,7 @@ class ProductPage extends Page implements Kerbs
             'remove' => $this->remove(),
             'setAmountInCart' => $this->setAmountInCart(),
             // 'stock' => $this->stock(withHold: true),
+            'inStock' => $this->stock(withHold: true) !== 0,
             'tags' => $this->tags()->split(),
             'title' => $this->title()->value(),
             'url' => $this->url(),

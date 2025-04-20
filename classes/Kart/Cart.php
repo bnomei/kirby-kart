@@ -79,9 +79,12 @@ class Cart implements Kerbs
         if ($item = $this->lines->get($product->uuid()->id())) {
             /** @var CartLine $item */
             if ($set) {
-                $item->setQuantity($amount);
+                $a = $item->setQuantity($amount);
             } else {
-                $item->increment($amount);
+                $a = $item->increment($amount);
+            }
+            if ($a <= 0) {
+                $this->lines->remove($item);
             }
         } else {
             $item = new CartLine(

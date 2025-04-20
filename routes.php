@@ -405,7 +405,7 @@ return function (App $kirby) {
 
                 kart()->cart()->add(
                     page('page://'.Router::get('product')),
-                    max(1, intval(Router::get('amount', 1))),
+                    max(0, intval(Router::get('amount', 1))),
                     true
                 );
                 kart()->cart()->save();
