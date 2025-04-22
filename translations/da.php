@@ -10,6 +10,7 @@ return [
     'bnomei.kart.description' => 'Beskrivelse',
     'bnomei.kart.discount' => 'Rabat',
     'bnomei.kart.downloads' => 'Downloads',
+    'bnomei.kart.featured' => 'Fremhævet',
     'bnomei.kart.gallery' => 'Galleri',
     'bnomei.kart.goodbye' => 'Farvel og tak for alle fiskene',
     'bnomei.kart.in-stock' => 'På lager',

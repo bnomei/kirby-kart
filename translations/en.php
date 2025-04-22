@@ -10,6 +10,7 @@ return [
     'bnomei.kart.description' => 'Description',
     'bnomei.kart.discount' => 'Discount',
     'bnomei.kart.downloads' => 'Downloads',
+    'bnomei.kart.featured' => 'Featured',
     'bnomei.kart.gallery' => 'Gallery',
     'bnomei.kart.goodbye' => 'So long and thanks for all the fish', // https://en.wikipedia.org/wiki/So_Long,_and_Thanks_for_All_the_Fish
     'bnomei.kart.in-stock' => 'In Stock',
@@ -60,4 +61,12 @@ return [
     'bnomei.kart.timestamp' => 'Timestamp',
     'bnomei.kart.total' => 'Total',
     'login.email.magic-link.subject' => 'Your login link for {{ site.title }}',
+    'bnomei.kerbs.checkout-disclaimer' => 'Additional fees such as shipping, duty, and tax will be calculated in checkout (if applicable).',
+    'bnomei.kerbs.safe-for-later' => 'safe for later',
+    'bnomei.kerbs.delete-from-cart' => 'delete',
+    'bnomei.kerbs.all' => 'All',
+    'bnomei.kerbs.sort-by-rrp-percent-desc' => 'Sort by highest RRP % first',
+    'bnomei.kerbs.featured-only' => 'Only featured items',
+    'bnomei.kerbs.include-out-of-stock' => 'Include items out of stock',
+    'bnomei.kerbs.sort-by-lowest-price' => 'Sort by lowest price first',
 ];

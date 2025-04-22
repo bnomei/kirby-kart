@@ -61,6 +61,7 @@ App::plugin(
                 'router' => true,
                 'queue' => true,
                 'ratelimit' => true,
+                'search' => true,
                 'stats' => true,
                 'stocks' => true,
                 'stocks-holds' => true,
@@ -306,7 +307,8 @@ App::plugin(
                         'kart' => kart()->toKerbs(),
                         'site' => kirby()->site()->toKerbs(),
                         'user' => kirby()->user()?->toKerbs(),
-                        'i18n' => A::get(kirby()->translation(kirby()->language()?->code() ?? 'en')->toArray()['data'], [
+                        'i18n' => array_filter(A::get(kirby()->translation(kirby()->language()?->code() ?? 'en')->toArray()['data'], [
+                            // KIRBY
                             'back',
                             'cancel',
                             'close',
@@ -335,6 +337,8 @@ App::plugin(
                             'url',
                             'user',
                             'welcome',
+                            // KART
+                            'bnomei.kart.items',
                             'bnomei.kart.categories',
                             'bnomei.kart.checkout',
                             'bnomei.kart.tags',
@@ -343,9 +347,20 @@ App::plugin(
                             'bnomei.kart.order',
                             'bnomei.kart.orders',
                             'bnomei.kart.subtotal',
+                            'bnomei.kart.total',
                             'bnomei.kart.in-stock',
                             'bnomei.kart.out-of-stock',
-                        ]),
+                            // KERBS
+                            'bnomei.kerbs.checkout-disclaimer',
+                            'bnomei.kerbs.safe-for-later',
+                            'bnomei.kerbs.delete-from-cart',
+                            'bnomei.kerbs.all',
+                            'bnomei.kerbs.sort-by-rrp-percent-desc',
+                            'bnomei.kerbs.featured-only',
+                            'bnomei.kerbs.include-out-of-stock',
+                            'bnomei.kerbs.sort-by-lowest-price',
+                            //'bnomei.kerbs.',
+                        ])),
                     ];
                 }
             ]

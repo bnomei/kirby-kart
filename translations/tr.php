@@ -10,6 +10,7 @@ return [
     'bnomei.kart.description' => 'Açıklama',
     'bnomei.kart.discount' => 'İndirim',
     'bnomei.kart.downloads' => 'İndirmeler',
+    'bnomei.kart.featured' => 'Öne çıkan',
     'bnomei.kart.gallery' => 'Galeri',
     'bnomei.kart.goodbye' => 'Hoşça kal ve tüm balıklar için teşekkürler',
     'bnomei.kart.in-stock' => 'Stokta var',

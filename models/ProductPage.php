@@ -24,6 +24,7 @@ use Kirby\Toolkit\Str;
  * @method Field description()
  * @method Field price()
  * @method Field rrprice()
+ * @method Field featured()
  * @method Field tax()
  * @method Field gallery()
  * @method Field downloads()
@@ -154,7 +155,7 @@ class ProductPage extends Page implements Kerbs
                                         'type' => 'query',
                                         'query' => 'page.siblings.pluck("categories", ",", true)',
                                     ],
-                                    'width' => '1/2',
+                                    'width' => '1/3',
                                     'translate' => false,
                                     // 'virtual' => true,
                                 ],
@@ -165,7 +166,15 @@ class ProductPage extends Page implements Kerbs
                                         'type' => 'query',
                                         'query' => 'page.siblings.pluck("tags", ",", true)',
                                     ],
-                                    'width' => '1/2',
+                                    'width' => '1/3',
+                                    'translate' => false,
+                                    // 'virtual' => true,
+                                ],
+                                'featured' => [
+                                    'label' => 'bnomei.kart.featured',
+                                    'type' => 'toggle',
+                                    'default' => false,
+                                    'width' => '1/3',
                                     'translate' => false,
                                     // 'virtual' => true,
                                 ],
@@ -431,6 +440,15 @@ class ProductPage extends Page implements Kerbs
         return A::get($this->raw()->yaml(), 'buy_now_url');
     }
 
+    /**
+     * @kql-allowed
+     */
+    public function rrpp(): float
+    {
+        return $this->rrprice()->isNotEmpty() ?
+            round(($this->rrprice()->toFloat() - $this->price()->toFloat())  / $this->rrprice()->toFloat()) * 100 : 0;
+    }
+
     public function toKerbs(): array
     {
         return [
@@ -439,12 +457,14 @@ class ProductPage extends Page implements Kerbs
             'categories' => $this->categories()->split(),
             'description' => $this->description()->kti()->value(),
             'firstGalleryImage' => $this->firstGalleryImage()?->toKerbs(),
+            'featured' => $this->featured()->toBool(),
             'forget' => $this->forget(),
             'formattedPrice' => $this->formattedPrice(),
             'gallery' => $this->gallery()->toFiles()->values(fn(File $f) => $f->toKerbs()),
             'later' => $this->later(),
             'now' => $this->now(),
             'price' => $this->price()->toFloat(),
+            'rrpp' => $this->rrpp(),
             'rrprice' => $this->rrprice()->isNotEmpty() ? $this->rrprice()->toFloat() : null,
             'formattedRRPrice' => $this->rrprice()->isNotEmpty() ? $this->rrprice()->toFormattedCurrency() : null,
             'remove' => $this->remove(),

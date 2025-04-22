@@ -10,6 +10,7 @@ return [
     'bnomei.kart.description' => 'Descrizione',
     'bnomei.kart.discount' => 'Sconto',
     'bnomei.kart.downloads' => 'Download',
+    'bnomei.kart.featured' => 'In evidenza',
     'bnomei.kart.gallery' => 'Galleria',
     'bnomei.kart.goodbye' => 'Addio e grazie per tutto il pesce',
     'bnomei.kart.in-stock' => 'Disponibile',
