@@ -19,8 +19,10 @@ use Closure;
 use Exception;
 use Kirby\Cms\App;
 use Kirby\Cms\Collection;
+use Kirby\Cms\File;
 use Kirby\Cms\Page;
 use Kirby\Cms\Pages;
+use Kirby\Cms\Site;
 use Kirby\Cms\User;
 use Kirby\Toolkit\A;
 use Kirby\Toolkit\Str;
@@ -691,6 +693,36 @@ class Kart implements Kerbs
         return kart()->page(ContentPageEnum::STOCKS)?->children() ?: new Pages;
     }
 
+    public static function query(mixed $template = null, mixed $model = null): string
+    {
+        // array|Closure|string|null could be passed from I18n::translate
+        if (! is_string($template)) {
+            return '';
+        }
+
+        $page = null;
+        $file = null;
+        $site = kirby()->site();
+        $user = kirby()->user();
+        if ($model instanceof Page) {
+            $page = $model;
+        } elseif ($model instanceof File) {
+            $file = $model;
+        } elseif ($model instanceof Site || $model === $site) {
+            $site = $model;
+        } elseif ($model instanceof User) {
+            $user = $model;
+        }
+
+        return Str::template($template, [
+            'kirby' => kirby(),
+            'site' => $site,
+            'page' => $page,
+            'file' => $file,
+            'user' => $user,
+            'model' => $model,
+        ]);
+    }
     public function toKerbs(): array
     {
         return [

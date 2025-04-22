@@ -15,6 +15,7 @@ use Bnomei\Kart\ProductStorage;
 use Bnomei\Kart\Router;
 use Kirby\Cms\File;
 use Kirby\Cms\Page;
+use Kirby\Cms\StructureObject;
 use Kirby\Content\Field;
 use Kirby\Content\Storage;
 use Kirby\Toolkit\A;
@@ -22,6 +23,7 @@ use Kirby\Toolkit\Str;
 
 /**
  * @method Field description()
+ * @method Field details()
  * @method Field price()
  * @method Field rrprice()
  * @method Field featured()
@@ -101,6 +103,26 @@ class ProductPage extends Page implements Kerbs
                                     'label' => 'bnomei.kart.description',
                                     'type' => 'textarea',
                                     // 'virtual' => true,
+                                ],
+                                'details' => [
+                                    'label' => 'bnomei.kart.details',
+                                    'type' => 'structure',
+                                    'virtual' => true,
+                                    'fields' => [
+                                        'summary' => [
+                                            'label' => 'bnomei.kart.details.summary',
+                                            'type' => 'text',
+                                        ],
+                                        'text' => [
+                                            'label' => 'bnomei.kart.details.text',
+                                            'type' => 'textarea',
+                                        ],
+                                        'open' => [
+                                            'label' => 'bnomei.kart.details.open',
+                                            'type' => 'toggle',
+                                            'default' => false,
+                                        ],
+                                    ],
                                 ],
                                 'price' => [
                                     'label' => 'bnomei.kart.price',
@@ -446,16 +468,25 @@ class ProductPage extends Page implements Kerbs
     public function rrpp(): float
     {
         return $this->rrprice()->isNotEmpty() ?
-            round(($this->rrprice()->toFloat() - $this->price()->toFloat())  / $this->rrprice()->toFloat()) * 100 : 0;
+            round(($this->rrprice()->toFloat() - $this->price()->toFloat())  / $this->rrprice()->toFloat() * 100) : 0;
     }
 
     public function toKerbs(): array
     {
         return [
+            'id' => $this->id(),
             'add' => $this->add(),
             'buy' => $this->buy(),
             'categories' => $this->categories()->split(),
             'description' => $this->description()->kti()->value(),
+            'details' => $this->details()->toStructure()->values(function(StructureObject $i) {
+                $s = $i->summary()->value() ?? '';
+                return [
+                    'summary' => !empty($s) ? Kart::query(t($s, $s), $this) : '',
+                    'text' => Kart::query($i->text()->kt()->value(), $this),
+                    'open' => $i->open()->toBool(),
+                ];
+            }),
             'firstGalleryImage' => $this->firstGalleryImage()?->toKerbs(),
             'featured' => $this->featured()->toBool(),
             'forget' => $this->forget(),
@@ -464,6 +495,7 @@ class ProductPage extends Page implements Kerbs
             'later' => $this->later(),
             'now' => $this->now(),
             'price' => $this->price()->toFloat(),
+            'related' => kart()->productsRelated($this)->not($this)->values(fn(ProductPage $p) => $p->id()),
             'rrpp' => $this->rrpp(),
             'rrprice' => $this->rrprice()->isNotEmpty() ? $this->rrprice()->toFloat() : null,
             'formattedRRPrice' => $this->rrprice()->isNotEmpty() ? $this->rrprice()->toFormattedCurrency() : null,

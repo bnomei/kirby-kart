@@ -355,6 +355,7 @@ App::plugin(
                             'bnomei.kerbs.safe-for-later',
                             'bnomei.kerbs.delete-from-cart',
                             'bnomei.kerbs.all',
+                            'bnomei.kerbs.related',
                             'bnomei.kerbs.sort-by-rrp-percent-desc',
                             'bnomei.kerbs.featured-only',
                             'bnomei.kerbs.include-out-of-stock',
