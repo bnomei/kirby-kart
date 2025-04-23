@@ -10,6 +10,7 @@
 
 use Bnomei\Kart\ContentPageEnum;
 use Bnomei\Kart\Kart;
+use Bnomei\Kart\Kerbs;
 use Bnomei\Kart\OrderLine;
 use Kirby\Cms\Collection;
 use Kirby\Cms\File;
@@ -31,7 +32,7 @@ use Kirby\Toolkit\Str;
  * @method Field paymentId()
  * @method Field notes()
  */
-class OrderPage extends Page
+class OrderPage extends Page implements Kerbs
 {
     public static function create(array $props): Page
     {
@@ -540,5 +541,15 @@ class OrderPage extends Page
         }
 
         return new Collection($lines);
+    }
+
+    public function toKerbs(): array
+    {
+        return [
+            'title' => $this->title()->value(),
+            'url' => $this->url(),
+            'paidDate' => $this->paidDate()->toDate('c'), // ISO 8601 date
+            'formattedTotal' => $this->formattedTotal(),
+        ];
     }
 }

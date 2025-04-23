@@ -79,6 +79,11 @@ class Kart implements Kerbs
         $this->makeContentPages();
         $this->queue()->process();
 
+        // Clean up caches that have no GC itself
+        if (rand(1, 200) === 1) {
+            static::flush('crypto');
+        }
+
         if (sha1(file_get_contents(__DIR__.strrev(base64_decode('cGhwLmVzbmVjaUwv')))) !== 'c96b2a082835cbfa95c2bc27f669098dd340bd5e' && $kart = base64_decode('c2xlZXA=')) { // @phpstan-ignore-line
             $kart(5); // @phpstan-ignore-line
         }
@@ -437,8 +442,12 @@ class Kart implements Kerbs
     /**
      * @kql-allowed
      */
-    public function ordersWithCustomer(User|string|null $user): Pages
+    public function ordersWithCustomer(User|string|null $user = null): Pages
     {
+        if (is_null($user)) {
+            $user = kirby()->user();
+        }
+
         if (is_string($user)) {
             $user = $this->kirby()->users()->findBy('email', $user);
         }
@@ -732,6 +741,12 @@ class Kart implements Kerbs
             'categories' => $this->categories()->values(),
             'tags' => $this->tags()->values(),
             'products' => $this->products()->values(fn (ProductPage $product) => $product->toKerbs()),
+            'orders' => $this->ordersWithCustomer()->values(fn (OrderPage $product) => $product->toKerbs()),
+            'options' => [
+                'turnstile' => [
+                    'sitekey' => $this->option('turnstile.sitekey'),
+                ],
+            ],
         ];
     }
 }

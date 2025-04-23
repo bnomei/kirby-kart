@@ -25,6 +25,7 @@ class Router
     use Captcha;
     use Turnstile;
 
+    const ACCOUNT = 'account';
     const ACCOUNT_DELETE = 'kart/account-delete';
 
     const CAPTCHA = 'kart/captcha';

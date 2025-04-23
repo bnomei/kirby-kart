@@ -788,9 +788,7 @@ App::plugin(
             },
             'toKerbs' => function (): array {
                 return array_filter([
-                    'url' => $this->isCustomer() ?
-                        $this->orders()->first()?->url() :
-                        $this->panel()->url(),
+                    'url' => url(Router::ACCOUNT),
                     'logout' => kart()->urls()->logout(),
                     'name' => $this->name()->value(),
                     'email' => $this->email(),
