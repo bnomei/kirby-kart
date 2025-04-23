@@ -548,8 +548,21 @@ class OrderPage extends Page implements Kerbs
         return [
             'title' => $this->title()->value(),
             'url' => $this->url(),
-            'paidDate' => $this->paidDate()->toDate('c'), // ISO 8601 date
+            'discount' => $this->discount(),
+            'download' => $this->download(),
+            'formattedDiscount' => $this->formattedDiscount(),
+            'formattedSubtotal' => $this->formattedSubtotal(),
+            'formattedTax' => $this->formattedTax(),
             'formattedTotal' => $this->formattedTotal(),
+            'invoice' => $this->invoice(),
+            'invoiceNumber' => $this->invoiceNumber(),
+            'isPayed' => $this->isPayed(),
+            'orderLines' => $this->orderLines()->values(fn(OrderLine $o) => $o->toKerbs()),
+            'paidDate' => $this->paidDate()->toDate('c'), // ISO 8601 date
+            'quantity' => $this->quantity(),
+            'subtotal' => $this->subtotal(),
+            'tax' => $this->tax(),
+            'total' => $this->total(),
         ];
     }
 }

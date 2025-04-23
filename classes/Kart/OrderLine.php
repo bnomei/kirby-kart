@@ -22,7 +22,7 @@ use ProductPage;
  * @method float tax() as monetary amount not as tax-rate
  * @method float discount() as monetary amount not as percentage
  */
-class OrderLine
+class OrderLine implements Kerbs
 {
     private readonly ?Page $product;
 
@@ -68,6 +68,11 @@ class OrderLine
         return Kart::formatCurrency($this->price);
     }
 
+    public function formattedTax(): string
+    {
+        return Kart::formatCurrency($this->tax);
+    }
+
     public function formattedTotal(): string
     {
         return Kart::formatCurrency($this->total);
@@ -81,5 +86,22 @@ class OrderLine
     public function formattedDiscount(): string
     {
         return Kart::formatCurrency($this->discount);
+    }
+
+    public function toKerbs(): array
+    {
+        return [
+            'discount' => $this->discount(),
+            'formattedDiscount' => $this->formattedDiscount(),
+            'formattedPrice' => $this->formattedPrice(),
+            'formattedSubtotal' => $this->formattedSubtotal(),
+            'formattedTotal' => $this->formattedTotal(),
+            'price' => $this->price(),
+            'product' => $this->product()?->toKerbs(),
+            'quantity' => $this->quantity(),
+            'subtotal' => $this->subtotal(),
+            'tax' => $this->tax(),
+            'total' => $this->total(),
+        ];
     }
 }

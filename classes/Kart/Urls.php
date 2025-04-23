@@ -14,6 +14,7 @@ use Kirby\Cms\Page;
 use ProductPage;
 
 /**
+ * @method string account()
  * @method string account_delete()
  * @method string captcha()
  * @method string cart()
@@ -54,6 +55,7 @@ class Urls implements Kerbs
     public function toKerbs(): array
     {
         return [
+            'account' => $this->account(),
             'account_delete' => $this->account_delete(),
             'captcha' => $this->captcha(),
             'cart' => $this->cart(),

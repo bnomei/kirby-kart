@@ -321,6 +321,11 @@ class Router
         return is_string($token) && csrf($token) ? null : 401;
     }
 
+    public static function account(): string
+    {
+        return url(self::ACCOUNT);
+    }
+
     public static function account_delete(): string
     {
         return self::factory(self::ACCOUNT_DELETE);
@@ -438,12 +443,12 @@ class Router
 
     public static function cart(): string
     {
-        return self::factory(self::CART);
+        return url(self::CART);
     }
 
     public static function kart(): string
     {
-        return self::factory(self::KART);
+        return url(self::KART);
     }
 
     public static function cart_buy(ProductPage $product): string
@@ -508,9 +513,7 @@ class Router
 
     public static function csrf(): string
     {
-        return Uri::index()->clone([
-            'path' => self::CSRF,
-        ])->toString();
+        return url(self::CSRF);
     }
 
     public static function captcha(): string
