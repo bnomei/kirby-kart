@@ -3,5 +3,5 @@ blueprint: page
 title: Default
 
 fields:
-  layouts:
+  layout:
     type: layout
