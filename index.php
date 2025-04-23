@@ -792,7 +792,7 @@ App::plugin(
                 // else sane defaults
                 if ($metadata instanceof Field) {
                     $metadata = [
-                        'title' => $page->isHomePage() ? $site->title() : $page->title().' | '.$site->title(),
+                        'title' => $page->isHomePage() ? $site->title()->value() : $page->title().' | '.$site->title(),
                         'description' => Str::esc($page->description()->kti()),
                     ];
                 }
