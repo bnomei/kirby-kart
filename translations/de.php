@@ -20,6 +20,7 @@ return [
     'bnomei.kart.in-stock' => 'Auf Lager',
     'bnomei.kart.invoice' => 'Rechnung',
     'bnomei.kart.invoiceNumber' => 'Rechnungsnummer',
+    'bnomei.kart.item' => 'Eintrag',
     'bnomei.kart.items' => 'Einträge',
     'bnomei.kart.kart' => 'KART', // do not translate
     'bnomei.kart.last-sync' => 'Letzte Synchronisation',

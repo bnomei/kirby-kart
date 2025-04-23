@@ -343,6 +343,11 @@ App::plugin(
                             'user',
                             'welcome',
                             // KART
+                            'bnomei.kart.invoice',
+                            'bnomei.kart.paidDate',
+                            'bnomei.kart.invoiceNumber',
+                            'bnomei.kart.price',
+                            'bnomei.kart.quantity',
                             'bnomei.kart.items',
                             'bnomei.kart.categories',
                             'bnomei.kart.checkout',
@@ -353,6 +358,8 @@ App::plugin(
                             'bnomei.kart.orders',
                             'bnomei.kart.subtotal',
                             'bnomei.kart.total',
+                            'bnomei.kart.tax',
+                            'bnomei.kart.discount',
                             'bnomei.kart.in-stock',
                             'bnomei.kart.out-of-stock',
                             // KERBS

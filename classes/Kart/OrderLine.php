@@ -95,6 +95,7 @@ class OrderLine implements Kerbs
             'formattedDiscount' => $this->formattedDiscount(),
             'formattedPrice' => $this->formattedPrice(),
             'formattedSubtotal' => $this->formattedSubtotal(),
+            'formattedTax' => $this->formattedTax(),
             'formattedTotal' => $this->formattedTotal(),
             'price' => $this->price(),
             'product' => $this->product()?->toKerbs(),
