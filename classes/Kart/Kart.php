@@ -736,17 +736,13 @@ class Kart implements Kerbs
     {
         return [
             'cart' => $this->cart()->toKerbs(),
-            'wishlist' => $this->wishlist()->toKerbs(),
-            'urls' => $this->urls()->toKerbs(),
-            'categories' => $this->categories()->values(),
-            'tags' => $this->tags()->values(),
-            'products' => $this->products()->values(fn (ProductPage $product) => $product->toKerbs()),
-            'orders' => $this->ordersWithCustomer()->values(fn (OrderPage $product) => $product->toKerbs()),
             'options' => [
                 'turnstile' => [
                     'sitekey' => $this->option('turnstile.sitekey'),
                 ],
             ],
+            'urls' => $this->urls()->toKerbs(),
+            'wishlist' => $this->wishlist()->toKerbs(),
         ];
     }
 }

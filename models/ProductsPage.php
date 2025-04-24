@@ -8,11 +8,10 @@
  * Unauthorized copying, modification, or distribution is prohibited.
  */
 
-use Bnomei\Kart\Kerbs;
 use Kirby\Cms\Page;
 use Kirby\Cms\Pages;
 
-class ProductsPage extends Page implements Kerbs
+class ProductsPage extends Page
 {
     public static function phpBlueprint(): array
     {
@@ -113,14 +112,5 @@ class ProductsPage extends Page implements Kerbs
         });
 
         return $this->children;
-    }
-
-    public function toKerbs(): array
-    {
-        return [
-            'title' => $this->title()->value(),
-            'url' => $this->url(),
-            'children' => $this->children()->values(fn (ProductPage $p) => $p->toKerbs()),
-        ];
     }
 }

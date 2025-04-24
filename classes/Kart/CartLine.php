@@ -148,7 +148,7 @@ class CartLine implements Kerbs
             'formattedSubtotal' => $this->formattedSubtotal(),
             'hasStockForQuantity' => $this->hasStockForQuantity(),
             'price' => $this->price(),
-            'product' => $this->product()?->toKerbs(),
+            'product' => $this->product()?->toKerbs(full: false),
             'quantity' => $this->quantity(),
             'subtotal' => $this->subtotal(),
         ];

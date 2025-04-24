@@ -471,43 +471,43 @@ class ProductPage extends Page implements Kerbs
             round(($this->rrprice()->toFloat() - $this->price()->toFloat())  / $this->rrprice()->toFloat() * 100) : 0;
     }
 
-    public function toKerbs(): array
+    public function toKerbs(bool $full = true): array
     {
-        return [
-            'id' => $this->id(),
+        return array_filter([
             'add' => $this->add(),
             'buy' => $this->buy(),
             'categories' => $this->categories()->split(),
             'description' => $this->description()->kti()->value(),
-            'details' => $this->details()->toStructure()->values(function(StructureObject $i) {
+            'details' => $full ? $this->details()->toStructure()->values(function(StructureObject $i) {
                 $s = $i->summary()->value() ?? '';
                 return [
                     'summary' => !empty($s) ? Kart::query(t($s, $s), $this) : '',
                     'text' => Kart::query($i->text()->kt()->value(), $this),
                     'open' => $i->open()->toBool(),
                 ];
-            }),
-            'firstGalleryImage' => $this->firstGalleryImage()?->toKerbs(),
+            }) : null,
             'featured' => $this->featured()->toBool(),
+            'firstGalleryImage' => $this->firstGalleryImage()?->toKerbs(),
             'forget' => $this->forget(),
             'formattedPrice' => $this->formattedPrice(),
-            'gallery' => $this->gallery()->toFiles()->values(fn(File $f) => $f->toKerbs()),
+            'formattedRRPrice' => $this->rrprice()->isNotEmpty() ? $this->rrprice()->toFormattedCurrency() : null,
+            'gallery' => $full ? $this->gallery()->toFiles()->values(fn(File $f) => $f->toKerbs()) : null,
+            'id' => $this->id(),
+            'inStock' => $this->stock(withHold: true) !== 0,
             'later' => $this->later(),
             'now' => $this->now(),
             'price' => $this->price()->toFloat(),
-            'related' => kart()->productsRelated($this)->not($this)->values(fn(ProductPage $p) => $p->id()),
+            'related' => $full ? kart()->productsRelated($this)->not($this)->values(fn(ProductPage $p) => $p->id()) : null,
+            'remove' => $this->remove(),
             'rrpp' => $this->rrpp(),
             'rrprice' => $this->rrprice()->isNotEmpty() ? $this->rrprice()->toFloat() : null,
-            'formattedRRPrice' => $this->rrprice()->isNotEmpty() ? $this->rrprice()->toFormattedCurrency() : null,
-            'remove' => $this->remove(),
             'setAmountInCart' => $this->setAmountInCart(),
             // 'stock' => $this->stock(withHold: true),
-            'inStock' => $this->stock(withHold: true) !== 0,
             'tags' => $this->tags()->split(),
             'title' => $this->title()->value(),
             'url' => $this->url(),
             // 'uuid' => $this->uuid()->id(),
             'wish' => $this->wish(),
-        ];
+        ]);
     }
 }
