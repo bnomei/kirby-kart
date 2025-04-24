@@ -348,6 +348,7 @@ App::plugin(
                             'welcome',
                             'yes',
                             // KART
+                            'bnomei.kart.cart',
                             'bnomei.kart.categories',
                             'bnomei.kart.checkout',
                             'bnomei.kart.discount',
