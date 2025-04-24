@@ -18,7 +18,7 @@
             --pico-font-family-sans-serif: "Geist", sans-serif;
         }
     </style>
-    <?= css('assets/css/pico.jade.min.css') ?>
+    <?= css('assets/css/pico.pumpkin.min.css') ?>
     <?= css('@auto') ?>
     <?= js('@auto') ?>
     <?php if (kart()->option('turnstile.sitekey')) { ?><script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script><?php } ?>
