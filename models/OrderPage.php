@@ -203,6 +203,10 @@ class OrderPage extends Page implements Kerbs
                                     'multiple' => false,
                                     'subpages' => false,
                                 ],
+                                'variant' => [
+                                    'label' => 'bnomei.kart.variant',
+                                    'type' => 'tags',
+                                ],
                                 'price' => [ // Merx
                                     'label' => 'bnomei.kart.price',
                                     'type' => 'number',
@@ -271,12 +275,12 @@ class OrderPage extends Page implements Kerbs
         ];
     }
 
-    public function hasProduct(string|ProductPage $key): bool
+    public function hasProduct(string|ProductPage $key, ?string $variant = null): bool
     {
         return $this->productsCount($key, true) > 0;
     }
 
-    public function productsCount(string|ProductPage|null $key = null, bool $oneIsEnough = false): int
+    public function productsCount(string|ProductPage|null $key = null, bool $oneIsEnough = false, ?string $variant = null): int
     {
         if ($key instanceof ProductPage) {
             $key = $key->id();
@@ -286,6 +290,9 @@ class OrderPage extends Page implements Kerbs
         foreach ($this->items()->toStructure() as $item) {
             // it does not matter if id or uuid is stored with this query
             if (! $key || $item->key()->toPage()?->id() === $key || $item->key()->toPage()?->uuid()->toString() === $key) {
+                if ($variant && $variant !== $item->variant()->value()) {
+                    continue;
+                }
                 $sum += $item->quantity()->toInt();
                 if ($oneIsEnough) {
 
@@ -536,7 +543,8 @@ class OrderPage extends Page implements Kerbs
                 $line->total()->toFloat(),
                 $line->subtotal()->toFloat(),
                 $line->tax()->toFloat(),
-                $line->discount()->toFloat()
+                $line->discount()->toFloat(),
+                $line->variant()->isNotEmpty() ? $line->variant()->value() : null,
             );
         }
 

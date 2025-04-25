@@ -141,6 +141,7 @@ class Lemonsqueezy extends Provider
 
         $data['items'][] = [
             'key' => ['page://'.$uuid(null, ['id' => A::get($json, 'data.attributes.first_order_item.product_id')])],  // pages field expect an array
+            'variant' => null, // TODO: variant
             'quantity' => 1, // lemonsqueeze ever only sells one item at a time
             'price' => round(A::get($json, 'data.attributes.first_order_item.price', 0) / 100.0, 2),
             // these values include the multiplication with quantity

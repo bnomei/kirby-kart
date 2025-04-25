@@ -196,6 +196,7 @@ class Paypal extends Provider
         foreach (A::get($json, 'purchase_units.0.items') as $line) {
             $data['items'][] = [
                 'key' => ['page://'.A::get($line, 'sku')],  // pages field expect an array
+                'variant' => null, // TODO: variant
                 'quantity' => intval(A::get($line, 'quantity')),
                 'price' => round(floatval(A::get($line, 'unit_amount.value', 0)), 2),
                 // these values include the multiplication with quantity

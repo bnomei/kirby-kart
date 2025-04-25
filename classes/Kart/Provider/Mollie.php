@@ -180,6 +180,7 @@ class Mollie extends Provider
         foreach (A::get($json, 'lines') as $line) {
             $data['items'][] = [
                 'key' => ['page://'.A::get($line, 'sku')],  // pages field expect an array
+                'variant' => null, // TODO: variant
                 'quantity' => A::get($line, 'quantity'),
                 'price' => round(floatval(A::get($line, 'unitPrice.value', 0)), 2),
                 // these values include the multiplication with quantity

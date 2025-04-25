@@ -164,6 +164,7 @@ class Paddle extends Provider
             }
             $data['items'][] = [
                 'key' => ['page://'.$uuid(null, ['id' => A::get($price, 'product_id')])],  // pages field expect an array
+                'variant' => null, // TODO: variant
                 'quantity' => A::get($line, 'quantity'),
                 'price' => round(A::get($price, 'unit_price.amount', 0) / 100.0, 2),
                 // these values include the multiplication with quantity

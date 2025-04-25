@@ -125,6 +125,7 @@ class Stripe extends Provider
         foreach (A::get($json, 'data') as $line) {
             $data['items'][] = [
                 'key' => ['page://'.$uuid(null, ['id' => A::get($line, 'price.product')])],  // pages field expect an array
+                'variant' => null, // TODO: variant
                 'quantity' => A::get($line, 'quantity'),
                 'price' => round(A::get($line, 'price.unit_amount', 0) / 100.0, 2),
                 // these values include the multiplication with quantity

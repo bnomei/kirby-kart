@@ -66,6 +66,7 @@ class Kirby extends Provider
             'invoiceurl' => A::get($input, 'invoiceurl'), // unknown at this point
             'items' => kart()->cart()->lines()->values(fn (CartLine $l) => [
                 'key' => [$l->product()?->uuid()->toString()], // pages field expect an array
+                'variant' => $l->variant(),
                 'quantity' => $l->quantity(),
                 'price' => $l->product()?->price()->toFloat(), // per item
                 'total' => $l->quantity() * $l->product()?->price()->toFloat(), // -discount +tax

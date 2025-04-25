@@ -157,6 +157,7 @@ class CartLine implements Kerbs
             'product' => $this->product()?->toKerbs(full: false),
             'quantity' => $this->quantity(),
             'subtotal' => $this->subtotal(),
+            'variant' => $this->variant(),
         ];
     }
 }

@@ -378,6 +378,7 @@ class Cart implements Kerbs
                 fn ($line) => [
                     'key' => [$line->product()->uuid()->id()],
                     'quantity' => $line->quantity(),
+                    'variant' => $line->variant(),
                 ]
             )];
         }
