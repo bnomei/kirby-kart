@@ -553,7 +553,7 @@ class OrderPage extends Page implements Kerbs
 
     public function toKerbs(): array
     {
-        return [
+        return array_filter([
             'discount' => $this->discount(),
             'download' => $this->download(),
             'formattedDiscount' => $this->formattedDiscount(),
@@ -571,6 +571,6 @@ class OrderPage extends Page implements Kerbs
             'title' => $this->title()->value(),
             'total' => $this->total(),
             'url' => $this->url(),
-        ];
+        ]);
     }
 }

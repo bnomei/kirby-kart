@@ -735,7 +735,7 @@ class Kart implements Kerbs
 
     public function toKerbs(): array
     {
-        return [
+        return array_filter([
             'cart' => $this->cart()->toKerbs(),
             'options' => [
                 'turnstile' => [
@@ -744,6 +744,6 @@ class Kart implements Kerbs
             ],
             'urls' => $this->urls()->toKerbs(),
             'wishlist' => $this->wishlist()->toKerbs(),
-        ];
+        ]);
     }
 }

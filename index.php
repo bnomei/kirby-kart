@@ -722,15 +722,16 @@ App::plugin(
                 return is_int($modified) ? date($format, $modified) : '?';
             },
             'toKerbs' => function (): array {
-                return [
+                return array_filter([
                     'alt' => $this->alt()->value(),
-                    'caption' => $this->caption()->kti(),
-                    'ratio' => $this->ratio(),
-                    // 'url' => $this->url(),
                     'blur' => $this->thumb('blurred')->url(),
-                    'thumb' => $this->thumb('default')->url(),
+                    'caption' => $this->caption()->kti(),
+                    'name' => $this->name(),
+                    'ratio' => $this->ratio(),
                     'srcset' => $this->srcset('default'),
-                ];
+                    'thumb' => $this->thumb('default')->url(),
+                    // 'url' => $this->url(),
+                ]);
             },
         ],
         'pageMethods' => [
@@ -777,12 +778,12 @@ App::plugin(
                 return '<code>'.$json.'</code>';
             },
             'toKerbs' => function (): array {
-                return [
+                return array_filter([
                     'title' => $this->title()->value(),
                     'url' => $this->url(),
                     'layouts' => $this->layout()->or($this->layouts())->toKerbs('layouts'),
-                    'blocks' => $this->blocks()->toKerbs('blocks'),
-                ];
+                    'blocks' => $this->blocks()->isEmpty() ? null : $this->blocks()->toKerbs('blocks'),
+                ]);
             },
         ],
         'siteMethods' => [
@@ -809,14 +810,14 @@ App::plugin(
                     ];
                 }
 
-                return [
+                return array_filter([
                     'title' => $this->title()->value(),
                     'url' => $this->url(),
                     'logo' => svg(kirby()->roots()->assets().'/logo.svg') ?: '[missing /assets/logo.svg]',
                     'meta' => is_array($metadata) ? $metadata : [],
                     'listed' => $site->children()->listed()->values(fn (Page $p) => $p->toKerbs()),
-                    'copyright' => $this->copyright()->kti()->value(),
-                ];
+                    'copyright' => $this->copyright()->isNotEmpty() ? $this->copyright()->kti()->value() : null,
+                ]);
             },
         ],
         'usersMethods' => [

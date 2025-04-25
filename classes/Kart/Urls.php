@@ -54,7 +54,7 @@ class Urls implements Kerbs
 
     public function toKerbs(): array
     {
-        return [
+        return array_filter([
             'account' => $this->account(),
             'account_delete' => $this->account_delete(),
             'captcha' => $this->captcha(),
@@ -66,6 +66,6 @@ class Urls implements Kerbs
             'logout' => $this->logout(),
             'products' => kart()->page(ContentPageEnum::PRODUCTS->value)?->url() ?? '',
             'signup_magic' => $this->signup_magic(),
-        ];
+        ]);
     }
 }

@@ -253,7 +253,7 @@ class ProductPage extends Page implements Kerbs
                                             'type' => 'number',
                                             'min' => 0,
                                             'step' => 0.01,
-                                            'default' => 0,
+                                            // 'default' => 0, // leave blank instead which will use products price
                                             'after' => '{{ kirby.option("bnomei.kart.currency") }}',
                                         ],
                                         'image' => [
@@ -507,13 +507,14 @@ class ProductPage extends Page implements Kerbs
 
     public function variantGroups(): array
     {
-        if ($this->variantGroups) {
-            return $this->variantGroups;
-        }
+//        if ($this->variantGroups) {
+//            return $this->variantGroups;
+//        }
 
         $groups = [];
         foreach ($this->variants()->toStructure() as $item) {
-            $tags = $item->variants()->split();
+
+            $tags = $item->variant()->split();
             foreach ($tags as $tag) {
                 if (! is_string($tag)) {
                     continue;
@@ -528,10 +529,13 @@ class ProductPage extends Page implements Kerbs
                 $kv = explode($s, trim($tag));
                 if (count($kv) === 2) {
                     $groups[trim($kv[0])][] = trim($kv[1]);
-                } elseif (count($kv) === 1) {
-                    $groups[] = trim($kv[0]);
                 }
             }
+        }
+
+        foreach(array_keys($groups) as $key) {
+            $groups[$key] = array_values(array_unique($groups[$key]));
+            sort($groups[$key]);
         }
 
         $this->variantGroups = $groups;
@@ -559,16 +563,36 @@ class ProductPage extends Page implements Kerbs
 
     public function variantFromRequestData(array $data = []): ?string
     {
-        $data = Kart::sanitize($data);
-        $variant = '';
-        foreach (array_keys($this->variantGroups()) as $key) {
-            $value = A::get($data, $key);
-            if ($value && is_string($value)) {
-                $variant .= $key.':'.trim($value);
+        // resolve a variant string to validatable parts
+        if ($va = A::get($data, 'variant')) {
+            if (is_string($va)) {
+                foreach(explode(',', urldecode($va)) as $tag) {
+                    $s = ':';
+                    if (! str_contains($tag, $s)) {
+                        $s = '=';
+                    }
+                    if (! str_contains($tag, $s)) {
+                        $s = '.';
+                    }
+                    $t = explode($s, $tag);
+                    if (count($t) === 2) {
+                        $data[trim($t[0])] = trim($t[1]);
+                    }
+                }
             }
         }
 
-        return empty($variant) ? null : $variant;
+        $data = Kart::sanitize($data);
+        $variant = [];
+        foreach (array_keys($this->variantGroups()) as $key) {
+            $value = A::get($data, $key);
+            if ($value && is_string($value)) {
+                $variant[] = $key.':'.trim($value);
+            }
+        }
+        sort($variant);
+
+        return empty($variant) ? null : implode(',', $variant);
     }
 
     public function toKerbs(bool $full = true): array
@@ -607,7 +631,12 @@ class ProductPage extends Page implements Kerbs
             'tags' => $this->tags()->split(),
             'title' => $this->title()->value(),
             'url' => $this->url(),
-            'variants' => $this->variants()->split(),
+            'variants' => $this->variants()->toStructure()->values(fn($i) => array_filter([
+                'variant' => $i->variant()->split(),
+                'price' => $i->price()->isNotEmpty() ? $i->price()->toFloat() : null,
+                'priceFormatted' => $i->price()->isNotEmpty() ? $i->price()->toFormattedCurrency() : null,
+                'image' => $i->image()->toFile()?->name(),
+            ])),
             'variantGroups' => $this->variantGroups(),
             // 'uuid' => $this->uuid()->id(),
             'wish' => $this->wish(),

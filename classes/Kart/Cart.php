@@ -42,11 +42,15 @@ class Cart implements Kerbs
 
         $this->lines = new Collection;
         foreach ($items as $uuid => $line) {
+            $variant = null;
+            if (str_contains($uuid, '|')) {
+                list($uuid, $variant) = explode('|', $uuid);
+            }
             $this->add(
                 $this->kirby->page($uuid) ?? $this->kirby->page('page://'.$uuid),
                 A::get($line, 'quantity'),
                 false,
-                A::get($line, 'variant')
+                A::get($line, 'variant', $variant)
             );
         }
         // NOTE: do NOT save here, handled separately
@@ -467,7 +471,7 @@ class Cart implements Kerbs
 
     public function toKerbs(): array
     {
-        return [
+        return array_filter([
             'canCheckout' => $this->canCheckout(),
             'count' => $this->lines()->count(),
             'formattedSubtotal' => $this->formattedSubtotal(),
@@ -477,6 +481,6 @@ class Cart implements Kerbs
             'quantity' => $this->quantity(),
             'subtotal' => $this->subtotal(),
             'url' => page($this->id)?->url(),
-        ];
+        ]);
     }
 }

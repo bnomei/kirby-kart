@@ -96,7 +96,7 @@ class OrderLine implements Kerbs
 
     public function toKerbs(): array
     {
-        return [
+        return array_filter([
             'discount' => $this->discount(),
             'formattedDiscount' => $this->formattedDiscount(),
             'formattedPrice' => $this->formattedPrice(),
@@ -110,6 +110,6 @@ class OrderLine implements Kerbs
             'tax' => $this->tax(),
             'total' => $this->total(),
             'variant' => $this->variant(),
-        ];
+        ]);
     }
 }
