@@ -22,15 +22,15 @@ use Kirby\Filesystem\F;
 use Kirby\Toolkit\Str;
 
 /**
- * @method Field invoiceurl()
- * @method Field invnumber()
- * @method Field paidDate()
  * @method Field customer()
+ * @method Field invnumber()
+ * @method Field invoiceurl()
  * @method Field items()
- * @method Field paymentComplete()
- * @method Field paymentMethod()
- * @method Field paymentId()
  * @method Field notes()
+ * @method Field paidDate()
+ * @method Field paymentComplete()
+ * @method Field paymentId()
+ * @method Field paymentMethod()
  */
 class OrderPage extends Page implements Kerbs
 {
@@ -555,7 +555,7 @@ class OrderPage extends Page implements Kerbs
             'invoice' => $this->invoice(),
             'invoiceNumber' => $this->invoiceNumber(),
             'isPayed' => $this->isPayed(),
-            'orderLines' => $this->orderLines()->values(fn(OrderLine $o) => $o->toKerbs()),
+            'orderLines' => $this->orderLines()->values(fn (OrderLine $o) => $o->toKerbs()),
             'paidDate' => $this->paidDate()->toDate('c'), // ISO 8601 date
             'quantity' => $this->quantity(),
             'subtotal' => $this->subtotal(),

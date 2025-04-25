@@ -64,6 +64,8 @@ return [
     'bnomei.kart.tax-rate' => 'Momssats',
     'bnomei.kart.timestamp' => 'Tidsstempel',
     'bnomei.kart.total' => 'Total',
+    'bnomei.kart.variant' => 'Variant',
+    'bnomei.kart.variants' => 'Variants',
     'login.email.magic-link.subject' => 'Dit login-link til {{ site.title }}',
     'bnomei.kerbs.add-to-cart' => 'Add to Cart',
     'bnomei.kerbs.all' => 'All',

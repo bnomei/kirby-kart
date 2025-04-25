@@ -1,1 +1,3 @@
-<?php kerbs();
+<?php
+
+kerbs();

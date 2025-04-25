@@ -64,6 +64,8 @@ return [
     'bnomei.kart.tax-rate' => 'Aliquota fiscale',
     'bnomei.kart.timestamp' => 'Data e ora',
     'bnomei.kart.total' => 'Totale',
+    'bnomei.kart.variant' => 'Variant',
+    'bnomei.kart.variants' => 'Variants',
     'login.email.magic-link.subject' => 'Il tuo link di accesso per {{ site.title }}',
     'bnomei.kerbs.add-to-cart' => 'Add to Cart',
     'bnomei.kerbs.all' => 'All',

@@ -73,7 +73,7 @@ class StocksPage extends Page
     /**
      * @kql-allowed
      */
-    public function stock(?string $id = null, ?string $withHold = null): ?int
+    public function stock(?string $id = null, ?string $withHold = null, ?string $variant = null): ?int
     {
         $expire = kart()->option('expire');
         if (is_int($expire)) {
@@ -86,16 +86,33 @@ class StocksPage extends Page
                         continue;
                     }
                     $stocks[$page->uuid()->toString()] = $stockPage->stock()->toInt();
+                    foreach ($stockPage->variant()->toStructure() as $var) {
+                        $stocks[$page->uuid()->toString().'|'.$var->variant()->value()] = $var->stock()->toInt();
+                    }
                 }
 
                 return $stocks;
             }, $expire);
 
-            $stock = A::get($stocks, $id);
+            $stock = A::get($stocks, $id.($variant ? '|'.$variant : ''));
         } else {
             // slowish...
             $stocks = $this->stockPages($id);
-            $stock = $stocks->count() ? $stocks->sumField('stock')->toInt() : null;
+            if (! $variant) {
+                $stock = $stocks->count() ? $stocks->sumField('stock')->toInt() : null;
+            } else {
+                $stock = null;
+                foreach ($stocks as $p) {
+                    foreach ($p->variants()->toStructure() as $var) {
+                        if ($var->variant()->value() === $variant) {
+                            if ($stock === null) {
+                                $stock = 0;
+                            }
+                            $stock += $var->stock()->toInt();
+                        }
+                    }
+                }
+            }
         }
 
         if ($stock === null) {
@@ -172,7 +189,7 @@ class StocksPage extends Page
                 continue;
             }
 
-            if ($this->updateStock($product, intval($item['quantity']) * $mod) !== null) {
+            if ($this->updateStock($product, intval($item['quantity']) * $mod, false, A::get($item, 'variant')) !== null) {
                 $count++;
             }
         }
@@ -180,7 +197,7 @@ class StocksPage extends Page
         return kart()->option('stocks.queue') ? null : $count;
     }
 
-    public function updateStock(ProductPage $product, int $quantity, bool $set = false): ?int
+    public function updateStock(ProductPage $product, int $quantity, bool $set = false, ?string $variant = null): ?int
     {
         /** @var StockPage $stockPage */
         $stockPage = $this->stockPages($product->uuid()->toString())->first();
@@ -188,6 +205,6 @@ class StocksPage extends Page
             return null;
         }
 
-        return $stockPage->updateStock($quantity, true, $set);
+        return $stockPage->updateStock($quantity, true, $set, $variant);
     }
 }

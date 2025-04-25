@@ -26,6 +26,7 @@ class Router
     use Turnstile;
 
     const ACCOUNT = 'account';
+
     const ACCOUNT_DELETE = 'kart/account-delete';
 
     const CAPTCHA = 'kart/captcha';
@@ -41,6 +42,7 @@ class Router
     const CART_LATER = 'kart/cart-later';
 
     const CART_REMOVE = 'kart/cart-remove';
+
     const CART_SET_AMOUNT = 'kart/cart-set-amount';
 
     const CSRF = 'kart/csrf';

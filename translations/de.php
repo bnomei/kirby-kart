@@ -65,6 +65,8 @@ return [
     'bnomei.kart.tax-rate' => 'Steuersatz',
     'bnomei.kart.timestamp' => 'Zeitstempel',
     'bnomei.kart.total' => 'Total',
+    'bnomei.kart.variant' => 'Variante',
+    'bnomei.kart.variants' => 'Vartianten',
     'login.email.magic-link.subject' => 'Login Link für {{ site.title }}',
     'bnomei.kerbs.add-to-cart' => 'In den Warenkorb',
     'bnomei.kerbs.all' => 'Alle',

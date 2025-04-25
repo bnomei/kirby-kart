@@ -44,7 +44,9 @@ class Cart implements Kerbs
         foreach ($items as $uuid => $line) {
             $this->add(
                 $this->kirby->page($uuid) ?? $this->kirby->page('page://'.$uuid),
-                A::get($line, 'quantity')
+                A::get($line, 'quantity'),
+                false,
+                A::get($line, 'variant')
             );
         }
         // NOTE: do NOT save here, handled separately
@@ -59,7 +61,7 @@ class Cart implements Kerbs
         ]);
     }
 
-    public function add(ProductPage|array|string|null $product, int $amount = 1, bool $set = false): int
+    public function add(ProductPage|array|string|null $product, int $amount = 1, bool $set = false, ?string $variant = null): int
     {
         // Merx compatibility
         if (is_array($product)) {
@@ -76,7 +78,7 @@ class Cart implements Kerbs
         }
 
         $maxLines = intval(kart()->option('orders.order.maxlpo'));
-        if ($item = $this->lines->get($product->uuid()->id())) {
+        if ($item = $this->lines->get($product->uuid()->id().($variant ? '|'.$variant : ''))) {
             /** @var CartLine $item */
             if ($set) {
                 $a = $item->setQuantity($amount);
@@ -90,6 +92,7 @@ class Cart implements Kerbs
             $item = new CartLine(
                 $product->uuid()->id(),
                 $amount,
+                $variant,
                 $this
             );
             $this->lines->add($item);
@@ -110,6 +113,7 @@ class Cart implements Kerbs
             'count' => $this->lines->count(),
             'item' => $item,
             'user' => $this->kirby->user(),
+            'variant' => $variant,
         ]);
 
         return $item->quantity();
@@ -229,7 +233,7 @@ class Cart implements Kerbs
         ));
     }
 
-    public function remove(ProductPage|array|string|null $product, int $amount = 1): int
+    public function remove(ProductPage|array|string|null $product, int $amount = 1, ?string $variant = null): int
     {
         // Merx compatibility
         if (is_array($product)) {
@@ -246,7 +250,7 @@ class Cart implements Kerbs
         }
 
         /** @var CartLine|null $item */
-        $item = $this->lines->get($product->uuid()->id());
+        $item = $this->lines->get($product->uuid()->id().($variant ? '|'.$variant : ''));
         if (is_null($item)) {
             return 0;
         }
@@ -263,6 +267,7 @@ class Cart implements Kerbs
             'count' => $this->lines->count(),
             'item' => $item,
             'user' => $this->kirby->user(),
+            'variant' => $variant,
         ]);
 
         return $item?->quantity() ?? 0;
@@ -284,7 +289,7 @@ class Cart implements Kerbs
         ]);
     }
 
-    public function has(ProductPage|CartLine|string $product): bool
+    public function has(ProductPage|CartLine|string $product, ?string $variant = null): bool
     {
         if ($product instanceof ProductPage) {
             $product = $product->uuid()->id();
@@ -294,7 +299,7 @@ class Cart implements Kerbs
             $product = $product->product()?->uuid()->id();
         }
 
-        return $product && $this->lines->has($product);
+        return $product && $this->lines->has($product.($variant ? '|'.$variant : ''));
     }
 
     public function merge(User $user): bool
@@ -320,7 +325,9 @@ class Cart implements Kerbs
         foreach ($lines as $uuid => $line) {
             $this->add(
                 $this->kirby->page($uuid) ?? $this->kirby->page('page://'.$uuid),
-                A::get($line, 'quantity')
+                A::get($line, 'quantity'),
+                false,
+                A::get($line, 'variant'),
             );
         }
         // NOTE: done by callee
@@ -385,7 +392,8 @@ class Cart implements Kerbs
             if (! $product) {
                 continue;
             }
-            $holdKey = 'hold-'.Kart::hash($product->uuid()->toString());
+            $variant = A::get($item, 'variant');
+            $holdKey = 'hold-'.Kart::hash($product->uuid()->toString().($variant ? '|'.$variant : ''));
             $holds = $this->kirby->cache('bnomei.kart.stocks-holds')->get($holdKey, []);
             $sid = $this->sessionToken();
             if (array_key_exists($sid, $holds)) {
@@ -393,7 +401,10 @@ class Cart implements Kerbs
                 $hasOne = true;
             } else {
                 // find by product and quantity, sort by expiry desc (as the best guess)
-                $holds = array_filter($holds, fn ($hold) => $hold['product'] === $product->uuid()->id() && $hold['quantity'] === intval($item['quantity']));
+                $holds = array_filter($holds, fn ($hold) => $hold['product'] === $product->uuid()->id() &&
+                    $hold['quantity'] === intval($item['quantity']) &&
+                    (! $variant || $hold['variant'] === $variant)
+                );
                 $holds = A::sort($holds, 'expires', 'desc');
                 if (count($holds) > 0) {
                     array_shift($holds);
@@ -426,21 +437,24 @@ class Cart implements Kerbs
         }
 
         $hasOne = false;
+        /** @var CartLine $line */
         foreach ($this->lines as $line) {
             $product = $line->product();
             if (! $product) {
                 continue;
             }
 
-            $holdKey = 'hold-'.Kart::hash($product->uuid()->toString());
+            $variant = $line->variant();
+            $holdKey = 'hold-'.Kart::hash($product->uuid()->toString().($variant ? '|'.$variant : ''));
             $holds = $this->kirby->cache('bnomei.kart.stocks-holds')->get($holdKey, []);
             $holds = array_filter($holds, fn ($hold) => $hold['expires'] > time()); // discard outdated
             $sid = $this->sessionToken();
-            $holds[$sid] = [
+            $holds[$sid] = array_filter([
                 'product' => $product->uuid()->id(),
+                'variant' => $variant,
                 'expires' => time() + $expire * 60,
                 'quantity' => $line->quantity(),
-            ];
+            ]);
 
             // the cache does not have to live longer than the expiry of each line
             $this->kirby->cache('bnomei.kart.stocks-holds')->set($holdKey, $holds, intval($expire));

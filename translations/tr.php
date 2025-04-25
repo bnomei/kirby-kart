@@ -64,6 +64,8 @@ return [
     'bnomei.kart.tax-rate' => 'Vergi oranı',
     'bnomei.kart.timestamp' => 'Zaman damgası',
     'bnomei.kart.total' => 'Toplam',
+    'bnomei.kart.variant' => 'Variant',
+    'bnomei.kart.variants' => 'Variants',
     'login.email.magic-link.subject' => '{{ site.title }} için giriş bağlantınız',
     'bnomei.kerbs.add-to-cart' => 'Add to Cart',
     'bnomei.kerbs.all' => 'All',

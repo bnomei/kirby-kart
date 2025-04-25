@@ -27,7 +27,7 @@ $request = kirby()->request();
 
 $inertia = array_filter([
     'component' => ucfirst($template->name()),
-    'props' => array_map(fn($value) => $value instanceof Closure ? $value() : $value, $props + kart()->option('kerbs.shared')),
+    'props' => array_map(fn ($value) => $value instanceof Closure ? $value() : $value, $props + kart()->option('kerbs.shared')),
     'url' => $request->url()->toString(),
     'version' => kart()->option('kerbs.version'),
 ]);
@@ -42,7 +42,7 @@ $inertia['props'] = ($only && $request->header('X-Inertia-Partial-Component') ==
 if ($request->method() === 'GET' && $request->header('X-Inertia')) {
     echo Response::json($inertia, headers: [
         'Vary' => 'Accept',
-        'X-Inertia' => 'true'
+        'X-Inertia' => 'true',
     ]);
     exit();
 }

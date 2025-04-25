@@ -20,6 +20,7 @@ class CartLine implements Kerbs
     public function __construct(
         private ProductPage|Page|string $uuid, // need to be named `id` for Collections to use it as key
         private int $quantity = 1,
+        private ?string $variant = null,
         private readonly ?Cart $cart = null,
     ) {
         if ($this->uuid instanceof ProductPage) {
@@ -36,7 +37,7 @@ class CartLine implements Kerbs
      */
     public function id(): string
     {
-        return $this->product()?->uuid()->id() ?? $this->uuid;
+        return ($this->product()?->uuid()->id() ?? $this->uuid).($this->variant ? '|'.$this->variant : '');
     }
 
     public function product(bool $refresh = false): ?ProductPage
@@ -83,7 +84,7 @@ class CartLine implements Kerbs
         $new = $old;
 
         if (! $this->hasStockForQuantity()) {
-            $stock = $this->product()?->stock(withHold: $this->cart?->sessionToken());
+            $stock = $this->product()?->stock(withHold: $this->cart?->sessionToken(), variant: $this->variant);
             $new = is_numeric($stock) ? $this->setQuantity(intval($stock)) : $old;
         }
 
@@ -97,9 +98,14 @@ class CartLine implements Kerbs
         return $this->quantity;
     }
 
+    public function variant(): ?string
+    {
+        return $this->variant;
+    }
+
     public function hasStockForQuantity(): bool
     {
-        $stock = $this->product()?->stock(withHold: $this->cart?->sessionToken());
+        $stock = $this->product()?->stock(withHold: $this->cart?->sessionToken(), variant: $this->variant);
 
         if (is_string($stock)) { // unknown stock = unlimited
             return true;

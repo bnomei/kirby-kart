@@ -9,14 +9,17 @@
  */
 
 use Bnomei\Kart\ContentPageEnum;
+use Bnomei\Kart\Kart;
 use Kirby\Cms\Page;
 use Kirby\Content\Field;
+use Kirby\Data\Yaml;
 use Kirby\Toolkit\A;
 use Kirby\Toolkit\Str;
 
 /**
  * @method Field page()
  * @method Field stock()
+ * @method Field variants()
  * @method Field timestamp()
  */
 class StockPage extends Page
@@ -64,6 +67,16 @@ class StockPage extends Page
                     'multiple' => false,
                     'subpages' => false,
                     'translate' => false,
+                    'width' => '2/3',
+                ],
+                'timestamp' => [
+                    'label' => 'bnomei.kart.timestamp',
+                    'type' => 'date',
+                    'required' => true,
+                    'time' => true,
+                    'default' => 'now',
+                    'translate' => false,
+                    'width' => '1/3',
                 ],
                 'stock' => [
                     'label' => 'bnomei.kart.stock',
@@ -73,15 +86,29 @@ class StockPage extends Page
                     'step' => 1,
                     'default' => 0,
                     'translate' => false,
+                    'width' => '1/2',
                 ],
-                'timestamp' => [
-                    'label' => 'bnomei.kart.timestamp',
-                    'type' => 'date',
-                    'required' => true,
-                    'time' => true,
-                    'default' => 'now',
+                'variants' => [
+                    'label' => 'bnomei.kart.variants',
+                    'type' => 'structure',
+                    'after' => '{{ kirby.option("bnomei.kart.currency") }}',
                     'translate' => false,
+                    'width' => '1/2',
+                    'fields' => [
+                        'variant' => [
+                            'label' => 'bnomei.kart.variant',
+                            'type' => 'tags',
+                        ],
+                        'stock' => [
+                            'label' => 'bnomei.kart.stock',
+                            'type' => 'number',
+                            // 'min' => 0,
+                            'step' => 1,
+                            'default' => 0,
+                        ],
+                    ],
                 ],
+
             ],
         ];
     }
@@ -109,7 +136,7 @@ class StockPage extends Page
         return str_pad((string) $this->stock()->value(), $length, '0', STR_PAD_LEFT);
     }
 
-    public function updateStock(int $amount = 0, bool $queue = true, bool $set = false): ?int
+    public function updateStock(int $amount = 0, bool $queue = true, bool $set = false, ?string $variant = null): ?int
     {
         if ($amount === 0 && ! $set) {
             return 0;
@@ -123,23 +150,52 @@ class StockPage extends Page
                     'amount' => $amount,
                     'queue' => false,
                     'set' => $set,
+                    'variant' => $variant,
                 ],
             ]);
 
             return null;
         }
 
-        return $this->kirby()->impersonate('kirby', function () use ($amount, $set) {
-            $stock = $set ?
-                $this->update(['stock' => $amount]) :
-                $this->increment('stock', $amount);
+        return $this->kirby()->impersonate('kirby', function () use ($amount, $set, $variant) {
+            if ($variant) {
+                $updated = [];
+                foreach ($this->variants()->toStructure() as $variantItem) {
+                    if ($variantItem->variant()->value() === $variant) {
+                        $updated[] = $set ?
+                            ['variant' => $variant, 'stock' => $amount] :
+                            ['variant' => $variant, 'stock' => $variantItem->stock()->toInt() + $amount];
+                    }
+                }
+                $stock = $this->update(['variants' => Yaml::encode($updated)]);
+            } else {
+                $stock = $set ?
+                    $this->update(['stock' => $amount]) :
+                    $this->increment('stock', $amount);
+            }
 
             kirby()->trigger('kart.stocks.updated', [
                 'stock' => $stock,
                 'amount' => $amount,
+                'variant' => $variant,
             ]);
 
             return $stock;
-        })->stock()->toInt();
+        })->stockFromVariant($variant)->toInt();
+    }
+
+    public function stockFromVariant(?string $variant = null): Field
+    {
+        if ($variant) {
+            foreach ($this->variants()->toStructure() as $variantItem) {
+                if ($variantItem->variant()->value() === $variant) {
+                    return new Field($this, 'stock_'.Kart::hash($variant),
+                        $variantItem->stock()->isNotEmpty() ? $variantItem->stock()->toInt() : null
+                    );
+                }
+            }
+        }
+
+        return $this->stock();
     }
 }

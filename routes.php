@@ -308,8 +308,12 @@ return function (App $kirby) {
                     return $r;
                 }
 
+                /** @var ProductPage|null $page */
+                $page = page('page://'.Router::get('product'));
+                $variant = $page?->variantFromRequestData(kirby()->request()->data());
                 kart()->wishlist()->add(
-                    page('page://'.Router::get('product'))
+                    $page,
+                    variant: $variant
                 );
                 kart()->wishlist()->save();
 
@@ -327,9 +331,13 @@ return function (App $kirby) {
                     return $r;
                 }
 
+                /** @var ProductPage|null $page */
+                $page = page('page://'.Router::get('product'));
+                $variant = $page?->variantFromRequestData(kirby()->request()->data());
                 kart()->wishlist()->remove(
-                    page('page://'.Router::get('product')),
-                    999
+                    $page,
+                    999,
+                    variant: $variant
                 );
                 kart()->wishlist()->save();
 
@@ -347,13 +355,18 @@ return function (App $kirby) {
                     return $r;
                 }
 
+                /** @var ProductPage|null $page */
+                $page = page('page://'.Router::get('product'));
+                $variant = $page?->variantFromRequestData(kirby()->request()->data());
                 kart()->cart()->add(
-                    page('page://'.Router::get('product'))
+                    $page,
+                    variant: $variant
                 );
                 kart()->cart()->save();
                 kart()->wishlist()->remove(
-                    page('page://'.Router::get('product')),
-                    999
+                    $page,
+                    999,
+                    variant: $variant
                 );
                 kart()->wishlist()->save();
 
@@ -403,10 +416,14 @@ return function (App $kirby) {
                     return $r;
                 }
 
+                /** @var ProductPage|null $page */
+                $page = page('page://'.Router::get('product'));
+                $variant = $page?->variantFromRequestData(kirby()->request()->data());
                 kart()->cart()->add(
-                    page('page://'.Router::get('product')),
+                    $page,
                     max(0, intval(Router::get('amount', 1))),
-                    true
+                    true,
+                    variant: $variant
                 );
                 kart()->cart()->save();
 
@@ -424,9 +441,13 @@ return function (App $kirby) {
                     return $r;
                 }
 
+                /** @var ProductPage|null $page */
+                $page = page('page://'.Router::get('product'));
+                $variant = $page?->variantFromRequestData(kirby()->request()->data());
                 kart()->cart()->add(
-                    page('page://'.Router::get('product')),
-                    max(1, intval(Router::get('amount', 1)))
+                    $page,
+                    max(1, intval(Router::get('amount', 1))),
+                    variant: $variant
                 );
                 kart()->cart()->save();
 
@@ -444,9 +465,13 @@ return function (App $kirby) {
                     return $r;
                 }
 
+                /** @var ProductPage|null $page */
+                $page = page('page://'.Router::get('product'));
+                $variant = $page?->variantFromRequestData(kirby()->request()->data());
                 kart()->cart()->add(
-                    page('page://'.Router::get('product')),
-                    max(1, intval(Router::get('amount', 1)))
+                    $page,
+                    max(1, intval(Router::get('amount', 1))),
+                    variant: $variant
                 );
                 kart()->cart()->save();
 
@@ -468,9 +493,13 @@ return function (App $kirby) {
                     return $r;
                 }
 
+                /** @var ProductPage|null $page */
+                $page = page('page://'.Router::get('product'));
+                $variant = $page?->variantFromRequestData(kirby()->request()->data());
                 kart()->cart()->remove(
-                    page('page://'.Router::get('product')),
-                    max(1, intval(Router::get('amount', 1)))
+                    $page,
+                    max(1, intval(Router::get('amount', 1))),
+                    variant: $variant
                 );
                 kart()->cart()->save();
 
@@ -506,13 +535,18 @@ return function (App $kirby) {
                     return $r;
                 }
 
+                /** @var ProductPage|null $page */
+                $page = page('page://'.Router::get('product'));
+                $variant = $page?->variantFromRequestData(kirby()->request()->data());
                 kart()->cart()->remove(
-                    page('page://'.Router::get('product')),
-                    999 // aka all
+                    $page,
+                    999, // aka all,
+                    variant: $variant
                 );
                 kart()->cart()->save();
                 kart()->wishlist()->add(
-                    page('page://'.Router::get('product'))
+                    $page,
+                    variant: $variant
                 );
                 kart()->wishlist()->save();
 

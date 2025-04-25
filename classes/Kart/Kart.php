@@ -732,6 +732,7 @@ class Kart implements Kerbs
             'model' => $model,
         ]);
     }
+
     public function toKerbs(): array
     {
         return [

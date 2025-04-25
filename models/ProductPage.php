@@ -22,18 +22,19 @@ use Kirby\Toolkit\A;
 use Kirby\Toolkit\Str;
 
 /**
+ * @method Field categories()
  * @method Field description()
  * @method Field details()
- * @method Field price()
- * @method Field rrprice()
- * @method Field featured()
- * @method Field tax()
- * @method Field gallery()
  * @method Field downloads()
- * @method Field raw()
- * @method Field categories()
- * @method Field tags()
+ * @method Field featured()
+ * @method Field gallery()
  * @method Field maxapo()
+ * @method Field price()
+ * @method Field raw()
+ * @method Field rrprice()
+ * @method Field tags()
+ * @method Field tax()
+ * @method Field variants()
  */
 class ProductPage extends Page implements Kerbs
 {
@@ -132,7 +133,7 @@ class ProductPage extends Page implements Kerbs
                                     'default' => 0,
                                     // 'required' => true, // does not work with pruning
                                     'after' => '{{ kirby.option("bnomei.kart.currency") }}',
-                                    'width' => '1/3',
+                                    'width' => '1/4',
                                     'translate' => false,
                                     'virtual' => true,
                                 ],
@@ -144,7 +145,7 @@ class ProductPage extends Page implements Kerbs
                                     'default' => 0,
                                     // 'required' => true, // does not work with pruning
                                     'after' => '{{ kirby.option("bnomei.kart.currency") }}',
-                                    'width' => '1/3',
+                                    'width' => '1/4',
                                     'translate' => false,
                                     'virtual' => false,
                                 ],
@@ -161,13 +162,22 @@ class ProductPage extends Page implements Kerbs
                                     'width' => '1/4',
                                 ],
                                 */
+                                'maxapo' => [
+                                    'label' => 'bnomei.kart.max-amount-per-order',
+                                    'type' => 'number',
+                                    // 'min' => 0, // allow stock to be negative when updating from orders
+                                    'step' => 1,
+                                    'translate' => false,
+                                    'width' => '1/4',
+                                    'placeholder' => '{{ site.kart.option("orders.order.maxapo") }}',
+                                ],
                                 'created' => [
                                     'label' => 'bnomei.kart.created',
                                     'type' => 'date',
                                     'time' => true,
                                     'default' => 'now',
                                     'translate' => false,
-                                    'width' => '1/3',
+                                    'width' => '1/4',
                                     // 'virtual' => true, // needed for `num`
                                 ],
                                 'categories' => [
@@ -208,7 +218,7 @@ class ProductPage extends Page implements Kerbs
                                         'parent' => 'page.parent',
                                         // 'template' => 'product-gallery',
                                     ],
-                                    'width' => '1/2',
+                                    'width' => '1/3',
                                     'translate' => false,
                                     // 'virtual' => true,
                                 ],
@@ -220,18 +230,37 @@ class ProductPage extends Page implements Kerbs
                                         'parent' => 'page.parent',
                                         // 'template' => 'product-downloads',
                                     ],
-                                    'width' => '1/2',
+                                    'width' => '1/3',
                                     'translate' => false,
                                     // 'virtual' => true,
                                 ],
-                                'maxapo' => [
-                                    'label' => 'bnomei.kart.max-amount-per-order',
-                                    'type' => 'number',
-                                    // 'min' => 0, // allow stock to be negative when updating from orders
-                                    'step' => 1,
+                                'variants' => [
+                                    'label' => 'bnomei.kart.variants',
+                                    'type' => 'structure',
                                     'translate' => false,
-                                    'width' => '1/4',
-                                    'placeholder' => '{{ site.kart.option("orders.order.maxapo") }}',
+                                    'virtual' => true,
+                                    'width' => '1/3',
+                                    'fields' => [
+                                        'price_id' => [
+                                            'type' => 'hidden',
+                                        ],
+                                        'variant' => [
+                                            'label' => 'bnomei.kart.variant',
+                                            'type' => 'tags',
+                                        ],
+                                        'price' => [
+                                            'label' => 'bnomei.kart.price',
+                                            'type' => 'number',
+                                            'min' => 0,
+                                            'step' => 0.01,
+                                            'default' => 0,
+                                            'after' => '{{ kirby.option("bnomei.kart.currency") }}',
+                                        ],
+                                        'image' => [
+                                            'label' => 'field.blocks.image.name',
+                                            'type' => 'files',
+                                        ],
+                                    ],
                                 ],
                                 'raw' => [
                                     'type' => 'hidden',
@@ -280,12 +309,12 @@ class ProductPage extends Page implements Kerbs
     /**
      * @kql-allowed
      */
-    public function stock(?string $withHold = null): int|string
+    public function stock(?string $withHold = null, ?string $variant = null): int|string
     {
         /** @var StocksPage $stocks */
         $stocks = kart()->page(ContentPageEnum::STOCKS);
 
-        return $stocks->stock($this->uuid()->toString(), $withHold) ?? '∞';
+        return $stocks->stock($this->uuid()->toString(), $withHold, $variant) ?? '∞';
     }
 
     public function stockUrl(): ?string
@@ -468,7 +497,78 @@ class ProductPage extends Page implements Kerbs
     public function rrpp(): float
     {
         return $this->rrprice()->isNotEmpty() ?
-            round(($this->rrprice()->toFloat() - $this->price()->toFloat())  / $this->rrprice()->toFloat() * 100) : 0;
+            round(($this->rrprice()->toFloat() - $this->price()->toFloat()) / $this->rrprice()->toFloat() * 100) : 0;
+    }
+
+    /*
+     * like A::get($product->variantGroups(), 'size.xl')
+     */
+    private ?array $variantGroups = null;
+
+    public function variantGroups(): array
+    {
+        if ($this->variantGroups) {
+            return $this->variantGroups;
+        }
+
+        $groups = [];
+        foreach ($this->variants()->toStructure() as $item) {
+            $tags = $item->variants()->split();
+            foreach ($tags as $tag) {
+                if (! is_string($tag)) {
+                    continue;
+                }
+                $s = ':';
+                if (str_contains($tag, $s) === false) {
+                    $s = '.';
+                }
+                if (str_contains($tag, $s) === false) {
+                    $s = '=';
+                }
+                $kv = explode($s, trim($tag));
+                if (count($kv) === 2) {
+                    $groups[trim($kv[0])][] = trim($kv[1]);
+                } elseif (count($kv) === 1) {
+                    $groups[] = trim($kv[0]);
+                }
+            }
+        }
+
+        $this->variantGroups = $groups;
+
+        return $this->variantGroups;
+    }
+
+    public function hasVariant(?string $variant = null): bool
+    {
+        if (empty($variant)) {
+            return false;
+        }
+
+        // using the parsed groups to allow alternative spellings like: x:1,x=1,x.1
+        // all tags within the variant must be present for a match to succeed
+        $tags = explode(',', $variant);
+        foreach ($tags as $tag) {
+            if (! A::get($this->variantGroups(), str_replace([':', '='], ['.', '.'], $tag))) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    public function variantFromRequestData(array $data = []): ?string
+    {
+        $data = Kart::sanitize($data);
+        $variant = '';
+        foreach (array_keys($this->variantGroups()) as $key) {
+            $value = A::get($data, $key);
+            if ($value && is_string($value)) {
+                $variant .= $key.':'.trim($value);
+            }
+        }
+
+        return empty($variant) ? null : $variant;
     }
 
     public function toKerbs(bool $full = true): array
@@ -478,10 +578,11 @@ class ProductPage extends Page implements Kerbs
             'buy' => $this->buy(),
             'categories' => $this->categories()->split(),
             'description' => $this->description()->kti()->value(),
-            'details' => $full ? $this->details()->toStructure()->values(function(StructureObject $i) {
+            'details' => $full ? $this->details()->toStructure()->values(function (StructureObject $i) {
                 $s = $i->summary()->value() ?? '';
+
                 return [
-                    'summary' => !empty($s) ? Kart::query(t($s, $s), $this) : '',
+                    'summary' => ! empty($s) ? Kart::query(t($s, $s), $this) : '',
                     'text' => Kart::query($i->text()->kt()->value(), $this),
                     'open' => $i->open()->toBool(),
                 ];
@@ -491,13 +592,13 @@ class ProductPage extends Page implements Kerbs
             'forget' => $this->forget(),
             'formattedPrice' => $this->formattedPrice(),
             'formattedRRPrice' => $this->rrprice()->isNotEmpty() ? $this->rrprice()->toFormattedCurrency() : null,
-            'gallery' => $full ? $this->gallery()->toFiles()->values(fn(File $f) => $f->toKerbs()) : null,
+            'gallery' => $full ? $this->gallery()->toFiles()->values(fn (File $f) => $f->toKerbs()) : null,
             'id' => $this->id(),
             'inStock' => $this->stock(withHold: true) !== 0,
             'later' => $this->later(),
             'now' => $this->now(),
             'price' => $this->price()->toFloat(),
-            'related' => $full ? kart()->productsRelated($this)->not($this)->values(fn(ProductPage $p) => $p->id()) : null,
+            'related' => $full ? kart()->productsRelated($this)->not($this)->values(fn (ProductPage $p) => $p->id()) : null,
             'remove' => $this->remove(),
             'rrpp' => $this->rrpp(),
             'rrprice' => $this->rrprice()->isNotEmpty() ? $this->rrprice()->toFloat() : null,
@@ -506,6 +607,8 @@ class ProductPage extends Page implements Kerbs
             'tags' => $this->tags()->split(),
             'title' => $this->title()->value(),
             'url' => $this->url(),
+            'variants' => $this->variants()->split(),
+            'variantGroups' => $this->variantGroups(),
             // 'uuid' => $this->uuid()->id(),
             'wish' => $this->wish(),
         ]);

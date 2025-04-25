@@ -14,7 +14,6 @@ use Kirby\Cms\User;
 use Kirby\Content\Field;
 
 /**
- * @method array toKerbs()
  * @method Field fastspring()
  * @method Field gumroad()
  * @method Field invoice_ninja()
@@ -26,13 +25,14 @@ use Kirby\Content\Field;
  * @method Field paypal()
  * @method Field snipcart()
  * @method Field stripe()
+ * @method Kart kart()
+ * @method Pages<string, OrderPage> completedOrders()
+ * @method Pages<string, OrderPage> orders()
+ * @method array toKerbs()
+ * @method bool hasMadePaymentFor(string $provider, ProductPage $productPage)
+ * @method bool hasPurchased(ProductPage|string $product)
  * @method bool isCustomer()
  * @method string gravatar()
- * @method Kart kart()
- * @method bool hasPurchased(ProductPage|string $product)
- * @method bool hasMadePaymentFor(string $provider, ProductPage $productPage)
- * @method Pages<string, OrderPage> orders()
- * @method Pages<string, OrderPage> completedOrders()
  */
 class CustomerUser extends User
 {

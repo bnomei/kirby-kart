@@ -306,7 +306,7 @@ App::plugin(
                 },
             ],
             'kerbs' => [
-                'version' => fn() => Kart::hash(kirby()->plugin('bnomei/kart')->version()),
+                'version' => fn () => Kart::hash(kirby()->plugin('bnomei/kart')->version()),
                 'shared' => function (): array {
                     return [
                         'kart' => kart()->toKerbs(),
@@ -381,8 +381,8 @@ App::plugin(
                             'bnomei.kerbs.sort-by-rrp-percent-desc',
                         ])),
                     ];
-                }
-            ]
+                },
+            ],
         ],
         'routes' => require_once __DIR__.'/routes.php',
         'snippets' => [
@@ -616,19 +616,18 @@ App::plugin(
             },
             'toKerbs' => function (Field $field, ?string $type = null): array {
                 if ($type === 'layouts') {
-                    return $field->toLayouts()->values(function(Layout $layout) {
+                    return $field->toLayouts()->values(function (Layout $layout) {
                         return [
                             'id' => $layout->id(),
-                            'columns' => $layout->columns()->values(function(LayoutColumn $column) {
+                            'columns' => $layout->columns()->values(function (LayoutColumn $column) {
                                 return [
                                     'span' => $column->span(),
                                     'blocks' => $column->blocks()->toKerbs(),
                                 ];
-                            })
+                            }),
                         ];
                     });
-                }
-                elseif ($type === 'blocks') {
+                } elseif ($type === 'blocks') {
                     return $field->toBlocks()->toKerbs();
                 }
 
@@ -637,7 +636,7 @@ App::plugin(
         ],
         'blocksMethods' => [
             'toKerbs' => function (): array {
-                return $this->values(fn(Block $block) => [
+                return $this->values(fn (Block $block) => [
                     'id' => $block->id(),
                     'type' => $block->type(),
                     'html' => $block->toHtml(),
@@ -732,7 +731,7 @@ App::plugin(
                     'thumb' => $this->thumb('default')->url(),
                     'srcset' => $this->srcset('default'),
                 ];
-            }
+            },
         ],
         'pageMethods' => [
             /**
@@ -799,7 +798,7 @@ App::plugin(
                 $page = $site->page();
                 // if has https://github.com/tobimori/kirby-seo
                 $metadata = $page->metadata();
-                if (is_object($metadata) && is_a($metadata,"\\tobimori\\Seo\\Meta")) {
+                if (is_object($metadata) && is_a($metadata, '\\tobimori\\Seo\\Meta')) {
                     $metadata = $metadata->metaArray();
                 }
                 // else sane defaults
@@ -815,7 +814,7 @@ App::plugin(
                     'url' => $this->url(),
                     'logo' => svg(kirby()->roots()->assets().'/logo.svg') ?: '[missing /assets/logo.svg]',
                     'meta' => is_array($metadata) ? $metadata : [],
-                    'listed' => $site->children()->listed()->values(fn(Page $p) => $p->toKerbs()),
+                    'listed' => $site->children()->listed()->values(fn (Page $p) => $p->toKerbs()),
                     'copyright' => $this->copyright()->kti()->value(),
                 ];
             },

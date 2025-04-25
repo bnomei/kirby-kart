@@ -10,6 +10,7 @@
 
 namespace Bnomei\Kart;
 
-interface Kerbs {
+interface Kerbs
+{
     public function toKerbs(): array;
 }
