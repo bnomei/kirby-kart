@@ -51,7 +51,7 @@ if ($request->method() === 'GET' && $request->header('X-Inertia')) {
 snippet('kerbs/layout', slots: true);
 ?>
     <!-- Kirby Kart Plugin, Kerbs Theme: a Svelte 5 frontend with Inertia.js Adapter for Kirby CMS -->
-    <main class="container" id="<?= $appId ?? 'app' ?>" data-page='<?= json_encode($inertia) ?>'></main>
+    <main class="container" id="<?= $appId ?? 'app' ?>" data-page='<?= htmlspecialchars(\Kirby\Data\Json::encode($inertia), ENT_QUOTES, 'UTF-8') ?>'></main>
     <script defer src="<?= kirby()->urls()->media() ?>/plugins/bnomei/kart/kerbs.iife.js"></script>
 
 <?php endsnippet();
