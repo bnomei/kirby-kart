@@ -142,7 +142,8 @@ class ProductPage extends Page implements Kerbs
                                     'type' => 'number',
                                     'min' => 0,
                                     'step' => 0.01,
-                                    'default' => 0,
+                                    'placeholder' => '{{ page.price }}',
+                                    // 'default' => 0,
                                     // 'required' => true, // does not work with pruning
                                     'after' => '{{ kirby.option("bnomei.kart.currency") }}',
                                     'width' => '1/4',
@@ -507,9 +508,9 @@ class ProductPage extends Page implements Kerbs
 
     public function variantGroups(): array
     {
-//        if ($this->variantGroups) {
-//            return $this->variantGroups;
-//        }
+        if ($this->variantGroups) {
+            return $this->variantGroups;
+        }
 
         $groups = [];
         foreach ($this->variants()->toStructure() as $item) {
@@ -528,14 +529,16 @@ class ProductPage extends Page implements Kerbs
                 }
                 $kv = explode($s, trim($tag));
                 if (count($kv) === 2) {
-                    $groups[trim($kv[0])][] = trim($kv[1]);
+                    $key = trim($kv[0]);
+                    $var = trim($kv[1]);
+                    $groups[$key][$var] = t($key.'.'.$var, $var);
                 }
             }
         }
 
         foreach(array_keys($groups) as $key) {
-            $groups[$key] = array_values(array_unique($groups[$key]));
-            sort($groups[$key]);
+            $groups[$key] = array_unique($groups[$key]);
+            asort($groups[$key]);
         }
 
         $this->variantGroups = $groups;

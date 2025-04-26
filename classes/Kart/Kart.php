@@ -601,9 +601,9 @@ class Kart implements Kerbs
 
         return array_map(fn ($t) => [
             'id' => $t,
-            'label' => t('category.'.$t, $t),
-            'title' => t('category.'.$t, $t),
-            'text' => t('category.'.$t, $t),
+            'label' => t('tags.'.$t, $t),
+            'title' => t('tags.'.$t, $t),
+            'text' => t('tags.'.$t, $t),
             'count' => $category ?
                 $products->children()->filterBy('tags', $t, ',')->filterBy('categories', 'in', [$category], ',')->count():
                 $products->children()->filterBy('tags', $t, ',')->count(),

@@ -368,6 +368,8 @@ App::plugin(
                             'bnomei.kart.tags',
                             'bnomei.kart.tax',
                             'bnomei.kart.total',
+                            'bnomei.kart.variant',
+                            'bnomei.kart.variants',
                             // KERBS
                             'bnomei.kerbs.add-to-cart',
                             'bnomei.kerbs.all',
