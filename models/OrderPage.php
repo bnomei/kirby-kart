@@ -537,7 +537,7 @@ class OrderPage extends Page implements Kerbs
         $lines = [];
         foreach ($this->items()->toStructure() as $line) {
             $lines[] = new OrderLine(
-                $line->key()->toPage()?->uuid()->toString(),
+                $line->key()->toPage()?->uuid()->toString() ?? $line->key()->value()[0],
                 $line->price()->toFloat(),
                 $line->quantity()->toInt(),
                 $line->total()->toFloat(),

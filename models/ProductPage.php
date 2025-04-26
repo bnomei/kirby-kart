@@ -496,7 +496,7 @@ class ProductPage extends Page implements Kerbs
      */
     public function rrpp(): float
     {
-        return $this->rrprice()->isNotEmpty() ?
+        return $this->rrprice()->isNotEmpty() && $this->rrprice()->toInt() !== 0 ?
             round(($this->rrprice()->toFloat() - $this->price()->toFloat()) / $this->rrprice()->toFloat() * 100) : 0;
     }
 

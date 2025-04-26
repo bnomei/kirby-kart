@@ -115,7 +115,7 @@ App::plugin(
                 'enabled' => true,
                 'page' => 'products',
                 'product' => [
-                    'uuid' => fn (?ProductsPage $products = null, array $props = []) => 'pr-'.Kart::hash(A::get($props, 'id')),
+                    'uuid' => fn (?ProductsPage $products = null, array $props = []) => 'pr-'.Kart::hash(A::get($props, 'id', Kart::nonAmbiguousUuid(7))),
                 ],
             ],
             'queues' => [

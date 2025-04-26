@@ -553,7 +553,7 @@ class Kart implements Kerbs
             $categories = [$categories];
         }
         sort($categories);
-        $categories = array_unique($categories);
+        $categories = array_unique(array_map(fn($cat) => urldecode($cat), $categories));
 
         $expire = kart()->option('expire');
         if (is_int($expire)) {
@@ -593,7 +593,6 @@ class Kart implements Kerbs
         if (! $products) {
             return [];
         }
-        $categories = $products->children()->pluck('categories', ',', true);
         $tags = $products->children()->pluck('tags', ',', true);
         sort($tags);
 
@@ -605,10 +604,12 @@ class Kart implements Kerbs
             'label' => t('category.'.$t, $t),
             'title' => t('category.'.$t, $t),
             'text' => t('category.'.$t, $t),
-            'count' => $products->children()->filterBy('tags', $t, ',')->filterBy('categories', 'in', $category ? [$category] : $categories, ',')->count(),
+            'count' => $category ?
+                $products->children()->filterBy('tags', $t, ',')->filterBy('categories', 'in', [$category], ',')->count():
+                $products->children()->filterBy('tags', $t, ',')->count(),
             'value' => $t,
             'isActive' => $t === $tag,
-            'url' => ($path ? url($path) : $products->url()).'?tag='.$t,
+            'url' => ($path ? url($path) : $products->url()).'?tag='.urlencode($t),
             'urlWithParams' => url(
                 $path ?? $products->id(),
                 ['params' => [
@@ -642,7 +643,6 @@ class Kart implements Kerbs
             return [];
         }
         $categories = $products->children()->pluck('categories', ',', true);
-        $tags = $products->children()->pluck('tags', ',', true);
         sort($categories);
 
         $category = param('category');
@@ -654,9 +654,11 @@ class Kart implements Kerbs
             'title' => t('category.'.$c, $c),
             'text' => t('category.'.$c, $c),
             'value' => $c,
-            'count' => $products->children()->filterBy('categories', $c, ',')->filterBy('tags', 'in', $tag ? [$tag] : $tags, ',')->count(),
+            'count' => $tag ?
+                $products->children()->filterBy('categories', $c, ',')->filterBy('tags', 'in', [$tag], ',')->count():
+                $products->children()->filterBy('categories', $c, ',')->count(),
             'isActive' => $c === $category,
-            'url' => ($path ? url($path) : $products->url()).'?category='.$c,
+            'url' => ($path ? url($path) : $products->url()).'?category='.urlencode($c),
             'urlWithParams' => url(
                 $path ?? $products->id(),
                 ['params' => [
@@ -676,7 +678,7 @@ class Kart implements Kerbs
             $tags = [$tags];
         }
         sort($tags);
-        $tags = array_unique($tags);
+        $tags = array_unique(array_map(fn($tag) => urldecode($tag), $tags));
 
         $expire = kart()->option('expire');
         if (is_int($expire)) {
