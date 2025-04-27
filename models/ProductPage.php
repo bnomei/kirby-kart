@@ -501,6 +501,21 @@ class ProductPage extends Page implements Kerbs
             round(($this->rrprice()->toFloat() - $this->price()->toFloat()) / $this->rrprice()->toFloat() * 100) : 0;
     }
 
+    public function variantData(): array {
+        return $this->variants()->toStructure()->values(function($i) {
+            $variants = $i->variant()->split();
+            sort($variants);
+            $variant = implode(',', $variants); // no whitespace
+            return array_filter([
+                'options' => $variants,
+                'price' => $i->price()->isNotEmpty() ? $i->price()->toFloat() : null,
+                'formattedPrice' => $i->price()->isNotEmpty() ? $i->price()->toFormattedCurrency() : null,
+                'image' => $i->image()->toFile()?->name(),
+                'variant' => $variant,
+                'inStock' => $this->stock(withHold: true, variant: $variant) !== 0,
+            ]);
+        });
+    }
     /*
      * like A::get($product->variantGroups(), 'size.xl')
      */
@@ -634,12 +649,7 @@ class ProductPage extends Page implements Kerbs
             'tags' => $this->tags()->split(),
             'title' => $this->title()->value(),
             'url' => $this->url(),
-            'variants' => $this->variants()->toStructure()->values(fn($i) => array_filter([
-                'variant' => $i->variant()->split(),
-                'price' => $i->price()->isNotEmpty() ? $i->price()->toFloat() : null,
-                'priceFormatted' => $i->price()->isNotEmpty() ? $i->price()->toFormattedCurrency() : null,
-                'image' => $i->image()->toFile()?->name(),
-            ])),
+            'variants' => $this->variantData(),
             'variantGroups' => $this->variantGroups(),
             // 'uuid' => $this->uuid()->id(),
             'wish' => $this->wish(),

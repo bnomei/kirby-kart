@@ -62,7 +62,7 @@ class StockPage extends Page
                 'page' => [
                     'label' => 'bnomei.kart.product',
                     'type' => 'pages',
-                    'query' => 'site.kart.page("demo/products")', // TODO: .withoutStocks does not work
+                    'query' => 'site.kart.page("products")', // TODO: .withoutStocks does not work
                     // 'required' => true,
                     'multiple' => false,
                     'subpages' => false,
