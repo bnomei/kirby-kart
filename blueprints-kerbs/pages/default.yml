@@ -2,6 +2,12 @@ blueprint: page
 
 title: Default
 
-fields:
-  layout:
-    type: layout
+sections:
+  content:
+    type: fields
+    fields:
+      layout:
+        type: layout
+
+  files:
+    type: files

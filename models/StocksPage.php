@@ -65,6 +65,7 @@ class StocksPage extends Page
                     'sortBy' => 'timestamp desc',
                     'text' => '[{{ page.stockPad(3) }}] {{ page.page.toPage.title }}',
                     'info' => '{{ page.title }} ・ {{ page.timestamp }}',
+                    'limit' => 1000,
                 ],
             ],
         ];

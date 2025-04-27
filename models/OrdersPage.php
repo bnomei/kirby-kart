@@ -82,6 +82,7 @@ class OrdersPage extends Page
                     'sortBy' => 'invnumber desc',
                     'text' => '[#{{ page.invoiceNumber }}] {{ page.customer.toUser.email }} ・ {{ page.formattedSubtotal }}',
                     'info' => '{{ page.title }} ・ {{ page.paidDate.toDate("Y-m-d H:i") }}',
+                    'limit' => 1000,
                 ],
             ],
         ];

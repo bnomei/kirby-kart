@@ -531,7 +531,7 @@ class ProductPage extends Page implements Kerbs
                 if (count($kv) === 2) {
                     $key = trim($kv[0]);
                     $var = trim($kv[1]);
-                    $groups[$key][$var] = t($key.'.'.$var, $var);
+                    $groups[$key][$var] = t($key.'.'.$var, str_replace('-',' ', $var));
                 }
             }
         }

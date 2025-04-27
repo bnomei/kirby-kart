@@ -72,6 +72,7 @@ class ProductsPage extends Page
                             'image' => [
                                 'query' => 'page.gallery.first.toFile',
                             ],
+                            'limit' => 1000,
                         ],
                     ],
                 ],
