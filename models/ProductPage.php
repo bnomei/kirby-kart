@@ -511,14 +511,14 @@ class ProductPage extends Page implements Kerbs
             $variants = $i->variant()->split();
             sort($variants);
             $variant = implode(',', $variants); // no whitespace
-            return [
+            return array_filter([
                 'options' => $variants,
                 'price' => $i->price()->isNotEmpty() ? $i->price()->toFloat() : null,
                 'formattedPrice' => $i->price()->isNotEmpty() ? $i->price()->toFormattedCurrency() : null,
                 'image' => $i->image()->toFile()?->toKerbs(),
                 'variant' => $variant,
                 'inStock' => $this->stock(withHold: true, variant: $variant) !== 0,
-            ];
+            ]);
         });
     }
     /*
