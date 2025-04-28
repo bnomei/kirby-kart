@@ -124,6 +124,11 @@ class ProductPage extends Page implements Kerbs
                                             'default' => false,
                                         ],
                                     ],
+                                    'columns' => [
+                                        'summary' => ['width' => '1/5'],
+                                        'text' => ['width' => '3/5'],
+                                        'open' => ['width' => '1/5'],
+                                    ]
                                 ],
                                 'price' => [
                                     'label' => 'bnomei.kart.price',
@@ -506,8 +511,8 @@ class ProductPage extends Page implements Kerbs
             round(($this->rrprice()->toFloat() - $this->price()->toFloat()) / $this->rrprice()->toFloat() * 100) : 0;
     }
 
-    public function variantData(): array {
-        return $this->variants()->toStructure()->values(function($i) {
+    public function variantData(bool $resolveImage = false): array {
+        return $this->variants()->toStructure()->values(function($i) use ($resolveImage) {
             $variants = $i->variant()->split();
             sort($variants);
             $variant = implode(',', $variants); // no whitespace
@@ -515,7 +520,7 @@ class ProductPage extends Page implements Kerbs
                 'options' => $variants,
                 'price' => $i->price()->isNotEmpty() ? $i->price()->toFloat() : null,
                 'formattedPrice' => $i->price()->isNotEmpty() ? $i->price()->toFormattedCurrency() : null,
-                'image' => $i->image()->toFile()?->toKerbs(),
+                'image' => $resolveImage ? $i->image()->toFile()?->toKerbs() : $i->image()->toFile()?->name(),
                 'variant' => $variant,
                 'inStock' => $this->stock(withHold: true, variant: $variant) !== 0,
             ]);
@@ -536,6 +541,7 @@ class ProductPage extends Page implements Kerbs
         foreach ($this->variants()->toStructure() as $item) {
 
             $tags = $item->variant()->split();
+            sort($tags);
             foreach ($tags as $tag) {
                 if (! is_string($tag)) {
                     continue;
@@ -618,10 +624,24 @@ class ProductPage extends Page implements Kerbs
         return empty($variant) ? null : implode(',', $variant);
     }
 
+    public function priceWithVariant(?string $variant = null): float
+    {
+        foreach($this->variantData(false) as $v) {
+            if ($v['variant'] === $variant) {
+                if ($price = A::get($v, 'price')) {
+                    return $price;
+                }
+            }
+        }
+
+        return $this->price()->toFloat();
+    }
+
     public function toKerbs(bool $full = true): array
     {
         return array_filter([
             'add' => $this->add(),
+            'blocks' => $this->blocks()->isEmpty() ? null : $this->blocks()->toKerbs('blocks'),
             'buy' => $this->buy(),
             'categories' => $this->categories()->split(),
             'description' => $this->description()->kti()->value(),
@@ -643,6 +663,7 @@ class ProductPage extends Page implements Kerbs
             'id' => $this->id(),
             'inStock' => $this->stock(withHold: true) !== 0,
             'later' => $this->later(),
+            'layouts' => $this->layout()->or($this->layouts())->toKerbs('layouts'),
             'now' => $this->now(),
             'price' => $this->price()->toFloat(),
             'related' => $full ? kart()->productsRelated($this)->not($this)->values(fn (ProductPage $p) => $p->id()) : null,
@@ -654,7 +675,7 @@ class ProductPage extends Page implements Kerbs
             'tags' => $this->tags()->split(),
             'title' => $this->title()->value(),
             'url' => $this->url(),
-            'variants' => $this->variantData(),
+            'variants' => $this->variantData(true),
             'variantGroups' => $this->variantGroups(),
             // 'uuid' => $this->uuid()->id(),
             'wish' => $this->wish(),

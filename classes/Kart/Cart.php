@@ -233,7 +233,7 @@ class Cart implements Kerbs
     {
         return array_sum($this->lines->values(
             fn (CartLine $item) => $item->product() ? ($item->quantity() *
-                $item->product()->price()->toFloat()) : 0
+                $item->product()->priceWithVariant($item->variant())) : 0
         ));
     }
 

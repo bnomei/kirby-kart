@@ -727,7 +727,7 @@ App::plugin(
                 return array_filter([
                     'alt' => $this->alt()->value(),
                     'blur' => $this->thumb('blurred')->url(),
-                    'caption' => $this->caption()->kti(),
+                    'caption' => $this->caption()->kti()->value(),
                     'name' => $this->name(),
                     'ratio' => $this->ratio(),
                     'srcset' => $this->srcset('default'),

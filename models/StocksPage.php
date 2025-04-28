@@ -88,7 +88,9 @@ class StocksPage extends Page
                     }
                     $stocks[$page->uuid()->toString()] = $stockPage->stock()->toInt();
                     foreach ($stockPage->variants()->toStructure() as $var) {
-                        $v = implode(',', $var->variant()->split()); // no whitespace
+                        $v = $var->variant()->split();
+                        sort($v);
+                        $v = implode(',', $v); // no whitespace
                         $stocks[$page->uuid()->toString().'|'.$v] = $var->stock()->toInt();
                     }
                 }
@@ -106,7 +108,9 @@ class StocksPage extends Page
                 $stock = null;
                 foreach ($stocks as $p) {
                     foreach ($p->variants()->toStructure() as $var) {
-                        $v = implode(',', $var->variant()->split()); // no whitespace
+                        $v = $var->variant()->split();
+                        sort($v);
+                        $v = implode(',', $v); // no whitespace
                         if ($v === $variant) {
                             if ($stock === null) {
                                 $stock = 0;
