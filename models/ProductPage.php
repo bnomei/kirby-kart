@@ -90,6 +90,7 @@ class ProductPage extends Page implements Kerbs
                                 [
                                     'label' => 'bnomei.kart.stock',
                                     'value' => '{{ page.stock }}',
+                                    'info' => '{{ page.stock(null, "*") ? page.stock(null, "*") : "" }}', # variants
                                     'link' => '{{ page.stockUrl }}',
                                 ],
                             ],
@@ -309,12 +310,20 @@ class ProductPage extends Page implements Kerbs
      */
     public function inStock(): bool
     {
-        $stock = $this->stock();
-        if (is_string($stock)) {
+        $mainStock = $this->stock();
+        if (is_string($mainStock)) {
+            return true;
+        }
+        if(is_numeric($mainStock) && $mainStock > 0) {
             return true;
         }
 
-        return is_numeric($stock) && $stock > 0;
+        $variantsStock = $this->stock(variant: '*');
+        if(is_numeric($variantsStock) && $variantsStock > 0) {
+            return true;
+        }
+
+        return false;
     }
 
     /**

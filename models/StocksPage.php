@@ -80,6 +80,7 @@ class StocksPage extends Page
         if (is_int($expire)) {
             $stocks = $this->kirby()->cache('bnomei.kart.stocks')->getOrSet('stocks', function () {
                 $stocks = [];
+                $c = 0;
                 /** @var StockPage $stockPage */
                 foreach ($this->stockPages() as $stockPage) {
                     $page = $stockPage->page()->toPage();
@@ -92,8 +93,10 @@ class StocksPage extends Page
                         sort($v);
                         $v = implode(',', $v); // no whitespace
                         $stocks[$page->uuid()->toString().'|'.$v] = $var->stock()->toInt();
+                        $c += $var->stock()->toInt();
                     }
                 }
+                $stocks[$page->uuid()->toString().'|*'] = $c;
 
                 return $stocks;
             }, $expire);
@@ -111,7 +114,7 @@ class StocksPage extends Page
                         $v = $var->variant()->split();
                         sort($v);
                         $v = implode(',', $v); // no whitespace
-                        if ($v === $variant) {
+                        if ($v === $variant || $variant === '*') {
                             if ($stock === null) {
                                 $stock = 0;
                             }

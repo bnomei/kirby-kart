@@ -8,6 +8,7 @@ return [
     'bnomei.kart.customer' => 'Müşteri',
     'bnomei.kart.customers' => 'Müşteriler',
     'bnomei.kart.description' => 'Açıklama',
+    'bnomei.kart.default' => 'Varsayılan',
     'bnomei.kart.details' => 'Details',
     'bnomei.kart.details.summary' => 'Summary',
     'bnomei.kart.details.text' => 'Text',

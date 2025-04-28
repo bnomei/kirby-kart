@@ -7,6 +7,7 @@ return [
     'bnomei.kart.checkout' => 'Checkout',
     'bnomei.kart.customer' => 'Customer',
     'bnomei.kart.customers' => 'Customers',
+    'bnomei.kart.default' => 'Default',
     'bnomei.kart.description' => 'Description',
     'bnomei.kart.details' => 'Details',
     'bnomei.kart.details.summary' => 'Summary',

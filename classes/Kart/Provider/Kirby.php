@@ -68,9 +68,9 @@ class Kirby extends Provider
                 'key' => [$l->product()?->uuid()->toString()], // pages field expect an array
                 'variant' => $l->variant(),
                 'quantity' => $l->quantity(),
-                'price' => $l->product()?->price()->toFloat(), // per item
-                'total' => $l->quantity() * $l->product()?->price()->toFloat(), // -discount +tax
-                'subtotal' => $l->quantity() * $l->product()?->price()->toFloat(),
+                'price' => $l->price(), // per item
+                'total' => $l->quantity() * $l->price(), // -discount +tax
+                'subtotal' => $l->quantity() * $l->price(),
                 'tax' => 0,
                 'discount' => 0,
             ]),

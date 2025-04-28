@@ -11,6 +11,7 @@
 namespace Bnomei\Kart;
 
 use Kirby\Cms\Page;
+use Kirby\Toolkit\A;
 use ProductPage;
 
 class CartLine implements Kerbs
@@ -134,7 +135,23 @@ class CartLine implements Kerbs
 
     public function price(): float
     {
-        return $this->product() ? $this->product()->price()->toFloat() : 0;
+        if (!$this->product()) {
+            return 0;
+        }
+
+        $price = $this->product()->price()->toFloat();
+        $variant = $this->variant();
+        if ($this->product()->hasVariant($variant)) {
+            $matches = array_values(array_filter(
+                $this->product()->variantData(),
+                fn($v) => $v['variant'] === $variant
+            ));
+            if (count($matches)) {
+                $price = A::get($matches[0], 'price', $price);
+            }
+        }
+
+        return $price;
     }
 
     public function formattedSubtotal(): string

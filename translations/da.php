@@ -7,6 +7,7 @@ return [
     'bnomei.kart.created' => 'Oprettet den',
     'bnomei.kart.customer' => 'Kunde',
     'bnomei.kart.customers' => 'Kunder',
+    'bnomei.kart.default' => 'Standard',
     'bnomei.kart.details' => 'Details',
     'bnomei.kart.details.summary' => 'Summary',
     'bnomei.kart.details.text' => 'Text',
