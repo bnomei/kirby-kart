@@ -260,6 +260,11 @@ class ProductPage extends Page implements Kerbs
                                         'image' => [
                                             'label' => 'field.blocks.image.name',
                                             'type' => 'files',
+                                            'query' => 'page.parent.files',
+                                            'uploads' => [
+                                                'parent' => 'page.parent',
+                                                // 'template' => 'product-downloads',
+                                            ],
                                         ],
                                     ],
                                 ],
@@ -506,14 +511,14 @@ class ProductPage extends Page implements Kerbs
             $variants = $i->variant()->split();
             sort($variants);
             $variant = implode(',', $variants); // no whitespace
-            return array_filter([
+            return [
                 'options' => $variants,
                 'price' => $i->price()->isNotEmpty() ? $i->price()->toFloat() : null,
                 'formattedPrice' => $i->price()->isNotEmpty() ? $i->price()->toFormattedCurrency() : null,
-                'image' => $i->image()->toFile()?->name(),
+                'image' => $i->image()->toFile()?->toKerbs(),
                 'variant' => $variant,
                 'inStock' => $this->stock(withHold: true, variant: $variant) !== 0,
-            ]);
+            ];
         });
     }
     /*

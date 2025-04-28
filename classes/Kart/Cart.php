@@ -178,7 +178,7 @@ class Cart implements Kerbs
                 return false;
             }
 
-            $stock = $line->product()?->stock(withHold: $this->sessionToken());
+            $stock = $line->product()?->stock(withHold: $this->sessionToken(), variant: $line->variant());
             if (is_int($stock) && $stock < $line->quantity()) {
                 kart()->message('bnomei.kart.out-of-stock', 'checkout');
 
