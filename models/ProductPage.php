@@ -485,12 +485,12 @@ class ProductPage extends Page implements Kerbs
         return $this->maxapo()->isEmpty() ? intval(kart()->option('orders.order.maxapo')) : $this->maxapo()->toInt();
     }
 
-    public function updateStock(int $quantity, bool $set = false): ProductPage
+    public function updateStock(int $quantity, bool $set = false, ?string $variant = null): ProductPage
     {
         /** @var StocksPage $stocks */
         $stocks = kart()->page(ContentPageEnum::STOCKS);
 
-        $stocks->updateStock($this, $quantity, $set);
+        $stocks->updateStock($this, $quantity, $set, $variant);
 
         return $this;
     }
@@ -641,7 +641,7 @@ class ProductPage extends Page implements Kerbs
         foreach ($this->variantData(false) as $v) {
             if ($v['variant'] === $variant) {
                 if ($price = A::get($v, 'price')) {
-                    return $price;
+                    return floatval($price);
                 }
             }
         }
