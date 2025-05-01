@@ -389,6 +389,27 @@ class Router
         ]));
     }
 
+    public static function licenses_activate(?string $license_key = null): string
+    {
+        return self::factory(self::LICENSES_ACTIVATE, params: array_filter([
+            'license_key' => $license_key,
+        ]));
+    }
+
+    public static function licenses_deactivate(?string $license_key = null): string
+    {
+        return self::factory(self::LICENSES_DEACTIVATE, params: array_filter([
+            'license_key' => $license_key,
+        ]));
+    }
+
+    public static function licenses_validate(?string $license_key = null): string
+    {
+        return self::factory(self::LICENSES_VALIDATE, params: array_filter([
+            'license_key' => $license_key,
+        ]));
+    }
+
     public static function logout(): string
     {
         return self::factory(self::LOGOUT);
