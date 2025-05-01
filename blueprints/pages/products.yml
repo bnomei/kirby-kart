@@ -42,6 +42,7 @@ tabs:
         info: '{{ page.formattedPrice }}'
         image:
           query: page.gallery.first.toFile
+        limit: 1000
   files:
     sections:
       files:

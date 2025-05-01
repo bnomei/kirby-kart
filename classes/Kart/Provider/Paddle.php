@@ -19,6 +19,7 @@ use Bnomei\Kart\VirtualPage;
 use Closure;
 use Kirby\Http\Remote;
 use Kirby\Toolkit\A;
+use Kirby\Toolkit\Str;
 
 class Paddle extends Provider
 {
@@ -172,6 +173,7 @@ class Paddle extends Provider
                 'subtotal' => round(A::get($line, 'totals.subtotal', 0) / 100.0, 2),
                 'tax' => round(A::get($line, 'totals.tax', 0) / 100.0, 2),
                 'discount' => round(A::get($line, 'totals.discount', 0) / 100.0, 2),
+                'licensekey' => Str::uuid(),
             ];
         }
 

@@ -50,6 +50,8 @@ class Kart implements Kerbs
 
     private App $kirby;
 
+    private Licenses $licenses;
+
     private Urls $urls;
 
     private Queue $queue;
@@ -59,6 +61,7 @@ class Kart implements Kerbs
         $this->cart = null; // lazy
         $this->kirby = kirby();
         $this->provider = null;  // lazy
+        $this->licenses = new Licenses;
         $this->queue = new Queue;
         $this->urls = new Urls;
         $this->wishlist = null;  // lazy
@@ -92,6 +95,12 @@ class Kart implements Kerbs
     public function queue(): Queue
     {
         return $this->queue;
+
+    }
+
+    public function licenses(): Licenses
+    {
+        return $this->licenses;
 
     }
 
@@ -151,6 +160,9 @@ class Kart implements Kerbs
 
         if (is_string($data)) {
             $queryString = parse_url($data, PHP_URL_QUERY);
+            if (! is_string($queryString)) {
+                throw new Exception('Signature can only be generated from a valid URLs.');
+            }
             $data = [];
             parse_str($queryString, $data);
         }
@@ -158,7 +170,7 @@ class Kart implements Kerbs
         return hash_hmac(
             'sha256',
             implode('', A::without($data, $without)),
-            kart()->option('crypto.salt')
+            strval(kart()->option('crypto.salt'))
         );
     }
 
@@ -394,7 +406,7 @@ class Kart implements Kerbs
             if (class_exists($class)) {
                 $this->provider = new $class($this->kirby()); // @phpstan-ignore-line
             }
-            if (! $this->provider instanceof Provider) {
+            if (! $this->provider instanceof Provider) { // @phpstan-ignore-line
                 $this->provider = new Kirby($this->kirby());
             }
         }
@@ -553,7 +565,7 @@ class Kart implements Kerbs
             $categories = [$categories];
         }
         sort($categories);
-        $categories = array_unique(array_map(fn($cat) => urldecode($cat), $categories));
+        $categories = array_unique(array_map(fn ($cat) => urldecode($cat), $categories));
 
         $expire = kart()->option('expire');
         if (is_int($expire)) {
@@ -605,7 +617,7 @@ class Kart implements Kerbs
             'title' => t('tags.'.$t, $t),
             'text' => t('tags.'.$t, $t),
             'count' => $category ?
-                $products->children()->filterBy('tags', $t, ',')->filterBy('categories', 'in', [$category], ',')->count():
+                $products->children()->filterBy('tags', $t, ',')->filterBy('categories', 'in', [$category], ',')->count() :
                 $products->children()->filterBy('tags', $t, ',')->count(),
             'value' => $t,
             'isActive' => $t === $tag,
@@ -655,7 +667,7 @@ class Kart implements Kerbs
             'text' => t('category.'.$c, $c),
             'value' => $c,
             'count' => $tag ?
-                $products->children()->filterBy('categories', $c, ',')->filterBy('tags', 'in', [$tag], ',')->count():
+                $products->children()->filterBy('categories', $c, ',')->filterBy('tags', 'in', [$tag], ',')->count() :
                 $products->children()->filterBy('categories', $c, ',')->count(),
             'isActive' => $c === $category,
             'url' => ($path ? url($path) : $products->url()).'?category='.urlencode($c),
@@ -678,7 +690,7 @@ class Kart implements Kerbs
             $tags = [$tags];
         }
         sort($tags);
-        $tags = array_unique(array_map(fn($tag) => urldecode($tag), $tags));
+        $tags = array_unique(array_map(fn ($tag) => urldecode($tag), $tags));
 
         $expire = kart()->option('expire');
         if (is_int($expire)) {
@@ -719,7 +731,7 @@ class Kart implements Kerbs
             $page = $model;
         } elseif ($model instanceof File) {
             $file = $model;
-        } elseif ($model instanceof Site || $model === $site) {
+        } elseif ($model instanceof Site) {
             $site = $model;
         } elseif ($model instanceof User) {
             $user = $model;

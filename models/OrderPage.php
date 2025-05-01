@@ -141,7 +141,7 @@ class OrderPage extends Page implements Kerbs
                             'multiple' => false,
                             // 'query' => 'kirby.users.filterBy("role", "customer")',
                             'translate' => false,
-                            'width' => '1/2',
+                            'width' => '1/3',
                         ],
                         'invnumber' => [
                             'label' => 'bnomei.kart.invoiceNumber',
@@ -151,7 +151,7 @@ class OrderPage extends Page implements Kerbs
                             // 'default' => 1, // Do not do this. Messes with auto-incrementing.
                             // 'required' => true,
                             'translate' => false,
-                            'width' => '1/2',
+                            'width' => '1/3',
                         ],
                         'paymentComplete' => [
                             'label' => 'bnomei.kart.paymentcomplete',
@@ -248,6 +248,10 @@ class OrderPage extends Page implements Kerbs
                                     'min' => 0,
                                     'step' => 0.01,
                                     'default' => 0,
+                                ],
+                                'licensekey' => [
+                                    'label' => 'license', // i18n from kirby
+                                    'type' => 'text',
                                 ],
                             ],
                         ],
@@ -544,6 +548,7 @@ class OrderPage extends Page implements Kerbs
                 $line->subtotal()->toFloat(),
                 $line->tax()->toFloat(),
                 $line->discount()->toFloat(),
+                $line->licensekey()->value(),
                 $line->variant()->isNotEmpty() ? $line->variant()->value() : null,
             );
         }

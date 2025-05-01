@@ -51,6 +51,8 @@ class Router
 
     const KART = 'kart';
 
+    const LICENSES_VALIDATE = 'kart/licenses/validate';
+
     const LOGIN = 'kart/login';
 
     const LOGOUT = 'kart/logout';

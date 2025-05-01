@@ -10,6 +10,7 @@
 /phpstan.neon.dist  export-ignore
 /phpunit.xml        export-ignore
 /ray.php            export-ignore
+/rector.php         export-ignore
 /pint.json          export-ignore
 /tests              export-ignore
 /collections/example_*.php    export-ignore

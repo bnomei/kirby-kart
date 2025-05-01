@@ -101,7 +101,7 @@ abstract class Provider
 
         $data = array_merge($this->getUserData(), $data);
 
-        kirby()->impersonate('kirby', function () use ($user, $data) { // @phpstan-ignore-line
+        kirby()->impersonate('kirby', function () use ($user, $data) {
             $field = $this->name; // no prefix to align with KLUB
 
             return $user->update([

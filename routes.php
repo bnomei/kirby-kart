@@ -50,6 +50,21 @@ return function (App $kirby) {
             },
         ],
         [
+            'pattern' => Router::LICENSES_VALIDATE,
+            'method' => 'POST',
+            'action' => function () {
+                if ($r = Router::denied([
+                    Router::class.'::hasRatelimit',
+                ], exclusive: true)) {
+                    return $r;
+                }
+
+                return Response::json()(kart()->licenses()->validate(
+                    substr(trim(strip_tags(strval(get('license_key', '')))), 0, 36),
+                ));
+            },
+        ],
+        [
             'pattern' => Router::LOGIN,
             'method' => 'GET',
             'action' => function () {

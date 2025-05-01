@@ -90,7 +90,7 @@ class ProductPage extends Page implements Kerbs
                                 [
                                     'label' => 'bnomei.kart.stock',
                                     'value' => '{{ page.stock }}',
-                                    'info' => '{{ page.stock(null, "*") ? page.stock(null, "*") : "" }}', # variants
+                                    'info' => '{{ page.stock(null, "*") ? page.stock(null, "*") : "" }}', // variants
                                     'link' => '{{ page.stockUrl }}',
                                 ],
                             ],
@@ -129,7 +129,7 @@ class ProductPage extends Page implements Kerbs
                                         'summary' => ['width' => '1/5'],
                                         'text' => ['width' => '3/5'],
                                         'open' => ['width' => '1/5'],
-                                    ]
+                                    ],
                                 ],
                                 'price' => [
                                     'label' => 'bnomei.kart.price',
@@ -314,12 +314,12 @@ class ProductPage extends Page implements Kerbs
         if (is_string($mainStock)) {
             return true;
         }
-        if(is_numeric($mainStock) && $mainStock > 0) {
+        if (is_numeric($mainStock) && $mainStock > 0) {
             return true;
         }
 
         $variantsStock = $this->stock(variant: '*');
-        if(is_numeric($variantsStock) && $variantsStock > 0) {
+        if (is_numeric($variantsStock) && $variantsStock > 0) {
             return true;
         }
 
@@ -520,11 +520,13 @@ class ProductPage extends Page implements Kerbs
             round(($this->rrprice()->toFloat() - $this->price()->toFloat()) / $this->rrprice()->toFloat() * 100) : 0;
     }
 
-    public function variantData(bool $resolveImage = false): array {
-        return $this->variants()->toStructure()->values(function($i) use ($resolveImage) {
+    public function variantData(bool $resolveImage = false): array
+    {
+        return $this->variants()->toStructure()->values(function ($i) use ($resolveImage) {
             $variants = $i->variant()->split();
             sort($variants);
             $variant = implode(',', $variants); // no whitespace
+
             return array_filter([
                 'options' => $variants,
                 'price' => $i->price()->isNotEmpty() ? $i->price()->toFloat() : null,
@@ -535,6 +537,7 @@ class ProductPage extends Page implements Kerbs
             ]);
         });
     }
+
     /*
      * like A::get($product->variantGroups(), 'size.xl')
      */
@@ -566,12 +569,12 @@ class ProductPage extends Page implements Kerbs
                 if (count($kv) === 2) {
                     $key = trim($kv[0]);
                     $var = trim($kv[1]);
-                    $groups[$key][$var] = t($key.'.'.$var, str_replace('-',' ', $var));
+                    $groups[$key][$var] = t($key.'.'.$var, str_replace('-', ' ', $var));
                 }
             }
         }
 
-        foreach(array_keys($groups) as $key) {
+        foreach (array_keys($groups) as $key) {
             $groups[$key] = array_unique($groups[$key]);
             asort($groups[$key]);
         }
@@ -604,7 +607,7 @@ class ProductPage extends Page implements Kerbs
         // resolve a variant string to validatable parts
         if ($va = A::get($data, 'variant')) {
             if (is_string($va)) {
-                foreach(explode(',', urldecode($va)) as $tag) {
+                foreach (explode(',', urldecode($va)) as $tag) {
                     $s = ':';
                     if (! str_contains($tag, $s)) {
                         $s = '=';
@@ -635,7 +638,7 @@ class ProductPage extends Page implements Kerbs
 
     public function priceWithVariant(?string $variant = null): float
     {
-        foreach($this->variantData(false) as $v) {
+        foreach ($this->variantData(false) as $v) {
             if ($v['variant'] === $variant) {
                 if ($price = A::get($v, 'price')) {
                     return $price;

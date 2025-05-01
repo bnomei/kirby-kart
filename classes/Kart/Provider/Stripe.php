@@ -19,6 +19,7 @@ use Bnomei\Kart\VirtualPage;
 use Closure;
 use Kirby\Http\Remote;
 use Kirby\Toolkit\A;
+use Kirby\Toolkit\Str;
 
 class Stripe extends Provider
 {
@@ -133,6 +134,7 @@ class Stripe extends Provider
                 'subtotal' => round(A::get($line, 'amount_subtotal', 0) / 100.0, 2),
                 'tax' => round(A::get($line, 'amount_tax', 0) / 100.0, 2),
                 'discount' => round(A::get($line, 'amount_discount', 0) / 100.0, 2),
+                'licensekey' => Str::uuid(),
             ];
         }
 

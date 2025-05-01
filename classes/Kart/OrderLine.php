@@ -34,6 +34,7 @@ class OrderLine implements Kerbs
         private readonly float $subtotal = 0,
         private readonly float $tax = 0,
         private readonly float $discount = 0,
+        private readonly ?string $licensekey = null,
         private readonly ?string $variant = null,
     ) {
         $this->product = kirby()->page($this->id);
@@ -62,6 +63,11 @@ class OrderLine implements Kerbs
     public function product(): ?ProductPage
     {
         return $this->product; // @phpstan-ignore-line
+    }
+
+    public function licensekey(): ?string
+    {
+        return $this->licensekey;
     }
 
     public function variant(): ?string
@@ -103,6 +109,7 @@ class OrderLine implements Kerbs
             'formattedSubtotal' => $this->formattedSubtotal(),
             'formattedTax' => $this->formattedTax(),
             'formattedTotal' => $this->formattedTotal(),
+            'licensekey' => $this->licensekey,
             'price' => $this->price(),
             'product' => $this->product()?->toKerbs(),
             'quantity' => $this->quantity(),

@@ -149,6 +149,7 @@ class Lemonsqueezy extends Provider
             'subtotal' => round(A::get($json, 'data.attributes.subtotal', 0) / 100.0, 2),
             'tax' => round(A::get($json, 'data.attributes.tax', 0) / 100.0, 2),
             'discount' => round(A::get($json, 'data.attributes.discount_total', 0) / 100.0, 2),
+            'licensekey' => Str::uuid(), // TODO: get the id and instance name and join with |
         ];
 
         return parent::completed($data);

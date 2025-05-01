@@ -10,7 +10,7 @@ fields:
   page:
     label: bnomei.kart.product
     type: pages
-    query: site.kart.page("demo/products")
+    query: site.kart.page("products")
     multiple: false
     subpages: false
     translate: false

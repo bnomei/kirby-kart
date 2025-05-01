@@ -17,6 +17,7 @@ use Bnomei\Kart\Provider;
 use Bnomei\Kart\ProviderEnum;
 use Bnomei\Kart\Router;
 use Kirby\Toolkit\A;
+use Kirby\Toolkit\Str;
 use Kirby\Uuid\Uuid;
 
 class Kirby extends Provider
@@ -73,6 +74,7 @@ class Kirby extends Provider
                 'subtotal' => $l->quantity() * $l->price(),
                 'tax' => 0,
                 'discount' => 0,
+                'licensekey' => Str::uuid(),
             ]),
         ]));
 

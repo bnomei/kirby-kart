@@ -14,6 +14,7 @@ return array(
     'Bnomei\\Kart\\Kart' => $baseDir . '/classes/Kart/Kart.php',
     'Bnomei\\Kart\\Kerbs' => $baseDir . '/classes/Kart/Kerbs.php',
     'Bnomei\\Kart\\License' => $baseDir . '/classes/Kart/License.php',
+    'Bnomei\\Kart\\Licenses' => $baseDir . '/classes/Kart/Licenses.php',
     'Bnomei\\Kart\\MagicLinkChallenge' => $baseDir . '/classes/Kart/MagicLinkChallenge.php',
     'Bnomei\\Kart\\Mixins\\Captcha' => $baseDir . '/classes/Kart/Mixins/Captcha.php',
     'Bnomei\\Kart\\Mixins\\ContentPages' => $baseDir . '/classes/Kart/Mixins/ContentPages.php',

@@ -19,6 +19,7 @@ use Bnomei\Kart\VirtualPage;
 use Closure;
 use Kirby\Http\Remote;
 use Kirby\Toolkit\A;
+use Kirby\Toolkit\Str;
 
 class Paypal extends Provider
 {
@@ -204,6 +205,7 @@ class Paypal extends Provider
                 'subtotal' => round(floatval(A::get($line, 'unit_amount.value', 0)), 2) * intval(A::get($line, 'quantity')),
                 'tax' => round(floatval(A::get($line, 'tax.value', 0)), 2),
                 'discount' => 0, // NOTE: paypal has no discount per item
+                'licensekey' => Str::uuid(),
             ];
         }
         // TODO: maybe add a line without a product linked if a global discount was set

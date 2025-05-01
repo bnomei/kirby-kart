@@ -21,6 +21,7 @@ it('can create orderlines', function (): void {
         123.4 * 2,
         10.0,
         20.0,
+        'yada',
     );
 
     expect($o)->toBeInstanceOf(OrderLine::class)
@@ -28,6 +29,7 @@ it('can create orderlines', function (): void {
         ->and($o->key())->toBe($o->id()) // Merx
         ->and($o->quantity())->toBe(2)
         ->and($o->doesNotExist())->toBeNull()
+        ->and($o->licensekey())->toBe('yada')
         ->and($o->product()->id())->toBe($product->id())
         ->and($o->formattedPrice())->toBe('€123.40')
         ->and($o->formattedSubtotal())->toBe('€246.80')

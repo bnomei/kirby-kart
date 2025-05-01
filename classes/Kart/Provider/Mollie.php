@@ -17,6 +17,7 @@ use Bnomei\Kart\Router;
 use Closure;
 use Kirby\Http\Remote;
 use Kirby\Toolkit\A;
+use Kirby\Toolkit\Str;
 
 class Mollie extends Provider
 {
@@ -188,6 +189,7 @@ class Mollie extends Provider
                 'subtotal' => round(floatval(A::get($line, 'totalAmount.value', 0)), 2),
                 'tax' => round(floatval(A::get($line, 'vatAmount.value', 0)), 2),
                 'discount' => round(floatval(A::get($line, 'discountAmount.value', 0)), 2),
+                'licensekey' => Str::uuid(),
             ];
         }
 

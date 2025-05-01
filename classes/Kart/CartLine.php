@@ -135,7 +135,7 @@ class CartLine implements Kerbs
 
     public function price(): float
     {
-        if (!$this->product()) {
+        if (! $this->product()) {
             return 0;
         }
 
@@ -144,7 +144,7 @@ class CartLine implements Kerbs
         if ($this->product()->hasVariant($variant)) {
             $matches = array_values(array_filter(
                 $this->product()->variantData(),
-                fn($v) => $v['variant'] === $variant
+                fn ($v) => $v['variant'] === $variant
             ));
             if (count($matches)) {
                 $price = A::get($matches[0], 'price', $price);

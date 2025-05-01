@@ -20,6 +20,7 @@ tabs:
           - 
             label: bnomei.kart.stock
             value: '{{ page.stock }}'
+            info: '{{ page.stock(null, "*") ? page.stock(null, "*") : "" }}'
             link: '{{ page.stockUrl }}'
       meta:
         type: fields
@@ -44,6 +45,13 @@ tabs:
                 label: bnomei.kart.details.open
                 type: toggle
                 default: false
+            columns:
+              summary:
+                width: 1/5
+              text:
+                width: 3/5
+              open:
+                width: 1/5
           price:
             label: bnomei.kart.price
             type: number
@@ -59,7 +67,7 @@ tabs:
             type: number
             min: 0
             step: 0.01
-            default: 0
+            placeholder: '{{ page.price }}'
             after: '{{ kirby.option("bnomei.kart.currency") }}'
             width: 1/4
             translate: false
@@ -135,11 +143,13 @@ tabs:
                 type: number
                 min: 0
                 step: 0.01
-                default: 0
                 after: '{{ kirby.option("bnomei.kart.currency") }}'
               image:
                 label: field.blocks.image.name
                 type: files
+                query: page.parent.files
+                uploads:
+                  parent: page.parent
           raw:
             type: hidden
             translate: false

@@ -44,7 +44,7 @@ class Cart implements Kerbs
         foreach ($items as $uuid => $line) {
             $variant = null;
             if (str_contains($uuid, '|')) {
-                list($uuid, $variant) = explode('|', $uuid);
+                [$uuid, $variant] = explode('|', $uuid);
             }
             $this->add(
                 $this->kirby->page($uuid) ?? $this->kirby->page('page://'.$uuid),

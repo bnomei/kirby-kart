@@ -61,6 +61,7 @@ App::plugin(
                 'categories' => true,
                 'crypto' => true,
                 'gravatar' => true,
+                'licenses' => true,
                 'orders' => true,
                 'products' => true,
                 'router' => true,
@@ -306,7 +307,7 @@ App::plugin(
                 },
             ],
             'kerbs' => [
-                'version' => fn () => Kart::hash(kirby()->plugin('bnomei/kart')->version()),
+                'version' => fn () => Kart::hash(kirby()->plugin('bnomei/kart')?->version() ?? __FILE__),
                 'shared' => function (): array {
                     return [
                         'kart' => kart()->toKerbs(),
@@ -315,7 +316,7 @@ App::plugin(
                             'products' => kart()->products()->values(fn (ProductPage $product) => $product->toKerbs(full: false)),
                             'tags' => kart()->tags()->values(),
                         ],
-                        'site' => kirby()->site()->toKerbs(),
+                        'site' => kirby()->site()->toKerbs(), // @phpstan-ignore-line
                         'user' => kirby()->user()?->toKerbs(),
                         'i18n' => array_filter(A::get(kirby()->translation(kirby()->language()?->code() ?? 'en')->toArray()['data'], [
                             // KIRBY
@@ -497,6 +498,8 @@ App::plugin(
                     kirby()->cache('bnomei.kart.stocks-holds')->flush();
                 } elseif ($page instanceof OrdersPage) {
                     kirby()->cache('bnomei.kart.orders')->flush();
+                } elseif ($page instanceof OrderPage) {
+                    kirby()->cache('bnomei.kart.licenses')->flush();
                 } elseif ($page instanceof ProductsPage) {
                     kirby()->cache('bnomei.kart.categories')->flush();
                     kirby()->cache('bnomei.kart.products')->flush();
@@ -512,6 +515,7 @@ App::plugin(
                 } elseif ($page instanceof StocksPage) {
                     kirby()->cache('bnomei.kart.stocks')->flush();
                 } elseif ($page instanceof OrderPage || $page instanceof OrdersPage) {
+                    kirby()->cache('bnomei.kart.licenses')->flush();
                     kirby()->cache('bnomei.kart.orders')->flush();
                 } elseif ($page instanceof ProductPage || $page instanceof ProductsPage) {
                     kirby()->cache('bnomei.kart.categories')->flush();
@@ -624,7 +628,7 @@ App::plugin(
                             'columns' => $layout->columns()->values(function (LayoutColumn $column) {
                                 return [
                                     'span' => $column->span(),
-                                    'blocks' => $column->blocks()->toKerbs(),
+                                    'blocks' => $column->blocks()->toKerbs(), // @phpstan-ignore-line
                                 ];
                             }),
                         ];
@@ -800,25 +804,25 @@ App::plugin(
                 $site = $this;
                 $page = $site->page();
                 // if has https://github.com/tobimori/kirby-seo
-                $metadata = $page->metadata();
+                $metadata = $page?->metadata(); // @phpstan-ignore-line
                 if (is_object($metadata) && is_a($metadata, '\\tobimori\\Seo\\Meta')) {
-                    $metadata = $metadata->metaArray();
+                    $metadata = $metadata->metaArray(); // @phpstan-ignore-line
                 }
                 // else sane defaults
-                if ($metadata instanceof Field) {
+                if ($page && $metadata instanceof Field) {
                     $metadata = [
-                        'title' => $page->isHomePage() ? $site->title()->value() : $page->title().' | '.$site->title(),
-                        'description' => Str::esc($page->description()->kti()),
+                        'title' => $page?->isHomePage() ? $site->title()->value() : $page->title().' | '.$site->title(),  // @phpstan-ignore-line
+                        'description' => Str::esc($page->description()->kti()), // @phpstan-ignore-line
                     ];
                 }
 
                 return array_filter([
-                    'title' => $this->title()->value(),
-                    'url' => $this->url(),
-                    'logo' => svg(kirby()->roots()->assets().'/logo.svg') ?: '[missing /assets/logo.svg]',
+                    'title' => $site->title()->value(), // @phpstan-ignore-line
+                    'url' => $site->url(),
+                    'logo' => svg(kirby()->roots()->assets().'/logo.svg') ?: '[missing /assets/logo.svg]', // @phpstan-ignore-line
                     'meta' => is_array($metadata) ? $metadata : [],
-                    'listed' => $site->children()->listed()->values(fn (Page $p) => $p->toKerbs()),
-                    'copyright' => $this->copyright()->isNotEmpty() ? $this->copyright()->kti()->value() : null,
+                    'listed' => $site->children()->listed()->values(fn (Page $p) => $p->toKerbs()), // @phpstan-ignore-line
+                    'copyright' => $site->copyright()->isNotEmpty() ? $this->copyright()->kti()->value() : null, // @phpstan-ignore-line
                 ]);
             },
         ],
