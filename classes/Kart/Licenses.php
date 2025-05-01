@@ -42,8 +42,8 @@ class Licenses
                 'created_at' => $order?->paidDate()->toDate('c'), // iso 8601
             ],
             'meta' => $order ? [
-                'order_id' => $order->title(),
-                'customer_name' => $customer?->name(),
+                'order_id' => $order->title()->value(),
+                'customer_name' => $customer?->name()?->value(),
                 'customer_email' => $customer?->email(),
             ] : [],
         ];

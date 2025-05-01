@@ -46,7 +46,7 @@ return function (App $kirby) {
                     return $r;
                 }
 
-                return Response::json()(kart()->option('captcha.set')());
+                return Response::json(kart()->option('captcha.set')());
             },
         ],
         [
@@ -59,7 +59,7 @@ return function (App $kirby) {
                     return $r;
                 }
 
-                return Response::json()(kart()->licenses()->validate(
+                return Response::json(kart()->licenses()->validate(
                     substr(trim(strip_tags(strval(get('license_key', '')))), 0, 36),
                 ));
             },
