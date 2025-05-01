@@ -160,13 +160,22 @@ class StockPage extends Page
         return $this->kirby()->impersonate('kirby', function () use ($amount, $set, $variant) {
             if ($variant) {
                 $updated = [];
+                /** @var \Kirby\Cms\StructureObject $variantItem */
                 foreach ($this->variants()->toStructure() as $variantItem) {
-                    if ($variantItem->variant()->value() === $variant) {
-                        $updated[] = $set ?
-                            ['variant' => $variant, 'stock' => $amount] :
-                            ['variant' => $variant, 'stock' => $variantItem->stock()->toInt() + $amount];
+                    $variants = $variantItem->variant()->split();
+                    sort($variants);
+                    $v = implode(',', $variants); // no whitespace
+                    if ($v === $variant) {
+                        $u = $set ?
+                            array_merge($variantItem->toArray(), ['stock' => $amount]) :
+                            array_merge($variantItem->toArray(), ['stock' => $variantItem->stock()->toInt() + $amount]);
+                        unset($u['id']);
+                        $updated[] = $u;
+                    } else {
+                        $updated[] = $variantItem->toArray();
                     }
                 }
+
                 $stock = $this->update(['variants' => Yaml::encode($updated)]);
             } else {
                 $stock = $set ?

@@ -327,12 +327,14 @@ class Cart implements Kerbs
         }
 
         foreach ($lines as $uuid => $line) {
-            $this->add(
-                $this->kirby->page($uuid) ?? $this->kirby->page('page://'.$uuid),
-                A::get($line, 'quantity'),
-                false,
-                A::get($line, 'variant'),
-            );
+            if ($product = $this->kirby->page($uuid) ?? $this->kirby->page('page://'.$uuid)) {
+                $this->add(
+                    $product,
+                    A::get($line, 'quantity'),
+                    false,
+                    A::get($line, 'variant'),
+                );
+            }
         }
         // NOTE: done by callee
         /*
