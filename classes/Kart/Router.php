@@ -51,6 +51,10 @@ class Router
 
     const KART = 'kart';
 
+    const LICENSES_ACTIVATE = 'kart/licenses/activate';
+
+    const LICENSES_DEACTIVATE = 'kart/licenses/deactivate';
+
     const LICENSES_VALIDATE = 'kart/licenses/validate';
 
     const LOGIN = 'kart/login';

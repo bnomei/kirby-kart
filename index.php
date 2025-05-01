@@ -119,6 +119,17 @@ App::plugin(
                     'uuid' => fn (?ProductsPage $products = null, array $props = []) => 'pr-'.Kart::hash(A::get($props, 'id', Kart::nonAmbiguousUuid(7))),
                 ],
             ],
+            'licenses' => [
+                'activate' => function(string $check, ?string $found = null, ?OrderPage $order = null, ?User $user = null) {
+                    return [];
+                },
+                'deactivate' => function(string $check, ?string $found = null, ?OrderPage $order = null, ?User $user = null) {
+                    return [];
+                },
+                'validate' => function(string $check, ?string $found = null,  ?OrderPage $order = null, ?User $user = null) {
+                    return [];
+                },
+            ],
             'queues' => [
                 'locking' => true, // with flock while reading
             ],

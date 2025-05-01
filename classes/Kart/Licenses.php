@@ -6,7 +6,7 @@ use Kirby\Toolkit\A;
 
 class Licenses
 {
-    public function validate(string $license_key): array
+    public function get(string $license_key): array
     {
         $licenses = kirby()->cache('bnomei.kart.licenses')->getOrSet('licenses', function () {
             $data = [];
@@ -33,8 +33,83 @@ class Licenses
             $error = 'Order for license key not found';
         }
 
-        // similar to https://docs.lemonsqueezy.com/api/license-api/validate-license-key
         return [
+            $license,
+            $order,
+            $customer,
+            $error,
+        ];
+    }
+
+    public function activate(string $license_key): array
+    {
+        [$license, $order, $customer, $error] = $this->get($license_key);
+
+        $data = kart()->option('licenses.activate', []);
+        if ($data instanceof \Closure) {
+            $data = $data($license_key, $license, $order, $customer);
+        }
+
+        // similar to https://docs.lemonsqueezy.com/api/license-api/activate-license-key
+        $data = array_merge([
+            'activated' => is_string($license),
+            'error' => is_string($error) ? $error : null,
+            'license_key' => [
+                'key' => $license,
+                'created_at' => $order?->paidDate()->toDate('c'), // iso 8601
+            ],
+            'meta' => $order ? [
+                'order_id' => $order->title()->value(),
+                'customer_name' => $customer?->name()?->value(),
+                'customer_email' => $customer?->email(),
+            ] : [],
+        ], $data);
+
+        kirby()->trigger('kart.license.activate', ['data' => $data]);
+
+        return $data;
+    }
+
+    public function deactivate(string $license_key): array
+    {
+        [$license, $order, $customer, $error] = $this->get($license_key);
+
+        $data = kart()->option('licenses.deactivate', []);
+        if ($data instanceof \Closure) {
+            $data = $data($license_key, $license, $order, $customer);
+        }
+
+        // similar to https://docs.lemonsqueezy.com/api/license-api/deactivate-license-key
+        $data = array_merge([
+            'deactivated' => is_string($license),
+            'error' => is_string($error) ? $error : null,
+            'license_key' => [
+                'key' => $license,
+                'created_at' => $order?->paidDate()->toDate('c'), // iso 8601
+            ],
+            'meta' => $order ? [
+                'order_id' => $order->title()->value(),
+                'customer_name' => $customer?->name()?->value(),
+                'customer_email' => $customer?->email(),
+            ] : [],
+        ], $data);
+
+        kirby()->trigger('kart.license.deactivate', ['data' => $data]);
+
+        return $data;
+    }
+
+    public function validate(string $license_key): array
+    {
+        [$license, $order, $customer, $error] = $this->get($license_key);
+
+        $data = kart()->option('licenses.validate', []);
+        if ($data instanceof \Closure) {
+            $data = $data($license_key, $license, $order, $customer);
+        }
+
+        // similar to https://docs.lemonsqueezy.com/api/license-api/validate-license-key
+        $data = array_merge([
             'valid' => is_string($license),
             'error' => is_string($error) ? $error : null,
             'license_key' => [
@@ -46,6 +121,10 @@ class Licenses
                 'customer_name' => $customer?->name()?->value(),
                 'customer_email' => $customer?->email(),
             ] : [],
-        ];
+        ], $data);
+
+        kirby()->trigger('kart.license.validate', ['data' => $data]);
+
+        return $data;
     }
 }
