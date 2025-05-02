@@ -18,7 +18,6 @@ use Closure;
 use Kirby\Http\Remote;
 use Kirby\Toolkit\A;
 use Kirby\Toolkit\Str;
-use SimpleCaptcha\Helpers\Str;
 
 class Square extends Provider
 {
