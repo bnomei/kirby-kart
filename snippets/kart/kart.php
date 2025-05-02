@@ -1,7 +1,7 @@
 <?php
 // KART localhost dev demo should not be used online
 if (! kirby()->environment()->isLocal()) {
-    // go('/', 418);
+    go('/', 418);
 }
 ?><!doctype html>
 <html lang="en">

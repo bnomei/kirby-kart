@@ -649,6 +649,16 @@ class ProductPage extends Page implements Kerbs
         return $this->price()->toFloat();
     }
 
+    public function ownedByUser(?\Kirby\Cms\User $user = null): bool
+    {
+        $user ??= kirby()->user();
+        if ($user === null) {
+            return false;
+        }
+
+        return $user->hasPurchased($this);
+    }
+
     public function toKerbs(bool $full = true): array
     {
         return array_filter([
