@@ -1,4 +1,7 @@
 <?php
+
+kart()->validateSignatureOrGo('/');
+
 snippet('kart/kart', slots: true);
 // COPY and modify the code below this line --------
 
@@ -6,7 +9,7 @@ snippet('kart/kart', slots: true);
 $order ??= $page;
 ?>
 
-<main>
+<main>1
     <article>
         <header>
             <h1>Your Order <?= $order->title() ?></h1>
@@ -43,7 +46,7 @@ $user = kirby()->user();
 if ($user && $user === $page->customer()->toUser()) { ?>
             <ol>
                 <?php foreach ($user->orders()->not($order) as $order) { ?>
-                    <li><a href="<?= $order->url() ?>"><?= $order->paidDate()->toDate('Y-m-d H:i') ?> <?= $order->title() ?></a></li>
+                    <li><a href="<?= $order->urlWithSignature() ?>"><?= $order->paidDate()->toDate('Y-m-d H:i') ?> <?= $order->title() ?></a></li>
                 <?php } ?>
             </ol>
         <?php } else { ?>

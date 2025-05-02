@@ -160,12 +160,10 @@ class Kart implements Kerbs
         }
 
         if (is_string($data)) {
-            $queryString = parse_url($data, PHP_URL_QUERY);
-            if (! is_string($queryString)) {
-                throw new Exception('Signature can only be generated from a valid URLs.');
-            }
+            ['query' => $query, 'path' => $path] = parse_url($data, PHP_URL_PATH | PHP_URL_QUERY);
             $data = [];
-            parse_str($queryString, $data);
+            parse_str($query ?? '', $data);
+            array_unshift($data, $path);
         }
 
         return hash_hmac(
@@ -181,6 +179,15 @@ class Kart implements Kerbs
             $signature,
             self::signature($url, $without)
         );
+    }
+
+    public function validateSignatureOrGo(string $redirect = '/', ?string $url = null): void
+    {
+        $url ??= kirby()->request()->url();
+        $signature = get('signature');
+        if (! $signature || self::checkSignature($signature, $url) === false) {
+            go($redirect);
+        }
     }
 
     public static function hash(string $value): string

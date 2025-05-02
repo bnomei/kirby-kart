@@ -1,6 +1,6 @@
 <?php /** @var OrderPage $order */ ?>
 <main>
-    <h1>Your Order: <a href="<?= $order->url() ?>" style="text-decoration: none"><code><?= $order->title() ?></code></a></h1>
+    <h1>Your Order: <a href="<?= $order->urlWithSignature() ?>" style="text-decoration: none"><code><?= $order->title() ?></code></a></h1>
 
     <table>
         <tr>
