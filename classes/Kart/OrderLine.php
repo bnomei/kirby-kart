@@ -37,7 +37,8 @@ class OrderLine implements Kerbs
         private readonly ?string $licensekey = null,
         private readonly ?string $variant = null,
     ) {
-        $this->product = kirby()->page($this->id);
+        $p = explode('|', $this->id); // id might contain variant to be unique in collection
+        $this->product = kirby()->page($p[0]);
     }
 
     public function __call(string $name, array $arguments): mixed
@@ -52,12 +53,9 @@ class OrderLine implements Kerbs
         return null;
     }
 
-    /**
-     * makes the product unique in the cart line collection
-     */
     public function id(): string
     {
-        return $this->product()?->uuid()->id() ?? $this->id;
+        return $this->id;
     }
 
     public function product(): ?ProductPage

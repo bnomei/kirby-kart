@@ -135,8 +135,9 @@ class Queue
                 $success = false;
                 try {
                     $success = $this->handle($job);
-                } catch (Throwable) {
-                    // ray($e->getMessage(), $job);
+                } catch (Throwable $e) {
+                    //ray($e->getMessage(), $job);
+                    $job['ERROR'] = $e->getMessage();
                 } finally {
                     if (! $success) {
                         $this->failed($job);

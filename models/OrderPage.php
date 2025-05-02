@@ -142,7 +142,7 @@ class OrderPage extends Page implements Kerbs
                             'multiple' => false,
                             // 'query' => 'kirby.users.filterBy("role", "customer")',
                             'translate' => false,
-                            'width' => '1/3',
+                            'width' => '1/4',
                         ],
                         'invnumber' => [
                             'label' => 'bnomei.kart.invoiceNumber',
@@ -152,12 +152,12 @@ class OrderPage extends Page implements Kerbs
                             // 'default' => 1, // Do not do this. Messes with auto-incrementing.
                             // 'required' => true,
                             'translate' => false,
-                            'width' => '1/3',
+                            'width' => '1/4',
                         ],
                         'paymentComplete' => [
                             'label' => 'bnomei.kart.paymentcomplete',
                             'type' => 'toggle',
-                            'width' => '1/3',
+                            'width' => '1/4',
                             'text' => [
                                 ['en' => 'No', 'de' => 'Nein'],
                                 ['en' => 'Yes', 'de' => 'Ja'],
@@ -167,7 +167,7 @@ class OrderPage extends Page implements Kerbs
                         'paymentMethod' => [
                             'label' => 'bnomei.kart.paymentmethod',
                             'type' => 'text',
-                            'width' => '1/3',
+                            'width' => '1/4',
                             'translate' => false,
                         ],
                         'paidDate' => [ // Merx 1.7+ https://github.com/wagnerwagner/merx/blob/8cadc64a0c4e98144c33b476094601560f204191/models/orderPageAbstract.php#L76C25-L76C33
@@ -183,11 +183,13 @@ class OrderPage extends Page implements Kerbs
                             'label' => 'bnomei.kart.paymentid',
                             'type' => 'text',
                             'translate' => false,
+                            'width' => '1/3',
                         ],
                         'invoiceurl' => [
                             'label' => 'bnomei.kart.invoice',
                             'type' => 'url',
                             'translate' => false,
+                            'width' => '1/3',
                         ],
                         'line' => [
                             'type' => 'line',
@@ -547,8 +549,9 @@ class OrderPage extends Page implements Kerbs
     {
         $lines = [];
         foreach ($this->items()->toStructure() as $line) {
+            $variant = $line->variant()->isNotEmpty() ? $line->variant()->value() : null;
             $lines[] = new OrderLine(
-                $line->key()->toPage()?->uuid()->toString() ?? $line->key()->value()[0],
+                ($line->key()->toPage()?->uuid()->toString() ?? $line->key()->value()[0]) . ($variant ? '|' . $variant : ''),
                 $line->price()->toFloat(),
                 $line->quantity()->toInt(),
                 $line->total()->toFloat(),
@@ -556,7 +559,7 @@ class OrderPage extends Page implements Kerbs
                 $line->tax()->toFloat(),
                 $line->discount()->toFloat(),
                 $line->licensekey()->value(),
-                $line->variant()->isNotEmpty() ? $line->variant()->value() : null,
+                $variant,
             );
         }
 

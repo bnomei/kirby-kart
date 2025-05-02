@@ -162,6 +162,7 @@ class StockPage extends Page
         }
 
         return $this->kirby()->impersonate('kirby', function () use ($amount, $set, $variant) {
+            $foundVariant = false;
             if ($variant) {
                 $updated = [];
                 /** @var \Kirby\Cms\StructureObject $variantItem */
@@ -175,13 +176,15 @@ class StockPage extends Page
                             array_merge($variantItem->toArray(), ['stock' => $variantItem->stock()->toInt() + $amount]);
                         unset($u['id']);
                         $updated[] = $u;
+                        $foundVariant = true;
                     } else {
-                        $updated[] = $variantItem->toArray();
+                        $updated[] = $variantItem->toArray(); // keep the original
                     }
                 }
 
                 $stock = $this->update(['variants' => Yaml::encode($updated)]);
-            } else {
+            }
+            if (! $foundVariant) {
                 $stock = $set ?
                     $this->update(['stock' => $amount]) :
                     $this->increment('stock', $amount);

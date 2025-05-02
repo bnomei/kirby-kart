@@ -389,7 +389,7 @@ class Cart implements Kerbs
 
         return $this->kirby->session()->pull(
             'kart.redirect.success',
-            $order ? $order->url() : $this->kirby->site()->url()
+            $order ? $order->urlWithSignature() : $this->kirby->site()->url()
         );
     }
 
