@@ -41,8 +41,8 @@ class Square extends Provider
         $remote = Remote::post('https://connect.squareup.com/v2/online-checkout/payment-link', [
             'headers' => array_filter([
                 'Content-Type' => 'application/json',
-                'Authorization' => 'Bearer '.strval($this->option('secret_key')),
-                'Square-Version' => $this->option('version'),
+                'Authorization' => 'Bearer '.strval($this->option('access_token')),
+                'Square-Version' => $this->option('api_version'),
             ]),
             'data' => json_encode(array_filter(array_merge([
                 'idempotency_key' => $uuid,
@@ -100,8 +100,8 @@ class Square extends Provider
         $remote = Remote::get('https://connect.squareup.com/v2/orders/'.$sessionId, [
             'headers' => array_filter([
                 'Content-Type' => 'application/json',
-                'Authorization' => 'Bearer '.strval($this->option('secret_key')),
-                'Square-Version' => $this->option('version'),
+                'Authorization' => 'Bearer '.strval($this->option('access_token')),
+                'Square-Version' => $this->option('api_version'),
             ]),
         ]);
         if ($remote->code() !== 200) {
@@ -115,8 +115,8 @@ class Square extends Provider
         $remote = Remote::get('https://connect.squareup.com/v2/customers/'.A::get($json, 'customer_id'), [
             'headers' => array_filter([
                 'Content-Type' => 'application/json',
-                'Authorization' => 'Bearer '.strval($this->option('secret_key')),
-                'Square-Version' => $this->option('version'),
+                'Authorization' => 'Bearer '.strval($this->option('access_token')),
+                'Square-Version' => $this->option('api_version'),
             ]),
         ]);
         if ($remote->code() === 200) {

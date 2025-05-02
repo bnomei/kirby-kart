@@ -1,6 +1,6 @@
 <?php
 
-kart()->validateSignatureOrGo('/');
+kart()->validateSignatureOrGo();
 
 use Bnomei\Kart\Kart;
 use Kirby\Cms\File;

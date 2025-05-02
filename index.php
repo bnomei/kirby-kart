@@ -191,13 +191,16 @@ App::plugin(
             'providers' => [
                 'checkout' => [],
                 'fastspring' => [
-                    // https://developer.fastspring.com/docs/storefront-urls#link-to-your-checkouts-with-the-api
                     'store_url' => fn () => class_exists('\Bnomei\DotEnv') ? DotEnv::getenv('FASTSPRING_STORE_URL') : 'https://acme.onfastspring.com',
                     'username' => fn () => class_exists('\Bnomei\DotEnv') ? DotEnv::getenv('FASTSPRING_USERNAME') : null,
                     'password' => fn () => class_exists('\Bnomei\DotEnv') ? DotEnv::getenv('FASTSPRING_PASSWORD') : null,
                     'checkout_options' => function (Kart $kart) {
                         // configure the checkout based on current kart instance
-                        // https://developer.paypal.com/docs/api/orders/v2/#orders_create
+                        // https://developer.fastspring.com/docs/storefront-urls#link-to-your-checkouts-with-the-api
+                        return [];
+                    },
+                    'checkout_line' => function (Kart $kart, CartLine $line) {
+                        // add custom data to the current checkout line
                         return [];
                     },
                     'virtual' => ['title', 'description', 'gallery'],
@@ -267,9 +270,9 @@ App::plugin(
                 ],
                 'shopify' => [],
                 'square' => [
-                    'secret_key' => fn () => class_exists('\Bnomei\DotEnv') ? DotEnv::getenv('SQUARE_ACCESS_TOKEN') : null,
+                    'access_token' => fn () => class_exists('\Bnomei\DotEnv') ? DotEnv::getenv('SQUARE_ACCESS_TOKEN') : null,
                     'location_id' => fn () => class_exists('\Bnomei\DotEnv') ? DotEnv::getenv('SQUARE_LOCATION_ID') : null,
-                    'version' => null, // null = default to current or set string with https://developer.squareup.com/docs/build-basics/versioning-overview
+                    'api_version' => fn () => class_exists('\Bnomei\DotEnv') ? DotEnv::getenv('SQUARE_API_VERSION') : null, // null = default to current or set string with https://developer.squareup.com/docs/build-basics/versioning-overview
                     'checkout_options' => function (Kart $kart) {
                         // configure the checkout based on current kart instance
                         // https://developer.squareup.com/reference/square/checkout-api/create-payment-link
@@ -280,6 +283,7 @@ App::plugin(
                         // https://developer.squareup.com/docs/orders-api/create-orders#create-an-ad-hoc-line-item
                         return [];
                     },
+                    'virtual' => false,
                 ],
                 'snipcart' => [
                     'public_key' => fn () => class_exists('\Bnomei\DotEnv') ? DotEnv::getenv('SNIPCART_PUBLIC_KEY') : null,

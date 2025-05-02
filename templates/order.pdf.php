@@ -1,6 +1,6 @@
 <?php
 
-kart()->validateSignatureOrGo('/');
+kart()->validateSignatureOrGo();
 
 snippet('kart/kart', slots: true);
 // COPY and modify the code below this line --------

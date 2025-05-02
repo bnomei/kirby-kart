@@ -40,15 +40,20 @@ class Fastspring extends Provider
             $options = $options($this->kart);
         }
 
+        $lineItem = $this->option('checkout_line', false);
+        if ($lineItem instanceof Closure === false) {
+            $lineItem = fn ($kart, $item) => [];
+        }
+
         // https://developer.fastspring.com/reference/create-a-session
         $remote = Remote::post('https://api.fastspring.com/sessions', [
             'headers' => $this->headers(),
             'data' => json_encode(array_filter(array_merge([
                 'account' => $this->kart->provider()->userData('customerId'), // TODO: required
-                'items' => $this->kart->cart()->lines()->values(fn (CartLine $l) => [
+                'items' => $this->kart->cart()->lines()->values(fn (CartLine $l) => array_merge([
                     'product' => A::get($l->product()?->raw()->yaml(), 'product', ''),
                     'quantity' => $l->quantity(),
-                ]),
+                ], $lineItem($this->kart, $l))),
             ], $options))),
         ]);
 
