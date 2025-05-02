@@ -203,6 +203,7 @@ class Router
         $request = kirby()->request();
         $value = $request->get($key, $default);
 
+        // if it has value encrypted, then prefer that
         $decrypted = self::decrypt($request->get(self::ENCRYPTED_QUERY));
         if (is_array($decrypted)) {
             $value = A::get($decrypted, $key, $value);
@@ -305,7 +306,7 @@ class Router
 
     public static function hasRatelimit(): ?int
     {
-        if (! kart()->option('ratelimit.enabled')) {
+        if (! kart()->option('middlewares.ratelimit.enabled')) {
             return null;
         }
 
@@ -314,11 +315,13 @@ class Router
 
     public static function hasCsrf(): ?int
     {
-        if (! kart()->option('middlewares.csrf')) {
+        // form data field name or false/null
+        $name = kart()->option('middlewares.csrf');
+        if (! $name) {
             return null;
         }
 
-        $token = self::get('token');
+        $token = self::get($name);
 
         // prefer from header if it exists
         $token = kirby()->request()->header(

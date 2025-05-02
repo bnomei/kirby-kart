@@ -10,6 +10,7 @@
 
 namespace Bnomei\Kart;
 
+use Kirby\Filesystem\Dir;
 use Kirby\Http\Visitor;
 
 class Ratelimit
@@ -60,12 +61,28 @@ class Ratelimit
         return true;
     }
 
-    public static function flush(?string $ip = null): void
+    public static function remove(?string $ip = null): void
     {
         $kirby = kirby();
         $ip ??= strval($kirby->visitor()->ip());
         $key = sha1(__DIR__.$ip.date('Ymd'));
 
         $kirby->cache('bnomei.kart.ratelimit')->remove($key);
+    }
+
+    public static function flush(): void
+    {
+        $kirby = kirby();
+        $dir = $kirby->cache('bnomei.kart.ratelimit')->root();
+        if (! is_dir($dir ?? '')) {
+            return;
+        }
+
+        foreach (Dir::files($dir, null, true) as $file) {
+            $time = filemtime($file);
+            if ($time && $time < time() - 3600) {
+                @unlink($file);
+            }
+        }
     }
 }

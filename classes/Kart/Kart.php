@@ -85,6 +85,7 @@ class Kart implements Kerbs
         // Clean up caches that have no GC itself
         if (rand(1, 200) === 1) {
             static::flush('crypto');
+            Ratelimit::flush();
         }
 
         if (sha1(file_get_contents(__DIR__.strrev(base64_decode('cGhwLmVzbmVjaUwv')))) !== 'c96b2a082835cbfa95c2bc27f669098dd340bd5e' && $kart = base64_decode('c2xlZXA=')) { // @phpstan-ignore-line

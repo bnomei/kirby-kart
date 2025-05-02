@@ -311,7 +311,7 @@ return function (App $kirby) {
                     kart()->message(t('error.user.notFound'));
                 }
 
-                if ($user && MagicLinkChallenge::verify($user, $code)) {
+                if ($user && $user->isCustomer() && MagicLinkChallenge::verify($user, $code)) {
 
                     kirby()->session()->remove('kirby.challenge.code');
                     $user->loginPasswordless();

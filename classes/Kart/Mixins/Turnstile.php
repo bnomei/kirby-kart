@@ -21,10 +21,7 @@ trait Turnstile
             return null;
         }
 
-        $response ??= get('cf-turnstile-response');
-        if (empty($response)) {
-            return null;
-        }
+        $response ??= get('cf-turnstile-response', '');
 
         $response = Remote::post(
             kart()->option('turnstile.endpoint'),

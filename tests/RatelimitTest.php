@@ -12,11 +12,11 @@ use Bnomei\Kart\Ratelimit;
 
 beforeEach(function (): void {
     $this->ip = '1.1.1.1';
-    Ratelimit::flush($this->ip);
+    Ratelimit::remove($this->ip);
 });
 
 afterEach(function (): void {
-    Ratelimit::flush($this->ip);
+    Ratelimit::remove($this->ip);
 });
 
 it('has a ratelimit helper class', function (): void {

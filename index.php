@@ -67,7 +67,6 @@ App::plugin(
                 'router' => true,
                 'queue' => true,
                 'ratelimit' => true,
-                'search' => true,
                 'stats' => true,
                 'stocks' => true,
                 'stocks-holds' => true,
@@ -993,7 +992,8 @@ App::plugin(
                     $dataUrl = "data:{$mimeType};base64,{$base64}";
 
                     // using the bnomei.kart.expire does not make sense for the long-lived url
-                    kirby()->cache('bnomei.kart.gravatar')->set(md5($url), $dataUrl, 60 * 24);
+                    // using user for cache id to only have one and better GC
+                    kirby()->cache('bnomei.kart.gravatar')->set($hash, $dataUrl, 60 * 24);
 
                     return $dataUrl;
                 }

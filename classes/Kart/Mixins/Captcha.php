@@ -21,16 +21,10 @@ trait Captcha
             $current = $current();
         }
         $response ??= $current;
-        if (! $response) {
-            return null;
-        }
 
         $secret = kart()->option('captcha.get');
         if ($secret instanceof Closure) {
             $secret = $secret();
-        }
-        if (! $secret) {
-            return null;
         }
 
         return $secret === $response ? null : 401;
