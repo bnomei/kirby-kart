@@ -133,7 +133,11 @@ class StockPage extends Page
      */
     public function stockPad(int $length): string
     {
-        return str_pad((string) $this->stock()->value(), $length, '0', STR_PAD_LEFT);
+        /** @var StocksPage $stocks */
+        $stocks = $this->parent();
+        $stock = $stocks->stock($this->page()->toPage()->uuid()->toString(), variant: '*');
+
+        return str_pad((string) $stock, $length, '0', STR_PAD_LEFT);
     }
 
     public function updateStock(int $amount = 0, bool $queue = true, bool $set = false, ?string $variant = null): ?int

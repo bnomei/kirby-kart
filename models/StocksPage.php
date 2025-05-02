@@ -41,7 +41,7 @@ class StocksPage extends Page
                         ],
                         [
                             'label' => 'bnomei.kart.stocks',
-                            'value' => '{{ page.children.sumField("stock").toInt }}',
+                            'value' => '{{ page.stock(null, null, "*") }}', // everything
                         ],
                         [
                             'label' => 'bnomei.kart.latest',
@@ -80,23 +80,34 @@ class StocksPage extends Page
         if (is_int($expire)) {
             $stocks = $this->kirby()->cache('bnomei.kart.stocks')->getOrSet('stocks', function () {
                 $stocks = [];
-                $c = 0;
+                $t = 0;
                 /** @var StockPage $stockPage */
                 foreach ($this->stockPages() as $stockPage) {
+                    $c = 0;
                     $page = $stockPage->page()->toPage();
                     if (! $page) {
                         continue;
                     }
-                    $stocks[$page->uuid()->toString()] = $stockPage->stock()->toInt();
+                    $p = $stockPage->stock()->toInt();
+                    $stocks[$page->uuid()->toString()] = $p;
+                    $t += $p;
                     foreach ($stockPage->variants()->toStructure() as $var) {
                         $v = $var->variant()->split();
                         sort($v);
                         $v = implode(',', $v); // no whitespace
-                        $stocks[$page->uuid()->toString().'|'.$v] = $var->stock()->toInt();
-                        $c += $var->stock()->toInt();
+                        if ($var->stock()->isNotEmpty()) {
+                            $stocks[$page->uuid()->toString() . '|' . $v] = $var->stock()->toInt();
+                            $c += $var->stock()->toInt();
+                        }
+                    }
+                    $t += $c;
+                    if ($p + $c > 0) {
+                        $stocks[$page->uuid()->toString().'|*'] = $p + $c;
                     }
                 }
-                $stocks[$page->uuid()->toString().'|*'] = $c;
+                if ($t > 0) {
+                    $stocks['|*'] = $t; // null id and all variants AKA everything
+                }
 
                 return $stocks;
             }, $expire);
@@ -105,21 +116,17 @@ class StocksPage extends Page
         } else {
             // slowish...
             $stocks = $this->stockPages($id);
-            if (! $variant) {
-                $stock = $stocks->count() ? $stocks->sumField('stock')->toInt() : null;
-            } else {
-                $stock = null;
-                foreach ($stocks as $p) {
-                    foreach ($p->variants()->toStructure() as $var) {
-                        $v = $var->variant()->split();
-                        sort($v);
-                        $v = implode(',', $v); // no whitespace
-                        if ($v === $variant || $variant === '*') {
-                            if ($stock === null) {
-                                $stock = 0;
-                            }
-                            $stock += $var->stock()->toInt();
+            $stock = $stocks->count() ? $stocks->sumField('stock')->toInt() : null;
+            foreach ($stocks as $p) {
+                foreach ($p->variants()->toStructure() as $var) {
+                    $v = $var->variant()->split();
+                    sort($v);
+                    $v = implode(',', $v); // no whitespace
+                    if ($variant && ($v === $variant || $variant === '*')) {
+                        if ($stock === null) {
+                            $stock = 0;
                         }
+                        $stock += $var->stock()->toInt();
                     }
                 }
             }

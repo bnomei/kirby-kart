@@ -89,8 +89,7 @@ class ProductPage extends Page implements Kerbs
                                 ],
                                 [
                                     'label' => 'bnomei.kart.stock',
-                                    'value' => '{{ page.stock }}',
-                                    'info' => '{{ page.stock(null, "*") ? page.stock(null, "*") : "" }}', // variants
+                                    'value' => '{{ page.stock(null, "*") }}',
                                     'link' => '{{ page.stockUrl }}',
                                 ],
                             ],

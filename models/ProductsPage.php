@@ -68,7 +68,7 @@ class ProductsPage extends Page
                             'layout' => 'cards',
                             'search' => true,
                             'template' => 'product', // maps to ProductPage model
-                            'info' => '{{ page.formattedPrice }}',
+                            'info' => '{{ page.formattedPrice }} [{{ page.stock(null, "*") }}]',
                             'image' => [
                                 'query' => 'page.gallery.first.toFile',
                             ],
