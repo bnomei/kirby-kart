@@ -23,6 +23,7 @@ enum ProviderEnum: string
     case PAYPAL = 'paypal';
     case PAYONE = 'payone';
     case SHOPIFY = 'shopify';
+    case SQUARE = 'square';
     case SNIPCART = 'snipcart';
     case STRIPE = 'stripe';
 }

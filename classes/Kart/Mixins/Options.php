@@ -40,6 +40,7 @@ trait Options
             'orders.order.uuid',
             'products.product.uuid',
             'stocks.stock.uuid',
+            'licenses.license.uuid',
             'licenses.activate',
             'licenses.deactivate',
             'licenses.validate',
@@ -55,6 +56,8 @@ trait Options
             'providers.paypal.checkout_options',
             'providers.paypal.checkout_line',
             'providers.snipcart.checkout_options',
+            'providers.square.checkout_options',
+            'providers.square.checkout_line',
             'providers.stripe.checkout_options',
             'providers.stripe.checkout_line',
         ])) {

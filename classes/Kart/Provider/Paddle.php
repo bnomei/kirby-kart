@@ -173,7 +173,7 @@ class Paddle extends Provider
                 'subtotal' => round(A::get($line, 'totals.subtotal', 0) / 100.0, 2),
                 'tax' => round(A::get($line, 'totals.tax', 0) / 100.0, 2),
                 'discount' => round(A::get($line, 'totals.discount', 0) / 100.0, 2),
-                'licensekey' => Str::uuid(),
+                'licensekey' => kart()->option('licenses.license.uuid')($data + ['line' => $line] + ['price' => $price]),
             ];
         }
 

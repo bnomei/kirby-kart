@@ -34,9 +34,12 @@
     "payone",
     "paypal",
     "provider",
+    "product",
+    "product-variants",
     "sell",
     "shop",
     "shopify",
+    "square",
     "snipcart",
     "stripe",
     "stock"

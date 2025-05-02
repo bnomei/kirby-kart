@@ -205,7 +205,7 @@ class Paypal extends Provider
                 'subtotal' => round(floatval(A::get($line, 'unit_amount.value', 0)), 2) * intval(A::get($line, 'quantity')),
                 'tax' => round(floatval(A::get($line, 'tax.value', 0)), 2),
                 'discount' => 0, // NOTE: paypal has no discount per item
-                'licensekey' => Str::uuid(),
+                'licensekey' => kart()->option('licenses.license.uuid')($data + $json + ['line' => $line]),
             ];
         }
         // TODO: maybe add a line without a product linked if a global discount was set

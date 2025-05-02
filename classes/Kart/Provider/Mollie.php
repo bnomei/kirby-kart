@@ -189,7 +189,7 @@ class Mollie extends Provider
                 'subtotal' => round(floatval(A::get($line, 'totalAmount.value', 0)), 2),
                 'tax' => round(floatval(A::get($line, 'vatAmount.value', 0)), 2),
                 'discount' => round(floatval(A::get($line, 'discountAmount.value', 0)), 2),
-                'licensekey' => Str::uuid(),
+                'licensekey' => kart()->option('licenses.license.uuid')($data + ['line' => $line]),
             ];
         }
 

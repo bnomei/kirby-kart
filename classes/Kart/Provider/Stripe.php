@@ -134,7 +134,7 @@ class Stripe extends Provider
                 'subtotal' => round(A::get($line, 'amount_subtotal', 0) / 100.0, 2),
                 'tax' => round(A::get($line, 'amount_tax', 0) / 100.0, 2),
                 'discount' => round(A::get($line, 'amount_discount', 0) / 100.0, 2),
-                'licensekey' => Str::uuid(),
+                'licensekey' => kart()->option('licenses.license.uuid')($data + $json + ['line' => $line]),
             ];
         }
 

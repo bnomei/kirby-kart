@@ -74,7 +74,7 @@ class Kirby extends Provider
                 'subtotal' => $l->quantity() * $l->price(),
                 'tax' => 0,
                 'discount' => 0,
-                'licensekey' => Str::uuid(),
+                'licensekey' => kart()->option('licenses.license.uuid')($input + ['line' => $l->toArray()]),
             ]),
         ]));
 
