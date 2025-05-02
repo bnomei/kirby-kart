@@ -176,7 +176,7 @@ App::plugin(
                 'csrf' => 'token', // null|false or name of form data
                 'ratelimit' => [
                     'enabled' => true,
-                    'limit' => 30 * 60, // N requests in 60 seconds
+                    'limit' => 60, // N requests within one minute
                 ],
                 'enabled' => function (): array {
                     // could do different stuff based on kirby()->request()

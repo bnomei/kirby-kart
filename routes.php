@@ -53,14 +53,12 @@ return function (App $kirby) {
             'pattern' => Router::LICENSES_ACTIVATE,
             'method' => 'POST',
             'action' => function () {
-                if ($r = Router::denied([
-                    Router::class.'::hasRatelimit',
-                ], exclusive: true)) {
+                if ($r = Router::denied()) {
                     return $r;
                 }
 
                 return Response::json(kart()->licenses()->activate(
-                    substr(trim(strip_tags(strval(get('license_key', '')))), 0, 36),
+                    substr(trim(strip_tags(strval(Router::get('license_key', '')))), 0, 36),
                 ));
             },
         ],
@@ -68,14 +66,12 @@ return function (App $kirby) {
             'pattern' => Router::LICENSES_DEACTIVATE,
             'method' => 'POST',
             'action' => function () {
-                if ($r = Router::denied([
-                    Router::class.'::hasRatelimit',
-                ], exclusive: true)) {
+                if ($r = Router::denied()) {
                     return $r;
                 }
 
                 return Response::json(kart()->licenses()->deactivate(
-                    substr(trim(strip_tags(strval(get('license_key', '')))), 0, 36),
+                    substr(trim(strip_tags(strval(Router::get('license_key', '')))), 0, 36),
                 ));
             },
         ],
@@ -83,29 +79,12 @@ return function (App $kirby) {
             'pattern' => Router::LICENSES_VALIDATE,
             'method' => 'POST',
             'action' => function () {
-                if ($r = Router::denied([
-                    Router::class.'::hasRatelimit',
-                ], exclusive: true)) {
+                if ($r = Router::denied()) {
                     return $r;
                 }
 
                 return Response::json(kart()->licenses()->validate(
-                    substr(trim(strip_tags(strval(get('license_key', '')))), 0, 36),
-                ));
-            },
-        ],
-        [
-            'pattern' => Router::LICENSES_VALIDATE,
-            'method' => 'POST',
-            'action' => function () {
-                if ($r = Router::denied([
-                    Router::class.'::hasRatelimit',
-                ], exclusive: true)) {
-                    return $r;
-                }
-
-                return Response::json(kart()->licenses()->validate(
-                    substr(trim(strip_tags(strval(get('license_key', '')))), 0, 36),
+                    substr(trim(strip_tags(strval(Router::get('license_key', '')))), 0, 36),
                 ));
             },
         ],

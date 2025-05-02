@@ -26,22 +26,15 @@ class Ratelimit
             return true;
         }
 
-        $cacheDurationInMinutes = 60;
-        $rateLimitResetIntervalInSeconds = 60;
+        $cacheDurationInMinutes = intval(kart()->option('middlewares.ratelimit.duration', 1));
 
         $ip ??= strval($kirby->visitor()->ip());
-        $limit = intval(kart()->option('middlewares.ratelimit.limit')); // 12 per minute within 1 hour
+        $limit = intval(kart()->option('middlewares.ratelimit.limit'));
         $key = sha1(__DIR__.$ip.date('Ymd'));
-        [$expireAt, $count] = $kirby->cache('bnomei.kart.ratelimit')->get(
+        $count = $kirby->cache('bnomei.kart.ratelimit')->get(
             $key,
-            [time() + $rateLimitResetIntervalInSeconds * $cacheDurationInMinutes, 0] // defaults to expire with caching duration if there is no cache, which will be once every hour
+            0
         );
-
-        // reset if set expire time has passed
-        if ($expireAt < time()) {
-            $expireAt = time() + $rateLimitResetIntervalInSeconds;
-            $count = 0;
-        }
 
         $count++;
 
@@ -55,8 +48,8 @@ class Ratelimit
 
             return false;
         }
-        // write after check to avoid unnecessary writes if ratelimit was hit
-        $kirby->cache('bnomei.kart.ratelimit')->set($key, [$expireAt, $count], $cacheDurationInMinutes); // store for 1 hour
+        // write after check to avoid unnecessary writes if the rate limit was hit
+        $kirby->cache('bnomei.kart.ratelimit')->set($key, $count, $cacheDurationInMinutes); // store for N minutes
 
         return true;
     }
@@ -78,9 +71,11 @@ class Ratelimit
             return;
         }
 
+        $cacheDurationInMinutes = intval(kart()->option('middlewares.ratelimit.duration', 1));
+
         foreach (Dir::files($dir, null, true) as $file) {
             $time = filemtime($file);
-            if ($time && $time < time() - 3600) {
+            if ($time && $time < time() - ($cacheDurationInMinutes * 60)) {
                 @unlink($file);
             }
         }
