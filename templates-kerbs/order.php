@@ -1,4 +1,3 @@
 <?php
-
 kart()->validateSignatureOrGo();
 kerbs();
