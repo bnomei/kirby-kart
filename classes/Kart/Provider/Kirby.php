@@ -32,6 +32,7 @@ class Kirby extends Provider
     {
         $session_id = sha1(Uuid::generate());
         $this->kirby->session()->set('bnomei.kart.'.$this->name.'.session_id', $session_id);
+        $this->kirby->session()->set('bnomei.kart.'.$this->name.'.cart_hash', $this->kart->cart()->hash());
 
         return parent::checkout() ? Router::provider_payment([
             'success_url' => url(Router::PROVIDER_SUCCESS).'?session_id='.$session_id,
@@ -42,6 +43,11 @@ class Kirby extends Provider
     {
         $sessionId = A::get($data, 'session_id', get('session_id'));
         if (! $sessionId || $sessionId !== $this->kirby->session()->get('bnomei.kart.'.$this->name.'.session_id')) {
+            return [];
+        }
+
+        // check that cart has not been modified
+        if ($this->kirby->session()->get('bnomei.kart.'.$this->name.'.cart_hash') !== $this->kart->cart()->hash()) {
             return [];
         }
 

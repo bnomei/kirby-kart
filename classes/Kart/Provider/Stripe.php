@@ -61,6 +61,8 @@ class Stripe extends Provider
             throw new \Exception('Checkout failed', $remote->code());
         }
 
+        $this->kirby->session()->set('bnomei.kart.'.$this->name.'.session_id', $remote->json()['id']);
+
         return parent::checkout() && $remote->code() === 200 ?
             $remote->json()['url'] : '/';
     }
@@ -69,7 +71,7 @@ class Stripe extends Provider
     {
         // get session from current session id param
         $sessionId = get('session_id');
-        if (! $sessionId || ! is_string($sessionId)) {
+        if (! $sessionId || ! is_string($sessionId) || $sessionId !== $this->kirby->session()->get('bnomei.kart.'.$this->name.'.session_id')) {
             return [];
         }
 
@@ -136,6 +138,8 @@ class Stripe extends Provider
                 'licensekey' => kart()->option('licenses.license.uuid')($data + $json + ['line' => $line]),
             ];
         }
+
+        $this->kirby->session()->remove('bnomei.kart.'.$this->name.'.session_id');
 
         return parent::completed($data);
     }

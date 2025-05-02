@@ -350,6 +350,14 @@ class Cart implements Kerbs
     {
         $data = $this->kart->provider()->completed();
 
+        // if the completed URL has been called with an invalid state, die silently
+        if (empty($data)) {
+            return $this->kirby->session()->pull(
+                'kart.redirect.canceled',
+                $this->kirby->site()->url()
+            );
+        }
+
         $customer = $this->kart->createOrUpdateCustomer($data);
 
         /** @var OrdersPage|null $orders */

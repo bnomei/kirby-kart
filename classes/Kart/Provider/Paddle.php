@@ -85,7 +85,7 @@ class Paddle extends Provider
     {
         // get session from current session id param
         $sessionId = get('session_id');
-        if (! $sessionId || ! is_string($sessionId)) {
+        if (! $sessionId || ! is_string($sessionId) || $sessionId !== $this->kirby->session()->get('bnomei.kart.'.$this->name.'.session_id')) {
             return [];
         }
 
@@ -175,6 +175,8 @@ class Paddle extends Provider
                 'licensekey' => kart()->option('licenses.license.uuid')($data + ['line' => $line] + ['price' => $price]),
             ];
         }
+
+        $this->kirby->session()->remove('bnomei.kart.'.$this->name.'.session_id');
 
         return parent::completed($data);
     }

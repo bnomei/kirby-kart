@@ -160,6 +160,8 @@ class Square extends Provider
             ];
         }
 
+        $this->kirby->session()->remove('bnomei.kart.'.$this->name.'.session_id');
+
         return parent::completed($data);
     }
 }

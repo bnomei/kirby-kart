@@ -152,6 +152,8 @@ class Lemonsqueezy extends Provider
             'licensekey' => kart()->option('licenses.license.uuid')($data + $json), // TODO: get the id and instance name and join with |
         ];
 
+        $this->kirby->session()->remove('bnomei.kart.'.$this->name.'.session_id');
+
         return parent::completed($data);
     }
 
