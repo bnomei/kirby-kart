@@ -17,7 +17,6 @@ use Bnomei\Kart\Router;
 use Closure;
 use Kirby\Http\Remote;
 use Kirby\Toolkit\A;
-use Kirby\Toolkit\Str;
 
 class Mollie extends Provider
 {

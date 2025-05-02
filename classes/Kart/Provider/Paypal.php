@@ -19,7 +19,6 @@ use Bnomei\Kart\VirtualPage;
 use Closure;
 use Kirby\Http\Remote;
 use Kirby\Toolkit\A;
-use Kirby\Toolkit\Str;
 
 class Paypal extends Provider
 {
