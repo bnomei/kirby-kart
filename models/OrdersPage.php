@@ -23,6 +23,13 @@ class OrdersPage extends Page
     {
         return [
             'name' => 'orders',
+            'image' => [
+                'back' => 'var(--color-black)',
+                'color' => 'var(--color-gray-500)',
+                'cover' => true,
+                'icon' => 'kart-orders',
+                'query' => false,
+            ],
             'options' => [
                 'preview' => false,
                 'changeSlug' => false,

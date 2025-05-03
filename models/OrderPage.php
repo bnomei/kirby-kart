@@ -101,6 +101,13 @@ class OrderPage extends Page implements Kerbs
     {
         return [
             'name' => 'order',
+            'image' => [
+                'back' => 'var(--color-black)',
+                'color' => 'var(--color-gray-500)',
+                'cover' => true,
+                'icon' => 'kart-order',
+                'query' => false,
+            ],
             'options' => [
                 'preview' => '{{page.urlWithSignature}}',
                 'changeSlug' => false,

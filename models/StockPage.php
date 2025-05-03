@@ -49,6 +49,13 @@ class StockPage extends Page
     {
         return [
             'name' => 'stock',
+            'image' => [
+                'back' => 'var(--color-black)',
+                'color' => 'var(--color-gray-500)',
+                'cover' => true,
+                'icon' => 'kart-stock',
+                'query' => false,
+            ],
             'options' => [
                 'changeSlug' => false,
                 'changeTitle' => false,
@@ -64,10 +71,16 @@ class StockPage extends Page
                     'type' => 'pages',
                     'query' => 'site.kart.page("products")', // TODO: .withoutStocks does not work
                     // 'required' => true,
+                    'info' => '{{ page.formattedPrice }}{{ page.featured.ecco(" ★") }}{{ page.variants.ecco(" ❖") }}',
+                    // 'layout' => 'cards',
                     'multiple' => false,
                     'subpages' => false,
                     'translate' => false,
-                    'width' => '2/3',
+                    'width' => '1/4',
+                    'image' => [
+                        'cover' => true,
+                        'query' => 'page.gallery.toFiles.first',
+                    ]
                 ],
                 'timestamp' => [
                     'label' => 'bnomei.kart.timestamp',
@@ -76,7 +89,11 @@ class StockPage extends Page
                     'time' => true,
                     'default' => 'now',
                     'translate' => false,
-                    'width' => '1/3',
+                    'width' => '1/4',
+                ],
+                'gap1' => [
+                    'type' => 'gap',
+                    'width' => '1/2',
                 ],
                 'stock' => [
                     'label' => 'bnomei.kart.stock',
@@ -86,14 +103,14 @@ class StockPage extends Page
                     'step' => 1,
                     'default' => 0,
                     'translate' => false,
-                    'width' => '1/2',
+                    'width' => '1/4',
                 ],
                 'variants' => [
                     'label' => 'bnomei.kart.variants',
                     'type' => 'structure',
                     'after' => '{{ kirby.option("bnomei.kart.currency") }}',
                     'translate' => false,
-                    'width' => '1/2',
+                    'width' => '3/4',
                     'fields' => [
                         'variant' => [
                             'label' => 'bnomei.kart.variant',
@@ -108,7 +125,6 @@ class StockPage extends Page
                         ],
                     ],
                 ],
-
             ],
         ];
     }
@@ -133,9 +149,12 @@ class StockPage extends Page
      */
     public function stockPad(int $length): string
     {
-        /** @var StocksPage $stocks */
-        $stocks = $this->parent();
-        $stock = $stocks->stock($this->page()->toPage()->uuid()->toString(), variant: '*');
+        /** @var ProductPage $product */
+        $product = $this->page()->toPage();
+        $stock = $product?->stockWithVariants();
+        if (is_string($stock)) {
+            return $stock;
+        }
 
         return str_pad((string) $stock, $length, '0', STR_PAD_LEFT);
     }

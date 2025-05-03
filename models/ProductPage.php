@@ -67,6 +67,11 @@ class ProductPage extends Page implements Kerbs
         return [
             'name' => 'product',
             'num' => '{{ page.created.toDate("YmdHis") }}',
+            'image' => [
+                'icon' => 'blank',
+                'cover' => true,
+                'query' => 'page.gallery.toFiles.first',
+            ],
             'options' => [
                 'changeTemplate' => false,
             ],
@@ -85,11 +90,11 @@ class ProductPage extends Page implements Kerbs
                                 [
                                     'label' => 'bnomei.kart.sales-count',
                                     'value' => '{{ page.salesCount }}',
-                                    'link' => '{{ site.kart.page("orders").url }}',
+                                    'link' => '{{ site.kart.page("orders")?.panel.url }}',
                                 ],
                                 [
                                     'label' => 'bnomei.kart.stock',
-                                    'value' => '{{ page.stock(null, "*") }}',
+                                    'value' => '{{ page.stockWithVariants }}',
                                     'link' => '{{ page.stockUrl }}',
                                 ],
                             ],
@@ -291,7 +296,7 @@ class ProductPage extends Page implements Kerbs
                 'local' => [
                     'label' => 'bnomei.kart.local-storage',
                     'icon' => 'server',
-                    'extends' => 'tabs/product',
+                    'extends' => 'tabs/product-local',
                 ],
             ],
         ];
@@ -309,20 +314,27 @@ class ProductPage extends Page implements Kerbs
      */
     public function inStock(): bool
     {
-        $mainStock = $this->stock();
-        if (is_string($mainStock)) {
-            return true;
-        }
-        if (is_numeric($mainStock) && $mainStock > 0) {
+        $stock = $this->stockWithVariants();
+        if (is_string($stock)) {
             return true;
         }
 
-        $variantsStock = $this->stock(variant: '*');
-        if (is_numeric($variantsStock) && $variantsStock > 0) {
-            return true;
+        return $stock > 0;
+    }
+
+    /**
+     * @kql-allowed
+     */
+    public function stockWithVariants(): int|string
+    {
+        $self = $this->stock();
+        $variants = $this->stock(variant: '*');
+
+        if (is_string($self) || is_string($variants)) {
+            return $self;
         }
 
-        return false;
+        return $self + $variants;
     }
 
     /**

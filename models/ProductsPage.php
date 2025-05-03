@@ -18,6 +18,13 @@ class ProductsPage extends Page
     {
         return [
             'name' => 'products',
+            'image' => [
+                'back' => 'var(--color-black)',
+                'color' => 'var(--color-gray-500)',
+                'cover' => true,
+                'icon' => 'kart-store',
+                'query' => false,
+            ],
             'options' => [
                 'changeSlug' => false,
                 'changeTemplate' => false,
@@ -44,6 +51,11 @@ class ProductsPage extends Page
                                 [
                                     'label' => 'bnomei.kart.products',
                                     'value' => '{{ page.children.count }}',
+                                ],
+                                [
+                                    'label' => 'bnomei.kart.out-of-stock',
+                                    'value' => '{{ page.outOfStock.count }}',
+                                    'link' => '{{ site.kart.page("stocks")?.panel.url }}',
                                 ],
                                 [
                                     'label' => 'bnomei.kart.provider',
@@ -83,7 +95,7 @@ class ProductsPage extends Page
                             'layout' => 'cards',
                             'search' => true,
                             'template' => 'product', // maps to ProductPage model
-                            'info' => '{{ page.formattedPrice }} [{{ page.stock(null, "*") }}] {{ page.featured.ecco("★") }} {{ page.variants.ecco("❖") }}',
+                            'info' => '{{ page.formattedPrice }} [{{ page.stock }}]{{ page.inStock ? "" : " ⚠️" }}{{ page.featured.ecco(" ★") }}{{ page.variants.ecco(" ❖") }}',
                             'image' => [
                                 'cover' => true,
                                 'query' => 'page.gallery.first.toFile',
@@ -145,5 +157,13 @@ class ProductsPage extends Page
     public function tags(): Field
     {
         return new Field($this, 'tags', implode(',', kart()->allTags()));
+    }
+
+    public function outOfStock(): Pages
+    {
+        return $this->children()->filterBy(function (ProductPage $p) {
+            $stock = $p->stockWithVariants();
+                return !(is_string($stock) || $stock > 0);
+        });
     }
 }

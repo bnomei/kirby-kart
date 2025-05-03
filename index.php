@@ -14,7 +14,6 @@ use Bnomei\Kart\CaptchaBuilder;
 use Bnomei\Kart\Cart;
 use Bnomei\Kart\CartLine;
 use Bnomei\Kart\Kart;
-use Bnomei\Kart\Kerbs;
 use Bnomei\Kart\License;
 use Bnomei\Kart\MagicLinkChallenge;
 use Bnomei\Kart\Router;
@@ -474,6 +473,7 @@ App::plugin(
             'pages/products' => ProductsPage::phpBlueprint(),
             'pages/stock' => StockPage::phpBlueprint(),
             'pages/stocks' => StocksPage::phpBlueprint(),
+            'tabs/product-local' => __DIR__.'/blueprints/tabs/product-local.yml',
         ],
         'templates' => [
             'cart' => __DIR__.'/templates/cart.php',

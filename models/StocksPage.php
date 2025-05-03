@@ -19,6 +19,13 @@ class StocksPage extends Page
     {
         return [
             'name' => 'stocks',
+            'image' => [
+                'back' => 'var(--color-black)',
+                'color' => 'var(--color-gray-500)',
+                'cover' => true,
+                'icon' => 'kart-stocks',
+                'query' => false,
+            ],
             'options' => [
                 'preview' => false,
                 'changeSlug' => false,
@@ -37,7 +44,11 @@ class StocksPage extends Page
                         [
                             'label' => 'bnomei.kart.products',
                             'value' => '{{ page.children.count }}',
-                            'link' => '{{ site.kart.page("products").panel.url }}',
+                            'link' => '{{ site.kart.page("products")?.panel.url }}',
+                        ],
+                        [
+                            'label' => 'bnomei.kart.out-of-stock',
+                            'value' => '{{ site.kart.page("products")?.outOfStock.count }}',
                         ],
                         [
                             'label' => 'bnomei.kart.stocks',
@@ -60,10 +71,10 @@ class StocksPage extends Page
                 'stocks' => [
                     'label' => 'bnomei.kart.stocks',
                     'type' => 'pages',
-                    'search' => true,
+                    // 'search' => true,
                     'template' => 'stock', // maps to StockPage model
                     'sortBy' => 'timestamp desc',
-                    'text' => '[{{ page.stockPad(3) }}] {{ page.page.toPage.title }}',
+                    'text' => '{{ page.page.toPage.inStock ? "" : "⚠️ " }}[{{ page.stockPad(3) }}] {{ page.page.toPage.title }}',
                     'info' => '{{ page.title }} ・ {{ page.timestamp }}',
                     'limit' => 1000,
                 ],
@@ -101,8 +112,11 @@ class StocksPage extends Page
                         }
                     }
                     $t += $c;
+                    if ($c > 0) {
+                        $stocks[$page->uuid()->toString().'|*'] = $c;
+                    }
                     if ($p + $c > 0) {
-                        $stocks[$page->uuid()->toString().'|*'] = $p + $c;
+                        $stocks[$page->uuid()->toString().'|='] = $p + $c;
                     }
                 }
                 if ($t > 0) {
@@ -116,7 +130,7 @@ class StocksPage extends Page
         } else {
             // slowish...
             $stocks = $this->stockPages($id);
-            $stock = $stocks->count() ? $stocks->sumField('stock')->toInt() : null;
+            $stock = $stocks->count() && !$variant ? $stocks->sumField('stock')->toInt() : null;
             foreach ($stocks as $p) {
                 foreach ($p->variants()->toStructure() as $var) {
                     $v = $var->variant()->split();
