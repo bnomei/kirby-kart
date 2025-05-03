@@ -607,7 +607,7 @@ return function (App $kirby) {
             'method' => 'POST',
             'action' => function () {
                 if ($r = Router::denied([
-                    Router::class.'::hasCaptcha',
+                    // Router::class.'::hasCaptcha', // would require captcha in checkout form
                     Router::class.'::hasTurnstile',
                 ])) {
                     return $r;
