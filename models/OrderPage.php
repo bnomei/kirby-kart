@@ -558,7 +558,7 @@ class OrderPage extends Page implements Kerbs
         foreach ($this->items()->toStructure() as $line) {
             $variant = $line->variant()->isNotEmpty() ? $line->variant()->value() : null;
             $lines[] = new OrderLine(
-                ($line->key()->toPage()?->uuid()->toString() ?? $line->key()->value()[0]) . ($variant ? '|' . $variant : ''),
+                ($line->key()->toPage()?->uuid()->toString() ?? $line->key()->value()[0]).($variant ? '|'.$variant : ''),
                 $line->price()->toFloat(),
                 $line->quantity()->toInt(),
                 $line->total()->toFloat(),

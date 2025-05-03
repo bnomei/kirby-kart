@@ -107,7 +107,7 @@ class StocksPage extends Page
                         sort($v);
                         $v = implode(',', $v); // no whitespace
                         if ($var->stock()->isNotEmpty()) {
-                            $stocks[$page->uuid()->toString() . '|' . $v] = $var->stock()->toInt();
+                            $stocks[$page->uuid()->toString().'|'.$v] = $var->stock()->toInt();
                             $c += $var->stock()->toInt();
                         }
                     }
@@ -130,7 +130,7 @@ class StocksPage extends Page
         } else {
             // slowish...
             $stocks = $this->stockPages($id);
-            $stock = $stocks->count() && !$variant ? $stocks->sumField('stock')->toInt() : null;
+            $stock = $stocks->count() && ! $variant ? $stocks->sumField('stock')->toInt() : null;
             foreach ($stocks as $p) {
                 foreach ($p->variants()->toStructure() as $var) {
                     $v = $var->variant()->split();

@@ -1,5 +1,12 @@
 name: order
+image:
+  back: var(--color-black)
+  color: var(--color-gray-500)
+  cover: true
+  icon: kart-order
+  query: false
 options:
+  preview: '{{page.urlWithSignature}}'
   changeSlug: false
   changeTitle: false
   changeTemplate: false
@@ -29,18 +36,18 @@ sections:
         type: users
         multiple: false
         translate: false
-        width: 1/3
+        width: 1/4
       invnumber:
         label: bnomei.kart.invoiceNumber
         type: number
         min: 1
         step: 1
         translate: false
-        width: 1/3
+        width: 1/4
       paymentComplete:
         label: bnomei.kart.paymentcomplete
         type: toggle
-        width: 1/3
+        width: 1/4
         text:
           - 
             en: 'No'
@@ -52,7 +59,7 @@ sections:
       paymentMethod:
         label: bnomei.kart.paymentmethod
         type: text
-        width: 1/3
+        width: 1/4
         translate: false
       paidDate:
         label: bnomei.kart.paidDate
@@ -66,10 +73,12 @@ sections:
         label: bnomei.kart.paymentid
         type: text
         translate: false
+        width: 1/3
       invoiceurl:
         label: bnomei.kart.invoice
         type: url
         translate: false
+        width: 1/3
       line:
         type: line
       items:

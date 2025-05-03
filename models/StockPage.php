@@ -80,7 +80,7 @@ class StockPage extends Page
                     'image' => [
                         'cover' => true,
                         'query' => 'page.gallery.toFiles.first',
-                    ]
+                    ],
                 ],
                 'timestamp' => [
                     'label' => 'bnomei.kart.timestamp',

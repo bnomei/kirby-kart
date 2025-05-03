@@ -1,4 +1,10 @@
 name: products
+image:
+  back: var(--color-black)
+  color: var(--color-gray-500)
+  cover: true
+  icon: kart-store
+  query: false
 options:
   changeSlug: false
   changeTemplate: false
@@ -23,6 +29,10 @@ tabs:
             label: bnomei.kart.products
             value: '{{ page.children.count }}'
           - 
+            label: bnomei.kart.out-of-stock
+            value: '{{ page.outOfStock.count }}'
+            link: '{{ site.kart.page("stocks")?.panel.url }}'
+          - 
             label: bnomei.kart.provider
             value: '{{ site.kart.provider.title }}'
           - 
@@ -31,6 +41,18 @@ tabs:
       meta:
         type: fields
         fields:
+          categories:
+            label: '{{ t("bnomei.kart.categories") }} ({{ site.kart.categories.count }})'
+            type: allcategories
+            disabled: true
+            translate: false
+            width: 1/3
+          tags:
+            label: '{{ t("bnomei.kart.tags") }} ({{ site.kart.tags.count }})'
+            type: alltags
+            disabled: true
+            translate: false
+            width: 2/3
           line:
             type: line
       products:
@@ -39,15 +61,22 @@ tabs:
         layout: cards
         search: true
         template: product
-        info: '{{ page.formattedPrice }}'
+        info: '{{ page.formattedPrice }} [{{ page.stock }}]{{ page.inStock ? "" : " ⚠️" }}{{ page.featured.ecco(" ★") }}{{ page.variants.ecco(" ❖") }}{{ page.downloads.ecco(" ↓") }}'
         image:
+          cover: true
           query: page.gallery.first.toFile
         limit: 1000
+        sortable: false
+        sortBy: title asc
   files:
     sections:
       files:
         type: files
         info: '{{ file.dimensions }} ・ {{ file.niceSize }}'
-        layout: cardlets
+        layout: cards
         image:
           cover: true
+        limit: 1000
+        search: true
+        sortable: false
+        sortBy: filename asc

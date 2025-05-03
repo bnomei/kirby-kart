@@ -667,6 +667,7 @@ App::plugin(
                 if ($field->isEmpty()) {
                     return $b;
                 }
+
                 return empty($field->value()) || strtolower($field->value()) === 'false' ? $b : $a;
             },
             'toKerbs' => function (Field $field, ?string $type = null): array {

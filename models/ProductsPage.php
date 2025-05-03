@@ -163,7 +163,8 @@ class ProductsPage extends Page
     {
         return $this->children()->filterBy(function (ProductPage $p) {
             $stock = $p->stockWithVariants();
-                return !(is_string($stock) || $stock > 0);
+
+            return ! (is_string($stock) || $stock > 0);
         });
     }
 }
