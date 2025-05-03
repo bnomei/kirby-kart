@@ -95,7 +95,7 @@ class ProductsPage extends Page
                             'layout' => 'cards',
                             'search' => true,
                             'template' => 'product', // maps to ProductPage model
-                            'info' => '{{ page.formattedPrice }} [{{ page.stock }}]{{ page.inStock ? "" : " ⚠️" }}{{ page.featured.ecco(" ★") }}{{ page.variants.ecco(" ❖") }}',
+                            'info' => '{{ page.formattedPrice }} [{{ page.stock }}]{{ page.inStock ? "" : " ⚠️" }}{{ page.featured.ecco(" ★") }}{{ page.variants.ecco(" ❖") }}{{ page.downloads.ecco(" ↓") }}',
                             'image' => [
                                 'cover' => true,
                                 'query' => 'page.gallery.first.toFile',

@@ -214,7 +214,7 @@ class ProductPage extends Page implements Kerbs
                                     // 'virtual' => true,
                                 ],
                                 'featured' => [
-                                    'label' => 'bnomei.kart.featured',
+                                    'label' => '★ {{ t("bnomei.kart.featured") }}',
                                     'type' => 'toggle',
                                     'default' => false,
                                     'width' => '1/3',
@@ -234,7 +234,7 @@ class ProductPage extends Page implements Kerbs
                                     // 'virtual' => true,
                                 ],
                                 'downloads' => [
-                                    'label' => 'bnomei.kart.downloads',
+                                    'label' => '↓ {{ t("bnomei.kart.downloads") }}',
                                     'type' => 'files',
                                     'query' => 'page.parent.files',
                                     'uploads' => [
@@ -246,7 +246,7 @@ class ProductPage extends Page implements Kerbs
                                     // 'virtual' => true,
                                 ],
                                 'variants' => [
-                                    'label' => 'bnomei.kart.variants',
+                                    'label' => '❖ {{ t("bnomei.kart.variants") }}',
                                     'type' => 'structure',
                                     'translate' => false,
                                     'virtual' => true,
