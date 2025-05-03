@@ -15,6 +15,13 @@ return function (App $kirby) {
             'pattern' => Router::CSRF,
             'method' => 'GET',
             'action' => function () use ($kirby) {
+                if ($r = Router::denied([
+                    Router::class.'::hasBlacklist',
+                    Router::class.'::hasRatelimit',
+                ], exclusive: true)) {
+                    return $r;
+                }
+
                 return Response::json([
                     'token' => $kirby->csrf(),
                 ], 201);
@@ -24,7 +31,12 @@ return function (App $kirby) {
             'pattern' => Router::CAPTCHA,
             'method' => 'GET',
             'action' => function () {
+                if (kart()->option('captcha.enabled') === false) {
+                    return Response::json([], 403);
+                }
+
                 if ($r = Router::denied([
+                    Router::class.'::hasBlacklist',
                     Router::class.'::hasRatelimit',
                 ], exclusive: true)) {
                     return $r;
@@ -40,7 +52,12 @@ return function (App $kirby) {
             'pattern' => Router::CAPTCHA,
             'method' => 'POST',
             'action' => function () {
+                if (kart()->option('captcha.enabled') === false) {
+                    return Response::json([], 403);
+                }
+
                 if ($r = Router::denied([
+                    Router::class.'::hasBlacklist',
                     Router::class.'::hasRatelimit',
                 ], exclusive: true)) {
                     return $r;
@@ -53,6 +70,10 @@ return function (App $kirby) {
             'pattern' => Router::LICENSES_ACTIVATE,
             'method' => 'POST',
             'action' => function () {
+                if (kart()->option('licenses.api') === false) {
+                    return Response::json([], 403);
+                }
+
                 if ($r = Router::denied()) {
                     return $r;
                 }
@@ -66,6 +87,10 @@ return function (App $kirby) {
             'pattern' => Router::LICENSES_DEACTIVATE,
             'method' => 'POST',
             'action' => function () {
+                if (kart()->option('licenses.api') === false) {
+                    return Response::json([], 403);
+                }
+
                 if ($r = Router::denied()) {
                     return $r;
                 }
@@ -79,6 +104,10 @@ return function (App $kirby) {
             'pattern' => Router::LICENSES_VALIDATE,
             'method' => 'POST',
             'action' => function () {
+                if (kart()->option('licenses.api') === false) {
+                    return Response::json([], 403);
+                }
+
                 if ($r = Router::denied()) {
                     return $r;
                 }
@@ -92,6 +121,12 @@ return function (App $kirby) {
             'pattern' => Router::LOGIN,
             'method' => 'GET',
             'action' => function () {
+                if ($r = Router::denied([
+                    Router::class.'::hasBlacklist',
+                    Router::class.'::hasRatelimit',
+                ], exclusive: true)) {
+                    return $r;
+                }
 
                 $page = kirby()->page(Router::LOGIN) ?? new Page([
                     'slug' => 'login',
@@ -152,6 +187,12 @@ return function (App $kirby) {
             'pattern' => Router::SIGNUP_MAGIC,
             'method' => 'GET',
             'action' => function () {
+                if ($r = Router::denied([
+                    Router::class.'::hasBlacklist',
+                    Router::class.'::hasRatelimit',
+                ], exclusive: true)) {
+                    return $r;
+                }
 
                 $page = kirby()->page(Router::SIGNUP_MAGIC) ?? new Page([
                     'slug' => 'signup',
@@ -250,8 +291,10 @@ return function (App $kirby) {
             'method' => 'GET',
             'action' => function () {
                 if ($r = Router::denied([
+                    Router::class.'::hasBlacklist',
+                    Router::class.'::hasRatelimit',
                     Router::class.'::hasMagicLink',
-                ], true)) {
+                ], exclusive: true)) {
                     return $r;
                 }
 
@@ -416,6 +459,13 @@ return function (App $kirby) {
             'pattern' => Router::KART,
             'method' => 'GET',
             'action' => function () {
+                if ($r = Router::denied([
+                    Router::class.'::hasBlacklist',
+                    Router::class.'::hasRatelimit',
+                ], exclusive: true)) {
+                    return $r;
+                }
+
                 kart()->tmnt(); // create demo content if needed
 
                 $page = new Page([
@@ -433,6 +483,13 @@ return function (App $kirby) {
             'pattern' => Router::CART,
             'method' => 'GET',
             'action' => function () {
+                if ($r = Router::denied([
+                    Router::class.'::hasBlacklist',
+                    Router::class.'::hasRatelimit',
+                ], exclusive: true)) {
+                    return $r;
+                }
+
                 $page = kirby()->page(Router::CART) ?? new Page([
                     'slug' => 'cart',
                     'template' => 'cart',
@@ -610,6 +667,13 @@ return function (App $kirby) {
             'pattern' => Router::PROVIDER_PAYMENT,
             'method' => 'GET|POST',
             'action' => function () {
+                if ($r = Router::denied([
+                    Router::class.'::hasBlacklist',
+                    Router::class.'::hasRatelimit',
+                ], exclusive: true)) {
+                    return $r;
+                }
+
                 $payment = new Page([
                     'id' => Router::PROVIDER_PAYMENT,
                     'slug' => 'payment',
@@ -650,14 +714,16 @@ return function (App $kirby) {
         [
             'pattern' => '(:all)',
             'action' => function ($path) {
-                if ($r = Router::denied([
-                    Router::class.'::hasRatelimit',
-                ], exclusive: true)) {
-                    return $r;
-                }
-
                 if (kirby()->request()->header('Accept') === 'application/json' &&
                     in_array($path, kart()->option('router.snippets'))) {
+
+                    if ($r = Router::denied([
+                        Router::class.'::hasBlacklist',
+                        Router::class.'::hasRatelimit',
+                    ], exclusive: true)) {
+                        return $r;
+                    }
+
                     return Router::go();
                 }
 

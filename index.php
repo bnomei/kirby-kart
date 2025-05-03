@@ -119,6 +119,7 @@ App::plugin(
                 ],
             ],
             'licenses' => [
+                'api' => false, // API endpoints are disabled by default
                 'license' => [
                     'uuid' => fn (array $data = []) => Str::uuid(),
                 ],
@@ -180,11 +181,18 @@ App::plugin(
                 'enabled' => function (): array {
                     // could do different stuff based on kirby()->request()
                     return [
+                        Router::class.'::hasBlacklist',
                         Router::class.'::hasCsrf',
                         Router::class.'::hasRatelimit',
                         // ... static class::method or closures
                     ];
                 },
+                'blacklist' => [
+                    // add any path from kart you want to block like...
+                    // Router::LOGIN,
+                    // Router::LOGOUT,
+                    // Router::SIGNUP_MAGIC,
+                ],
             ],
             'provider' => 'kirby_cms', // see ProviderEnum (kirby_cms, stripe, mollie, paddle, ...) or use \Kart\Provider\Kirby::class etc.
             'providers' => [
@@ -309,6 +317,7 @@ App::plugin(
                 'secretkey' => fn () => class_exists('\Bnomei\DotEnv') ? DotEnv::getenv('TURNSTILE_SECRET_KEY') : null,
             ],
             'captcha' => [
+                'enabled' => false,
                 'current' => function () {
                     return get('captcha'); // in current request
                 },
@@ -340,82 +349,88 @@ App::plugin(
             ],
             'kerbs' => [
                 'version' => fn () => Kart::hash(kirby()->plugin('bnomei/kart')?->version() ?? __FILE__),
-                'shared' => function (): array {
+                'kart' => function(): array {
+                    return kart()->toKerbs();
+                },
+                'shop' => function(): array {
                     return [
-                        'kart' => kart()->toKerbs(),
-                        'shop' => [
-                            'categories' => kart()->categories()->values(),
-                            'products' => kart()->products()->values(fn (ProductPage $product) => $product->toKerbs(full: false)),
-                            'tags' => kart()->tags()->values(),
-                        ],
-                        'site' => kirby()->site()->toKerbs(), // @phpstan-ignore-line
-                        'user' => kirby()->user()?->toKerbs(),
-                        'i18n' => array_filter(A::get(kirby()->translation(kirby()->language()?->code() ?? 'en')->toArray()['data'], [
-                            // KIRBY
-                            'back',
-                            'cancel',
-                            'close',
-                            'confirm',
-                            'download',
-                            'edit',
-                            'email',
-                            'email.placeholder',
-                            'error',
-                            'info',
-                            'login',
-                            'logout',
-                            'menu',
-                            'more',
-                            'name',
-                            'no',
-                            'off',
-                            'on',
-                            'password',
-                            'save',
-                            'saved',
-                            'search',
-                            'searching',
-                            'title',
-                            'url',
-                            'user',
-                            'welcome',
-                            'yes',
-                            // KART
-                            'bnomei.kart.cart',
-                            'bnomei.kart.categories',
-                            'bnomei.kart.checkout',
-                            'bnomei.kart.discount',
-                            'bnomei.kart.in-stock',
-                            'bnomei.kart.invoice',
-                            'bnomei.kart.invoiceNumber',
-                            'bnomei.kart.items',
-                            'bnomei.kart.order',
-                            'bnomei.kart.orders',
-                            'bnomei.kart.out-of-stock',
-                            'bnomei.kart.paidDate',
-                            'bnomei.kart.price',
-                            'bnomei.kart.quantity',
-                            'bnomei.kart.signup',
-                            'bnomei.kart.subtotal',
-                            'bnomei.kart.summary',
-                            'bnomei.kart.tags',
-                            'bnomei.kart.tax',
-                            'bnomei.kart.total',
-                            'bnomei.kart.variant',
-                            'bnomei.kart.variants',
-                            // KERBS
-                            'bnomei.kerbs.add-to-cart',
-                            'bnomei.kerbs.all',
-                            'bnomei.kerbs.checkout-disclaimer',
-                            'bnomei.kerbs.delete-from-cart',
-                            'bnomei.kerbs.featured-only',
-                            'bnomei.kerbs.include-out-of-stock',
-                            'bnomei.kerbs.related',
-                            'bnomei.kerbs.safe-for-later',
-                            'bnomei.kerbs.sort-by-lowest-price',
-                            'bnomei.kerbs.sort-by-rrp-percent-desc',
-                        ])),
+                        'categories' => kart()->categories()->values(),
+                        'products' => kart()->products()->values(fn (ProductPage $product) => $product->toKerbs(full: false)),
+                        'tags' => kart()->tags()->values(),
                     ];
+                },
+                'site' => function(): array {
+                    return kirby()->site()->toKerbs(); // @phpstan-ignore-line
+                },
+                'user' => function(): array {
+                    return kirby()->user()?->toKerbs();
+                },
+                'i18n' => function(): array {
+                    return array_filter(A::get(kirby()->translation(kirby()->language()?->code() ?? 'en')->toArray()['data'], [
+                        // KIRBY
+                        'back',
+                        'cancel',
+                        'close',
+                        'confirm',
+                        'download',
+                        'edit',
+                        'email',
+                        'email.placeholder',
+                        'error',
+                        'info',
+                        'login',
+                        'logout',
+                        'menu',
+                        'more',
+                        'name',
+                        'no',
+                        'off',
+                        'on',
+                        'password',
+                        'save',
+                        'saved',
+                        'search',
+                        'searching',
+                        'title',
+                        'url',
+                        'user',
+                        'welcome',
+                        'yes',
+                        // KART
+                        'bnomei.kart.cart',
+                        'bnomei.kart.categories',
+                        'bnomei.kart.checkout',
+                        'bnomei.kart.discount',
+                        'bnomei.kart.in-stock',
+                        'bnomei.kart.invoice',
+                        'bnomei.kart.invoiceNumber',
+                        'bnomei.kart.items',
+                        'bnomei.kart.order',
+                        'bnomei.kart.orders',
+                        'bnomei.kart.out-of-stock',
+                        'bnomei.kart.paidDate',
+                        'bnomei.kart.price',
+                        'bnomei.kart.quantity',
+                        'bnomei.kart.signup',
+                        'bnomei.kart.subtotal',
+                        'bnomei.kart.summary',
+                        'bnomei.kart.tags',
+                        'bnomei.kart.tax',
+                        'bnomei.kart.total',
+                        'bnomei.kart.variant',
+                        'bnomei.kart.variants',
+                        // KERBS
+                        'bnomei.kerbs.add-to-cart',
+                        'bnomei.kerbs.all',
+                        'bnomei.kerbs.checkout-disclaimer',
+                        'bnomei.kerbs.delete-from-cart',
+                        'bnomei.kerbs.featured-only',
+                        'bnomei.kerbs.include-out-of-stock',
+                        'bnomei.kerbs.related',
+                        'bnomei.kerbs.safe-for-later',
+                        'bnomei.kerbs.sort-by-lowest-price',
+                        'bnomei.kerbs.sort-by-rrp-percent-desc',
+                    ]));
                 },
             ],
         ],
@@ -996,7 +1011,7 @@ App::plugin(
                 $hash = md5(strtolower(trim($this->email())));
                 $url = "https://www.gravatar.com/avatar/{$hash}?s={$size}";
 
-                if ($cache = kirby()->cache('bnomei.kart.gravatar')->get(md5($url))) {
+                if ($cache = kirby()->cache('bnomei.kart.gravatar')->get($hash)) {
                     return $cache;
                 }
 

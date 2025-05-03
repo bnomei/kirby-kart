@@ -19,24 +19,34 @@ use Kirby\Toolkit\A;
 
 $page ??= kirby()->site()->page();
 $template ??= $page->intendedTemplate();
-$props ??= ['page' => $page->toKerbs()];
-if ($props instanceof Field) {
-    $props = [];
-}
 $request = kirby()->request();
 
 $inertia = array_filter([
     'component' => ucfirst($template->name()),
-    'props' => array_map(fn ($value) => $value instanceof Closure ? $value() : $value, $props + kart()->option('kerbs.shared')),
+    'props' => $props ?? [],
     'url' => $request->url()->toString(),
     'version' => kart()->option('kerbs.version'),
 ]);
 
 // only return partial props when requested
 $only = array_filter(explode(',', $request->header('X-Inertia-Partial-Data') ?? ''));
-$inertia['props'] = ($only && $request->header('X-Inertia-Partial-Component') === $inertia['component'])
-    ? A::get($inertia['props'], $only)
-    : $inertia['props'];
+if ($request->header('X-Inertia-Partial-Component') !== $inertia['component']) {
+    $only = ['page','i18n','user','site','kart','shop']; // all
+}
+
+// build the result
+foreach ($only as $key) {
+    switch ($key) {
+        case 'page': $inertia['props']['page'] = $page->toKerbs(); break;
+        default: $inertia['props'][$key] = kart()->option('kerbs.'.$key); break;
+    }
+}
+
+// resolve fields and closures
+$inertia['props'] = array_filter(array_map(function ($value) {
+    $value = $value instanceof Field ? $value->value() : $value;
+    return $value instanceof Closure ? $value() : $value;
+}, $inertia['props']));
 
 // return json when in inertia mode
 if ($request->method() === 'GET' && $request->header('X-Inertia')) {

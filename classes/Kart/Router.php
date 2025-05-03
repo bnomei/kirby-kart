@@ -332,6 +332,24 @@ class Router
         return is_string($token) && csrf($token) ? null : 401;
     }
 
+    public static function hasBlacklist(): ?int
+    {
+        $blacklist = kart()->option('middlewares.blacklist');
+        if (option('under-attack', false) !== false ||
+            ($blacklist === 'under-attack') ||
+            (is_array($blacklist) && in_array('under-attack', $blacklist))
+        ) {
+            return 403;
+        }
+        if (! is_array($blacklist)) {
+            $blacklist = [];
+        }
+        if (in_array(kirby()->request()->path(), $blacklist)) {
+            return 403;
+        }
+
+        return null;
+    }
     public static function account(): string
     {
         return url(self::ACCOUNT);

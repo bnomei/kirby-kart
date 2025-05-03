@@ -612,9 +612,9 @@ class Kart implements Kerbs
         $tags = $this->allTags();
 
         if ($multiple) {
-            $t = explode(',', param('tags'));
+            $t = explode(',', param('tags', ''));
         } else {
-            $t = [param('tag')];
+            $t = [param('tag', '')];
         }
         $t = array_map(fn ($tag) => trim(strip_tags(urldecode(strval($tag)))), $t);
         $t = array_filter($t, fn ($tag) => ! empty($tag) && in_array($tag, $tags));
@@ -702,9 +702,9 @@ class Kart implements Kerbs
         $categories = $this->allCategories();
 
         if ($multiple) {
-            $c = explode(',', param('categories'));
+            $c = explode(',', param('categories', ''));
         } else {
-            $c = [param('category')];
+            $c = [param('category', '')];
         }
         $c = array_map(fn ($cat) => trim(strip_tags(urldecode(strval($cat)))), $c);
         $c = array_filter($c, fn ($cat) => ! empty($cat) && in_array($cat, $categories));
@@ -837,9 +837,13 @@ class Kart implements Kerbs
         ]);
     }
 
+    protected ?array $kerbs = null;
     public function toKerbs(): array
     {
-        return array_filter([
+        if ($this->kerbs) {
+            return $this->kerbs;
+        }
+        return $this->kerbs = array_filter([
             'cart' => $this->cart()->toKerbs(),
             'options' => [
                 'turnstile' => [

@@ -98,9 +98,13 @@ class OrderLine implements Kerbs
         return Kart::formatCurrency($this->discount);
     }
 
+    protected ?array $kerbs = null;
     public function toKerbs(): array
     {
-        return array_filter([
+        if ($this->kerbs) {
+            return $this->kerbs;
+        }
+        return $this->kerbs = array_filter([
             'discount' => $this->discount(),
             'formattedDiscount' => $this->formattedDiscount(),
             'formattedPrice' => $this->formattedPrice(),

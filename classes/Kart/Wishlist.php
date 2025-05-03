@@ -19,9 +19,13 @@ class Wishlist extends Cart
         parent::__construct($id, $items);
     }
 
+    protected ?array $kerbs = null;
     public function toKerbs(): array
     {
-        return array_filter(A::get(parent::toKerbs(), [
+        if ($this->kerbs) {
+            return $this->kerbs;
+        }
+        return $this->kerbs = array_filter(A::get(parent::toKerbs(), [
             'count',
             'hash',
             'id',

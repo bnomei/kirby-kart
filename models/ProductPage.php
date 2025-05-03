@@ -670,36 +670,30 @@ class ProductPage extends Page implements Kerbs
         return $user->hasPurchased($this);
     }
 
+    protected array $kerbs = [];
     public function toKerbs(bool $full = true): array
     {
-        return array_filter([
+        if ($kerbs = A::get($this->kerbs, $full ? 'full' : 'partial')) {
+            return $kerbs;
+        }
+
+        $this->kerbs['partial'] = [
             'add' => $this->add(),
             'blocks' => $this->blocks()->isEmpty() ? null : $this->blocks()->toKerbs('blocks'),
             'buy' => $this->buy(),
             'categories' => $this->categories()->split(),
             'description' => $this->description()->kti()->value(),
-            'details' => $full ? $this->details()->toStructure()->values(function (StructureObject $i) {
-                $s = $i->summary()->value() ?? '';
-
-                return [
-                    'summary' => ! empty($s) ? Kart::query(t($s, $s), $this) : '',
-                    'text' => Kart::query($i->text()->kt()->value(), $this),
-                    'open' => $i->open()->toBool(),
-                ];
-            }) : null,
             'featured' => $this->featured()->toBool(),
             'firstGalleryImage' => $this->firstGalleryImage()?->toKerbs(),
             'forget' => $this->forget(),
             'formattedPrice' => $this->formattedPrice(),
             'formattedRRPrice' => $this->rrprice()->isNotEmpty() ? $this->rrprice()->toFormattedCurrency() : null,
-            'gallery' => $full ? $this->gallery()->toFiles()->values(fn (File $f) => $f->toKerbs()) : null,
             'id' => $this->id(),
             'inStock' => $this->stock(withHold: true) !== 0,
             'later' => $this->later(),
             'layouts' => $this->layout()->or($this->layouts())->toKerbs('layouts'),
             'now' => $this->now(),
             'price' => $this->price()->toFloat(),
-            'related' => $full ? kart()->productsRelated($this)->not($this)->values(fn (ProductPage $p) => $p->id()) : null,
             'remove' => $this->remove(),
             'rrpp' => $this->rrpp(),
             'rrprice' => $this->rrprice()->isNotEmpty() ? $this->rrprice()->toFloat() : null,
@@ -712,6 +706,22 @@ class ProductPage extends Page implements Kerbs
             'variantGroups' => $this->variantGroups(),
             // 'uuid' => $this->uuid()->id(),
             'wish' => $this->wish(),
+        ];
+
+        $this->kerbs['full'] = array_merge($this->kerbs['partial'], [
+            'details' => $full ? $this->details()->toStructure()->values(function (StructureObject $i) {
+                $s = $i->summary()->value() ?? '';
+
+                return [
+                    'summary' => ! empty($s) ? Kart::query(t($s, $s), $this) : '',
+                    'text' => Kart::query($i->text()->kt()->value(), $this),
+                    'open' => $i->open()->toBool(),
+                ];
+            }) : null,
+            'gallery' => $full ? $this->gallery()->toFiles()->values(fn (File $f) => $f->toKerbs()) : null,
+            'related' => $full ? kart()->productsRelated($this)->not($this)->values(fn (ProductPage $p) => $p->id()) : null,
         ]);
+
+        return $this->kerbs[$full ? 'full' : 'partial'];
     }
 }

@@ -581,9 +581,13 @@ class OrderPage extends Page implements Kerbs
         return $url.'?signature='.$signature;
     }
 
+    protected ?array $kerbs = null;
     public function toKerbs(): array
     {
-        return array_filter([
+        if ($this->kerbs) {
+            return $this->kerbs;
+        }
+        return $this->kerbs = array_filter([
             'discount' => $this->discount(),
             'download' => $this->download(),
             'formattedDiscount' => $this->formattedDiscount(),

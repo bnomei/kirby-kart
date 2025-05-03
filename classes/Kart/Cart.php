@@ -487,9 +487,13 @@ class Cart implements Kerbs
         return $hasOne;
     }
 
+    protected ?array $kerbs = null;
     public function toKerbs(): array
     {
-        return array_filter([
+        if ($this->kerbs) {
+            return $this->kerbs;
+        }
+        return $this->kerbs = array_filter([
             'canCheckout' => $this->canCheckout(),
             'count' => $this->lines()->count(),
             'formattedSubtotal' => $this->formattedSubtotal(),

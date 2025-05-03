@@ -164,9 +164,13 @@ class CartLine implements Kerbs
         return $this->price() * $this->quantity();
     }
 
+    protected ?array $kerbs = null;
     public function toKerbs(): array
     {
-        return array_filter([
+        if ($this->kerbs) {
+            return $this->kerbs;
+        }
+        return $this->kerbs = array_filter([
             'formattedPrice' => $this->formattedPrice(),
             'formattedSubtotal' => $this->formattedSubtotal(),
             'hasStockForQuantity' => $this->hasStockForQuantity(),

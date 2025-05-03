@@ -16,6 +16,10 @@ trait Captcha
 {
     public static function hasCaptcha(?string $response = null): ?int
     {
+        if (kart()->option('captcha.enabled') === false) {
+            return null;
+        }
+
         $current = kart()->option('captcha.current');
         if ($current instanceof Closure) {
             $current = $current();
