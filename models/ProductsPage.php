@@ -10,6 +10,7 @@
 
 use Kirby\Cms\Page;
 use Kirby\Cms\Pages;
+use Kirby\Content\Field;
 
 class ProductsPage extends Page
 {
@@ -57,6 +58,20 @@ class ProductsPage extends Page
                         'meta' => [
                             'type' => 'fields',
                             'fields' => [
+                                'categories' => [
+                                    'label' => '{{ t("bnomei.kart.categories") }} ({{ site.kart.categories.count }})',
+                                    'type' => 'allcategories',
+                                    'disabled' => true,
+                                    'translate' => false,
+                                    'width' => '1/3',
+                                ],
+                                'tags' => [
+                                    'label' => '{{ t("bnomei.kart.tags") }} ({{ site.kart.tags.count }})',
+                                    'type' => 'alltags',
+                                    'disabled' => true,
+                                    'translate' => false,
+                                    'width' => '2/3',
+                                ],
                                 'line' => [
                                     'type' => 'line',
                                 ],
@@ -68,11 +83,14 @@ class ProductsPage extends Page
                             'layout' => 'cards',
                             'search' => true,
                             'template' => 'product', // maps to ProductPage model
-                            'info' => '{{ page.formattedPrice }} [{{ page.stock(null, "*") }}]',
+                            'info' => '{{ page.formattedPrice }} [{{ page.stock(null, "*") }}] {{ page.featured.ecco("★") }} {{ page.variants.ecco("❖") }}',
                             'image' => [
+                                'cover' => true,
                                 'query' => 'page.gallery.first.toFile',
                             ],
                             'limit' => 1000,
+                            'sortable' => false,
+                            'sortBy' => 'title asc',
                         ],
                     ],
                 ],
@@ -81,10 +99,14 @@ class ProductsPage extends Page
                         'files' => [
                             'type' => 'files',
                             'info' => '{{ file.dimensions }} ・ {{ file.niceSize }}',
-                            'layout' => 'cardlets',
+                            'layout' => 'cards',
                             'image' => [
                                 'cover' => true,
                             ],
+                            'limit' => 1000,
+                            'search' => true,
+                            'sortable' => false,
+                            'sortBy' => 'filename asc',
                         ],
                     ],
                 ],
@@ -113,5 +135,15 @@ class ProductsPage extends Page
         });
 
         return $this->children;
+    }
+
+    public function categories(): Field
+    {
+        return new Field($this, 'categories', implode(',', kart()->allCategories()));
+    }
+
+    public function tags(): Field
+    {
+        return new Field($this, 'tags', implode(',', kart()->allTags()));
     }
 }

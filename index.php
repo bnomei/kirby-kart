@@ -59,14 +59,14 @@ App::plugin(
             'license' => fn () => class_exists('\Bnomei\DotEnv') ? DotEnv::getenv('KART_LICENSE_KEY') : '', // set your license from https://buy-kart.bnomei.com code in the config `bnomei.kart.license`
             'cache' => [
                 'categories' => true,
-                'crypto' => true,
+                'crypto' => true, // used to store a SALT
                 'gravatar' => true,
                 'licenses' => true,
                 'orders' => true,
                 'products' => true,
-                'router' => true,
+                'router' => true, // used to store a SALT
                 'queue' => true,
-                'ratelimit' => true,
+                'ratelimit' => true, // GC in kart->ready
                 'stats' => true,
                 'stocks' => true,
                 'stocks-holds' => true,
@@ -524,16 +524,16 @@ App::plugin(
             },
             'user.delete:after' => function (bool $status, User $user) {
                 kirby()->cache('bnomei.kart.stats')->remove('customers');
+                kirby()->cache('bnomei.kart.gravatar')->remove(md5(strtolower(trim($this->email()))));
             },
             'page.created:after' => function (Page $page) {
                 if ($page instanceof StocksPage) {
                     kirby()->cache('bnomei.kart.stocks')->flush();
                     kirby()->cache('bnomei.kart.stocks-holds')->flush();
-                } elseif ($page instanceof OrdersPage) {
-                    kirby()->cache('bnomei.kart.orders')->flush();
-                } elseif ($page instanceof OrderPage) {
+                } elseif ($page instanceof OrderPage || $page instanceof OrdersPage) {
                     kirby()->cache('bnomei.kart.licenses')->flush();
-                } elseif ($page instanceof ProductsPage) {
+                    kirby()->cache('bnomei.kart.orders')->flush();
+                } elseif ($page instanceof ProductPage || $page instanceof ProductsPage) {
                     kirby()->cache('bnomei.kart.categories')->flush();
                     kirby()->cache('bnomei.kart.products')->flush();
                     kirby()->cache('bnomei.kart.tags')->flush();
@@ -565,8 +565,15 @@ App::plugin(
                 }
             },
             'page.delete:after' => function (bool $status, Page $page) {
-                if ($page instanceof StockPage) {
+                if ($page instanceof StockPage || $page instanceof StocksPage) {
                     kirby()->cache('bnomei.kart.stocks')->flush();
+                } elseif ($page instanceof OrderPage || $page instanceof OrdersPage) {
+                    kirby()->cache('bnomei.kart.licenses')->flush();
+                    kirby()->cache('bnomei.kart.orders')->flush();
+                } elseif ($page instanceof ProductPage || $page instanceof ProductsPage) {
+                    kirby()->cache('bnomei.kart.categories')->flush();
+                    kirby()->cache('bnomei.kart.products')->flush();
+                    kirby()->cache('bnomei.kart.tags')->flush();
                 }
             },
             /*
@@ -652,6 +659,15 @@ App::plugin(
              */
             'toTags' => function (Field $field): Collection {
                 return kart()->tags()->filterBy('value', 'in', explode(',', strval($field->value)));
+            },
+            /**
+             * @kql-allowed
+             */
+            'ecco' => function ($field, string $a, string $b = ''): string {
+                if ($field->isEmpty()) {
+                    return $b;
+                }
+                return empty($field->value()) || strtolower($field->value()) === 'false' ? $b : $a;
             },
             'toKerbs' => function (Field $field, ?string $type = null): array {
                 if ($type === 'layouts') {
@@ -1029,6 +1045,24 @@ App::plugin(
                     kirby()->session()->set('kirby.challenge.code', password_hash($code, PASSWORD_DEFAULT));
                 }
             },
+        ],
+        'fields' => [
+            'allcategories' => [
+                'extends' => 'tags',
+                'props' => [
+                    'value' => function () {
+                        return kart()->allCategories();
+                    },
+                ],
+            ],
+            'alltags' => [
+                'extends' => 'tags',
+                'props' => [
+                    'value' => function () {
+                        return kart()->allTags();
+                    },
+                ],
+            ],
         ],
         'commands' => [
             'kart:blueprints-publish' => [

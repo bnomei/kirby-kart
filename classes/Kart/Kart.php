@@ -497,10 +497,10 @@ class Kart implements Kerbs
     public function productsByParams(array $params = []): Pages
     {
         $params = array_filter(array_merge($params, array_filter([
-            'category' => param('category'),
-            'categories' => param('categories'),
-            'tag' => param('tag'),
-            'tags' => param('tags'),
+            'category' => $this->category(),
+            'categories' => $this->category(true),
+            'tag' => $this->tag(),
+            'tags' => $this->tag(true),
         ])));
 
         if (empty($params)) {
@@ -598,7 +598,7 @@ class Kart implements Kerbs
     {
         $expire = kart()->option('expire');
         if (is_int($expire)) {
-            $key = Kart::hash(implode(',', array_filter([$path, param('category'), param('tag')])));
+            $key = Kart::hash(implode(',', array_filter([$path, $this->category(), $this->tag()])));
             $tags = kirby()->cache('bnomei.kart.tags')->getOrSet('tags-'.$key, fn () => $this->getTags($path), $expire);
         } else {
             $tags = $this->getTags($path);
@@ -607,17 +607,56 @@ class Kart implements Kerbs
         return new Collection(array_map(fn ($c) => new Tag($c), $tags)); // @phpstan-ignore-line
     }
 
+    public function tag(bool $multiple = false): ?string
+    {
+        $tags = $this->allTags();
+
+        if ($multiple) {
+            $t = explode(',', param('tags'));
+        } else {
+            $t = [param('tag')];
+        }
+        $t = array_map(fn($tag) => trim(strip_tags(urldecode(strval($tag)))), $t);
+        $t = array_filter($t, fn ($tag) => ! empty($tag) && in_array($tag, $tags));
+        if (empty($t)) {
+            return null;
+        }
+
+        return implode(',', $t);
+    }
+
+    public function allTags(): array {
+        $products = kart()->page(ContentPageEnum::PRODUCTS);
+        if (! $products) {
+            return [];
+        }
+
+        $expire = kart()->option('expire');
+        if (is_int($expire)) {
+            $tags = kirby()->cache('bnomei.kart.tags')->getOrSet('tags', function() use ($products) {
+                $tags = $products->children()->pluck('tags', ',', true);
+                sort($tags);
+                return $tags;
+            }, $expire);
+        } else {
+            $tags = $products->children()->pluck('tags', ',', true);
+            sort($tags);
+        }
+
+        return $tags;
+    }
+
     private function getTags(?string $path = null): array
     {
         $products = kart()->page(ContentPageEnum::PRODUCTS);
         if (! $products) {
             return [];
         }
-        $tags = $products->children()->pluck('tags', ',', true);
-        sort($tags);
 
-        $category = param('category');
-        $tag = param('tag');
+        // $categories = $this->allCategories();
+        $tags = $this->allTags();
+        $category = $this->category();
+        $tag = $this->tag();
 
         return array_map(fn ($t) => [
             'id' => $t,
@@ -647,7 +686,7 @@ class Kart implements Kerbs
     {
         $expire = kart()->option('expire');
         if (is_int($expire)) {
-            $key = Kart::hash(implode(',', array_filter([$path, param('category'), param('tag')])));
+            $key = Kart::hash(implode(',', array_filter([$path, $this->category(), $this->tag()])));
             $categories = kirby()->cache('bnomei.kart.categories')->getOrSet('categories-'.$key, fn () => $this->getCategories($path), $expire);
         } else {
             $categories = $this->getCategories($path);
@@ -656,17 +695,56 @@ class Kart implements Kerbs
         return new Collection(array_map(fn ($c) => new Category($c), $categories));  // @phpstan-ignore-line
     }
 
+    public function category(bool $multiple = false): ?string
+    {
+        $categories = $this->allCategories();
+
+        if ($multiple) {
+            $c = explode(',', param('categories'));
+        } else {
+            $c = [param('category')];
+        }
+        $c = array_map(fn($cat) => trim(strip_tags(urldecode(strval($cat)))), $c);
+        $c = array_filter($c, fn ($cat) => ! empty($cat) && in_array($cat, $categories));
+        if (empty($c)) {
+            return null;
+        }
+
+        return implode(',', $c);
+    }
+
+    public function allCategories(): array {
+        $products = kart()->page(ContentPageEnum::PRODUCTS);
+        if (! $products) {
+            return [];
+        }
+
+        $expire = kart()->option('expire');
+        if (is_int($expire)) {
+            $categories = kirby()->cache('bnomei.kart.categories')->getOrSet('categories', function() use ($products) {
+                $categories = $products->children()->pluck('categories', ',', true);
+                sort($categories);
+                return $categories;
+            }, $expire);
+        } else {
+            $categories = $products->children()->pluck('categories', ',', true);
+            sort($categories);
+        }
+
+        return $categories;
+    }
+
     private function getCategories(?string $path = null): array
     {
         $products = kart()->page(ContentPageEnum::PRODUCTS);
         if (! $products) {
             return [];
         }
-        $categories = $products->children()->pluck('categories', ',', true);
-        sort($categories);
 
-        $category = param('category');
-        $tag = param('tag');
+        $categories = $this->allCategories();
+        // $tags = $this->allTags();
+        $category = $this->category();
+        $tag = $this->tag();
 
         return array_map(fn ($c) => [
             'id' => $c,
