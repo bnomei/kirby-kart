@@ -616,7 +616,7 @@ class Kart implements Kerbs
         } else {
             $t = [param('tag')];
         }
-        $t = array_map(fn($tag) => trim(strip_tags(urldecode(strval($tag)))), $t);
+        $t = array_map(fn ($tag) => trim(strip_tags(urldecode(strval($tag)))), $t);
         $t = array_filter($t, fn ($tag) => ! empty($tag) && in_array($tag, $tags));
         if (empty($t)) {
             return null;
@@ -625,7 +625,8 @@ class Kart implements Kerbs
         return implode(',', $t);
     }
 
-    public function allTags(): array {
+    public function allTags(): array
+    {
         $products = kart()->page(ContentPageEnum::PRODUCTS);
         if (! $products) {
             return [];
@@ -633,9 +634,10 @@ class Kart implements Kerbs
 
         $expire = kart()->option('expire');
         if (is_int($expire)) {
-            $tags = kirby()->cache('bnomei.kart.tags')->getOrSet('tags', function() use ($products) {
+            $tags = kirby()->cache('bnomei.kart.tags')->getOrSet('tags', function () use ($products) {
                 $tags = $products->children()->pluck('tags', ',', true);
                 sort($tags);
+
                 return $tags;
             }, $expire);
         } else {
@@ -704,7 +706,7 @@ class Kart implements Kerbs
         } else {
             $c = [param('category')];
         }
-        $c = array_map(fn($cat) => trim(strip_tags(urldecode(strval($cat)))), $c);
+        $c = array_map(fn ($cat) => trim(strip_tags(urldecode(strval($cat)))), $c);
         $c = array_filter($c, fn ($cat) => ! empty($cat) && in_array($cat, $categories));
         if (empty($c)) {
             return null;
@@ -713,7 +715,8 @@ class Kart implements Kerbs
         return implode(',', $c);
     }
 
-    public function allCategories(): array {
+    public function allCategories(): array
+    {
         $products = kart()->page(ContentPageEnum::PRODUCTS);
         if (! $products) {
             return [];
@@ -721,9 +724,10 @@ class Kart implements Kerbs
 
         $expire = kart()->option('expire');
         if (is_int($expire)) {
-            $categories = kirby()->cache('bnomei.kart.categories')->getOrSet('categories', function() use ($products) {
+            $categories = kirby()->cache('bnomei.kart.categories')->getOrSet('categories', function () use ($products) {
                 $categories = $products->children()->pluck('categories', ',', true);
                 sort($categories);
+
                 return $categories;
             }, $expire);
         } else {

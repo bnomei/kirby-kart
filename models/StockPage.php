@@ -181,11 +181,12 @@ class StockPage extends Page
         }
 
         return $this->kirby()->impersonate('kirby', function () use ($amount, $set, $variant) {
+            $stock = $this;
             $foundVariant = false;
             if ($variant) {
                 $updated = [];
                 /** @var \Kirby\Cms\StructureObject $variantItem */
-                foreach ($this->variants()->toStructure() as $variantItem) {
+                foreach ($stock->variants()->toStructure() as $variantItem) {
                     $variants = $variantItem->variant()->split();
                     sort($variants);
                     $v = implode(',', $variants); // no whitespace
@@ -201,12 +202,12 @@ class StockPage extends Page
                     }
                 }
 
-                $stock = $this->update(['variants' => Yaml::encode($updated)]);
+                $stock = $stock->update(['variants' => Yaml::encode($updated)]);
             }
             if (! $foundVariant) {
                 $stock = $set ?
-                    $this->update(['stock' => $amount]) :
-                    $this->increment('stock', $amount);
+                    $stock->update(['stock' => $amount]) :
+                    $stock->increment('stock', $amount);
             }
 
             kirby()->trigger('kart.stocks.updated', [
