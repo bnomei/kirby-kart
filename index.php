@@ -349,23 +349,23 @@ App::plugin(
             ],
             'kerbs' => [
                 'version' => fn () => Kart::hash(kirby()->plugin('bnomei/kart')?->version() ?? __FILE__),
-                'kart' => function(): array {
+                'kart' => function (): array {
                     return kart()->toKerbs();
                 },
-                'shop' => function(): array {
+                'shop' => function (): array {
                     return [
                         'categories' => kart()->categories()->values(),
                         'products' => kart()->products()->values(fn (ProductPage $product) => $product->toKerbs(full: false)),
                         'tags' => kart()->tags()->values(),
                     ];
                 },
-                'site' => function(): array {
+                'site' => function (): array {
                     return kirby()->site()->toKerbs(); // @phpstan-ignore-line
                 },
-                'user' => function(): array {
+                'user' => function (): array {
                     return kirby()->user()?->toKerbs();
                 },
-                'i18n' => function(): array {
+                'i18n' => function (): array {
                     return array_filter(A::get(kirby()->translation(kirby()->language()?->code() ?? 'en')->toArray()['data'], [
                         // KIRBY
                         'back',

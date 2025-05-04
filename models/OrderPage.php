@@ -582,11 +582,13 @@ class OrderPage extends Page implements Kerbs
     }
 
     protected ?array $kerbs = null;
+
     public function toKerbs(): array
     {
         if ($this->kerbs) {
             return $this->kerbs;
         }
+
         return $this->kerbs = array_filter([
             'discount' => $this->discount(),
             'download' => $this->download(),

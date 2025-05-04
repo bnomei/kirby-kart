@@ -317,7 +317,7 @@ class Router
     {
         // form data field name or false/null
         $name = kart()->option('middlewares.csrf');
-        if (! $name) {
+        if (! is_string($name)) {
             return null;
         }
 
@@ -350,6 +350,7 @@ class Router
 
         return null;
     }
+
     public static function account(): string
     {
         return url(self::ACCOUNT);

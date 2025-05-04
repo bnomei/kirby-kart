@@ -124,6 +124,9 @@ class Stripe extends Provider
             return [];
         }
 
+        /** @var \Closure $likey */
+        $likey = kart()->option('licenses.license.uuid');
+
         foreach (A::get($json, 'data') as $line) {
             $data['items'][] = [
                 'key' => ['page://'.$uuid(null, ['id' => A::get($line, 'price.product')])],  // pages field expect an array
@@ -135,7 +138,7 @@ class Stripe extends Provider
                 'subtotal' => round(A::get($line, 'amount_subtotal', 0) / 100.0, 2),
                 'tax' => round(A::get($line, 'amount_tax', 0) / 100.0, 2),
                 'discount' => round(A::get($line, 'amount_discount', 0) / 100.0, 2),
-                'licensekey' => kart()->option('licenses.license.uuid')($data + $json + ['line' => $line]),
+                'licensekey' => $likey($data + $json + ['line' => $line]),
             ];
         }
 

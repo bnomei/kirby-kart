@@ -328,10 +328,8 @@ class Cart implements Kerbs
 
         foreach ($lines as $uuid => $line) {
             $p = explode('|', $uuid);
+            $uuid = $p[0];
             $variant = null;
-            if (count($p) >= 1) {
-                $uuid = $p[0];
-            }
             if (count($p) >= 2) {
                 $variant = $p[1];
             }
@@ -488,11 +486,13 @@ class Cart implements Kerbs
     }
 
     protected ?array $kerbs = null;
+
     public function toKerbs(): array
     {
         if ($this->kerbs) {
             return $this->kerbs;
         }
+
         return $this->kerbs = array_filter([
             'canCheckout' => $this->canCheckout(),
             'count' => $this->lines()->count(),

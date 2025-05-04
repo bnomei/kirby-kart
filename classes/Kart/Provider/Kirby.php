@@ -51,13 +51,16 @@ class Kirby extends Provider
             return [];
         }
 
-        $input = Kart::sanitize(array_filter([
+        $input = (array) Kart::sanitize(array_filter([
             'email' => strtolower(urldecode(strval(get('email', $this->kirby->user()?->email())))),
             'name' => urldecode(strval(get('name', $this->kirby->user()?->name()))),
             'payment_method' => urldecode(strval(get('payment_method', ''))),
             'payment_status' => urldecode(strval(get('payment_status', ''))),
             'invoiceurl' => urldecode(strval(get('invoiceurl', ''))),
         ]));
+
+        /** @var \Closure $likey */
+        $likey = kart()->option('licenses.license.uuid');
 
         // build data for user, order and stock updates
         $data = array_merge($data, array_filter([
@@ -79,7 +82,7 @@ class Kirby extends Provider
                 'subtotal' => $l->quantity() * $l->price(),
                 'tax' => 0,
                 'discount' => 0,
-                'licensekey' => kart()->option('licenses.license.uuid')($input + ['line' => $l->toArray()]),
+                'licensekey' => $likey($input + ['line' => $l->toArray()]),
             ]),
         ]));
 

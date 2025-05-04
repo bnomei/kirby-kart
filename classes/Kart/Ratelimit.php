@@ -10,6 +10,7 @@
 
 namespace Bnomei\Kart;
 
+use Kirby\Cache\FileCache;
 use Kirby\Filesystem\Dir;
 use Kirby\Http\Visitor;
 
@@ -66,8 +67,10 @@ class Ratelimit
     public static function flush(): void
     {
         $kirby = kirby();
-        $dir = $kirby->cache('bnomei.kart.ratelimit')->root();
-        if (! is_dir($dir ?? '')) {
+        /** @var FileCache $cache */
+        $cache = $kirby->cache('bnomei.kart.ratelimit');
+        $dir = $cache->root();
+        if (! is_dir($dir)) {
             return;
         }
 

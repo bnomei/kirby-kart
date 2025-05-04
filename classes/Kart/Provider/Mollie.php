@@ -177,6 +177,9 @@ class Mollie extends Provider
             'paymentId' => A::get($json, 'id'),
         ]));
 
+        /** @var \Closure $likey */
+        $likey = kart()->option('licenses.license.uuid');
+
         foreach (A::get($json, 'lines') as $line) {
             $data['items'][] = [
                 'key' => ['page://'.A::get($line, 'sku')],  // pages field expect an array
@@ -188,7 +191,7 @@ class Mollie extends Provider
                 'subtotal' => round(floatval(A::get($line, 'totalAmount.value', 0)), 2),
                 'tax' => round(floatval(A::get($line, 'vatAmount.value', 0)), 2),
                 'discount' => round(floatval(A::get($line, 'discountAmount.value', 0)), 2),
-                'licensekey' => kart()->option('licenses.license.uuid')($data + ['line' => $line]),
+                'licensekey' => $likey($data + ['line' => $line]),
             ];
         }
 

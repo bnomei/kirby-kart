@@ -153,6 +153,9 @@ class Paddle extends Provider
             return [];
         }
 
+        /** @var \Closure $likey */
+        $likey = kart()->option('licenses.license.uuid');
+
         foreach (A::get($json, 'data.details.line_items') as $line) {
             $price_id = A::get($line, 'price_id');
             $price = [];
@@ -172,7 +175,7 @@ class Paddle extends Provider
                 'subtotal' => round(A::get($line, 'totals.subtotal', 0) / 100.0, 2),
                 'tax' => round(A::get($line, 'totals.tax', 0) / 100.0, 2),
                 'discount' => round(A::get($line, 'totals.discount', 0) / 100.0, 2),
-                'licensekey' => kart()->option('licenses.license.uuid')($data + ['line' => $line] + ['price' => $price]),
+                'licensekey' => $likey($data + ['line' => $line] + ['price' => $price]),
             ];
         }
 

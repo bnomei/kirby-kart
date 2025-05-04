@@ -15,7 +15,6 @@
 
 use Kirby\Cms\Response;
 use Kirby\Content\Field;
-use Kirby\Toolkit\A;
 
 $page ??= kirby()->site()->page();
 $template ??= $page->intendedTemplate();
@@ -31,20 +30,23 @@ $inertia = array_filter([
 // only return partial props when requested
 $only = array_filter(explode(',', $request->header('X-Inertia-Partial-Data') ?? ''));
 if ($request->header('X-Inertia-Partial-Component') !== $inertia['component']) {
-    $only = ['page','i18n','user','site','kart','shop']; // all
+    $only = ['page', 'i18n', 'user', 'site', 'kart', 'shop']; // all
 }
 
 // build the result
 foreach ($only as $key) {
     switch ($key) {
-        case 'page': $inertia['props']['page'] = $page->toKerbs(); break;
-        default: $inertia['props'][$key] = kart()->option('kerbs.'.$key); break;
+        case 'page': $inertia['props']['page'] = $page->toKerbs();
+            break;
+        default: $inertia['props'][$key] = kart()->option('kerbs.'.$key);
+            break;
     }
 }
 
 // resolve fields and closures
 $inertia['props'] = array_filter(array_map(function ($value) {
     $value = $value instanceof Field ? $value->value() : $value;
+
     return $value instanceof Closure ? $value() : $value;
 }, $inertia['props']));
 

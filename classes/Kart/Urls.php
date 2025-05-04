@@ -56,11 +56,13 @@ class Urls implements Kerbs
     }
 
     protected ?array $kerbs = null;
+
     public function toKerbs(): array
     {
         if ($this->kerbs) {
             return $this->kerbs;
         }
+
         return $this->kerbs = array_filter([
             'account' => $this->account(),
             'account_delete' => $this->account_delete(),

@@ -160,10 +160,19 @@ class Kart implements Kerbs
         }
 
         if (is_string($data)) {
-            ['query' => $query, 'path' => $path] = parse_url($data, PHP_URL_PATH | PHP_URL_QUERY);
-            $data = [];
-            parse_str($query ?? '', $data);
-            array_unshift($data, $path);
+            $p = parse_url($data, PHP_URL_PATH | PHP_URL_QUERY);
+            if (is_array($p)) { // @phpstan-ignore-line
+                $query = '';
+                $path = '';
+                ['query' => $query, 'path' => $path] = $p;
+                $data = [];
+                parse_str($query, $data);
+                array_unshift($data, $path);
+            }
+        }
+
+        if (is_string($data)) {
+            throw new Exception('data must be an array or string');
         }
 
         return hash_hmac(
@@ -185,7 +194,7 @@ class Kart implements Kerbs
     {
         $url ??= kirby()->request()->url();
         $signature = get('signature');
-        if (! $signature || self::checkSignature($signature, $url) === false) {
+        if (! is_string($signature) || self::checkSignature($signature, $url) === false) {
             go($redirect);
         }
     }
@@ -414,7 +423,7 @@ class Kart implements Kerbs
             if (class_exists($class)) {
                 $this->provider = new $class($this->kirby()); // @phpstan-ignore-line
             }
-            if (! $this->provider instanceof Provider) { // @phpstan-ignore-line
+            if (! $this->provider instanceof Provider) {
                 $this->provider = new Kirby($this->kirby());
             }
         }
@@ -838,11 +847,13 @@ class Kart implements Kerbs
     }
 
     protected ?array $kerbs = null;
+
     public function toKerbs(): array
     {
         if ($this->kerbs) {
             return $this->kerbs;
         }
+
         return $this->kerbs = array_filter([
             'cart' => $this->cart()->toKerbs(),
             'options' => [

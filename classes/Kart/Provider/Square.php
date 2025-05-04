@@ -108,7 +108,7 @@ class Square extends Provider
             return [];
         }
 
-        $json = $remote->json()['order'];
+        $json = A::get($remote->json(), 'order', []);
 
         $customer = [];
         // https://developer.squareup.com/reference/square/customers-api/retrieve-customer
@@ -143,6 +143,9 @@ class Square extends Provider
             return [];
         }
 
+        /** @var \Closure $likey */
+        $likey = kart()->option('licenses.license.uuid');
+
         foreach (A::get($json, 'line_items') as $line) {
             $data['items'][] = [
                 // 'key' => ['page://'.$uuid(null, ['id' => A::get($price, 'product_id')])],  // pages field expect an array
@@ -155,7 +158,7 @@ class Square extends Provider
                 'subtotal' => round(A::get($line, 'gross_sales_money.amount', 0) / 100.0, 2),
                 'tax' => round(A::get($line, 'total_tax_money.amount', 0) / 100.0, 2),
                 'discount' => round(A::get($line, 'total_discount_money.amount', 0) / 100.0, 2),
-                'licensekey' => A::get($line, 'uid', kart()->option('licenses.license.uuid')($data + $json + ['line' => $line])),
+                'licensekey' => A::get($line, 'uid', $likey($data + $json + ['line' => $line])),
             ];
         }
 

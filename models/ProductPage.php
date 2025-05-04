@@ -671,6 +671,7 @@ class ProductPage extends Page implements Kerbs
     }
 
     protected array $kerbs = [];
+
     public function toKerbs(bool $full = true): array
     {
         if ($kerbs = A::get($this->kerbs, $full ? 'full' : 'partial')) {

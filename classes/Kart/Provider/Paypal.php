@@ -193,6 +193,9 @@ class Paypal extends Provider
             return [];
         }
 
+        /** @var \Closure $likey */
+        $likey = kart()->option('licenses.license.uuid');
+
         foreach (A::get($json, 'purchase_units.0.items') as $line) {
             $data['items'][] = [
                 'key' => ['page://'.A::get($line, 'sku')],  // pages field expect an array
@@ -204,7 +207,7 @@ class Paypal extends Provider
                 'subtotal' => round(floatval(A::get($line, 'unit_amount.value', 0)), 2) * intval(A::get($line, 'quantity')),
                 'tax' => round(floatval(A::get($line, 'tax.value', 0)), 2),
                 'discount' => 0, // NOTE: paypal has no discount per item
-                'licensekey' => kart()->option('licenses.license.uuid')($data + $json + ['line' => $line]),
+                'licensekey' => $likey($data + $json + ['line' => $line]),
             ];
         }
         // TODO: maybe add a line without a product linked if a global discount was set

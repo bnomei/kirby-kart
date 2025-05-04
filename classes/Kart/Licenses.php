@@ -12,8 +12,9 @@ class Licenses
             $data = [];
             /** @var \OrderPage $order */
             foreach (kart()->orders() as $order) {
+                /** @var OrderLine $line */
                 foreach ($order->orderLines() as $line) {
-                    $data[$line->licenseKey()] = [$line->licenseKey(), $order->uuid()->toString()];
+                    $data[$line->licensekey()] = [$line->licensekey(), $order->uuid()->toString()];
                 }
             }
 

@@ -20,11 +20,13 @@ class Wishlist extends Cart
     }
 
     protected ?array $kerbs = null;
+
     public function toKerbs(): array
     {
         if ($this->kerbs) {
             return $this->kerbs;
         }
+
         return $this->kerbs = array_filter(A::get(parent::toKerbs(), [
             'count',
             'hash',

@@ -139,6 +139,9 @@ class Lemonsqueezy extends Provider
             return [];
         }
 
+        /** @var \Closure $likey */
+        $likey = kart()->option('licenses.license.uuid');
+
         $data['items'][] = [
             'key' => ['page://'.$uuid(null, ['id' => A::get($json, 'data.attributes.first_order_item.product_id')])],  // pages field expect an array
             'variant' => null, // TODO: variant
@@ -149,7 +152,7 @@ class Lemonsqueezy extends Provider
             'subtotal' => round(A::get($json, 'data.attributes.subtotal', 0) / 100.0, 2),
             'tax' => round(A::get($json, 'data.attributes.tax', 0) / 100.0, 2),
             'discount' => round(A::get($json, 'data.attributes.discount_total', 0) / 100.0, 2),
-            'licensekey' => kart()->option('licenses.license.uuid')($data + $json), // TODO: get the id and instance name and join with |
+            'licensekey' => $likey($data + $json), // TODO: get the id and instance name and join with |
         ];
 
         $this->kirby->session()->remove('bnomei.kart.'.$this->name.'.session_id');
