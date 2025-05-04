@@ -26,5 +26,5 @@ it('has shortcut for products that are out of stock', function (): void {
     /** @var ProductsPage $p */
     $p = page('products');
 
-    expect($p->outOfStock()->count())->toBe(0);
+    expect($p->outOfStock()->count())->toBe(1);
 });

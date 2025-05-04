@@ -69,7 +69,7 @@ it('is an order page', function (): void {
         ->and($o->formattedDiscount())->toBe('€5.00')
         ->and($o->total())->toBe(87.0)
         ->and($o->formattedTotal())->toBe('€87.00')
-        ->and($p->salesCount())->toBe(2)
+        ->and($p->salesCount())->toBe(4)
         ->and($l->salesCount())->toBe(3)
         ->and($l->toKerbs())->toBeArray();
 

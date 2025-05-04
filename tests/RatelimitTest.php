@@ -31,6 +31,15 @@ it('has a ratelimit helper class', function (): void {
     expect(Ratelimit::check($this->ip))->toBeTrue()
         ->and(Ratelimit::check($this->ip))->toBeFalse();
 
+    Ratelimit::flush(true);
+
+    for ($i = 0; $i < $limit - 2; $i++) {
+        Ratelimit::check($this->ip);
+    }
+    expect(Ratelimit::check($this->ip))->toBeTrue()
+        ->and(Ratelimit::check($this->ip))->toBeTrue()
+        ->and(Ratelimit::check($this->ip))->toBeFalse();
+
     kart()->setOption('middlewares.ratelimit.enabled', false);
     expect(Ratelimit::check($this->ip))->toBeTrue();
 });

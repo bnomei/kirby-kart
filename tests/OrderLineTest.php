@@ -29,10 +29,13 @@ it('can create orderlines', function (): void {
         ->and($o->key())->toBe($o->id()) // Merx
         ->and($o->quantity())->toBe(2)
         ->and($o->doesNotExist())->toBeNull()
+        ->and($o->variant())->toBeNull()
         ->and($o->licensekey())->toBe('yada')
         ->and($o->product()->id())->toBe($product->id())
         ->and($o->formattedPrice())->toBe('€123.40')
         ->and($o->formattedSubtotal())->toBe('€246.80')
         ->and($o->formattedDiscount())->toBe('€20.00')
-        ->and($o->formattedTotal())->toBe('€236.80');
+        ->and($o->formattedTax())->toBe('€10.00')
+        ->and($o->formattedTotal())->toBe('€236.80')
+        ->and($o->toKerbs())->toBeArray();
 });

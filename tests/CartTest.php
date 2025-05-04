@@ -260,3 +260,11 @@ it('can complete a cart', function (): void {
 
     expect($this->cart->complete())->toBeString();
 });
+
+it('can export to kerbs', function (): void {
+    $this->cart = new Cart(
+        'cart',
+    );
+
+    expect($this->cart->toKerbs())->toBeArray();
+});

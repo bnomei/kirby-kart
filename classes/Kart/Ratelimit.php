@@ -64,7 +64,7 @@ class Ratelimit
         $kirby->cache('bnomei.kart.ratelimit')->remove($key);
     }
 
-    public static function flush(): void
+    public static function flush(bool $force = false): void
     {
         $kirby = kirby();
         /** @var FileCache $cache */
@@ -78,7 +78,7 @@ class Ratelimit
 
         foreach (Dir::files($dir, null, true) as $file) {
             $time = filemtime($file);
-            if ($time && $time < time() - ($cacheDurationInMinutes * 60)) {
+            if ($force || ($time && $time < time() - ($cacheDurationInMinutes * 60))) {
                 @unlink($file);
             }
         }

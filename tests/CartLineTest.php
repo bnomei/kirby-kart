@@ -116,3 +116,7 @@ it('honors the max amount of product per order (global and in product)', functio
     restore_error_handler();
     restore_exception_handler();
 });
+
+it('can export to kerbs', function (): void {
+    expect($this->cartLine->toKerbs())->toBeArray();
+});

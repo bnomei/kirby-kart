@@ -1,4 +1,10 @@
 name: stocks
+image:
+  back: var(--color-black)
+  color: var(--color-gray-500)
+  cover: true
+  icon: kart-stocks
+  query: false
 options:
   preview: false
   changeSlug: false
@@ -16,10 +22,13 @@ sections:
       - 
         label: bnomei.kart.products
         value: '{{ page.children.count }}'
-        link: '{{ site.kart.page("products").panel.url }}'
+        link: '{{ site.kart.page("products")?.panel.url }}'
+      - 
+        label: bnomei.kart.out-of-stock
+        value: '{{ site.kart.page("products")?.outOfStock.count }}'
       - 
         label: bnomei.kart.stocks
-        value: '{{ page.children.sumField("stock").toInt }}'
+        value: '{{ page.stock(null, null, "*") }}'
       - 
         label: bnomei.kart.latest
         value: '{{ page.children.sortBy("timestamp", "desc").first.timestamp }}'
@@ -31,9 +40,8 @@ sections:
   stocks:
     label: bnomei.kart.stocks
     type: pages
-    search: true
     template: stock
     sortBy: timestamp desc
-    text: '[{{ page.stockPad(3) }}] {{ page.page.toPage.title }}'
+    text: '{{ page.page.toPage.inStock ? "" : "⚠️ " }}[{{ page.stockPad(3) }}] {{ page.page.toPage.title }}'
     info: '{{ page.title }} ・ {{ page.timestamp }}'
     limit: 1000

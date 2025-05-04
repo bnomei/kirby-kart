@@ -28,5 +28,6 @@ it('has a tag helper', function (): void {
         ->and($c->isActive())->toBeFalse()
         ->and($c->url())->toBe('url')
         ->and($c->urlWithParams())->toBe('urlWithParams')
-        ->and($c->nope())->toBe(null);
+        ->and($c->nope())->toBe(null)
+        ->and((string) $c)->toBe('text (5)');
 });

@@ -10,6 +10,7 @@
 
 namespace Bnomei\Kart;
 
+use Kirby\Cms\User;
 use Kirby\Toolkit\A;
 
 class Licenses
@@ -50,14 +51,14 @@ class Licenses
         ];
     }
 
-    public function order(string $license_key): array
+    public function order(string $license_key): ?\OrderPage
     {
         [$license, $order, $customer, $error] = $this->get($license_key);
 
         return $order;
     }
 
-    public function customer(string $license_key): array
+    public function customer(string $license_key): ?User
     {
         [$license, $order, $customer, $error] = $this->get($license_key);
 

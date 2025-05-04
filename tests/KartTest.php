@@ -11,6 +11,7 @@
 use Bnomei\Kart\Cart;
 use Bnomei\Kart\ContentPageEnum;
 use Bnomei\Kart\Kart;
+use Bnomei\Kart\Licenses;
 use Bnomei\Kart\Provider;
 use Bnomei\Kart\Queue;
 use Bnomei\Kart\Urls;
@@ -36,6 +37,10 @@ it('has various shorthands for urls', function (): void {
 
 it('has a queue', function (): void {
     expect(kart()->queue())->toBeInstanceOf(Queue::class);
+});
+
+it('has a licenses', function (): void {
+    expect(kart()->licenses())->toBeInstanceOf(Licenses::class);
 });
 
 it('has a kirby ref', function (): void {
@@ -197,4 +202,26 @@ it('can find orders', function (): void {
         ->and(kart()->ordersWithProduct($p)->count())->toBeGreaterThan(0)
         ->and(kart()->ordersWithCustomer($customer)->count())->toBe(1)
         ->and(kart()->ordersWithInvoiceNumber($o->invnumber()->toInt())->id())->toBe($o->id());
+});
+
+it('can export to kerbs', function (): void {
+    expect(kart()->toKerbs())->toBeArray();
+});
+
+it('can create and check signatures from urls', function (string $url): void {
+    $signature = Kart::signature($url);
+    expect($signature)->not()->toBeEmpty()
+        ->and(Kart::checkSignature($signature, $url))->toBeTrue();
+
+})->with([
+    'https://kart.test',
+    'https://kart.test/',
+    'https://kart.test/hello.jpg',
+    'https://kart.test/hello?foo=bar',
+    'https://kart.test/hello?foo=bar&baz=qux',
+    'https://kart.test/hello.zip?foo=bar&baz=qux',
+]);
+
+it('can resolve query strings', function (): void {
+    expect(Kart::query('{{ page.title }}', site()->homePage()))->toBe('Kart Tests');
 });
