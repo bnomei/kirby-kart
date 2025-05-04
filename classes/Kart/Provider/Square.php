@@ -76,16 +76,16 @@ class Square extends Provider
             ], $options))),
         ]);
 
-        if (! in_array($remote->code(), [200, 201])) {
+        if (! in_array($remote->code(), [200, 201]) || ! is_array($remote->json())) {
             throw new \Exception('Checkout failed', $remote->code());
         }
 
-        $session_id = $remote->json()['payment_link']['order_id'];
+        $session_id = A::get($remote->json(), 'payment_link.order_id');
         $this->kirby->session()->set('bnomei.kart.'.$this->name.'.session_id', $session_id);
 
         // https://developer.squareup.com/reference/square/checkout-api/create-payment-link#response__property-payment_link
         return parent::checkout() && $remote->code() === 200 ?
-            $remote->json()['payment_link']['long_url'] : '/';
+            A::get($remote->json(), 'payment_link.long_url') : '/';
     }
 
     public function completed(array $data = []): array
@@ -104,7 +104,7 @@ class Square extends Provider
                 'Square-Version' => $this->option('api_version'),
             ]),
         ]);
-        if ($remote->code() !== 200) {
+        if ($remote->code() !== 200 || ! is_array($remote->json())) {
             return [];
         }
 
@@ -119,7 +119,7 @@ class Square extends Provider
                 'Square-Version' => $this->option('api_version'),
             ]),
         ]);
-        if ($remote->code() === 200) {
+        if ($remote->code() === 200 && is_array($remote->json())) {
             $customer = A::get($remote->json(), 'customer');
         }
 

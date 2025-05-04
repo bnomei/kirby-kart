@@ -57,14 +57,14 @@ class Stripe extends Provider
             ], $options)),
         ]);
 
-        if (! in_array($remote->code(), [200, 201])) {
+        if (! in_array($remote->code(), [200, 201]) || ! is_array($remote->json())) {
             throw new \Exception('Checkout failed', $remote->code());
         }
 
         $this->kirby->session()->set('bnomei.kart.'.$this->name.'.session_id', $remote->json()['id']);
 
         return parent::checkout() && $remote->code() === 200 ?
-            $remote->json()['url'] : '/';
+            A::get($remote->json(), 'url') : '/';
     }
 
     public function completed(array $data = []): array
@@ -85,7 +85,7 @@ class Stripe extends Provider
                     'customer',
                 ],
             ]]);
-        if ($remote->code() !== 200) {
+        if ($remote->code() !== 200 || ! is_array($remote->json())) {
             return [];
         }
 
@@ -114,7 +114,7 @@ class Stripe extends Provider
                 'limit' => 100, // is max without pagination. $this->kart->cart()->lines()->count(),
             ]]);
 
-        if ($remote->code() !== 200) {
+        if ($remote->code() !== 200 || ! is_array($remote->json())) {
             return [];
         }
 
@@ -230,7 +230,7 @@ class Stripe extends Provider
             ]),
         ]);
 
-        if ($remote->code() !== 200) {
+        if ($remote->code() !== 200 || ! is_array($remote->json())) {
             return null;
         }
 

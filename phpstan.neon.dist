@@ -21,5 +21,6 @@ parameters:
         - '#Cannot call method toString\(\) on Kirby\\Uuid\\Uuid\|null#'
         - '#Cannot call method id\(\) on Kirby\\Uuid\\Uuid\|null#'
         - '#Cannot call method license\(\) on Kirby\\Plugin\\Plugin\|null#'
+        - '#Trait Bnomei\\Kart\\ModelWithTurbo is used zero times and is not analysed.#'
         -
             identifier: missingType.iterableValue

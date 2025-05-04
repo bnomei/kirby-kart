@@ -165,7 +165,7 @@ class Paypal extends Provider
         $remote = Remote::get($endpoint.'/v2/checkout/orders/'.$sessionId, [
             'headers' => $this->headers(),
         ]);
-        if ($remote->code() !== 200) {
+        if ($remote->code() !== 200 || ! is_array($remote->json())) {
             return [];
         }
 
@@ -241,7 +241,7 @@ class Paypal extends Provider
                     'headers' => $this->headers(),
                 ]);
 
-                if ($remote->code() === 200) {
+                if ($remote->code() === 200 && is_array($remote->json())) {
                     $products[$product['id']] = $remote->json();
                 }
             }

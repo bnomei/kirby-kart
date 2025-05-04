@@ -102,7 +102,7 @@ class Paddle extends Provider
                     'customer',
                 ],
             ]]);
-        if ($remote->code() !== 200) {
+        if ($remote->code() !== 200 || ! is_array($remote->json())) {
             return [];
         }
 
@@ -116,7 +116,7 @@ class Paddle extends Provider
                 'Authorization' => 'Bearer '.strval($this->option('secret_key')),
             ],
         ]);
-        if ($remote->code() === 200) {
+        if ($remote->code() === 200 && is_array($remote->json())) {
             // NOTE: valid for 1h
             $invoice_url = A::get($remote->json(), 'data.url');
         }
@@ -129,7 +129,7 @@ class Paddle extends Provider
                 'Authorization' => 'Bearer '.strval($this->option('secret_key')),
             ],
         ]);
-        if ($remote->code() === 200) {
+        if ($remote->code() === 200 && is_array($remote->json())) {
             $customer = A::get($remote->json(), 'data');
         }
 
@@ -281,7 +281,7 @@ class Paddle extends Provider
             ],
         ]);
 
-        if ($remote->code() !== 200) {
+        if ($remote->code() !== 200 || ! is_array($remote->json())) {
             return null;
         }
 

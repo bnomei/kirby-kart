@@ -139,7 +139,7 @@ class Mollie extends Provider
                 'Authorization' => 'Bearer '.strval($this->option('secret_key')),
             ],
         ]);
-        if ($remote->code() !== 200) {
+        if ($remote->code() !== 200 || ! is_array($remote->json())) {
             return [];
         }
 
@@ -156,7 +156,7 @@ class Mollie extends Provider
                 ],
             ]);
 
-            if ($remote->code() === 200) {
+            if ($remote->code() === 200 && is_array($remote->json())) {
                 $customer = $remote->json();
             }
         }

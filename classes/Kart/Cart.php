@@ -327,6 +327,10 @@ class Cart implements Kerbs
         }
 
         foreach ($lines as $uuid => $line) {
+            if (! is_array($line)) {
+                continue;
+            }
+
             $p = explode('|', $uuid);
             $uuid = $p[0];
             $variant = null;

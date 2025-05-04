@@ -163,12 +163,8 @@ class Kart implements Kerbs
             $path = parse_url($data, PHP_URL_PATH);
             $query = parse_url($data, PHP_URL_QUERY);
             $data = [];
-            parse_str($query ?? '', $data);
+            parse_str(is_string($query) ? $query : '', $data);
             array_unshift($data, $path);
-        }
-
-        if (is_string($data)) {
-            throw new Exception('data must be an array or string');
         }
 
         return hash_hmac(

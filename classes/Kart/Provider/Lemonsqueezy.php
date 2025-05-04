@@ -113,7 +113,7 @@ class Lemonsqueezy extends Provider
             ],
         ]);
 
-        if ($remote->code() !== 200) {
+        if ($remote->code() !== 200 || ! is_array($remote->json())) {
             return [];
         }
 
@@ -204,7 +204,7 @@ class Lemonsqueezy extends Provider
                         'filter[product_id]' => $product['id'],
                     ]),
                 ]);
-                if ($remote->code() === 200) {
+                if ($remote->code() === 200 && is_array($remote->json())) {
                     foreach (A::get($remote->json(), 'data', []) as $variant) {
                         $variants[] = $variant['attributes'] + ['id' => $variant['id']];
                     }

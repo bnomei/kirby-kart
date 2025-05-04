@@ -78,7 +78,7 @@ class Fastspring extends Provider
             'headers' => $this->headers(),
         ]);
 
-        if ($remote->code() !== 200) {
+        if ($remote->code() !== 200 || ! is_array($remote->json())) {
             return [];
         }
 

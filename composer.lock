@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "b84ab79643869d8816af195fddec9a75",
+    "content-hash": "313bd76840df0322f0403e2512a961e4",
     "packages": [
         {
             "name": "getkirby/composer-installer",
@@ -956,16 +956,16 @@
         },
         {
             "name": "getkirby/cms",
-            "version": "5.0.0-beta.4",
+            "version": "dev-v5/develop",
             "source": {
                 "type": "git",
                 "url": "https://github.com/getkirby/kirby.git",
-                "reference": "a0e64e87743af69a3798bfc78e4e578b674a1173"
+                "reference": "9901a45113dc71ab81b1e33677c0689516339607"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/getkirby/kirby/zipball/a0e64e87743af69a3798bfc78e4e578b674a1173",
-                "reference": "a0e64e87743af69a3798bfc78e4e578b674a1173",
+                "url": "https://api.github.com/repos/getkirby/kirby/zipball/9901a45113dc71ab81b1e33677c0689516339607",
+                "reference": "9901a45113dc71ab81b1e33677c0689516339607",
                 "shasum": ""
             },
             "require": {
@@ -991,7 +991,7 @@
                 "phpmailer/phpmailer": "6.9.3",
                 "symfony/polyfill-intl-idn": "1.31.0",
                 "symfony/polyfill-mbstring": "1.31.0",
-                "symfony/yaml": "7.2.3"
+                "symfony/yaml": "7.2.5"
             },
             "replace": {
                 "symfony/polyfill-php72": "*"
@@ -1056,7 +1056,7 @@
                     "type": "custom"
                 }
             ],
-            "time": "2025-03-18T10:41:12+00:00"
+            "time": "2025-05-02T13:53:04+00:00"
         },
         {
             "name": "guzzlehttp/guzzle",
@@ -8348,16 +8348,16 @@
         },
         {
             "name": "symfony/yaml",
-            "version": "v7.2.3",
+            "version": "v7.2.5",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/yaml.git",
-                "reference": "ac238f173df0c9c1120f862d0f599e17535a87ec"
+                "reference": "4c4b6f4cfcd7e52053f0c8bfad0f7f30fb924912"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symfony/yaml/zipball/ac238f173df0c9c1120f862d0f599e17535a87ec",
-                "reference": "ac238f173df0c9c1120f862d0f599e17535a87ec",
+                "url": "https://api.github.com/repos/symfony/yaml/zipball/4c4b6f4cfcd7e52053f0c8bfad0f7f30fb924912",
+                "reference": "4c4b6f4cfcd7e52053f0c8bfad0f7f30fb924912",
                 "shasum": ""
             },
             "require": {
@@ -8400,7 +8400,7 @@
             "description": "Loads and dumps YAML files",
             "homepage": "https://symfony.com",
             "support": {
-                "source": "https://github.com/symfony/yaml/tree/v7.2.3"
+                "source": "https://github.com/symfony/yaml/tree/v7.2.5"
             },
             "funding": [
                 {
@@ -8416,7 +8416,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2025-01-07T12:55:42+00:00"
+            "time": "2025-03-03T07:12:39+00:00"
         },
         {
             "name": "ta-tikoma/phpunit-architecture-test",
@@ -8660,10 +8660,17 @@
             "time": "2022-06-03T18:03:27+00:00"
         }
     ],
-    "aliases": [],
+    "aliases": [
+        {
+            "package": "getkirby/cms",
+            "version": "dev-v5/develop",
+            "alias": "5.0.0",
+            "alias_normalized": "5.0.0.0"
+        }
+    ],
     "minimum-stability": "stable",
     "stability-flags": {
-        "getkirby/cms": 10
+        "getkirby/cms": 20
     },
     "prefer-stable": false,
     "prefer-lowest": false,
