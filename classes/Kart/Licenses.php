@@ -41,6 +41,20 @@ class Licenses
         ];
     }
 
+    public function order(string $license_key): array
+    {
+        [$license, $order, $customer, $error] = $this->get($license_key);
+
+        return $order;
+    }
+
+    public function customer(string $license_key): array
+    {
+        [$license, $order, $customer, $error] = $this->get($license_key);
+
+        return $customer;
+    }
+
     public function activate(string $license_key): array
     {
         [$license, $order, $customer, $error] = $this->get($license_key);
@@ -110,7 +124,7 @@ class Licenses
 
         // similar to https://docs.lemonsqueezy.com/api/license-api/validate-license-key
         $data = array_merge([
-            'valid' => is_string($license),
+            'con' => is_string($license),
             'error' => is_string($error) ? $error : null,
             'license_key' => [
                 'key' => $license,
