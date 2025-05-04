@@ -10,6 +10,7 @@
 
 use Bnomei\Kart\ContentPageEnum;
 use Bnomei\Kart\Kart;
+use Bnomei\Kart\ModelWithTurbo;
 use Kirby\Cms\Page;
 use Kirby\Content\Field;
 use Kirby\Data\Yaml;
@@ -24,6 +25,8 @@ use Kirby\Toolkit\Str;
  */
 class StockPage extends Page
 {
+    use ModelWithTurbo;
+
     public static function create(array $props): Page
     {
         $parent = kart()->page(ContentPageEnum::STOCKS);

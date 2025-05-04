@@ -11,6 +11,7 @@
 use Bnomei\Kart\ContentPageEnum;
 use Bnomei\Kart\Kart;
 use Bnomei\Kart\Kerbs;
+use Bnomei\Kart\ModelWithTurbo;
 use Bnomei\Kart\OrderLine;
 use Kirby\Cms\Collection;
 use Kirby\Cms\File;
@@ -34,6 +35,8 @@ use Kirby\Toolkit\Str;
  */
 class OrderPage extends Page implements Kerbs
 {
+    use ModelWithTurbo;
+
     public static function create(array $props): Page
     {
         $parent = kart()->page(ContentPageEnum::ORDERS);

@@ -11,6 +11,7 @@
 use Bnomei\Kart\ContentPageEnum;
 use Bnomei\Kart\Kart;
 use Bnomei\Kart\Kerbs;
+use Bnomei\Kart\ModelWithTurbo;
 use Bnomei\Kart\ProductStorage;
 use Bnomei\Kart\Router;
 use Kirby\Cms\File;
@@ -38,6 +39,8 @@ use Kirby\Toolkit\Str;
  */
 class ProductPage extends Page implements Kerbs
 {
+    use ModelWithTurbo;
+
     public static function create(array $props): Page
     {
         $parent = kart()->page(ContentPageEnum::PRODUCTS);

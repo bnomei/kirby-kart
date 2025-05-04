@@ -160,15 +160,11 @@ class Kart implements Kerbs
         }
 
         if (is_string($data)) {
-            $p = parse_url($data, PHP_URL_PATH | PHP_URL_QUERY);
-            if (is_array($p)) { // @phpstan-ignore-line
-                $query = '';
-                $path = '';
-                ['query' => $query, 'path' => $path] = $p;
-                $data = [];
-                parse_str($query, $data);
-                array_unshift($data, $path);
-            }
+            $path = parse_url($data, PHP_URL_PATH);
+            $query = parse_url($data, PHP_URL_QUERY);
+            $data = [];
+            parse_str($query ?? '', $data);
+            array_unshift($data, $path);
         }
 
         if (is_string($data)) {
