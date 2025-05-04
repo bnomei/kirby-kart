@@ -14,7 +14,7 @@ it('can create orderlines', function (): void {
     $product = page('products')->children()->random(1)->first();
 
     $o = new OrderLine(
-        $product->id(), // uuid would work as well but not uuid.id
+        $product->uuid()->toString(), // id would work as well but not uuid.id
         123.4,
         2,
         123.4 * 2 + 10.00 - 20.00,
@@ -25,7 +25,7 @@ it('can create orderlines', function (): void {
     );
 
     expect($o)->toBeInstanceOf(OrderLine::class)
-        ->and($o->id())->toBe($product->uuid()->id()) // uuid as key for collections
+        ->and($o->id())->toBe($product->uuid()->toString()) // uuid as key for collections
         ->and($o->key())->toBe($o->id()) // Merx
         ->and($o->quantity())->toBe(2)
         ->and($o->doesNotExist())->toBeNull()

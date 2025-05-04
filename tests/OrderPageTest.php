@@ -17,8 +17,10 @@ it('has a blueprint from PHP', function (): void {
 it('is an order page', function (): void {
     /** @var ProductPage $p */
     $p = kart()->products()->first();
+    $p_sc = $p->salesCount();
     /** @var ProductPage $l */
     $l = kart()->products()->last();
+    $l_sc = $p->salesCount();
     /** @var OrdersPage $orders */
     $orders = kart()->page('orders');
 
@@ -53,6 +55,8 @@ it('is an order page', function (): void {
         ->and($o->downloads())->toBeNull()
         ->and($o->invoice())->toBeString()
         ->and($o->invoiceNumber())->toHaveLength(5)
+        ->and($o->url())->toBeString(5)
+        ->and($o->urlWithSignature())->toContain('?signature=')
         ->and($o->tax())->toBe(15.0)
         ->and($o->formattedTax())->toBe('€15.00')
         ->and($o->sum())->toBe(75.0)
@@ -66,7 +70,8 @@ it('is an order page', function (): void {
         ->and($o->total())->toBe(87.0)
         ->and($o->formattedTotal())->toBe('€87.00')
         ->and($p->salesCount())->toBe(2)
-        ->and($l->salesCount())->toBe(3);
+        ->and($l->salesCount())->toBe(3)
+        ->and($l->toKerbs())->toBeArray();
 
     // create zip file
     touch($o->root().'/hello.jpg');

@@ -554,7 +554,7 @@ App::plugin(
             },
             'user.delete:after' => function (bool $status, User $user) {
                 kirby()->cache('bnomei.kart.stats')->remove('customers');
-                kirby()->cache('bnomei.kart.gravatar')->remove(md5(strtolower(trim($this->email()))));
+                kirby()->cache('bnomei.kart.gravatar')->remove(md5(strtolower(trim($user->email()))));
             },
             'page.created:after' => function (Page $page) {
                 if ($page instanceof StocksPage) {
@@ -1025,7 +1025,9 @@ App::plugin(
              * @kql-allowed
              */
             'gravatar' => function (int $size = 200): string {
-                $hash = md5(strtolower(trim($this->email())));
+                /** @var User $user */
+                $user = $this;
+                $hash = md5(strtolower(trim($user->email())));
                 $url = "https://www.gravatar.com/avatar/{$hash}?s={$size}";
 
                 if ($cache = kirby()->cache('bnomei.kart.gravatar')->get($hash)) {

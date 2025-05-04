@@ -63,7 +63,7 @@ it('can check if it can checkout (stock)', function (): void {
     $products = page('products')->children()->random(3);
 
     $products->map(function (ProductPage $p) {
-        $p->updateStock(1, true);
+        $p = $p->updateStock(1, true);
 
         return $p;
     });
@@ -93,7 +93,7 @@ it('can check if it can checkout (maxapo)', function (): void {
 
     $products = page('products')->children()->random(4);
     $products->map(function (ProductPage $p) {
-        $p->updateStock(20, true);
+        $p = $p->updateStock(20, true);
 
         return $p;
     });
@@ -102,7 +102,11 @@ it('can check if it can checkout (maxapo)', function (): void {
     $products = $products->remove($other);
 
     $limit = intval(kart()->option('orders.order.maxapo'));
-    $products->map(fn (ProductPage $p) => $p->updateStock(20, true));
+    $products->map(function (ProductPage $p) {
+        $p = $p->updateStock(20, true);
+
+        return $p;
+    });
     $this->cart = new Cart(
         'cart',
         $products->toArray(fn ($p) => ['quantity' => $limit + 1])
