@@ -26,7 +26,7 @@
 /vendor/**/*.xml
 /vendor/**/*.dist
 /vendor/**/readme.php
-/vendor/**/LICENSE
+# /vendor/**/LICENSE
 /vendor/**/COPYING
 /vendor/**/VERSION
 /vendor/**/docs/*
