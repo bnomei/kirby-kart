@@ -57,7 +57,7 @@ if (! function_exists('kart_env')) {
         // NOTE: using a string prevents the IDE to put it in a use statement which would break if the class is not loaded
         $dotenv = '\Bnomei\DotEnv';
 
-        return class_exists($dotenv) ? $dotenv::getenv($key) : $default;
+        return class_exists($dotenv) ? $dotenv::getenv($key, $default) : $default;
     }
 }
 
