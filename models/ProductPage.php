@@ -657,17 +657,30 @@ class ProductPage extends Page implements Kerbs
         return empty($variant) ? null : implode(',', $variant);
     }
 
-    public function priceWithVariant(?string $variant = null, bool $asPriceId = false): float
+    public function priceWithVariant(?string $variant = null): float
     {
         foreach ($this->variantData(false) as $v) {
             if ($v['variant'] === $variant) {
-                if ($price = A::get($v, $asPriceId ? 'price' : 'price_id')) {
-                    return floatval($price);
+                if ($price = A::get($v, 'price')) {
+                    return $price;
                 }
             }
         }
 
         return $this->price()->toFloat();
+    }
+
+    public function priceIdForVariant(string $variant): ?string
+    {
+        foreach ($this->variantData(false) as $v) {
+            if ($v['variant'] === $variant) {
+                if ($priceId = A::get($v, 'price_id')) {
+                    return $priceId;
+                }
+            }
+        }
+
+        return null;
     }
 
     public function ownedByUser(?\Kirby\Cms\User $user = null): bool

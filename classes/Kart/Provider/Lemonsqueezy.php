@@ -46,7 +46,7 @@ class Lemonsqueezy extends Provider
 
         $variantId = A::get($product?->raw()->yaml(), 'variants.0.id');
         if ($product && $line->variant()) {
-            $variantId = $product->priceWithVariant($line->variant(), true);
+            $variantId = $product->priceIdForVariant($line->variant());
         }
 
         // https://docs.lemonsqueezy.com/api/checkouts/create-checkout

@@ -43,7 +43,7 @@ class Stripe extends Provider
                 'Authorization' => 'Bearer '.strval($this->option('secret_key')),
             ],
             'data' => array_filter(array_merge([
-                'mode' => 'payment',
+                'mode' => 'payment', // NOTE: if price is a recurring price this must be a `subscription`
                 'payment_method_types' => ['card'],
                 'currency' => strtolower($this->kart->currency()),
                 'customer_email' => $this->kirby->user()?->email(),
@@ -52,7 +52,7 @@ class Stripe extends Provider
                 'invoice_creation' => ['enabled' => 'true'],
                 'line_items' => $this->kart->cart()->lines()->values(fn (CartLine $l) => array_merge([
                     'price' => $l->variant() ?
-                            $l->product()?->priceWithVariant($l->variant(), true) :
+                            $l->product()?->priceIdForVariant($l->variant()) :
                             A::get($l->product()?->raw()->yaml(), 'default_price.id'), // @phpstan-ignore-line
                     'quantity' => $l->quantity(),
                 ], $lineItem($this->kart, $l))),
@@ -60,6 +60,7 @@ class Stripe extends Provider
         ]);
 
         $json = in_array($remote->code(), [200, 201]) ? $remote->json() : null;
+
         if (! is_array($json)) {
             throw new \Exception('Checkout failed', $remote->code());
         }
@@ -106,7 +107,7 @@ class Stripe extends Provider
             'paymentMethod' => implode(',', A::get($json, 'payment_method_types', [])),
             'paymentComplete' => A::get($json, 'payment_status') === 'paid',
             'invoiceurl' => A::get($json, 'invoice'),
-            'paymentId' => A::get($json, 'id'),
+            'paymentId' => A::get($json, 'id', A::get($json, 'payment_intent')),
         ]));
 
         $remote = Remote::get('https://api.stripe.com/v1/checkout/sessions/'.$sessionId.'/line_items', [
@@ -188,6 +189,7 @@ class Stripe extends Provider
                     ],
                     'data' => array_filter([
                         'product' => $cursor,
+                        // 'type' => 'one_time', // otherwise checkout needs to switch to subscription
                         'active' => 'true',
                         'limit' => 100,
                         'currency' => strtolower($this->kart->currency()),
@@ -225,6 +227,7 @@ class Stripe extends Provider
                         'downloads' => fn ($i) => $this->findFilesFromUrls(
                             A::get($i, 'metadata.downloads', [])
                         ),
+                        'featured' => fn ($i) => boolval(filter_var(A::get($i, 'metadata.featured'), FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE) ?? false),
                         'variants' => function ($i) {
                             $variants = [];
                             foreach (A::get($i, 'prices', []) as $price) {

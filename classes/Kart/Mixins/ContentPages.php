@@ -30,12 +30,15 @@ trait ContentPages
 
         $this->kirby->impersonate('kirby', function () use ($pages): void {
             foreach ($pages as $key => $id) {
+                $parts = explode('/', $id);
+                $slug = array_pop($parts);
                 $props = [
                     'id' => $id,
-                    'slug' => $id,
+                    'slug' => $slug,
                     'isDraft' => false,
                     'template' => $this->kirby->option("bnomei.kart.{$key}.template", $key),
                     'model' => $this->kirby->option("bnomei.kart.{$key}.model", $key),
+                    'parent' => page(implode('/', $parts)),
                 ];
                 if (kirby()->multilang()) {
                     foreach (kirby()->languages() as $language) {
@@ -56,7 +59,7 @@ trait ContentPages
                         'uuid' => $key, // match key to make them easier to find
                     ];
                 }
-                Page::create($props);
+                $new = Page::create($props);
             }
         });
     }

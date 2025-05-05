@@ -168,6 +168,8 @@ abstract class Provider
             $urls = Str::contains($urls, ',') ? explode(',', $urls) : [$urls];
         }
 
+        $urls = array_map(fn ($i) => trim($i), $urls);
+
         // media pool in the products page
         $images = $this->kirby()->site()->kart()->page(ContentPageEnum::PRODUCTS)->images();
 
@@ -192,6 +194,8 @@ abstract class Provider
         if (is_string($urls)) {
             $urls = Str::contains($urls, ',') ? explode(',', $urls) : [$urls];
         }
+
+        $urls = array_map(fn ($i) => trim($i), $urls);
 
         // media pool in the products page
         $images = $this->kirby()->site()->kart()->page(ContentPageEnum::PRODUCTS)->files();

@@ -254,6 +254,7 @@ class Paddle extends Provider
                     },
                     'tags' => fn ($i) => A::get($i, 'custom_data.tags', A::get($i, 'custom_data.tag', '')),
                     'categories' => fn ($i) => A::get($i, 'custom_data.categories', A::get($i, 'custom_data.category', '')),
+                    'featured' => fn ($i) => boolval(filter_var(A::get($i, 'custom_data.featured'), FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE) ?? false),
                     'gallery' => fn ($i) => $this->findImagesFromUrls(
                         explode(',', A::get($i, 'image_url', A::get($i, 'custom_data.gallery', '')))
                     ),
