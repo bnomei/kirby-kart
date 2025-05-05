@@ -40,8 +40,10 @@ class Paypal extends Provider
                 'Authorization' => 'Basic '.base64_encode(strval($this->option('client_id')).':'.strval($this->option('client_secret'))),
             ],
         ]);
-        if ($remote->code() === 200) {
-            $this->token = $remote->json()['access_token'];
+
+        $json = $remote->code() === 200 ? $remote->json() : null;
+        if (is_array($json)) {
+            $this->token = A::get($json, 'access_token');
         }
 
         return $this->token;
@@ -138,18 +140,17 @@ class Paypal extends Provider
             ], $options))),
         ]);
 
-        if ($remote->code() === 200) {
-            $this->kirby->session()->set('kart.paypal.order.id', $remote->json()['id']);
-            $this->kirby->session()->set('kart.paypal.cart.hash', $this->kart->cart()->hash());
-        }
-
-        if (! in_array($remote->code(), [200, 201])) {
+        $json = in_array($remote->code(), [200, 201]) ? $remote->json() : null;
+        if (! is_array($json)) {
             throw new \Exception('Checkout failed', $remote->code());
         }
 
+        $this->kirby->session()->set('kart.paypal.order.id', A::get($json, 'id'));
+        $this->kirby->session()->set('kart.paypal.cart.hash', $this->kart->cart()->hash());
+
         // https://www.sandbox.paypal.com/checkoutnow?token=...
         return parent::checkout() && $remote->code() === 200 ?
-            $remote->json()['links'][1]['href'] : '/';
+            A::get($json, 'links.1.href') : '/';
     }
 
     public function completed(array $data = []): array
@@ -165,11 +166,11 @@ class Paypal extends Provider
         $remote = Remote::get($endpoint.'/v2/checkout/orders/'.$sessionId, [
             'headers' => $this->headers(),
         ]);
-        if ($remote->code() !== 200 || ! is_array($remote->json())) {
+
+        $json = $remote->code() === 200 ? $remote->json() : null;
+        if (! is_array($json)) {
             return [];
         }
-
-        $json = $remote->json();
 
         $data = array_merge($data, array_filter([
             // 'session_id' => $sessionId,
@@ -187,7 +188,6 @@ class Paypal extends Provider
             'paymentId' => A::get($json, 'id'),
         ]));
 
-        $json = $remote->json();
         $uuid = kart()->option('products.product.uuid');
         if ($uuid instanceof Closure === false) {
             return [];
@@ -227,11 +227,7 @@ class Paypal extends Provider
                 'headers' => $this->headers(),
             ]);
 
-            if ($remote->code() !== 200) {
-                break;
-            }
-
-            $json = $remote->json();
+            $json = $remote->code() === 200 ? $remote->json() : null;
             if (! is_array($json)) {
                 break;
             }
@@ -241,8 +237,9 @@ class Paypal extends Provider
                     'headers' => $this->headers(),
                 ]);
 
-                if ($remote->code() === 200 && is_array($remote->json())) {
-                    $products[$product['id']] = $remote->json();
+                $prod = $remote->code() === 200 ? $remote->json() : null;
+                if (is_array($prod)) {
+                    $products[$product['id']] = $prod;
                 }
             }
 

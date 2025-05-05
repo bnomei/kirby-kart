@@ -57,8 +57,10 @@ class Paddle extends Provider
                             continue;
                         }
 
-                        $price_id = $price['id'];
-                        break; // first active EUR price
+                        if (! $l->variant() || $l->variant() === A::get($price, 'custom_data.variant')) {
+                            $price_id = $price['id'];
+                            break; // match or first active EUR price
+                        }
                     }
 
                     return array_merge([
@@ -69,11 +71,12 @@ class Paddle extends Provider
             ], $options))),
         ]);
 
-        if (! in_array($remote->code(), [200, 201])) {
+        $json = in_array($remote->code(), [200, 201]) ? $remote->json() : null;
+        if (! is_array($json)) {
             throw new \Exception('Checkout failed', $remote->code());
         }
 
-        $session_id = $remote->json()['data']['id']; // txn_...
+        $session_id = A::get($remote->json(), 'data.id'); // txn_...
         $this->kirby->session()->set('bnomei.kart.'.$this->name.'.session_id', $session_id);
 
         return parent::checkout() ? Router::provider_payment([
@@ -102,11 +105,11 @@ class Paddle extends Provider
                     'customer',
                 ],
             ]]);
-        if ($remote->code() !== 200 || ! is_array($remote->json())) {
+
+        $json = $remote->code() === 200 ? $remote->json() : null;
+        if (! is_array($json)) {
             return [];
         }
-
-        $json = $remote->json();
 
         $invoice_url = null;
         // https://developer.paddle.com/api-reference/transactions/get-invoice-pdf
@@ -116,9 +119,11 @@ class Paddle extends Provider
                 'Authorization' => 'Bearer '.strval($this->option('secret_key')),
             ],
         ]);
-        if ($remote->code() === 200 && is_array($remote->json())) {
-            // NOTE: valid for 1h
-            $invoice_url = A::get($remote->json(), 'data.url');
+
+        $inv = $remote->code() === 200 ? $remote->json() : null;
+        if (is_array($inv)) {
+            // TODO: valid ONLY for 1h
+            $invoice_url = A::get($inv, 'data.url');
         }
 
         $customer = [];
@@ -129,8 +134,10 @@ class Paddle extends Provider
                 'Authorization' => 'Bearer '.strval($this->option('secret_key')),
             ],
         ]);
-        if ($remote->code() === 200 && is_array($remote->json())) {
-            $customer = A::get($remote->json(), 'data');
+
+        $cust = $remote->code() === 200 ? $remote->json() : null;
+        if (is_array($cust)) {
+            $customer = A::get($cust, 'data');
         }
 
         $data = array_merge($data, array_filter([
@@ -167,7 +174,7 @@ class Paddle extends Provider
             }
             $data['items'][] = [
                 'key' => ['page://'.$uuid(null, ['id' => A::get($price, 'product_id')])],  // pages field expect an array
-                'variant' => null, // TODO: variant
+                'variant' => A::get($price, 'custom_data.variant', ''),
                 'quantity' => A::get($line, 'quantity'),
                 'price' => round(A::get($price, 'unit_price.amount', 0) / 100.0, 2),
                 // these values include the multiplication with quantity
@@ -205,11 +212,7 @@ class Paddle extends Provider
                 ]),
             ]);
 
-            if ($remote->code() !== 200) {
-                break;
-            }
-
-            $json = $remote->json();
+            $json = $remote->code() === 200 ? $remote->json() : null;
             if (! is_array($json)) {
                 break;
             }
@@ -258,6 +261,26 @@ class Paddle extends Provider
                         explode(',', A::get($i, 'custom_data.downloads', ''))
                     ),
                     // maxapo, could be read from price
+                    'variants' => function ($i) {
+                        $variants = [];
+                        foreach (A::get($i, 'prices', []) as $price) {
+                            if (A::get($price, 'status') !== 'active') {
+                                continue;
+                            }
+                            if (A::get($price, 'unit_price.currency_code', '') !== $this->kart->currency()) {
+                                continue;
+                            }
+
+                            $variants[] = [
+                                'price_id' => $price['id'],
+                                'variant' => A::get($price, 'custom_data.variant', ''),
+                                'price' => round(A::get($price, 'unit_amount', 0) / 100.0, 2),
+                                'image' => explode(',', A::get($price, 'custom_data.image', '')),
+                            ];
+                        }
+
+                        return empty($variants) ? null : $variants;
+                    },
                 ],
             ],
             $this->kart->page(ContentPageEnum::PRODUCTS))
@@ -281,11 +304,10 @@ class Paddle extends Provider
             ],
         ]);
 
-        if ($remote->code() !== 200 || ! is_array($remote->json())) {
+        $json = $remote->code() === 200 ? $remote->json() : null;
+        if (! is_array($json)) {
             return null;
         }
-
-        $json = $remote->json();
 
         return A::get($json, 'data.urls.general.overview');
     }

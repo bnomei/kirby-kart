@@ -41,11 +41,7 @@ class Gumroad extends Provider
             ],
         ]);
 
-        if ($remote->code() !== 200) {
-            return [];
-        }
-
-        $json = $remote->json();
+        $json = $remote->code() === 200 ? $remote->json() : null;
         if (! is_array($json)) {
             return [];
         }
@@ -79,6 +75,7 @@ class Gumroad extends Provider
                     ),
                     // downloads
                     // 'maxapo' => 'max_purchase_count',
+                    // NOTE: has variants but without any metadata to map
                 ],
             ],
             $this->kart->page(ContentPageEnum::PRODUCTS))

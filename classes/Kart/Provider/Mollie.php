@@ -56,8 +56,9 @@ class Mollie extends Provider
                 ]),
             ]);
 
-            if (in_array($remote->code(), [200, 201])) {
-                $customerId = $remote->json()['id'];
+            $customer = in_array($remote->code(), [200, 201]) ? $remote->json() : null;
+            if (is_array($customer)) {
+                $customerId = A::get($customer, 'id');
             }
         }
 
@@ -85,7 +86,7 @@ class Mollie extends Provider
                     'email' => $this->kirby()->user()->email(),
                 ] : null,
                 'lines' => $this->kart->cart()->lines()->values(fn (CartLine $l) => array_merge([
-                    'sku' => $l->product()?->uuid()->id(), // used on completed again to find the product
+                    'sku' => $l->product()?->uuid()->id().($l->variant() ? '|'.$l->variant() : ''), // used on completed again to find the product
                     'type' => $l->product()?->ptype()->isNotEmpty() ? // @phpstan-ignore-line
                         $l->product()?->ptype()->value() : 'physical', // @phpstan-ignore-line
                     'description' => $l->product()?->title()->value(),
@@ -113,15 +114,16 @@ class Mollie extends Provider
             ], $options)),
         ]);
 
-        $session_id = $remote->json()['id']; // tr_...
-        $this->kirby->session()->set('bnomei.kart.'.$this->name.'.session_id', $session_id);
-
-        if (! in_array($remote->code(), [200, 201])) {
+        $json = in_array($remote->code(), [200, 201]) ? $remote->json() : null;
+        if (! is_array($json)) {
             throw new \Exception('Checkout failed', $remote->code());
         }
 
+        $session_id = A::get($json, 'id'); // tr_...
+        $this->kirby->session()->set('bnomei.kart.'.$this->name.'.session_id', $session_id);
+
         return parent::checkout() && in_array($remote->code(), [200, 201]) ?
-            $remote->json()['_links']['checkout']['href'] : '/';
+            A::get($json, '_links.checkout.href') : '/';
     }
 
     public function completed(array $data = []): array
@@ -139,11 +141,11 @@ class Mollie extends Provider
                 'Authorization' => 'Bearer '.strval($this->option('secret_key')),
             ],
         ]);
-        if ($remote->code() !== 200 || ! is_array($remote->json())) {
+
+        $json = $remote->code() === 200 ? $remote->json() : null;
+        if (! is_array($json)) {
             return [];
         }
-
-        $json = $remote->json();
 
         $customer = [];
         // this only works if the user has been linked on checkout creation
@@ -156,8 +158,9 @@ class Mollie extends Provider
                 ],
             ]);
 
-            if ($remote->code() === 200 && is_array($remote->json())) {
-                $customer = $remote->json();
+            $customer = $remote->code() === 200 ? $remote->json() : null;
+            if (! is_array($customer)) {
+                $customer = [];
             }
         }
 
@@ -181,9 +184,14 @@ class Mollie extends Provider
         $likey = kart()->option('licenses.license.uuid');
 
         foreach (A::get($json, 'lines') as $line) {
+            $sku = A::get($line, 'sku');
+            $variant = '';
+            if (str_contains($sku, '|')) {
+                [$sku, $variant] = explode('|', $sku);
+            }
             $data['items'][] = [
-                'key' => ['page://'.A::get($line, 'sku')],  // pages field expect an array
-                'variant' => null, // TODO: variant
+                'key' => ['page://'.$sku],  // pages field expect an array
+                'variant' => $variant,
                 'quantity' => A::get($line, 'quantity'),
                 'price' => round(floatval(A::get($line, 'unitPrice.value', 0)), 2),
                 // these values include the multiplication with quantity

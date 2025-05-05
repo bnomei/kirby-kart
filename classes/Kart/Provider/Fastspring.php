@@ -59,12 +59,14 @@ class Fastspring extends Provider
 
         $session_id = null;
 
-        if ($remote->code() === 200) {
-            $session_id = $remote->json()['id'];
-            $this->kirby->session()->set('kart.'.$this->name.'.session_id', $session_id);
+        $json = $remote->code() === 200 ? $remote->json() : null;
+        if (! is_array($json)) {
+            throw new \Exception('Fastspring: checkout failed');
         }
 
-        //
+        $session_id = A::get($remote->json(), 'id');
+        $this->kirby->session()->set('kart.'.$this->name.'.session_id', $session_id);
+
         return parent::checkout() && $remote->code() === 200 && $session_id ?
             strval($this->option('store_url')).'/session/'.$session_id : '/';
     }
@@ -78,27 +80,24 @@ class Fastspring extends Provider
             'headers' => $this->headers(),
         ]);
 
-        if ($remote->code() !== 200 || ! is_array($remote->json())) {
+        $json = $remote->code() === 200 ? $remote->json() : null;
+        if (! is_array($json)) {
             return [];
         }
 
-        foreach (A::get($remote->json(), 'products', []) as $path) {
+        foreach (A::get($json, 'products', []) as $path) {
             // https://developer.fastspring.com/reference/retrieve-a-product
             $remote = Remote::get('https://api.fastspring.com/products/'.$path, [
                 'headers' => $this->headers(),
             ]);
 
-            if ($remote->code() !== 200) {
+            $product = $remote->code() === 200 ? $remote->json() : null;
+            if (! is_array($product)) {
                 continue;
             }
 
-            $json = $remote->json();
-            if (! is_array($json)) {
-                continue;
-            }
-
-            foreach (A::get($json, 'products') as $product) {
-                $products[$product['product']] = $product;
+            foreach (A::get($product, 'products') as $p) {
+                $products[$p['product']] = $p;
             }
         }
 

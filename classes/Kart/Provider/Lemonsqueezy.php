@@ -36,11 +36,17 @@ class Lemonsqueezy extends Provider
 
     public function checkout(): string
     {
-        $product = $this->kart->cart()->lines()->first()?->product(); // @phpstan-ignore-line
+        $line = $this->kart->cart()->lines()->first();
+        $product = $line->product(); // @phpstan-ignore-line
 
         $options = $this->option('checkout_options', false);
         if ($options instanceof Closure) {
             $options = $options($this->kart);
+        }
+
+        $variantId = A::get($product?->raw()->yaml(), 'variants.0.id');
+        if ($product && $line->variant()) {
+            $variantId = $product->priceWithVariant($line->variant(), true);
         }
 
         // https://docs.lemonsqueezy.com/api/checkouts/create-checkout
@@ -62,13 +68,13 @@ class Lemonsqueezy extends Provider
                         'variant' => [
                             'data' => [
                                 'type' => 'variants',
-                                'id' => $product ? A::get($product->raw()->yaml(), 'variants.0.id') : null,
+                                'id' => $variantId,
                             ],
                         ],
                     ],
                     'attributes' => array_filter(array_merge([
                         'product_options' => [
-                            'enabled_variants' => [$product ? A::get($product->raw()->yaml(), 'variants.0.id') : null],
+                            'enabled_variants' => [$variantId], // NOTE: array
                             'redirect_url' => url(Router::PROVIDER_SUCCESS).'?order_id=[order_id]',
                         ],
                         'checkout_data' => array_filter([
@@ -82,15 +88,16 @@ class Lemonsqueezy extends Provider
             ]),
         ]);
 
-        if (! in_array($remote->code(), [200, 201])) {
+        $json = in_array($remote->code(), [200, 201]) ? $remote->json() : null;
+        if (! is_array($json)) {
             throw new \Exception('Checkout failed', $remote->code());
         }
 
-        $session_id = $remote->json()['data']['id'];
+        $session_id = A::get($json, 'data.id');
         $this->kirby->session()->set('bnomei.kart.'.$this->name.'.session_id', $session_id);
 
         return parent::checkout() && in_array($remote->code(), [200, 201]) ?
-            $remote->json()['data']['attributes']['url'] : '/';
+            A::get($json, 'data.attributes.url') : '/';
     }
 
     public function completed(array $data = []): array
@@ -113,11 +120,10 @@ class Lemonsqueezy extends Provider
             ],
         ]);
 
-        if ($remote->code() !== 200 || ! is_array($remote->json())) {
+        $json = $remote->code() === 200 ? $remote->json() : null;
+        if (! is_array($json)) {
             return [];
         }
-
-        $json = $remote->json();
 
         $data = array_merge($data, array_filter([
             // 'session_id' => $sessionId,
@@ -142,9 +148,10 @@ class Lemonsqueezy extends Provider
         /** @var \Closure $likey */
         $likey = kart()->option('licenses.license.uuid');
 
+        // https://docs.lemonsqueezy.com/api/variants/the-variant-object
         $data['items'][] = [
             'key' => ['page://'.$uuid(null, ['id' => A::get($json, 'data.attributes.first_order_item.product_id')])],  // pages field expect an array
-            'variant' => null, // TODO: variant
+            'variant' => 'variant:'.A::get($json, 'data.attributes.first_order_item.variant_name', 'default'),
             'quantity' => 1, // lemonsqueeze ever only sells one item at a time
             'price' => round(A::get($json, 'data.attributes.first_order_item.price', 0) / 100.0, 2),
             // these values include the multiplication with quantity
@@ -179,11 +186,7 @@ class Lemonsqueezy extends Provider
                 ]),
             ]);
 
-            if ($remote->code() !== 200) {
-                break;
-            }
-
-            $json = $remote->json();
+            $json = $remote->code() === 200 ? $remote->json() : null;
             if (! is_array($json)) {
                 break;
             }
@@ -204,8 +207,15 @@ class Lemonsqueezy extends Provider
                         'filter[product_id]' => $product['id'],
                     ]),
                 ]);
-                if ($remote->code() === 200 && is_array($remote->json())) {
-                    foreach (A::get($remote->json(), 'data', []) as $variant) {
+
+                $productVariants = $remote->code() === 200 ? $remote->json() : null;
+                if (is_array($productVariants)) {
+                    foreach (A::get($productVariants, 'data', []) as $variant) {
+                        // NOTE: the default variant will always be pending status
+                        if (strtolower(A::get($variant, 'name', 'default')) !== 'default' &&
+                        A::get($variant, 'attributes.status') !== 'published') {
+                            continue;
+                        }
                         $variants[] = $variant['attributes'] + ['id' => $variant['id']];
                     }
                 }
@@ -241,6 +251,19 @@ class Lemonsqueezy extends Provider
                     // 'downloads' => fn ($i) => $this->findFilesFromUrls(
                     //     A::get($i, 'metadata.downloads', [])
                     // ),
+                    'variants' => function ($i) {
+                        $variants = [];
+                        foreach (A::get($i, 'variants', []) as $variant) {
+                            $variants[] = [
+                                'price_id' => $variant['id'],
+                                'variant' => 'variant:'.A::get($variant, 'name', 'default'),
+                                'price' => round(A::get($variant, 'price', 0) / 100.0, 2),
+                                // 'image' => explode(',', A::get($variant, 'metadata.image', '')),
+                            ];
+                        }
+
+                        return empty($variants) ? null : $variants;
+                    },
                 ],
             ],
             $this->kart->page(ContentPageEnum::PRODUCTS))

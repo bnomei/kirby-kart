@@ -55,11 +55,7 @@ class Snipcart extends Provider
                 'headers' => $this->headers(),
             ]);
 
-            if ($remote->code() !== 200) {
-                break;
-            }
-
-            $json = $remote->json();
+            $json = $remote->code() === 200 ? $remote->json() : null;
             if (! is_array($json)) {
                 break;
             }

@@ -76,16 +76,17 @@ class Square extends Provider
             ], $options))),
         ]);
 
-        if (! in_array($remote->code(), [200, 201]) || ! is_array($remote->json())) {
+        $json = in_array($remote->code(), [200, 201]) ? $remote->json() : null;
+        if (! is_array($json)) {
             throw new \Exception('Checkout failed', $remote->code());
         }
 
-        $session_id = A::get($remote->json(), 'payment_link.order_id');
+        $session_id = A::get($json, 'payment_link.order_id');
         $this->kirby->session()->set('bnomei.kart.'.$this->name.'.session_id', $session_id);
 
         // https://developer.squareup.com/reference/square/checkout-api/create-payment-link#response__property-payment_link
         return parent::checkout() && $remote->code() === 200 ?
-            A::get($remote->json(), 'payment_link.long_url') : '/';
+            A::get($json, 'payment_link.long_url') : '/';
     }
 
     public function completed(array $data = []): array
@@ -104,23 +105,25 @@ class Square extends Provider
                 'Square-Version' => $this->option('api_version'),
             ]),
         ]);
-        if ($remote->code() !== 200 || ! is_array($remote->json())) {
+
+        $json = $remote->code() === 200 ? $remote->json() : null;
+        if (! is_array($json)) {
             return [];
         }
 
-        $json = A::get($remote->json(), 'order', []);
-
         $customer = [];
         // https://developer.squareup.com/reference/square/customers-api/retrieve-customer
-        $remote = Remote::get('https://connect.squareup.com/v2/customers/'.A::get($json, 'customer_id'), [
+        $remote = Remote::get('https://connect.squareup.com/v2/customers/'.A::get($json, 'order.customer_id'), [
             'headers' => array_filter([
                 'Content-Type' => 'application/json',
                 'Authorization' => 'Bearer '.strval($this->option('access_token')),
                 'Square-Version' => $this->option('api_version'),
             ]),
         ]);
-        if ($remote->code() === 200 && is_array($remote->json())) {
-            $customer = A::get($remote->json(), 'customer');
+
+        $cust = $remote->code() === 200 ? $remote->json() : null;
+        if (is_array($cust)) {
+            $customer = A::get($cust, 'customer');
         }
 
         $data = array_merge($data, array_filter([
@@ -131,11 +134,11 @@ class Square extends Provider
                 'email' => A::get($customer, 'email_address'),
                 'name' => trim(A::get($customer, 'given_name').' '.A::get($customer, 'family_name')),
             ],
-            'paidDate' => date('Y-m-d H:i:s', strtotime(A::get($json, 'updated_at'))),
+            'paidDate' => date('Y-m-d H:i:s', strtotime(A::get($json, 'order.updated_at'))),
             // 'paymentMethod' => implode(',', A::get($json, 'payment_method_types', [])),
-            'paymentComplete' => A::get($json, 'state') === 'COMPLETED',
+            'paymentComplete' => A::get($json, 'order.state') === 'COMPLETED',
             // 'invoiceurl' => '',
-            'paymentId' => A::get($json, 'id'),
+            'paymentId' => A::get($json, 'order.id'),
         ]));
 
         $uuid = kart()->option('products.product.uuid');

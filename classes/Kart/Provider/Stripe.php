@@ -51,20 +51,23 @@ class Stripe extends Provider
                 'cancel_url' => url(Router::PROVIDER_CANCEL),
                 'invoice_creation' => ['enabled' => 'true'],
                 'line_items' => $this->kart->cart()->lines()->values(fn (CartLine $l) => array_merge([
-                    'price' => A::get($l->product()?->raw()->yaml(), 'default_price.id'), // @phpstan-ignore-line
+                    'price' => $l->variant() ?
+                            $l->product()?->priceWithVariant($l->variant(), true) :
+                            A::get($l->product()?->raw()->yaml(), 'default_price.id'), // @phpstan-ignore-line
                     'quantity' => $l->quantity(),
                 ], $lineItem($this->kart, $l))),
             ], $options)),
         ]);
 
-        if (! in_array($remote->code(), [200, 201]) || ! is_array($remote->json())) {
+        $json = in_array($remote->code(), [200, 201]) ? $remote->json() : null;
+        if (! is_array($json)) {
             throw new \Exception('Checkout failed', $remote->code());
         }
 
-        $this->kirby->session()->set('bnomei.kart.'.$this->name.'.session_id', $remote->json()['id']);
+        $this->kirby->session()->set('bnomei.kart.'.$this->name.'.session_id', A::get($json, 'id'));
 
         return parent::checkout() && $remote->code() === 200 ?
-            A::get($remote->json(), 'url') : '/';
+            A::get($json, 'url') : '/';
     }
 
     public function completed(array $data = []): array
@@ -85,11 +88,11 @@ class Stripe extends Provider
                     'customer',
                 ],
             ]]);
-        if ($remote->code() !== 200 || ! is_array($remote->json())) {
+
+        $json = $remote->code() === 200 ? $remote->json() : null;
+        if (! is_array($json)) {
             return [];
         }
-
-        $json = $remote->json();
 
         $data = array_merge($data, array_filter([
             // 'session_id' => $sessionId,
@@ -114,11 +117,11 @@ class Stripe extends Provider
                 'limit' => 100, // is max without pagination. $this->kart->cart()->lines()->count(),
             ]]);
 
-        if ($remote->code() !== 200 || ! is_array($remote->json())) {
+        $json = $remote->code() === 200 ? $remote->json() : null;
+        if (! is_array($json)) {
             return [];
         }
 
-        $json = $remote->json();
         $uuid = kart()->option('products.product.uuid');
         if ($uuid instanceof Closure === false) {
             return [];
@@ -127,10 +130,11 @@ class Stripe extends Provider
         /** @var \Closure $likey */
         $likey = kart()->option('licenses.license.uuid');
 
+        // https://docs.stripe.com/api/checkout/sessions/line_items
         foreach (A::get($json, 'data') as $line) {
             $data['items'][] = [
                 'key' => ['page://'.$uuid(null, ['id' => A::get($line, 'price.product')])],  // pages field expect an array
-                'variant' => null, // TODO: variant
+                'variant' => A::get($line, 'price.metadata.variant', ''),
                 'quantity' => A::get($line, 'quantity'),
                 'price' => round(A::get($line, 'price.unit_amount', 0) / 100.0, 2),
                 // these values include the multiplication with quantity
@@ -167,11 +171,7 @@ class Stripe extends Provider
                 ]),
             ]);
 
-            if ($remote->code() !== 200) {
-                break;
-            }
-
-            $json = $remote->json();
+            $json = $remote->code() === 200 ? $remote->json() : null;
             if (! is_array($json)) {
                 break;
             }
@@ -179,6 +179,25 @@ class Stripe extends Provider
             foreach (A::get($json, 'data') as $product) {
                 $cursor = A::get($product, 'id');
                 $products[$cursor] = $product;
+
+                // https://docs.stripe.com/api/prices/list?lang=curl
+                $remote = Remote::get('https://api.stripe.com/v1/prices', [
+                    'headers' => [
+                        'Content-Type' => 'application/json',
+                        'Authorization' => 'Bearer '.strval($this->option('secret_key')),
+                    ],
+                    'data' => array_filter([
+                        'product' => $cursor,
+                        'active' => 'true',
+                        'limit' => 100,
+                        'currency' => strtolower($this->kart->currency()),
+                    ]),
+                ]);
+
+                $productPrices = $remote->code() === 200 ? $remote->json() : null;
+                if (is_array($productPrices)) {
+                    $products[$cursor]['prices'] = A::get($productPrices, 'data', []);
+                }
             }
 
             if (! A::get($json, 'has_more')) {
@@ -206,6 +225,19 @@ class Stripe extends Provider
                         'downloads' => fn ($i) => $this->findFilesFromUrls(
                             A::get($i, 'metadata.downloads', [])
                         ),
+                        'variants' => function ($i) {
+                            $variants = [];
+                            foreach (A::get($i, 'prices', []) as $price) {
+                                $variants[] = [
+                                    'price_id' => $price['id'],
+                                    'variant' => A::get($price, 'metadata.variant', ''),
+                                    'price' => round(A::get($price, 'unit_amount', 0) / 100.0, 2),
+                                    'image' => explode(',', A::get($price, 'metadata.image', '')),
+                                ];
+                            }
+
+                            return empty($variants) ? null : $variants;
+                        },
                     ],
                 ],
                 $this->kart->page(ContentPageEnum::PRODUCTS))
@@ -230,11 +262,10 @@ class Stripe extends Provider
             ]),
         ]);
 
-        if ($remote->code() !== 200 || ! is_array($remote->json())) {
+        $json = $remote->code() === 200 ? $remote->json() : null;
+        if (! is_array($json)) {
             return null;
         }
-
-        $json = $remote->json();
 
         return A::get($json, 'url');
     }

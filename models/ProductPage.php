@@ -534,15 +534,22 @@ class ProductPage extends Page implements Kerbs
             round(($this->rrprice()->toFloat() - $this->price()->toFloat()) / $this->rrprice()->toFloat() * 100) : 0;
     }
 
+    protected ?array $vardat = null;
+
     public function variantData(bool $resolveImage = false): array
     {
-        return $this->variants()->toStructure()->values(function ($i) use ($resolveImage) {
+        if ($this->vardat) {
+            return $this->vardat;
+        }
+
+        return $this->vardat = $this->variants()->toStructure()->values(function ($i) use ($resolveImage) {
             $variants = $i->variant()->split();
             sort($variants);
             $variant = implode(',', $variants); // no whitespace
 
             return array_filter([
                 'options' => $variants,
+                'price_id' => $i->price_id()->isNotEmpty() ? $i->price_id()->value() : null,
                 'price' => $i->price()->isNotEmpty() ? $i->price()->toFloat() : null,
                 'formattedPrice' => $i->price()->isNotEmpty() ? $i->price()->toFormattedCurrency() : null,
                 'image' => $resolveImage ? $i->image()->toFile()?->toKerbs() : $i->image()->toFile()?->name(),
@@ -650,11 +657,11 @@ class ProductPage extends Page implements Kerbs
         return empty($variant) ? null : implode(',', $variant);
     }
 
-    public function priceWithVariant(?string $variant = null): float
+    public function priceWithVariant(?string $variant = null, bool $asPriceId = false): float
     {
         foreach ($this->variantData(false) as $v) {
             if ($v['variant'] === $variant) {
-                if ($price = A::get($v, 'price')) {
+                if ($price = A::get($v, $asPriceId ? 'price' : 'price_id')) {
                     return floatval($price);
                 }
             }
