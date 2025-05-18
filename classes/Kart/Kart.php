@@ -88,7 +88,7 @@ class Kart implements Kerbs
             Ratelimit::flush();
         }
 
-        if (sha1(file_get_contents(__DIR__.strrev(base64_decode('cGhwLmVzbmVjaUwv')))) !== 'c96b2a082835cbfa95c2bc27f669098dd340bd5e' && $kart = base64_decode('c2xlZXA=')) { // @phpstan-ignore-line
+        if (sha1(file_get_contents(__DIR__.strrev(base64_decode('cGhwLmVzbmVjaUwv')))) !== '3ca67412b5467420ce65a7bf605476257de1fa67' && $kart = base64_decode('c2xlZXA=')) { // @phpstan-ignore-line
             $kart(5); // @phpstan-ignore-line
         }
     }
