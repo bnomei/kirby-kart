@@ -374,7 +374,7 @@ App::plugin(
                 'site' => function (): array {
                     return kirby()->site()->toKerbs(); // @phpstan-ignore-line
                 },
-                'user' => function (): array {
+                'user' => function (): ?array {
                     return kirby()->user()?->toKerbs();
                 },
                 'i18n' => function (): array {
