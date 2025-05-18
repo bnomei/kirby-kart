@@ -67,7 +67,7 @@ return [
     'bnomei.kart.total' => 'Totale',
     'bnomei.kart.variant' => 'Variant',
     'bnomei.kart.variants' => 'Variants',
-    'login.email.magic-link.subject' => 'Il tuo link di accesso per {{ site.title }}',
+    'login.email.login-magic.subject' => 'Il tuo link di accesso per {{ site.title }}',
     'bnomei.kerbs.add-to-cart' => 'Add to Cart',
     'bnomei.kerbs.all' => 'All',
     'bnomei.kerbs.checkout-disclaimer' => 'Additional fees such as shipping, duty, and tax will be calculated in checkout (if applicable).',

@@ -67,7 +67,7 @@ return [
     'bnomei.kart.total' => 'Toplam',
     'bnomei.kart.variant' => 'Variant',
     'bnomei.kart.variants' => 'Variants',
-    'login.email.magic-link.subject' => '{{ site.title }} için giriş bağlantınız',
+    'login.email.login-magic.subject' => '{{ site.title }} için giriş bağlantınız',
     'bnomei.kerbs.add-to-cart' => 'Add to Cart',
     'bnomei.kerbs.all' => 'All',
     'bnomei.kerbs.checkout-disclaimer' => 'Additional fees such as shipping, duty, and tax will be calculated in checkout (if applicable).',
