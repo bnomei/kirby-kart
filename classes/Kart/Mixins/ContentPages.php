@@ -38,7 +38,7 @@ trait ContentPages
                     'isDraft' => false,
                     'template' => $this->kirby->option("bnomei.kart.{$key}.template", $key),
                     'model' => $this->kirby->option("bnomei.kart.{$key}.model", $key),
-                    'parent' => page(implode('/', $parts)),
+                    'parent' => count($parts) ? page(implode('/', $parts)) : null,
                 ];
                 if (kirby()->multilang()) {
                     foreach (kirby()->languages() as $language) {
