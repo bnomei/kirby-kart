@@ -60,7 +60,7 @@ class MagicLinkChallenge extends Challenge
 
         $data = [
             'user' => $user,
-            'site' => $kirby->system()->title(),
+            'site' => $kirby->site(),
             'code' => $link,
             'link' => $link,
             'preview' => t('login.code.label.login'),
