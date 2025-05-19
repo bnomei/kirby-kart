@@ -72,10 +72,10 @@ class MagicLinkChallenge extends Challenge
             'from' => $kirby->option('auth.challenge.email.from', $from),
             'fromName' => $kirby->option('auth.challenge.email.fromName', $kirby->site()->title()->value()), // @phpstan-ignore-line
             'to' => $user,
-            'subject' => I18n::template(strval($kirby->option(
+            'subject' => Str::template(strval($kirby->option(
                 'auth.challenge.email.subject', // use this option to set your own
                 I18n::translate('login.email.'.$mode.'.subject', null, $user->language()) ?? ''
-            )), null, $data, $user->language()),
+            )), $data),
             'body' => [
                 'html' => snippet('kart/email-'.$mode.'.html', $data, true),
                 'text' => snippet('kart/email-'.$mode, $data, true),
