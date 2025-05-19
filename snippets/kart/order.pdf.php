@@ -29,7 +29,7 @@
         <?php /** @var ProductPage|null $product */
         /** @var \Bnomei\Kart\OrderLine $line */
         foreach ($order->orderLines() as $line) {
-            $product = page($line->key());
+            $product = $line->product();
             ?>
             <tr>
                 <td><img src="<?= $product?->gallery()->toFile()?->resize(128)->url() ?>" alt=""></td>
