@@ -37,7 +37,7 @@ class Lemonsqueezy extends Provider
     public function checkout(): string
     {
         $line = $this->kart->cart()->lines()->first();
-        $product = $line->product(); // @phpstan-ignore-line
+        $product = $line->product();
 
         $options = $this->option('checkout_options', false);
         if ($options instanceof Closure) {

@@ -149,6 +149,7 @@ it('can check if it can checkout (hold)', function (): void {
     $customer = kirby()->impersonate('kirby', fn () => kirby()->users()->create([
         'email' => Str::random(5).'@kart.test',
         'role' => 'customer',
+        'password' => Str::random(16),
     ]));
     expect($customer->isCustomer())->toBeTrue();
     kirby()->impersonate($customer);
@@ -199,6 +200,7 @@ it('can merge with the cart of the user', function (): void {
     $customer = kirby()->impersonate('kirby', fn () => kirby()->users()->create([
         'email' => Str::random(5).'@kart.test',
         'role' => 'customer',
+        'password' => Str::random(16),
     ]));
     expect($customer->isCustomer())->toBeTrue();
     kirby()->impersonate($customer);

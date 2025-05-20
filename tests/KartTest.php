@@ -181,6 +181,7 @@ it('can find orders', function (): void {
     $customer = kirby()->impersonate('kirby', fn () => kirby()->users()->create([
         'email' => Str::random(5).'@kart.test',
         'role' => 'customer',
+        'password' => Str::random(16),
     ]));
     expect($customer->isCustomer())->toBeTrue();
     kirby()->impersonate($customer);
