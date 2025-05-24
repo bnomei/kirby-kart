@@ -8,8 +8,8 @@
         <li>
             <a href="<?= $product->url() ?>"><?= $product->title() ?></a>
             <div>
-                <form method="POST" onclick="this.disabled=true;this.form.submit();" action="<?= $product->now() ?>">
-                    <button type="submit">⊼</button>
+                <form method="POST" action="<?= $product->now() ?>">
+                    <button type="submit" onclick="this.disabled=true;this.form.submit();">⊼</button>
                 </form>
                 <form method="POST" action="<?= $product->forget() ?>">
                     <button type="submit" onclick="this.disabled=true;this.form.submit();">⊗</button>
