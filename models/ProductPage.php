@@ -61,6 +61,7 @@ class ProductPage extends Page implements Kerbs
         /** @var ProductPage $p */
         $p = parent::create($props);
         $p = $p->changeStatus('listed');
+        $p->uuid()->populate(); // add uuid to cache now to avoid full index later
 
         return $p;
     }

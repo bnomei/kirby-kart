@@ -57,6 +57,7 @@ class OrderPage extends Page implements Kerbs
 
         /** @var OrderPage $p */
         $p = parent::create($props);
+        $p->uuid()->populate(); // add uuid to cache now to avoid full index later
 
         return $p->updateInvoiceNumber();
     }

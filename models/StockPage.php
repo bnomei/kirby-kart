@@ -45,7 +45,11 @@ class StockPage extends Page
         $props['template'] = kart()->option('stocks.stock.template', 'stock');
         $props['model'] = kart()->option('stocks.stock.model', 'stock');
 
-        return parent::create($props);
+        /** @var StockPage $p */
+        $p = parent::create($props);
+        $p->uuid()->populate(); // add uuid to cache now to avoid full index later
+
+        return $p;
     }
 
     public static function phpBlueprint(): array
