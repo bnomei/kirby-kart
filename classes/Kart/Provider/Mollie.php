@@ -62,6 +62,14 @@ class Mollie extends Provider
             }
         }
 
+        $locale = $this->kirby->multilang() ? $this->kirby->language()?->locale() : null;
+        if (is_array($locale)) {
+            $locale = $locale[0];
+        }
+        if (is_null($locale)) {
+            $locale = kart()->option('locale', 'en_EN');
+        }
+
         // https://docs.mollie.com/reference/create-payment
         $remote = Remote::post('https://api.mollie.com/v2/payments', [
             'headers' => [
@@ -73,7 +81,7 @@ class Mollie extends Provider
                 'metadata' => [
                     'order_id' => $uuid,
                 ],
-                'locale' => $this->kirby->language()?->locale(),
+                'locale' => strval($locale),
                 'method' => ['applepay', 'creditcard', 'paypal', 'twint'],
                 'customerId' => $customerId,
                 'redirectUrl' => url(Router::PROVIDER_SUCCESS).'?session_id='.urlencode($uuid),
