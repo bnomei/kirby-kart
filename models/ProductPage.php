@@ -112,12 +112,12 @@ class ProductPage extends Page implements Kerbs
                                 'description' => [
                                     'label' => 'bnomei.kart.description',
                                     'type' => 'textarea',
-                                    // 'virtual' => true,
+                                    'virtual' => true,
                                 ],
                                 'details' => [
                                     'label' => 'bnomei.kart.details',
                                     'type' => 'structure',
-                                    'virtual' => true,
+                                    // 'virtual' => true,
                                     'fields' => [
                                         'summary' => [
                                             'label' => 'bnomei.kart.details.summary',
@@ -204,7 +204,7 @@ class ProductPage extends Page implements Kerbs
                                     ],
                                     'width' => '1/3',
                                     'translate' => false,
-                                    // 'virtual' => true,
+                                    'virtual' => true,
                                 ],
                                 'tags' => [
                                     'label' => 'bnomei.kart.tags',
@@ -215,7 +215,7 @@ class ProductPage extends Page implements Kerbs
                                     ],
                                     'width' => '1/3',
                                     'translate' => false,
-                                    // 'virtual' => true,
+                                    'virtual' => true,
                                 ],
                                 'featured' => [
                                     'label' => '★ {{ t("bnomei.kart.featured") }}',
@@ -223,7 +223,7 @@ class ProductPage extends Page implements Kerbs
                                     'default' => false,
                                     'width' => '1/3',
                                     'translate' => false,
-                                    // 'virtual' => true,
+                                    'virtual' => true,
                                 ],
                                 'gallery' => [
                                     'label' => 'bnomei.kart.gallery',
@@ -235,7 +235,7 @@ class ProductPage extends Page implements Kerbs
                                     ],
                                     'width' => '1/3',
                                     'translate' => false,
-                                    // 'virtual' => true,
+                                    'virtual' => true,
                                 ],
                                 'downloads' => [
                                     'label' => '↓ {{ t("bnomei.kart.downloads") }}',
@@ -247,7 +247,7 @@ class ProductPage extends Page implements Kerbs
                                     ],
                                     'width' => '1/3',
                                     'translate' => false,
-                                    // 'virtual' => true,
+                                    'virtual' => true,
                                 ],
                                 'variants' => [
                                     'label' => '❖ {{ t("bnomei.kart.variants") }}',

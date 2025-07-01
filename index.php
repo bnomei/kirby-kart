@@ -222,11 +222,11 @@ App::plugin(
                         // add custom data to the current checkout line
                         return [];
                     },
-                    'virtual' => ['title', 'description', 'gallery'],
+                    'virtual' => ['raw', 'title', 'description', 'gallery'],
                 ],
                 'gumroad' => [
                     'access_token' => fn () => kart_env('GUMROAD_ACCESS_TOKEN'),
-                    'virtual' => true,
+                    'virtual' => ['raw', 'description', 'gallery', 'price', 'tags', 'title'],
                 ],
                 'invoice_ninja' => [],
                 'kirby_cms' => [
@@ -240,7 +240,7 @@ App::plugin(
                         // https://docs.lemonsqueezy.com/api/checkouts/create-checkout
                         return [];
                     },
-                    'virtual' => true,
+                    'virtual' => ['raw', 'description', 'gallery', 'price', 'variants', 'title'],
                 ],
                 'mollie' => [
                     'secret_key' => fn () => kart_env('MOLLIE_SECRET_KEY'),
@@ -253,7 +253,7 @@ App::plugin(
                         // add custom data to the current checkout line
                         return [];
                     },
-                    'virtual' => true,
+                    'virtual' => false,
                 ],
                 'paddle' => [
                     // https://developer.paddle.com/api-reference/overview
@@ -269,7 +269,7 @@ App::plugin(
                         // add custom data to the current checkout line
                         return [];
                     },
-                    'virtual' => true,
+                    'virtual' => ['raw', 'description', 'gallery', 'downloads', 'price', 'tags', 'categories', 'variants', 'title', 'featured'],
                 ],
                 'payone' => [],
                 'paypal' => [
@@ -285,7 +285,7 @@ App::plugin(
                         // add custom data to the current checkout line
                         return [];
                     },
-                    'virtual' => ['title', 'description', 'gallery'],
+                    'virtual' => ['raw', 'title', 'description', 'gallery'],
                 ],
                 'shopify' => [],
                 'square' => [
@@ -320,7 +320,7 @@ App::plugin(
                         // add custom data to the current checkout line
                         return [];
                     },
-                    'virtual' => true,
+                    'virtual' => ['raw', 'description', 'gallery', 'downloads', 'price', 'tags', 'categories', 'variants', 'title', 'featured'],
                 ],
             ],
             'turnstile' => [
