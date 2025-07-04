@@ -128,6 +128,9 @@ App::plugin(
                 'product' => [
                     'uuid' => fn (?ProductsPage $products = null, array $props = []) => 'pr-'.Kart::hash(A::get($props, 'id', Kart::nonAmbiguousUuid(7))),
                 ],
+                'variants' => [ // overwrite and define your own sorting orders
+                    'size' => ['XS', 'xs', 'S', 's', 'M', 'm', 'L', 'l', 'XL', 'xl', 'XXL', 'xxl'],
+                ],
             ],
             'licenses' => [
                 'api' => false, // API endpoints are disabled by default

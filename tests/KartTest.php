@@ -60,6 +60,10 @@ it('can flush caches', function (): void {
     expect(kart()->flush())->toBeTrue();
 });
 
+it('can sort arrays by key', function (): void {
+    expect(Kart::arrayKeySort(['L' => 1, 'M' => 2, 'S' => 3], ['S', 'M', 'L']))->toBe(['S' => 3, 'M' => 2, 'L' => 1]);
+});
+
 it('can encrypt and decrypt', function (): void {
     kart()->flush('crypto');
     // kart()->setOption('crypto.password', 'kart');

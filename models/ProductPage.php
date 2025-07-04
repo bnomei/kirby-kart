@@ -565,10 +565,14 @@ class ProductPage extends Page implements Kerbs
      */
     private ?array $variantGroups = null;
 
-    public function variantGroups(): array
+    public function variantGroups(?array $sortBy = null): array
     {
         if ($this->variantGroups) {
             return $this->variantGroups;
+        }
+
+        if (! $sortBy) {
+            $sortBy = (array) kart()->option('products.variants', []);
         }
 
         $groups = [];
@@ -596,9 +600,21 @@ class ProductPage extends Page implements Kerbs
             }
         }
 
+        // pre-sort with alphabetic desc order
         foreach (array_keys($groups) as $key) {
             $groups[$key] = array_unique($groups[$key]);
             asort($groups[$key]);
+        }
+
+        // apply custom sorting
+        if (! empty($sortBy)) {
+            $groups = Kart::arrayKeySort($groups, $sortBy);
+            foreach ($sortBy as $group => $keys) {
+                if (! array_key_exists($group, $groups)) {
+                    continue;
+                }
+                $groups[$group] = Kart::arrayKeySort($groups[$group], $keys);
+            }
         }
 
         $this->variantGroups = $groups;

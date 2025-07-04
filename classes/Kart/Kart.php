@@ -191,6 +191,20 @@ class Kart implements Kerbs
         }
     }
 
+    public static function arrayKeySort(array $input, array $sortBy): array
+    {
+        $sorted = [];
+        foreach ($sortBy as $key) {
+            if ((is_int($key) || is_string($key)) && array_key_exists($key, $input)) {
+                $sorted[$key] = $input[$key];
+                unset($input[$key]);
+            }
+        }
+
+        // append remaining groups that were not in the sorting array
+        return array_merge($sorted, $input);
+    }
+
     public static function hash(string $value): string
     {
         return str_pad(hash('xxh3', $value), 16, '0', STR_PAD_LEFT);
