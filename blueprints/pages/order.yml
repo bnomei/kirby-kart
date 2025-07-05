@@ -21,7 +21,7 @@ sections:
     reports:
       - 
         value: '#{{ page.invoiceNumber }}'
-        info: '{{ page.paidDate.toDate("Y-m-d H:i") }}'
+        info: '{{ page.paidDate.toDate(site.kart.dateformat) }}'
       - 
         value: '{{ page.formattedSubtotal }}'
         info: '+ {{ page.formattedTax }}'
