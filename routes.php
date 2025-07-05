@@ -266,7 +266,7 @@ return function (App $kirby) {
 
                 $user = kirby()->user(A::get($data, 'email'));
                 if (! $user) {
-                    kart()->message(t('error.user.notFound'));
+                    kart()->message(t('error.access.login'));
                 }
                 if ($user && $user->isCustomer()) {
                     $code = MagicLinkChallenge::create($user, [
@@ -330,7 +330,7 @@ return function (App $kirby) {
                 }
 
                 if (! $user) {
-                    kart()->message(t('error.user.notFound'));
+                    kart()->message(t('error.access.login'));
                 }
 
                 if ($user && $user->isCustomer() && MagicLinkChallenge::verify($user, $code)) {
