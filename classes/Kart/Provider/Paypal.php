@@ -172,6 +172,10 @@ class Paypal extends Provider
             return [];
         }
 
+        $paymentMethod = A::get($json, 'payment_source', []);
+        if (is_array($paymentMethod)) {
+            $paymentMethod = implode(',', array_keys($paymentMethod));
+        }
         $data = array_merge($data, array_filter([
             // 'session_id' => $sessionId,
             'uuid' => A::get($json, 'purchase_units.0.custom_id'),
@@ -182,7 +186,7 @@ class Paypal extends Provider
                 'name' => A::get($json, 'payer.given_name').' '.A::get($json, 'payer.surname'),
             ],
             'paidDate' => date('Y-m-d H:i:s', strtotime(A::get($json, 'create_time'))),
-            'paymentMethod' => implode(',', array_keys(A::get($json, 'payment_source', []))),
+            'paymentMethod' => $paymentMethod,
             'paymentComplete' => A::get($json, 'status') === 'APPROVED',
             // 'invoiceurl' => A::get($json, 'invoice'),
             'paymentId' => A::get($json, 'id'),

@@ -172,6 +172,10 @@ class Mollie extends Provider
             }
         }
 
+        $paymentMethod = A::get($json, 'method', []);
+        if (is_array($paymentMethod)) {
+            $paymentMethod = implode(',', $paymentMethod);
+        }
         $data = array_merge($data, array_filter([
             // 'session_id' => $sessionId,
             'uuid' => A::get($json, 'metadata.order_id'),
@@ -182,7 +186,7 @@ class Mollie extends Provider
                 'name' => A::get($customer, 'name'),
             ] : null,
             'paidDate' => date('Y-m-d H:i:s', strtotime(A::get($json, 'paidAt', A::get($json, 'createdAt')))),
-            'paymentMethod' => implode(',', A::get($json, 'method', [])),
+            'paymentMethod' => $paymentMethod,
             'paymentComplete' => A::get($json, 'status') === 'paid',
             // 'invoiceurl' => A::get($json, 'invoice'),
             'paymentId' => A::get($json, 'id'),

@@ -70,7 +70,7 @@ class Kirby extends Provider
                 'name' => A::get($input, 'name'),
             ],
             'paidDate' => date('Y-m-d H:i:s'),
-            'paymentMethod' => A::get($input, 'payment_method'),
+            'paymentMethod' => strval(A::get($input, 'payment_method')),
             'paymentComplete' => A::get($input, 'payment_status', 'paid') === 'paid',
             'invoiceurl' => A::get($input, 'invoiceurl'), // unknown at this point
             'items' => kart()->cart()->lines()->values(fn (CartLine $l) => [

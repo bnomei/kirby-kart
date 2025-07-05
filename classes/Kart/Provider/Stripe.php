@@ -95,6 +95,10 @@ class Stripe extends Provider
             return [];
         }
 
+        $paymentMethod = A::get($json, 'payment_method_types', []);
+        if (is_array($paymentMethod)) {
+            $paymentMethod = implode(',', $paymentMethod);
+        }
         $data = array_merge($data, array_filter([
             // 'session_id' => $sessionId,
             'email' => A::get($json, 'customer_email'),
@@ -104,7 +108,7 @@ class Stripe extends Provider
                 'name' => A::get($json, 'customer.name'),
             ],
             'paidDate' => date('Y-m-d H:i:s', A::get($json, 'created', time())),
-            'paymentMethod' => implode(',', A::get($json, 'payment_method_types', [])),
+            'paymentMethod' => $paymentMethod,
             'paymentComplete' => A::get($json, 'payment_status') === 'paid',
             'invoiceurl' => A::get($json, 'invoice'),
             'paymentId' => A::get($json, 'id', A::get($json, 'payment_intent')),
