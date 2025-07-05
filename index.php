@@ -112,6 +112,7 @@ App::plugin(
             'locale' => 'en_EN', // or current locale on multilanguage setups
             'currency' => 'EUR', // uppercase 3-letter code
             'successPage' => null, // id of the page to redirect to after checkout flow, defaults to page of order
+            'dateformat' => "Y-m-d H:i",
             'orders' => [
                 'enabled' => true,
                 'page' => 'orders',

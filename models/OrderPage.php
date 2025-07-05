@@ -131,7 +131,7 @@ class OrderPage extends Page implements Kerbs
                         [
                             // 'label' => 'bnomei.kart.invoiceNumber', Invoice Number'),
                             'value' => '#{{ page.invoiceNumber }}',
-                            'info' => '{{ page.paidDate.toDate("Y-m-d H:i") }}',
+                            'info' => '{{ page.paidDate.toDate(site.kart.dateformat) }}',
                         ],
                         [
                             // 'label' => 'bnomei.kart.sum', Sum'),

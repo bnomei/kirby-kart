@@ -48,7 +48,7 @@ class OrdersPage extends Page
                         [
                             'label' => 'bnomei.kart.latest-order',
                             'value' => '#{{ page.children.sortBy("paidDate", "desc").first.invoiceNumber }} ・ {{ page.children.sortBy("paidDate", "desc").first.customer.toUser.email }}',
-                            'info' => '{{ page.children.sortBy("paidDate", "desc").first.paidDate.toDate("Y-m-d H:i") }}',
+                            'info' => '{{ page.children.sortBy("paidDate", "desc").first.paidDate.toDate(site.kart.dateformat) }}',
                             'link' => '{{ page.children.sortBy("paidDate", "desc").first.panel.url }}',
                         ],
                         [
@@ -88,7 +88,7 @@ class OrdersPage extends Page
                     'template' => 'order', // maps to OrderPage model
                     'sortBy' => 'invnumber desc',
                     'text' => '[#{{ page.invoiceNumber }}] {{ page.customer.toUser.email }} ・ {{ page.formattedSubtotal }}',
-                    'info' => '{{ page.title }} ・ {{ page.paidDate.toDate("Y-m-d H:i") }}',
+                    'info' => '{{ page.title }} ・ {{ page.paidDate.toDate(site.kart.dateformat) }}',
                     'limit' => 1000,
                 ],
             ],

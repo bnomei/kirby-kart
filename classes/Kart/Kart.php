@@ -105,6 +105,11 @@ class Kart implements Kerbs
 
     }
 
+    public function dateformat(): string
+    {
+        return strval($this->option('dateformat'));
+    }
+
     public static function flush(string $cache = 'all'): bool
     {
         if (kart()->option('expire') === null) {
