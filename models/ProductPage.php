@@ -189,7 +189,7 @@ class ProductPage extends Page implements Kerbs
                                 'created' => [
                                     'label' => 'bnomei.kart.created',
                                     'type' => 'date',
-                                    'time' => true,
+                                    'time' => ['step' => 1],
                                     'default' => 'now',
                                     'translate' => false,
                                     'width' => '1/4',

@@ -189,7 +189,7 @@ class OrderPage extends Page implements Kerbs
                                     'label' => 'bnomei.kart.paidDate',
                                     'type' => 'date',
                                     'required' => true,
-                                    'time' => true,
+                                    'time' => ['step' => 1],
                                     'default' => 'now',
                                     'translate' => false,
                                     'width' => '1/3',

@@ -93,7 +93,7 @@ class StockPage extends Page
                     'label' => 'bnomei.kart.timestamp',
                     'type' => 'date',
                     'required' => true,
-                    'time' => true,
+                    'time' => ['step' => 1],
                     'default' => 'now',
                     'translate' => false,
                     'width' => '1/4',
