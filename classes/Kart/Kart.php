@@ -262,7 +262,7 @@ class Kart implements Kerbs
         $kirby = kirby();
         $locale = $kirby->multilang() ? $kirby->language()?->locale() : null;
         if (is_array($locale)) {
-            $locale = $locale[0];
+            $locale = array_shift($locale);
         }
         if (is_null($locale)) {
             $locale = kart()->option('locale', 'en_EN');
