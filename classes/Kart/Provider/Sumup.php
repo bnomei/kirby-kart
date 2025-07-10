@@ -29,7 +29,7 @@ class Sumup extends Provider
     {
         return [
             'Content-Type' => 'application/json',
-            'Authorization' => 'Bearer '.$this->option('secret_key'),
+            'Authorization' => 'Bearer '.strval($this->option('secret_key')),
         ];
     }
 
