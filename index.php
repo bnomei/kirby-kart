@@ -96,6 +96,7 @@ App::plugin(
                 'square' => true,
                 'snipcart' => true,
                 'stripe' => true,
+                'sumup' => true,
             ],
             'expire' => 0, // 0 = forever, null to disable caching
             'customers' => [
@@ -326,6 +327,21 @@ App::plugin(
                     },
                     'virtual' => ['raw', 'description', 'gallery', 'downloads', 'price', 'tags', 'categories', 'variants', 'title', 'featured'],
                 ],
+                'sumup' => [
+                    'public_key' => fn () => kart_env('SUMUP_PUBLIC_KEY'),
+                    'secret_key' => fn () => kart_env('SUMUP_SECRET_KEY'),
+                    'merchant_code' => fn () => kart_env('SUMUP_MERCHANT_CODE'),
+                    'checkout_options' => function (Kart $kart) {
+                        // configure the checkout based on current kart instance
+                        // https://developer.sumup.com/api/checkouts/create
+                        return [];
+                    },
+                    'checkout_line' => function (Kart $kart, CartLine $line) {
+                        // add custom data to the current checkout line
+                        return [];
+                    },
+                    'virtual' => false,
+                ],
             ],
             'turnstile' => [
                 'endpoint' => 'https://challenges.cloudflare.com/turnstile/v0/siteverify',
@@ -476,6 +492,7 @@ App::plugin(
             'kart/profile' => __DIR__.'/snippets/kart/profile.php',
             'kart/signup-magic' => __DIR__.'/snippets/kart/signup-magic.php',
             'kart/snipcart-checkout' => __DIR__.'/snippets/kart/snipcart-checkout.php',
+            'kart/sumup-checkout' => __DIR__.'/snippets/kart/sumup-checkout.php',
             'kart/turnstile-form' => __DIR__.'/snippets/kart/turnstile-form.php',
             'kart/turnstile-widget' => __DIR__.'/snippets/kart/turnstile-widget.php',
             'kart/wish-or-forget' => __DIR__.'/snippets/kart/wish-or-forget.php',

@@ -399,7 +399,7 @@ class Kart implements Kerbs
                 // customerId to align with KLUB
                 $user->isCustomer() && $user->userData('customerId') === $id)->first();
         }
-        if (! $customer) {
+        if (! $customer && $email && V::email($email)) {
             $customer = $this->kirby()->users()->findBy('email', $email);
         }
         if (! $customer && V::email($email) && $this->option('customers.enabled')) {

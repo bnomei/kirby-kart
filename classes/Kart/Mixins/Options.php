@@ -74,6 +74,8 @@ trait Options
             'providers.square.checkout_options',
             'providers.stripe.checkout_line',
             'providers.stripe.checkout_options',
+            'providers.sumup.checkout_line',
+            'providers.sumup.checkout_options',
         ])) {
             $option = $option();
             $this->options[$key] = $option;

@@ -26,4 +26,5 @@ enum ProviderEnum: string
     case SQUARE = 'square';
     case SNIPCART = 'snipcart';
     case STRIPE = 'stripe';
+    case SUMUP = 'sumup';
 }

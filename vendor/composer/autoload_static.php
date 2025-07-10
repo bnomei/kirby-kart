@@ -83,6 +83,7 @@ class ComposerStaticInit0b4a90d8ca6c77d6790e4f32c53ff9b9
         'Bnomei\\Kart\\Provider\\Snipcart' => __DIR__ . '/../..' . '/classes/Kart/Provider/Snipcart.php',
         'Bnomei\\Kart\\Provider\\Square' => __DIR__ . '/../..' . '/classes/Kart/Provider/Square.php',
         'Bnomei\\Kart\\Provider\\Stripe' => __DIR__ . '/../..' . '/classes/Kart/Provider/Stripe.php',
+        'Bnomei\\Kart\\Provider\\Sumup' => __DIR__ . '/../..' . '/classes/Kart/Provider/Sumup.php',
         'Bnomei\\Kart\\Queue' => __DIR__ . '/../..' . '/classes/Kart/Queue.php',
         'Bnomei\\Kart\\Ratelimit' => __DIR__ . '/../..' . '/classes/Kart/Ratelimit.php',
         'Bnomei\\Kart\\Router' => __DIR__ . '/../..' . '/classes/Kart/Router.php',

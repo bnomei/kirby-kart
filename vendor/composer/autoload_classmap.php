@@ -41,6 +41,7 @@ return array(
     'Bnomei\\Kart\\Provider\\Snipcart' => $baseDir . '/classes/Kart/Provider/Snipcart.php',
     'Bnomei\\Kart\\Provider\\Square' => $baseDir . '/classes/Kart/Provider/Square.php',
     'Bnomei\\Kart\\Provider\\Stripe' => $baseDir . '/classes/Kart/Provider/Stripe.php',
+    'Bnomei\\Kart\\Provider\\Sumup' => $baseDir . '/classes/Kart/Provider/Sumup.php',
     'Bnomei\\Kart\\Queue' => $baseDir . '/classes/Kart/Queue.php',
     'Bnomei\\Kart\\Ratelimit' => $baseDir . '/classes/Kart/Ratelimit.php',
     'Bnomei\\Kart\\Router' => $baseDir . '/classes/Kart/Router.php',
