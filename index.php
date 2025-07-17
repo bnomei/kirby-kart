@@ -459,7 +459,7 @@ App::plugin(
                         'bnomei.kerbs.featured-only',
                         'bnomei.kerbs.include-out-of-stock',
                         'bnomei.kerbs.related',
-                        'bnomei.kerbs.safe-for-later',
+                        'bnomei.kerbs.save-for-later',
                         'bnomei.kerbs.sort-by-lowest-price',
                         'bnomei.kerbs.sort-by-rrp-percent-desc',
                     ]));

@@ -76,7 +76,7 @@ return [
     'bnomei.kerbs.featured-only' => 'Alleen uitgelichte artikelen',
     'bnomei.kerbs.include-out-of-stock' => 'Inclusief artikelen die niet op voorraad zijn',
     'bnomei.kerbs.related' => 'Gerelateerd',
-    'bnomei.kerbs.safe-for-later' => 'Bewaren voor later',
+    'bnomei.kerbs.save-for-later' => 'Bewaren voor later',
     'bnomei.kerbs.sort-by-lowest-price' => 'Sorteer op laagste prijs eerst',
     'bnomei.kerbs.sort-by-rrp-percent-desc' => 'Sorteer op hoogste korting eerst',
 ];

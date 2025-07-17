@@ -76,7 +76,7 @@ return [
     'bnomei.kerbs.featured-only' => 'Nur Featured Produkte',
     'bnomei.kerbs.include-out-of-stock' => 'Auch ausverkaufte Produkte',
     'bnomei.kerbs.related' => 'Ähnliche Produkte',
-    'bnomei.kerbs.safe-for-later' => 'für später merken',
+    'bnomei.kerbs.save-for-later' => 'für später merken',
     'bnomei.kerbs.sort-by-lowest-price' => 'Beginnend mit niedrigstem Preis',
     'bnomei.kerbs.sort-by-rrp-percent-desc' => 'Höchster Discount zuerst',
 ];
