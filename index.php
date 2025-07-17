@@ -513,6 +513,8 @@ App::plugin(
             'es_ES' => require_once __DIR__.'/translations/es_ES.php',
             'fr' => require_once __DIR__.'/translations/fr.php',
             'it' => require_once __DIR__.'/translations/it.php',
+            'nl' => require_once __DIR__.'/translations/nl.php',
+            'ru' => require_once __DIR__.'/translations/ru.php',
             'tr' => require_once __DIR__.'/translations/tr.php',
         ],
         'blueprints' => [
