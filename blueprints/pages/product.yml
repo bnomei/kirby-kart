@@ -16,6 +16,7 @@ tabs:
         type: stats
         reports:
           - 
+            label: bnomei.kart.price
             value: '{{ page.formattedPrice() }}'
           - 
             label: bnomei.kart.sales-count

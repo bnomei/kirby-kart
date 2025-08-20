@@ -89,6 +89,7 @@ class ProductPage extends Page implements Kerbs
                             'type' => 'stats',
                             'reports' => [
                                 [
+                                    'label' => 'bnomei.kart.price',
                                     'value' => '{{ page.formattedPrice() }}',
                                 ],
                                 [
