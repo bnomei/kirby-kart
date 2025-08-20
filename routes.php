@@ -1,5 +1,6 @@
 <?php
 
+use Bnomei\Kart\ContentPageEnum;
 use Bnomei\Kart\Kart;
 use Bnomei\Kart\MagicLinkChallenge;
 use Bnomei\Kart\Router;
@@ -468,15 +469,7 @@ return function (App $kirby) {
 
                 kart()->tmnt(); // create demo content if needed
 
-                $page = new Page([
-                    'slug' => 'kart',
-                    'template' => 'kart',
-                    'content' => [
-                        'title' => t('bnomei.kart.kart'),
-                    ],
-                ]);
-
-                return site()->visit($page);
+                go(kart()->page(ContentPageEnum::PRODUCTS));
             },
         ],
         [
