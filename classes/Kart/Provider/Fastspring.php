@@ -45,8 +45,8 @@ class Fastspring extends Provider
             $lineItem = fn ($kart, $item) => [];
         }
 
-        $lines = A::get($options, 'lines', []);
-        unset($options['lines']);
+        $lines = A::get($options, 'items', []);
+        unset($options['items']);
 
         // https://developer.fastspring.com/reference/create-a-session
         $remote = Remote::post('https://api.fastspring.com/sessions', [

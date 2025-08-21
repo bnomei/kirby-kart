@@ -79,8 +79,8 @@ class Paypal extends Provider
             $lineItem = fn ($kart, $item) => [];
         }
 
-        $lines = A::get($options, 'lines', []);
-        unset($options['lines']);
+        $lines = A::get($options, 'items', []);
+        unset($options['items']);
 
         // https://developer.paypal.com/docs/api/orders/v2/#orders_create
         $remote = Remote::post($endpoint.'/v2/checkout/orders', [

@@ -36,8 +36,8 @@ class Stripe extends Provider
             $lineItem = fn ($kart, $item) => [];
         }
 
-        $lines = A::get($options, 'lines', []);
-        unset($options['lines']);
+        $lines = A::get($options, 'line_items', []);
+        unset($options['line_items']);
 
         // https://docs.stripe.com/api/checkout/sessions/create?lang=curl
         $remote = Remote::post('https://api.stripe.com/v1/checkout/sessions', [

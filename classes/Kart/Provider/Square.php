@@ -35,8 +35,8 @@ class Square extends Provider
             $lineItem = fn ($kart, $item) => [];
         }
 
-        $lines = A::get($options, 'lines', []);
-        unset($options['lines']);
+        $lines = A::get($options, 'line_items', []);
+        unset($options['line_items']);
 
         $uuid = Str::uuid();
 

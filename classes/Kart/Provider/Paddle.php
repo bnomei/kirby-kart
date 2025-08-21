@@ -37,8 +37,8 @@ class Paddle extends Provider
             $lineItem = fn ($kart, $item) => [];
         }
 
-        $lines = A::get($options, 'lines', []);
-        unset($options['lines']);
+        $lines = A::get($options, 'items', []);
+        unset($options['items']);
 
         // https://developer.paddle.com/api-reference/transactions/create-transaction
         $remote = Remote::post($endpoint.'/transactions', [
