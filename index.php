@@ -527,6 +527,7 @@ App::plugin(
             'pages/stock' => StockPage::phpBlueprint(),
             'pages/stocks' => StocksPage::phpBlueprint(),
             'tabs/product-local' => __DIR__.'/blueprints/tabs/product-local.yml',
+            'tabs/order-local' => __DIR__.'/blueprints/tabs/order-local.yml',
         ],
         'templates' => [
             'cart' => __DIR__.'/templates/cart.php',
