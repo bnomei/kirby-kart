@@ -8,12 +8,15 @@
  * Unauthorized copying, modification, or distribution is prohibited.
  */
 
+namespace Bnomei\Kart\Models;
+
 use Bnomei\Kart\ContentPageEnum;
 use Bnomei\Kart\Kart;
 use Bnomei\Kart\Kerbs;
 use Bnomei\Kart\ModelWithTurbo;
 use Bnomei\Kart\ProductStorage;
 use Bnomei\Kart\Router;
+use Closure;
 use Kirby\Cms\File;
 use Kirby\Cms\Page;
 use Kirby\Cms\StructureObject;
@@ -23,12 +26,15 @@ use Kirby\Toolkit\A;
 use Kirby\Toolkit\Str;
 
 /**
+ * @method Field blocks()
  * @method Field categories()
  * @method Field description()
  * @method Field details()
  * @method Field downloads()
  * @method Field featured()
  * @method Field gallery()
+ * @method Field layout()
+ * @method Field layouts()
  * @method Field maxapo()
  * @method Field price()
  * @method Field raw()
@@ -355,9 +361,12 @@ class ProductPage extends Page implements Kerbs
 
     public function stockUrl(): ?string
     {
-        return kart()->stocks()
-            ->filterBy(fn ($page) => $page->page()->toPage()?->uuid()->id() === $this->uuid()->id())
-            ->first()?->panel()->url() ?? kart()->page(ContentPageEnum::STOCKS)->panel()->url();
+        /** @var Page|null $p */
+        $p = kart()->stocks()
+            ->filterBy(fn (StockPage $page) => $page->page()->toPage()?->uuid()->id() === $this->uuid()->id())
+            ->first();
+
+        return $p?->panel()->url() ?? kart()->page(ContentPageEnum::STOCKS)?->panel()->url();
     }
 
     /**
@@ -556,7 +565,7 @@ class ProductPage extends Page implements Kerbs
                 'formattedPrice' => $i->price()->isNotEmpty() ? $i->price()->toFormattedCurrency() : null,
                 'image' => $resolveImage ? $i->image()->toFile()?->toKerbs() : $i->image()->toFile()?->name(),
                 'variant' => $variant,
-                'inStock' => $this->stock(withHold: true, variant: $variant) !== 0,
+                'inStock' => $this->stock(withHold: kart()->cart()->sessionToken(), variant: $variant) !== 0,
             ]);
         });
     }
@@ -596,7 +605,7 @@ class ProductPage extends Page implements Kerbs
                 if (count($kv) === 2) {
                     $key = trim($kv[0]);
                     $var = trim($kv[1]);
-                    $groups[$key][$var] = t($key.'.'.$var, str_replace('-', ' ', $var));
+                    $groups[$key][$var] = strval(t($key.'.'.$var, str_replace('-', ' ', $var)));
                 }
             }
         }
@@ -665,6 +674,9 @@ class ProductPage extends Page implements Kerbs
         $data = Kart::sanitize($data);
         $variant = [];
         foreach (array_keys($this->variantGroups()) as $key) {
+            if (! is_array($data)) {
+                continue;
+            }
             $value = A::get($data, $key);
             if ($value && is_string($value)) {
                 $variant[] = $key.':'.trim($value);
@@ -726,12 +738,12 @@ class ProductPage extends Page implements Kerbs
             'categories' => $this->categories()->split(),
             'description' => $this->description()->kti()->value(),
             'featured' => $this->featured()->toBool(),
-            'firstGalleryImage' => $this->firstGalleryImage()?->toKerbs(),
+            'firstGalleryImage' => $this->firstGalleryImage()?->toKerbs(), // @phpstan-ignore-line
             'forget' => $this->forget(),
             'formattedPrice' => $this->formattedPrice(),
             'formattedRRPrice' => $this->rrprice()->isNotEmpty() ? $this->rrprice()->toFormattedCurrency() : null,
             'id' => $this->id(),
-            'inStock' => $this->stock(withHold: true) !== 0,
+            'inStock' => $this->stock(kart()->cart()->sessionToken()) !== 0,
             'later' => $this->later(),
             'layouts' => $this->layout()->or($this->layouts())->toKerbs('layouts'),
             'now' => $this->now(),

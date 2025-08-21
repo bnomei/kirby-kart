@@ -8,6 +8,8 @@
  * Unauthorized copying, modification, or distribution is prohibited.
  */
 
+namespace Bnomei\Kart\Models;
+
 use Bnomei\Kart\Kart;
 use Kirby\Cms\Page;
 use Kirby\Cms\Pages;
@@ -230,7 +232,7 @@ class StocksPage extends Page
 
     public function updateStock(ProductPage $product, int $quantity, bool $set = false, ?string $variant = null): ?int
     {
-        /** @var StockPage $stockPage */
+        /** @var StockPage|null $stockPage */
         $stockPage = $this->stockPages($product->uuid()->toString())->first();
         if (! $stockPage) {
             return null;

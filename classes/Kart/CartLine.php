@@ -10,9 +10,9 @@
 
 namespace Bnomei\Kart;
 
+use Bnomei\Kart\Models\ProductPage;
 use Kirby\Cms\Page;
 use Kirby\Toolkit\A;
-use ProductPage;
 
 class CartLine implements Kerbs
 {

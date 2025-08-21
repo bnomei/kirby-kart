@@ -48,17 +48,7 @@
   "autoload": {
     "psr-4": {
       "Bnomei\\Kart\\": "classes/Kart"
-    },
-    "files": [
-      "models/CustomerUser.php",
-      "models/DeletedUser.php",
-      "models/OrderPage.php",
-      "models/OrdersPage.php",
-      "models/ProductPage.php",
-      "models/ProductsPage.php",
-      "models/StockPage.php",
-      "models/StocksPage.php"
-    ]
+    }
   },
   "config": {
     "optimize-autoloader": true,

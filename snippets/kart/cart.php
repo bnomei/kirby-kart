@@ -1,3 +1,8 @@
+<?php
+
+use Bnomei\Kart\Models\ProductPage;
+
+?>
 <fieldset>
     <legend>Cart (<?= kart()->cart()->quantity() ?>)</legend>
     <menu>

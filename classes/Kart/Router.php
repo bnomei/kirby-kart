@@ -12,13 +12,13 @@ namespace Bnomei\Kart;
 
 use Bnomei\Kart\Mixins\Captcha;
 use Bnomei\Kart\Mixins\Turnstile;
+use Bnomei\Kart\Models\ProductPage;
 use Closure;
 use Kirby\Cms\Page;
 use Kirby\Cms\Response;
 use Kirby\Http\Uri;
 use Kirby\Toolkit\A;
 use Kirby\Toolkit\Str;
-use ProductPage;
 
 class Router
 {

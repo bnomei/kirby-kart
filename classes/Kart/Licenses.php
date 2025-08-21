@@ -19,7 +19,7 @@ class Licenses
     {
         $licenses = kirby()->cache('bnomei.kart.licenses')->getOrSet('licenses', function () {
             $data = [];
-            /** @var \OrderPage $order */
+            /** @var \Bnomei\Kart\Models\OrderPage $order */
             foreach (kart()->orders() as $order) {
                 /** @var OrderLine $line */
                 foreach ($order->orderLines() as $line) {
@@ -36,7 +36,7 @@ class Licenses
         if (is_null($license)) {
             $error = 'Invalid license key';
         }
-        /** @var \OrderPage|null $order */
+        /** @var \Bnomei\Kart\Models\OrderPage|null $order */
         $order = $order ? page($order) : null; // find order by stored uuid
         $customer = $order?->customer()->toUser();
         if (is_null($order)) {
@@ -51,7 +51,7 @@ class Licenses
         ];
     }
 
-    public function order(string $license_key): ?\OrderPage
+    public function order(string $license_key): ?Models\OrderPage
     {
         [$license, $order, $customer, $error] = $this->get($license_key);
 

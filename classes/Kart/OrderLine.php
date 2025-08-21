@@ -10,8 +10,8 @@
 
 namespace Bnomei\Kart;
 
+use Bnomei\Kart\Models\ProductPage;
 use Kirby\Cms\Page;
-use ProductPage;
 
 /**
  * @method string key() aka id(), the link to the product

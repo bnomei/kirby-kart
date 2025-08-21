@@ -14,6 +14,8 @@ use Bnomei\Kart\Mixins\ContentPages;
 use Bnomei\Kart\Mixins\Options;
 use Bnomei\Kart\Mixins\Stats;
 use Bnomei\Kart\Mixins\TMNT;
+use Bnomei\Kart\Models\OrderPage;
+use Bnomei\Kart\Models\ProductPage;
 use Bnomei\Kart\Provider\Kirby;
 use Closure;
 use Exception;
@@ -30,8 +32,6 @@ use Kirby\Toolkit\SymmetricCrypto;
 use Kirby\Toolkit\V;
 use Kirby\Uuid\Uuid;
 use NumberFormatter;
-use OrderPage;
-use ProductPage;
 
 class Kart implements Kerbs
 {

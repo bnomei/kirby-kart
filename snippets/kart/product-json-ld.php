@@ -1,4 +1,7 @@
 <?php
+
+use Bnomei\Kart\Models\ProductPage;
+
 $product ??= $page;
 /** @var ProductPage $product */
 ?>

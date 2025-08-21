@@ -10,15 +10,15 @@
 
 namespace Bnomei\Kart;
 
+use Bnomei\Kart\Models\OrderPage;
+use Bnomei\Kart\Models\OrdersPage;
+use Bnomei\Kart\Models\ProductPage;
+use Bnomei\Kart\Models\StocksPage;
 use Kirby\Cms\App;
 use Kirby\Cms\Collection;
 use Kirby\Cms\User;
 use Kirby\Toolkit\A;
 use Kirby\Uuid\Uuid;
-use OrderPage;
-use OrdersPage;
-use ProductPage;
-use StocksPage;
 
 class Cart implements Kerbs
 {

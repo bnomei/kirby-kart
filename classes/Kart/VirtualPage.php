@@ -144,10 +144,6 @@ class VirtualPage extends Obj
             }
         }
 
-        if ($result['content'] === null) {
-            $result['content'] = [];
-        }
-
         ksort($result['content']);
 
         unset($result['parent']); // do not expose the parent

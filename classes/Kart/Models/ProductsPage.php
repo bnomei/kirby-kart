@@ -8,6 +8,8 @@
  * Unauthorized copying, modification, or distribution is prohibited.
  */
 
+namespace Bnomei\Kart\Models;
+
 use Kirby\Cms\Page;
 use Kirby\Cms\Pages;
 use Kirby\Content\Field;
@@ -139,7 +141,7 @@ class ProductsPage extends Page
         $this->kirby()->impersonate('kirby', function () use ($uuids): void {
             $uuid = kart()->option('products.product.uuid');
             foreach (kart()->provider()->products() as $product) {
-                if (in_array($uuid($this, $product), $uuids)) {
+                if (is_callable($uuid) && in_array($uuid($this, $product), $uuids)) {
                     continue;
                 }
                 $this->createChild($product);

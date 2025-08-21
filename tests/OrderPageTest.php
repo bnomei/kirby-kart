@@ -8,6 +8,9 @@
  * Unauthorized copying, modification, or distribution is prohibited.
  */
 
+use Bnomei\Kart\Models\OrderPage;
+use Bnomei\Kart\Models\OrdersPage;
+use Bnomei\Kart\Models\ProductPage;
 use Kirby\Data\Yaml;
 
 it('has a blueprint from PHP', function (): void {
@@ -51,8 +54,8 @@ it('is an order page', function (): void {
 
     expect($o->isPayed())->toBeTrue()
         ->and($o->orderLines()->count())->toBe(2)
-        ->and($o->download())->toBeNull()
         ->and($o->downloads())->toBeNull()
+        ->and($o->download())->toBeNull()
         ->and($o->invoice())->toBeString()
         ->and($o->invoiceNumber())->toHaveLength(5)
         ->and($o->url())->toBeString(5)
@@ -75,9 +78,12 @@ it('is an order page', function (): void {
 
     // create zip file
     touch($o->root().'/hello.jpg');
-    expect($o->createZipWithFiles([
+    $zip = $o->createZipWithFiles([
         $o->root().'/hello.jpg',
-    ], 'hello.zip'))->not()->toBeNull()
-        ->and($o->download())->not()->toBeNull()
-        ->and($o->downloads())->not()->toBeNull();
+    ], 'hello.zip');
+    $o = $zip->parent(); // refresh
+    expect($zip)->not()->toBeNull()
+        ->and($o->isPayed())->toBeTrue()
+        ->and($o->downloads())->not()->toBeNull()
+        ->and($o->download())->not()->toBeNull();
 });

@@ -1,3 +1,8 @@
+<?php
+
+use Bnomei\Kart\Models\ProductPage;
+
+?>
 <fieldset>
     <legend>Wishlist (<?= kart()->wishlist()->lines()->count() ?>)</legend>
     <menu>

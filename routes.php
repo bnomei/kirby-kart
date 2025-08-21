@@ -3,6 +3,7 @@
 use Bnomei\Kart\ContentPageEnum;
 use Bnomei\Kart\Kart;
 use Bnomei\Kart\MagicLinkChallenge;
+use Bnomei\Kart\Models\ProductPage;
 use Bnomei\Kart\Router;
 use Kirby\Cms\App;
 use Kirby\Cms\Page;

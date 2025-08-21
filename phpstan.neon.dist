@@ -8,19 +8,20 @@ parameters:
         - tests
 
     ignoreErrors:
-        - '#Undefined variable: \$this#'
-        - '/Parameter #1 \$value of function strval expects/'
-        - '/Parameter #1 \$value of function intval expects/'
-        - '/Parameter #1 \$value of function floatval expects/'
-        - '#Call to an undefined method Kirby\\Cms\\Site::kart\(\)#'
-        - '#Call to an undefined method Kirby\\Session\\Session::#'
-        - '#Call to an undefined static method Kirby\\Toolkit\\V::#'
+        - '#Call to an undefined method Kirby\\Cms\\File::#'
+        - '#Call to an undefined method Kirby\\Cms\\Page::#'
+        - '#Call to an undefined method Kirby\\Cms\\Pages::#'
+        - '#Call to an undefined method Kirby\\Cms\\Site::#'
+        - '#Call to an undefined method Kirby\\Cms\\StructureObject::#'
         - '#Call to an undefined method Kirby\\Cms\\User::#'
         - '#Call to an undefined method Kirby\\Content\\Field::#'
+        - '#Call to an undefined method Kirby\\Session\\Session::#'
         - '#Call to an undefined static method Kirby\\Http\\Remote::#'
-        - '#Cannot call method toString\(\) on Kirby\\Uuid\\Uuid\|null#'
-        - '#Cannot call method id\(\) on Kirby\\Uuid\\Uuid\|null#'
+        - '#Call to an undefined static method Kirby\\Toolkit\\V::#'
         - '#Cannot call method license\(\) on Kirby\\Plugin\\Plugin\|null#'
-        - '#Trait Bnomei\\Kart\\ModelWithTurbo is used zero times and is not analysed.#'
+        - '#Undefined variable: \$this#'
+        - '/Parameter #1 \$value of function floatval expects/'
+        - '/Parameter #1 \$value of function intval expects/'
+        - '/Parameter #1 \$value of function strval expects/'
         -
             identifier: missingType.iterableValue
