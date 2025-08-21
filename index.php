@@ -1133,6 +1133,7 @@ App::plugin(
                         'pages/orders' => OrdersPage::class,
                         'pages/product' => ProductPage::class,
                         'pages/products' => ProductsPage::class,
+                        'pages/stocks' => StocksPage::class,
                         'pages/stock' => StockPage::class,
                     ] as $name => $class) {
                         Yaml::write(__DIR__."/blueprints/{$name}.yml", $class::phpBlueprint());
