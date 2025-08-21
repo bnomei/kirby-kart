@@ -37,6 +37,9 @@ class Paddle extends Provider
             $lineItem = fn ($kart, $item) => [];
         }
 
+        $lines = A::get($options, 'lines', []);
+        unset($options['lines']);
+
         // https://developer.paddle.com/api-reference/transactions/create-transaction
         $remote = Remote::post($endpoint.'/transactions', [
             'headers' => [
@@ -47,7 +50,7 @@ class Paddle extends Provider
                 'collection_mode' => 'automatic',
                 'customer_id' => $this->userData('customerId'),
                 'currency_code' => $this->kart->currency(),
-                'items' => $this->kart->cart()->lines()->values(function (CartLine $l) use ($lineItem) {
+                'items' => array_merge($lines, $this->kart->cart()->lines()->values(function (CartLine $l) use ($lineItem) {
                     $price_id = null;
                     foreach (A::get($l->product()?->raw()->yaml(), 'prices', []) as $price) {
                         if (A::get($price, 'status') !== 'active') {
@@ -67,7 +70,7 @@ class Paddle extends Provider
                         'price_id' => $price_id,
                         'quantity' => $l->quantity(),
                     ], $lineItem($this->kart, $l));
-                }),
+                })),
             ], $options))),
         ]);
 

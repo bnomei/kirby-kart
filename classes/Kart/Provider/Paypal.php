@@ -79,6 +79,9 @@ class Paypal extends Provider
             $lineItem = fn ($kart, $item) => [];
         }
 
+        $lines = A::get($options, 'lines', []);
+        unset($options['lines']);
+
         // https://developer.paypal.com/docs/api/orders/v2/#orders_create
         $remote = Remote::post($endpoint.'/v2/checkout/orders', [
             'headers' => $this->headers(),
@@ -121,7 +124,7 @@ class Paypal extends Provider
                                 // 'shipping' => [],
                             ],
                         ],
-                        'items' => $this->kart->cart()->lines()->values(fn (CartLine $l) => array_merge([
+                        'items' => array_merge($lines, $this->kart->cart()->lines()->values(fn (CartLine $l) => array_merge([
                             'sku' => $l->product()?->uuid()->id(), // used on completed again to find the product
                             'name' => $l->product()?->title()->value(),
                             'description' => $l->product()?->description()->value(),
@@ -134,7 +137,7 @@ class Paypal extends Provider
                             'image_url' => A::get($l->product()?->raw()->yaml(), 'image_url', $l->product()?->firstGalleryImageUrl()),
                             'url' => $l->product()?->url(),
                             'quantity' => $l->quantity(),
-                        ], $lineItem($this->kart, $l))),
+                        ], $lineItem($this->kart, $l)))),
                     ],
                 ],
             ], $options))),

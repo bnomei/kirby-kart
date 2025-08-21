@@ -36,6 +36,9 @@ class Stripe extends Provider
             $lineItem = fn ($kart, $item) => [];
         }
 
+        $lines = A::get($options, 'lines', []);
+        unset($options['lines']);
+
         // https://docs.stripe.com/api/checkout/sessions/create?lang=curl
         $remote = Remote::post('https://api.stripe.com/v1/checkout/sessions', [
             'headers' => [
@@ -50,12 +53,12 @@ class Stripe extends Provider
                 'success_url' => url(Router::PROVIDER_SUCCESS).'?session_id={CHECKOUT_SESSION_ID}',
                 'cancel_url' => url(Router::PROVIDER_CANCEL),
                 'invoice_creation' => ['enabled' => 'true'],
-                'line_items' => $this->kart->cart()->lines()->values(fn (CartLine $l) => array_merge([
+                'line_items' => array_merge($lines, $this->kart->cart()->lines()->values(fn (CartLine $l) => array_merge([
                     'price' => $l->variant() ?
                             $l->product()?->priceIdForVariant($l->variant()) :
                             A::get($l->product()?->raw()->yaml(), 'default_price.id'), // @phpstan-ignore-line
                     'quantity' => $l->quantity(),
-                ], $lineItem($this->kart, $l))),
+                ], $lineItem($this->kart, $l)))),
             ], $options)),
         ]);
 
