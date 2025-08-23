@@ -22,9 +22,6 @@ use function kirby;
 use function option;
 use function t;
 
-/**
- * Kart Order Line License
- */
 class License extends KirbyLicense
 {
     const NAME = 'Kirby Kart';
