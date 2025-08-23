@@ -1,9 +1,6 @@
 <?php
-
-use Bnomei\Kart\Models\ProductPage;
-
-$product ??= $page;
 /** @var ProductPage $product */
+$product ??= $page;
 ?>
 <script type="application/ld+json">
     {

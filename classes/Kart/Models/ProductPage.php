@@ -26,6 +26,8 @@ use Kirby\Toolkit\A;
 use Kirby\Toolkit\Str;
 
 /**
+ * Kart Product Page
+ *
  * @method Field blocks()
  * @method Field categories()
  * @method Field description()

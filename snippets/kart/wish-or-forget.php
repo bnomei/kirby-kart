@@ -1,8 +1,5 @@
 <?php
 /** @var ProductPage $page */
-
-use Bnomei\Kart\Models\ProductPage;
-
 $product ??= $page;
 
 if (kart()->wishlist()->has($product) === false) { ?>

@@ -1,8 +1,5 @@
 <?php
 
-use Bnomei\Kart\Models\OrderPage;
-use Bnomei\Kart\Models\ProductPage;
-
 kart()->validateSignatureOrGo();
 
 snippet('kart/kart', slots: true);

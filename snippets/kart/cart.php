@@ -1,13 +1,8 @@
-<?php
-
-use Bnomei\Kart\Models\ProductPage;
-
-?>
 <fieldset>
     <legend>Cart (<?= kart()->cart()->quantity() ?>)</legend>
     <menu>
         <?php foreach (kart()->cart()->lines() as $line) {
-            /** @var \Bnomei\Kart\CartLine $line */
+            /** @var CartLine $line */
             /** @var ProductPage $product */
             $product = $line->product(); ?>
             <li>

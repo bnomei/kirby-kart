@@ -14,6 +14,8 @@ use Kirby\Toolkit\Obj;
 use Stringable;
 
 /**
+ * Kart Product Category
+ *
  * @method string id()
  * @method string text()
  * @method int count()

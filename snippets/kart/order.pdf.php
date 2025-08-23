@@ -1,9 +1,4 @@
-<?php /** @var OrderPage $order */
-
-use Bnomei\Kart\Models\OrderPage;
-use Bnomei\Kart\Models\ProductPage;
-
-?>
+<?php /** @var OrderPage $order */ ?>
 <main>
     <h1>Your Order: <a href="<?= $order->urlWithSignature() ?>" style="text-decoration: none"><code><?= $order->title() ?></code></a></h1>
 

@@ -14,6 +14,9 @@ use Bnomei\Kart\Models\ProductPage;
 use Kirby\Cms\Page;
 use Kirby\Toolkit\A;
 
+/**
+ * Kart Cart Line
+ */
 class CartLine implements Kerbs
 {
     private ?Page $product = null;

@@ -14,6 +14,8 @@ use Bnomei\Kart\Models\ProductPage;
 use Kirby\Cms\Page;
 
 /**
+ * Kart URL helper
+ *
  * @method string account()
  * @method string account_delete()
  * @method string captcha()

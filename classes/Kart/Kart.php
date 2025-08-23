@@ -33,6 +33,9 @@ use Kirby\Toolkit\V;
 use Kirby\Uuid\Uuid;
 use NumberFormatter;
 
+/**
+ * Kart
+ */
 class Kart implements Kerbs
 {
     use ContentPages;
@@ -79,7 +82,10 @@ class Kart implements Kerbs
 
     public function ready(): void
     {
+        // ensure that root pages exist
         $this->makeContentPages();
+
+        // process queue
         $this->queue()->process();
 
         // Clean up caches that have no GC itself

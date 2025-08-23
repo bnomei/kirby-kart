@@ -12,6 +12,7 @@
 use Bnomei\Kart\CaptchaBuilder;
 use Bnomei\Kart\Cart;
 use Bnomei\Kart\CartLine;
+use Bnomei\Kart\Category;
 use Bnomei\Kart\Kart;
 use Bnomei\Kart\License;
 use Bnomei\Kart\MagicLinkChallenge;
@@ -23,7 +24,9 @@ use Bnomei\Kart\Models\ProductPage;
 use Bnomei\Kart\Models\ProductsPage;
 use Bnomei\Kart\Models\StockPage;
 use Bnomei\Kart\Models\StocksPage;
+use Bnomei\Kart\OrderLine;
 use Bnomei\Kart\Router;
+use Bnomei\Kart\Tag;
 use Bnomei\Kart\UuidCache;
 use Bnomei\Kart\Wishlist;
 use Kirby\Cms\App;
@@ -44,6 +47,17 @@ use Kirby\Toolkit\A;
 use Kirby\Toolkit\Str;
 
 @include_once __DIR__.'/vendor/autoload.php';
+
+// register class aliases
+if (defined('KART_CLASS_ALIAS') === false || constant('KART_CLASS_ALIAS') !== false) {
+    class_alias(Category::class, 'Category');
+    class_alias(Kart::class, 'Kart');
+    class_alias(ProductPage::class, 'ProductPage');
+    class_alias(OrderLine::class, 'OrderLine');
+    class_alias(OrderPage::class, 'OrderPage');
+    class_alias(StockPage::class, 'StockPage');
+    class_alias(Tag::class, 'Tag');
+}
 
 if (! function_exists('kart')) {
     function kart(): Kart
@@ -111,6 +125,15 @@ App::plugin(
                 'enabled' => true,
                 'roles' => ['customer', 'member', 'admin'], // does NOT include `deleted`
             ],
+            'classAlias' => function () {
+                class_alias(Category::class, 'Category');
+                class_alias(Kart::class, 'Kart');
+                class_alias(ProductPage::class, 'ProductPage');
+                class_alias(OrderLine::class, 'OrderLine');
+                class_alias(OrderPage::class, 'OrderPage');
+                class_alias(StockPage::class, 'StockPage');
+                class_alias(Tag::class, 'Tag');
+            },
             'crypto' => [
                 'password' => fn () => kart_env('CRYPTO_PASSWORD'),
                 'salt' => fn () => kart_env(

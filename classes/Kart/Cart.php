@@ -20,6 +20,9 @@ use Kirby\Cms\User;
 use Kirby\Toolkit\A;
 use Kirby\Uuid\Uuid;
 
+/**
+ * Kart Cart
+ */
 class Cart implements Kerbs
 {
     /** @var Collection<CartLine> */
