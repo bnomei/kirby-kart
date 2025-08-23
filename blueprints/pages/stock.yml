@@ -34,9 +34,15 @@ fields:
     default: now
     translate: false
     width: 1/4
+  modified_ts:
+    label: bnomei.kart.timestamp
+    type: info
+    theme: neutral
+    text: '{{ page.timestampOrModified }}'
+    width: 1/4
   gap1:
     type: gap
-    width: 1/2
+    width: 1/4
   stock:
     label: bnomei.kart.stock
     type: number

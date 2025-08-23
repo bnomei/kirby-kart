@@ -102,9 +102,16 @@ class StockPage extends Page
                     'translate' => false,
                     'width' => '1/4',
                 ],
+                'modified_ts' => [
+                    'label' => 'bnomei.kart.timestamp',
+                    'type' => 'info',
+                    'theme' => 'neutral',
+                    'text' => '{{ page.timestampOrModified }}',
+                    'width' => '1/4',
+                ],
                 'gap1' => [
                     'type' => 'gap',
-                    'width' => '1/2',
+                    'width' => '1/4',
                 ],
                 'stock' => [
                     'label' => 'bnomei.kart.stock',
@@ -138,6 +145,11 @@ class StockPage extends Page
                 ],
             ],
         ];
+    }
+
+    public function timestampOrModified(): Field
+    {
+        return new Field($this, 'timestampOrModified', date('Y-m-d H:i:s', max($this->timestamp()->toDate(), $this->modified())));
     }
 
     public function onlyOneStockPagePerProduct(array $values): bool
