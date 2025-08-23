@@ -1,6 +1,6 @@
 <?php
-$product ??= $page;
 /** @var ProductPage $product */
+$product ??= $page;
 ?>
 <script type="application/ld+json">
     {

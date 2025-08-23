@@ -10,6 +10,7 @@
 
 use Bnomei\Kart\CartLine;
 use Bnomei\Kart\ContentPageEnum;
+use Bnomei\Kart\Models\StocksPage;
 
 beforeEach(function (): void {
     $this->cartLine = new CartLine(

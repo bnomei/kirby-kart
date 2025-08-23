@@ -10,10 +10,12 @@
 
 namespace Bnomei\Kart;
 
+use Bnomei\Kart\Models\ProductPage;
 use Kirby\Cms\Page;
-use ProductPage;
 
 /**
+ * Kart URL helper
+ *
  * @method string account()
  * @method string account_delete()
  * @method string captcha()

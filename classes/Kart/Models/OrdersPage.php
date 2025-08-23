@@ -8,6 +8,8 @@
  * Unauthorized copying, modification, or distribution is prohibited.
  */
 
+namespace Bnomei\Kart\Models;
+
 use Kirby\Cms\Page;
 use Kirby\Cms\Pages;
 use Kirby\Cms\User;
@@ -115,11 +117,14 @@ class OrdersPage extends Page
 
     public function createOrder(array $data, ?User $customer = null): ?Page
     {
-        if (! $this->kart()->option('orders.enabled')) {
+        if (! kart()->option('orders.enabled')) {
             return null;
         }
 
-        return kirby()->impersonate('kirby', fn () => OrderPage::create([
+        /** @var Page $p */
+        $p = kirby()->impersonate('kirby', fn () => self::createChild([
+            'template' => kart()->option('orders.order.template', 'order'),
+            'model' => kart()->option('orders.order.model', 'order'),
             // id, title, slug and uuid are automatically generated
             'content' => A::get($data, [
                 'paidDate',
@@ -130,5 +135,7 @@ class OrdersPage extends Page
                 'customer' => [$customer?->uuid()->toString()], // kirby user field expects an array
             ],
         ]));
+
+        return $p;
     }
 }

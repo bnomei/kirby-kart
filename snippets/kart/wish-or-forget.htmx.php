@@ -1,4 +1,5 @@
 <?php
+/** @var ProductPage $product */
 $product ??= $page;
 ?>
 <?php if (! kart()->wishlist()->has($product)) { ?>

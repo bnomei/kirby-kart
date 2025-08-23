@@ -35,6 +35,9 @@ class Square extends Provider
             $lineItem = fn ($kart, $item) => [];
         }
 
+        $lines = A::get($options, 'line_items', []);
+        unset($options['line_items']);
+
         $uuid = Str::uuid();
 
         // https://developer.squareup.com/reference/square/checkout-api/create-payment-link
@@ -58,7 +61,7 @@ class Square extends Provider
                     // ?checkoutId=xxxxxx&amp;orderId=xxxxxx&amp;referenceId=xxxxxx&amp;transactionId=xxxxxx
                     'redirect_url' => url(Router::PROVIDER_SUCCESS),
                 ],
-                'line_items' => $this->kart->cart()->lines()->values(function (CartLine $l) use ($lineItem) {
+                'line_items' => array_merge($lines, $this->kart->cart()->lines()->values(function (CartLine $l) use ($lineItem) {
                     return array_merge([
                         'metadata' => [
                             'product_uuid' => $l->product()?->uuid()->id(),
@@ -72,7 +75,7 @@ class Square extends Provider
                         ],
                         // catalog_object_id
                     ], $lineItem($this->kart, $l));
-                }),
+                })),
             ], $options))),
         ]);
 

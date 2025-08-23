@@ -8,6 +8,7 @@
  * Unauthorized copying, modification, or distribution is prohibited.
  */
 
+use Bnomei\Kart\Models\ProductPage;
 use Kirby\Data\Yaml;
 
 it('has a blueprint from PHP', function (): void {

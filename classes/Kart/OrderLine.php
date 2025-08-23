@@ -10,10 +10,12 @@
 
 namespace Bnomei\Kart;
 
+use Bnomei\Kart\Models\ProductPage;
 use Kirby\Cms\Page;
-use ProductPage;
 
 /**
+ * Kart Order Line
+ *
  * @method string key() aka id(), the link to the product
  * @method float price() Price of a single item
  * @method int quantity() Amount of items in this line

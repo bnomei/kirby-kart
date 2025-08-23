@@ -6,17 +6,6 @@ namespace Composer\Autoload;
 
 class ComposerStaticInit33432ab03ec2d17bd09746e8b1c408ba
 {
-    public static $files = array (
-        '8f71fe9c10212a59120af5e600149cb7' => __DIR__ . '/../..' . '/models/CustomerUser.php',
-        '4b36526d2f445359da8d6a67db898d76' => __DIR__ . '/../..' . '/models/DeletedUser.php',
-        '4b646ec6b0b900e93512b1814e8c8fb9' => __DIR__ . '/../..' . '/models/OrderPage.php',
-        '3ba39b1eacd62fadd67c18ac244b4dbe' => __DIR__ . '/../..' . '/models/OrdersPage.php',
-        '71f68c0c3c3b09f5a8c6d4c392949b40' => __DIR__ . '/../..' . '/models/ProductPage.php',
-        '016481e9c62acfdd5754c751692f7f30' => __DIR__ . '/../..' . '/models/ProductsPage.php',
-        '292d970aac831a4e121577df0c04e3bf' => __DIR__ . '/../..' . '/models/StockPage.php',
-        '9bc22dd02b29e895370d7cc6375df35c' => __DIR__ . '/../..' . '/models/StocksPage.php',
-    );
-
     public static $prefixLengthsPsr4 = array (
         'S' => 
         array (
@@ -65,6 +54,14 @@ class ComposerStaticInit33432ab03ec2d17bd09746e8b1c408ba
         'Bnomei\\Kart\\Mixins\\TMNT' => __DIR__ . '/../..' . '/classes/Kart/Mixins/TMNT.php',
         'Bnomei\\Kart\\Mixins\\Turnstile' => __DIR__ . '/../..' . '/classes/Kart/Mixins/Turnstile.php',
         'Bnomei\\Kart\\ModelWithTurbo' => __DIR__ . '/../..' . '/classes/Kart/ModelWithTurbo.php',
+        'Bnomei\\Kart\\Models\\CustomerUser' => __DIR__ . '/../..' . '/classes/Kart/Models/CustomerUser.php',
+        'Bnomei\\Kart\\Models\\DeletedUser' => __DIR__ . '/../..' . '/classes/Kart/Models/DeletedUser.php',
+        'Bnomei\\Kart\\Models\\OrderPage' => __DIR__ . '/../..' . '/classes/Kart/Models/OrderPage.php',
+        'Bnomei\\Kart\\Models\\OrdersPage' => __DIR__ . '/../..' . '/classes/Kart/Models/OrdersPage.php',
+        'Bnomei\\Kart\\Models\\ProductPage' => __DIR__ . '/../..' . '/classes/Kart/Models/ProductPage.php',
+        'Bnomei\\Kart\\Models\\ProductsPage' => __DIR__ . '/../..' . '/classes/Kart/Models/ProductsPage.php',
+        'Bnomei\\Kart\\Models\\StockPage' => __DIR__ . '/../..' . '/classes/Kart/Models/StockPage.php',
+        'Bnomei\\Kart\\Models\\StocksPage' => __DIR__ . '/../..' . '/classes/Kart/Models/StocksPage.php',
         'Bnomei\\Kart\\OrderLine' => __DIR__ . '/../..' . '/classes/Kart/OrderLine.php',
         'Bnomei\\Kart\\ProductStorage' => __DIR__ . '/../..' . '/classes/Kart/ProductStorage.php',
         'Bnomei\\Kart\\Provider' => __DIR__ . '/../..' . '/classes/Kart/Provider.php',

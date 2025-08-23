@@ -8,6 +8,8 @@
  * Unauthorized copying, modification, or distribution is prohibited.
  */
 
+namespace Bnomei\Kart\Models;
+
 use Bnomei\Kart\Kart;
 use Kirby\Cms\Pages;
 use Kirby\Cms\User;

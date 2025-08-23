@@ -8,6 +8,8 @@
  * Unauthorized copying, modification, or distribution is prohibited.
  */
 
+namespace Bnomei\Kart\Models;
+
 use Bnomei\Kart\Kart;
 use Kirby\Cms\Page;
 use Kirby\Cms\Pages;
@@ -52,11 +54,11 @@ class StocksPage extends Page
                         ],
                         [
                             'label' => 'bnomei.kart.stocks',
-                            'value' => '{{ page.stock(null, null, "*") }}', // everything
+                            'value' => '{{ page.stock(null, null, "*") ?? 0 }}', // everything
                         ],
                         [
                             'label' => 'bnomei.kart.latest',
-                            'value' => '{{ page.children.sortBy("timestamp", "desc").first.timestamp }}',
+                            'value' => '{{ page.children.sortBy("timestampOrModified", "desc").first.timestampOrModified.toDate(site.kart.dateformat) }}',
                         ],
                     ],
                 ],
@@ -73,9 +75,9 @@ class StocksPage extends Page
                     'type' => 'pages',
                     // 'search' => true,
                     'template' => 'stock', // maps to StockPage model
-                    'sortBy' => 'timestamp desc',
+                    'sortBy' => 'timestampOrModified desc',
                     'text' => '{{ page.page.toPage.inStock ? "" : "⚠️ " }}[{{ page.stockPad(3) }}] {{ page.page.toPage.title }}',
-                    'info' => '{{ page.title }} ・ {{ page.timestamp }}',
+                    'info' => '{{ page.title }} ・ {{ page.timestampOrModified.toDate(site.kart.dateformat) }}',
                     'limit' => 1000,
                 ],
             ],
@@ -230,7 +232,7 @@ class StocksPage extends Page
 
     public function updateStock(ProductPage $product, int $quantity, bool $set = false, ?string $variant = null): ?int
     {
-        /** @var StockPage $stockPage */
+        /** @var StockPage|null $stockPage */
         $stockPage = $this->stockPages($product->uuid()->toString())->first();
         if (! $stockPage) {
             return null;

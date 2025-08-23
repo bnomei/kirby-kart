@@ -38,11 +38,13 @@ trait Options
             'captcha.current',
             'captcha.get',
             'captcha.set',
+            'completed',
             'licenses.activate',
             'licenses.deactivate',
             'licenses.license.uuid',
             'licenses.validate',
             'orders.order.uuid',
+            'orders.order.zip',
             'products.product.uuid',
             'stocks.stock.uuid',
             // mutators

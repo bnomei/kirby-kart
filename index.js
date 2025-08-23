@@ -6,6 +6,9 @@ panel.plugin("bnomei/kart", {
     alltags: {
       extends: "k-tags-field",
     },
+    allvariants: {
+      extends: "k-tags-field",
+    },
   },
   icons: {
     // https://remixicon.com

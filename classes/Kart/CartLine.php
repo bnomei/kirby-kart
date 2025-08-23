@@ -10,10 +10,13 @@
 
 namespace Bnomei\Kart;
 
+use Bnomei\Kart\Models\ProductPage;
 use Kirby\Cms\Page;
 use Kirby\Toolkit\A;
-use ProductPage;
 
+/**
+ * Kart Cart Line
+ */
 class CartLine implements Kerbs
 {
     private ?Page $product = null;

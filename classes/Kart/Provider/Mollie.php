@@ -70,6 +70,9 @@ class Mollie extends Provider
             $locale = kart()->option('locale', 'en_EN');
         }
 
+        $lines = A::get($options, 'lines', []);
+        unset($options['lines']);
+
         // https://docs.mollie.com/reference/create-payment
         $remote = Remote::post('https://api.mollie.com/v2/payments', [
             'headers' => [
@@ -93,7 +96,7 @@ class Mollie extends Provider
                 'billingAddress' => $this->kirby()->user() ? [
                     'email' => $this->kirby()->user()->email(),
                 ] : null,
-                'lines' => $this->kart->cart()->lines()->values(fn (CartLine $l) => array_merge([
+                'lines' => array_merge($lines, $this->kart->cart()->lines()->values(fn (CartLine $l) => array_merge([
                     'sku' => $l->product()?->uuid()->id().($l->variant() ? '|'.$l->variant() : ''), // used on completed again to find the product
                     'type' => $l->product()?->ptype()->isNotEmpty() ? // @phpstan-ignore-line
                         $l->product()?->ptype()->value() : 'physical', // @phpstan-ignore-line
@@ -118,7 +121,7 @@ class Mollie extends Provider
                         'currency' => $this->kart->currency(),
                         'value' => number_format(0, 2),
                     ], // use checkout_line to adjust
-                ], $lineItem($this->kart, $l))),
+                ], $lineItem($this->kart, $l)))),
             ], $options)),
         ]);
 

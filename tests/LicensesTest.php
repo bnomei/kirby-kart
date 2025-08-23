@@ -1,6 +1,9 @@
 <?php
 
 use Bnomei\Kart\Licenses;
+use Bnomei\Kart\Models\OrderPage;
+use Bnomei\Kart\Models\OrdersPage;
+use Bnomei\Kart\Models\ProductPage;
 
 it('has a helper to work with licenses', function (): void {
     kirby()->cache('bnomei.kart.licenses')->flush();

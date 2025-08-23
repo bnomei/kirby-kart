@@ -8,11 +8,14 @@
  * Unauthorized copying, modification, or distribution is prohibited.
  */
 
+namespace Bnomei\Kart\Models;
+
 use Bnomei\Kart\ContentPageEnum;
 use Bnomei\Kart\Kart;
 use Bnomei\Kart\Kerbs;
 use Bnomei\Kart\ModelWithTurbo;
 use Bnomei\Kart\OrderLine;
+use Closure;
 use Kirby\Cms\Collection;
 use Kirby\Cms\File;
 use Kirby\Cms\Files;
@@ -21,6 +24,8 @@ use Kirby\Content\Field;
 use Kirby\Filesystem\Dir;
 use Kirby\Filesystem\F;
 use Kirby\Toolkit\Str;
+use Throwable;
+use ZipArchive;
 
 /**
  * @method Field customer()
@@ -72,16 +77,16 @@ class OrderPage extends Page implements Kerbs
         if ($page->num() !== null) {
             $current = $page->num();
             if ($this->invnumber()->toInt() !== $current) {
-                $this->kirby()->impersonate('kirby', fn () => page($pageId)->update([
+                $this->kirby()->impersonate('kirby', fn () => page($pageId)?->update([
                     'invnumber' => $current,
                 ]));
             }
         }
 
         // if the current is higher than the tracker in the parent then update the parent with current
-        if ($current && $page->parent()->invnumber()->toInt() <= $current) {
+        if ($current && $page->parent()?->invnumber()->toInt() <= $current) {
             $this->kirby()->impersonate('kirby', function () use ($pageId, $current): void {
-                page($pageId)->parent()->update([
+                page($pageId)?->parent()?->update([
                     'invnumber' => $current,
                 ]);
             });
@@ -90,15 +95,15 @@ class OrderPage extends Page implements Kerbs
         // if the order does not have an invoice number increment and fetch from parent
         if ($page->invnumber()->isEmpty()) {
             $page = $this->kirby()->impersonate('kirby', function () use ($pageId) {
-                $next = page($pageId)->parent()->increment('invnumber', 1)->invnumber()->toInt();
+                $next = page($pageId)?->parent()?->increment('invnumber', 1)->invnumber()->toInt();
 
-                return page($pageId)->update([
+                return page($pageId)?->update([
                     'invnumber' => $next,
                 ]);
             });
         }
 
-        return $page;
+        return $page ?? $this; // @phpstan-ignore-line
     }
 
     public static function phpBlueprint(): array
@@ -451,7 +456,7 @@ class OrderPage extends Page implements Kerbs
     {
         // $page = $this->updateInvoiceNumber(); // this would auto-fix Merx pages but it's not needed otherwise
 
-        return str_pad((string) $this->invnumber()->value(), 5, 0, STR_PAD_LEFT);
+        return str_pad(strval($this->invnumber()->value()), 5, '0', STR_PAD_LEFT);
     }
 
     /**
@@ -462,7 +467,7 @@ class OrderPage extends Page implements Kerbs
         $url = $this->url().'.pdf';
         $signature = Kart::signature($url);
 
-        return $this->invoiceurl()->isNotEmpty() ? $this->invoiceurl()->value() : $url.'?signature='.$signature;
+        return $this->invoiceurl()->isNotEmpty() ? strval($this->invoiceurl()->value()) : $url.'?signature='.$signature;
     }
 
     /**
@@ -479,12 +484,13 @@ class OrderPage extends Page implements Kerbs
 
     public function downloads(): ?File
     {
+        /** @var File|null $file */
         $file = $this->files()
             ->filterBy('extension', 'zip')
             ->sortBy('modified', 'desc')
             ->first();
 
-        if (! $file && $this->kart()->option('orders.order.create-missing-zips')) {
+        if ($file === null && kart()->option('orders.order.create-missing-zips')) {
             $file = $this->createZipWithFiles();
         }
 
@@ -495,12 +501,15 @@ class OrderPage extends Page implements Kerbs
     {
         try {
             $tmpId = date('U-v');
-            $tmpDir = kirby()->roots()->cache().'/zips/'.$tmpId;
+            $tmpDir = kirby()->root('cache').'/zips/'.$tmpId;
             Dir::make($tmpDir);
 
             if ($files instanceof Files) {
+                /** @var File $file */
                 foreach ($files as $file) {
-                    F::copy($file->root(), $tmpDir.'/'.$file->filename());
+                    if ($file->root()) {
+                        F::copy($file->root(), $tmpDir.'/'.$file->filename());
+                    }
                 }
             }
 
@@ -516,9 +525,15 @@ class OrderPage extends Page implements Kerbs
                 }
             }
 
+            $zipper = kart()->option('orders.order.zip', false);
+            if ($zipper instanceof Closure) {
+                $zipper($this, $tmpDir);
+            }
+
+            clearstatcache(true, $tmpDir); // make extra sure all file changes have been applied
             $existingFiles = Dir::read($tmpDir);
 
-            if (count($existingFiles) === 0) {
+            if (! is_dir($tmpDir) || count($existingFiles) === 0) {
                 Dir::remove($tmpDir);
 
                 return null;
@@ -548,7 +563,7 @@ class OrderPage extends Page implements Kerbs
 
             Dir::remove($tmpDir);
 
-            return $file;
+            return $file; // @phpstan-ignore-line
         } catch (Throwable $e) {
             kirby()->trigger('kart.log.error', ['error' => $e]);
         }
@@ -565,7 +580,7 @@ class OrderPage extends Page implements Kerbs
     }
 
     /**
-     * @return Collection<string, OrderLine>
+     * @return Collection<mixed>
      */
     public function orderLines(): Collection
     {
@@ -588,7 +603,7 @@ class OrderPage extends Page implements Kerbs
         return new Collection($lines);
     }
 
-    public function urlWithSignature($options = null): string
+    public function urlWithSignature(string|array|null $options = null): string
     {
         $url = $this->url($options);
         $signature = Kart::signature($url);
@@ -616,7 +631,6 @@ class OrderPage extends Page implements Kerbs
             'isPayed' => $this->isPayed(),
             'orderLines' => $this->orderLines()->values(fn (OrderLine $o) => $o->toKerbs()),
             'paidDate' => $this->paidDate()->toDate('c'), // ISO 8601 date
-            'quantity' => $this->quantity(),
             'subtotal' => $this->subtotal(),
             'tax' => $this->tax(),
             'title' => $this->title()->value(),

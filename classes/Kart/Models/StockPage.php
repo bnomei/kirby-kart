@@ -8,10 +8,14 @@
  * Unauthorized copying, modification, or distribution is prohibited.
  */
 
+namespace Bnomei\Kart\Models;
+
 use Bnomei\Kart\ContentPageEnum;
 use Bnomei\Kart\Kart;
 use Bnomei\Kart\ModelWithTurbo;
+use Closure;
 use Kirby\Cms\Page;
+use Kirby\Cms\StructureObject;
 use Kirby\Content\Field;
 use Kirby\Data\Yaml;
 use Kirby\Toolkit\A;
@@ -98,9 +102,16 @@ class StockPage extends Page
                     'translate' => false,
                     'width' => '1/4',
                 ],
+                'modified_ts' => [
+                    'label' => 'bnomei.kart.timestamp',
+                    'type' => 'info',
+                    'theme' => 'neutral',
+                    'text' => '{{ page.timestampOrModified }}',
+                    'width' => '1/4',
+                ],
                 'gap1' => [
                     'type' => 'gap',
-                    'width' => '1/2',
+                    'width' => '1/4',
                 ],
                 'stock' => [
                     'label' => 'bnomei.kart.stock',
@@ -136,6 +147,11 @@ class StockPage extends Page
         ];
     }
 
+    public function timestampOrModified(): Field
+    {
+        return new Field($this, 'timestampOrModified', date('Y-m-d H:i:s', max($this->timestamp()->toDate(), $this->modified())));
+    }
+
     public function onlyOneStockPagePerProduct(array $values): bool
     {
         $productUuid = A::get($values, 'page');
@@ -144,7 +160,7 @@ class StockPage extends Page
         }
 
         return $this->parent()
-            ->childrenAndDrafts()
+            ?->childrenAndDrafts()
             ->not($this)
             ->filterBy(fn ($page) => $page->page()->toPages()->count() &&
                 $page->page()->toPage()?->uuid()->toString() === $productUuid
@@ -156,7 +172,7 @@ class StockPage extends Page
      */
     public function stockPad(int $length): string
     {
-        /** @var ProductPage $product */
+        /** @var ProductPage|null $product */
         $product = $this->page()->toPage();
         $stock = $product?->stockWithVariants();
         if (is_string($stock)) {
@@ -187,12 +203,13 @@ class StockPage extends Page
             return null;
         }
 
-        return $this->kirby()->impersonate('kirby', function () use ($amount, $set, $variant) {
+        /** @var StockPage $p */
+        $p = $this->kirby()->impersonate('kirby', function () use ($amount, $set, $variant) {
             $stock = $this;
             $foundVariant = false;
             if ($variant) {
                 $updated = [];
-                /** @var \Kirby\Cms\StructureObject $variantItem */
+                /** @var StructureObject $variantItem */
                 foreach ($stock->variants()->toStructure() as $variantItem) {
                     $variants = $variantItem->variant()->split();
                     sort($variants);
@@ -224,7 +241,9 @@ class StockPage extends Page
             ]);
 
             return $stock;
-        })->stockFromVariant($variant)->toInt();
+        });
+
+        return intval($p->stockFromVariant($variant)->toInt());
     }
 
     public function stockFromVariant(?string $variant = null): Field

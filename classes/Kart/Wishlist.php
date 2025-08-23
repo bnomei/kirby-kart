@@ -12,6 +12,9 @@ namespace Bnomei\Kart;
 
 use Kirby\Toolkit\A;
 
+/*
+ * Kart Wishlist (mostly like a cart)
+ */
 class Wishlist extends Cart
 {
     public function __construct(string $id = 'wishlist', array $items = [])

@@ -14,6 +14,8 @@ use Bnomei\Kart\Mixins\ContentPages;
 use Bnomei\Kart\Mixins\Options;
 use Bnomei\Kart\Mixins\Stats;
 use Bnomei\Kart\Mixins\TMNT;
+use Bnomei\Kart\Models\OrderPage;
+use Bnomei\Kart\Models\ProductPage;
 use Bnomei\Kart\Provider\Kirby;
 use Closure;
 use Exception;
@@ -30,9 +32,10 @@ use Kirby\Toolkit\SymmetricCrypto;
 use Kirby\Toolkit\V;
 use Kirby\Uuid\Uuid;
 use NumberFormatter;
-use OrderPage;
-use ProductPage;
 
+/**
+ * Kart
+ */
 class Kart implements Kerbs
 {
     use ContentPages;
@@ -79,7 +82,10 @@ class Kart implements Kerbs
 
     public function ready(): void
     {
+        // ensure that root pages exist
         $this->makeContentPages();
+
+        // process queue
         $this->queue()->process();
 
         // Clean up caches that have no GC itself
@@ -818,6 +824,58 @@ class Kart implements Kerbs
             $this->products()->filterBy(fn ($product) => count(array_diff($tags, $product->tags()->split())) === 0);
     }
 
+    public function allVariants(): array
+    {
+        $products = kart()->page(ContentPageEnum::PRODUCTS);
+        if (! $products) {
+            return [];
+        }
+
+        $expire = kart()->option('expire');
+        if (is_int($expire)) {
+            $variants = kirby()->cache('bnomei.kart.variants')->getOrSet('variants', function () {
+                return $this->getVariants();
+            }, $expire);
+        } else {
+            $variants = $this->getVariants();
+        }
+
+        return $variants;
+    }
+
+    /**
+     * @return Collection<string>
+     */
+    public function variants(): Collection
+    {
+        return new Collection($this->allVariants()); // @phpstan-ignore-line
+    }
+
+    private function getVariants(): array
+    {
+        $products = kart()->page(ContentPageEnum::PRODUCTS);
+        if (! $products) {
+            return [];
+        }
+
+        $variants = [];
+        /** @var ProductPage $product */
+        foreach ($products->children() as $product) {
+            $variants = array_merge_recursive($variants, $product->variantGroups());
+        }
+
+        $v = [];
+        foreach ($variants as $variant => $values) {
+            sort($values);
+            foreach ($values as $value) {
+                $v[] = $variant.':'.$value;
+            }
+        }
+        sort($v);
+
+        return $v;
+    }
+
     /**
      * @kql-allowed
      */
@@ -855,6 +913,19 @@ class Kart implements Kerbs
             'user' => $user,
             'model' => $model,
         ]);
+    }
+
+    /**
+     * set on checkout
+     *
+     * @see Router::CART_CHECKOUT
+     */
+    public function checkoutFormData(): array
+    {
+        return kirby()->session()->get(
+            'bnomei.kart.checkout_form_data',
+            []
+        );
     }
 
     protected ?array $kerbs = null;

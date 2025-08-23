@@ -2,7 +2,7 @@
     <legend>Wishlist (<?= kart()->wishlist()->lines()->count() ?>)</legend>
     <menu>
     <?php foreach (kart()->wishlist()->lines() as $line) {
-        /** @var \Bnomei\Kart\CartLine $line */
+        /** @var CartLine $line */
         /** @var ProductPage $product */
         $product = $line->product(); ?>
         <li>

@@ -10,16 +10,19 @@
 
 namespace Bnomei\Kart;
 
+use Bnomei\Kart\Models\OrderPage;
+use Bnomei\Kart\Models\OrdersPage;
+use Bnomei\Kart\Models\ProductPage;
+use Bnomei\Kart\Models\StocksPage;
 use Kirby\Cms\App;
 use Kirby\Cms\Collection;
 use Kirby\Cms\User;
 use Kirby\Toolkit\A;
 use Kirby\Uuid\Uuid;
-use OrderPage;
-use OrdersPage;
-use ProductPage;
-use StocksPage;
 
+/**
+ * Kart Cart
+ */
 class Cart implements Kerbs
 {
     /** @var Collection<CartLine> */
@@ -385,6 +388,7 @@ class Cart implements Kerbs
             'user' => $customer,
             'order' => $order,
         ]);
+        kirby()->session()->remove('bnomei.kart.checkout_form_data');
 
         $this->clear();
         $this->save();

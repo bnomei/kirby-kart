@@ -2,7 +2,6 @@
 
 kart()->validateSignatureOrGo();
 
-use Bnomei\Kart\Kart;
 use Kirby\Cms\File;
 use Kirby\Filesystem\F;
 

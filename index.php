@@ -12,10 +12,21 @@
 use Bnomei\Kart\CaptchaBuilder;
 use Bnomei\Kart\Cart;
 use Bnomei\Kart\CartLine;
+use Bnomei\Kart\Category;
 use Bnomei\Kart\Kart;
 use Bnomei\Kart\License;
 use Bnomei\Kart\MagicLinkChallenge;
+use Bnomei\Kart\Models\CustomerUser;
+use Bnomei\Kart\Models\DeletedUser;
+use Bnomei\Kart\Models\OrderPage;
+use Bnomei\Kart\Models\OrdersPage;
+use Bnomei\Kart\Models\ProductPage;
+use Bnomei\Kart\Models\ProductsPage;
+use Bnomei\Kart\Models\StockPage;
+use Bnomei\Kart\Models\StocksPage;
+use Bnomei\Kart\OrderLine;
 use Bnomei\Kart\Router;
+use Bnomei\Kart\Tag;
 use Bnomei\Kart\UuidCache;
 use Bnomei\Kart\Wishlist;
 use Kirby\Cms\App;
@@ -36,6 +47,21 @@ use Kirby\Toolkit\A;
 use Kirby\Toolkit\Str;
 
 @include_once __DIR__.'/vendor/autoload.php';
+
+// register class aliases
+if (defined('KART_CLASS_ALIAS') === false || constant('KART_CLASS_ALIAS') !== false) {
+    class_alias(CartLine::class, 'CartLine');
+    class_alias(Category::class, 'Category');
+    class_alias(Kart::class, 'Kart');
+    class_alias(ProductPage::class, 'ProductPage');
+    class_alias(ProductsPage::class, 'ProductsPage');
+    class_alias(OrderLine::class, 'OrderLine');
+    class_alias(OrderPage::class, 'OrderPage');
+    class_alias(OrdersPage::class, 'OrdersPage');
+    class_alias(StockPage::class, 'StockPage');
+    class_alias(StocksPage::class, 'StocksPage');
+    class_alias(Tag::class, 'Tag');
+}
 
 if (! function_exists('kart')) {
     function kart(): Kart
@@ -80,6 +106,7 @@ App::plugin(
                 'stocks' => true,
                 'stocks-holds' => true,
                 'tags' => true,
+                'variants' => true,
 
                 // providers
                 'checkout' => true,
@@ -103,6 +130,15 @@ App::plugin(
                 'enabled' => true,
                 'roles' => ['customer', 'member', 'admin'], // does NOT include `deleted`
             ],
+            'classAlias' => function () {
+                class_alias(Category::class, 'Category');
+                class_alias(Kart::class, 'Kart');
+                class_alias(ProductPage::class, 'ProductPage');
+                class_alias(OrderLine::class, 'OrderLine');
+                class_alias(OrderPage::class, 'OrderPage');
+                class_alias(StockPage::class, 'StockPage');
+                class_alias(Tag::class, 'Tag');
+            },
             'crypto' => [
                 'password' => fn () => kart_env('CRYPTO_PASSWORD'),
                 'salt' => fn () => kart_env(
@@ -114,6 +150,13 @@ App::plugin(
             'currency' => 'EUR', // uppercase 3-letter code
             'successPage' => null, // id of the page to redirect to after checkout flow, defaults to page of order
             'dateformat' => 'Y-m-d H:i',
+            'completed' => function (array $data, array $checkoutFormData): array {
+                // use this to add custom data to the order before the kart.provider.NAME.completed hook is triggered.
+                // the form data of the checkout is available in $checkoutFormData in case you want to add custom data to the order based on the checkout form.
+                // you can also pull in any other data here like from the current user or kirby()->session().
+
+                return $data; // return the modified data
+            },
             'orders' => [
                 'enabled' => true,
                 'page' => 'orders',
@@ -122,6 +165,10 @@ App::plugin(
                     'create-missing-zips' => true,
                     'maxapo' => 10, // max amount of a single product per order, keep this low to prevent stock hostages, set per product instead
                     'maxlpo' => 10, // max different products per order aka lines in cart, check your providers API docs before increasing this
+                    'zip' => function (OrderPage $order, string $zipDir): void {
+                        // this callback allows you to do late adjustments to the zip directory
+                        // you can use this to add, filter by extension or remove files
+                    },
                 ],
             ],
             'products' => [
@@ -235,6 +282,14 @@ App::plugin(
                 ],
                 'invoice_ninja' => [],
                 'kirby_cms' => [
+                    'checkout_options' => function (Kart $kart) {
+                        // configure the checkout based on current kart instance
+                        return [];
+                    },
+                    'checkout_line' => function (Kart $kart, CartLine $line) {
+                        // add custom data to the current checkout line
+                        return [];
+                    },
                     'virtual' => false,
                 ],
                 'lemonsqueezy' => [
@@ -931,6 +986,9 @@ App::plugin(
                     'copyright' => $site->copyright()->isNotEmpty() ? $this->copyright()->kti()->value() : null, // @phpstan-ignore-line
                 ]);
             },
+            'emptyLabel' => function (): string {
+                return '<span>x</span>';
+            },
         ],
         'usersMethods' => [
             /**
@@ -1119,6 +1177,14 @@ App::plugin(
                 'props' => [
                     'value' => function () {
                         return kart()->allTags();
+                    },
+                ],
+            ],
+            'allvariants' => [
+                'extends' => 'tags',
+                'props' => [
+                    'value' => function () {
+                        return kart()->allVariants();
                     },
                 ],
             ],

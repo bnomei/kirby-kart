@@ -8,6 +8,8 @@
  * Unauthorized copying, modification, or distribution is prohibited.
  */
 
+namespace Bnomei\Kart\Models;
+
 use Kirby\Cms\Page;
 use Kirby\Cms\Pages;
 use Kirby\Content\Field;
@@ -75,14 +77,21 @@ class ProductsPage extends Page
                                     'type' => 'allcategories',
                                     'disabled' => true,
                                     'translate' => false,
-                                    'width' => '1/3',
+                                    'width' => '1/4',
                                 ],
                                 'tags' => [
                                     'label' => '{{ t("bnomei.kart.tags") }} ({{ site.kart.tags.count }})',
                                     'type' => 'alltags',
                                     'disabled' => true,
                                     'translate' => false,
-                                    'width' => '2/3',
+                                    'width' => '1/2',
+                                ],
+                                'variants' => [
+                                    'label' => '{{ t("bnomei.kart.variants") }} ({{ site.kart.variants.count }})',
+                                    'type' => 'allvariants',
+                                    'disabled' => true,
+                                    'translate' => false,
+                                    'width' => '1/4',
                                 ],
                                 'line' => [
                                     'type' => 'line',
@@ -139,7 +148,7 @@ class ProductsPage extends Page
         $this->kirby()->impersonate('kirby', function () use ($uuids): void {
             $uuid = kart()->option('products.product.uuid');
             foreach (kart()->provider()->products() as $product) {
-                if (in_array($uuid($this, $product), $uuids)) {
+                if (is_callable($uuid) && in_array($uuid($this, $product), $uuids)) {
                     continue;
                 }
                 $this->createChild($product);
@@ -157,6 +166,11 @@ class ProductsPage extends Page
     public function tags(): Field
     {
         return new Field($this, 'tags', implode(',', kart()->allTags()));
+    }
+
+    public function variants(): Field
+    {
+        return new Field($this, 'variants', implode(',', kart()->allVariants()));
     }
 
     public function outOfStock(): Pages

@@ -18,6 +18,8 @@ use Kirby\Toolkit\Obj;
 use Kirby\Toolkit\Str;
 
 /**
+ * Kart Virtual Page is used to create virtual (product) pages from synced data
+ *
  * @property string $id
  * @property string $uuid
  * @property string $title
@@ -142,10 +144,6 @@ class VirtualPage extends Obj
             if (is_array($value)) {
                 $result['content'][$key] = Yaml::encode($value);
             }
-        }
-
-        if ($result['content'] === null) {
-            $result['content'] = [];
         }
 
         ksort($result['content']);

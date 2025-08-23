@@ -34,6 +34,54 @@ class Kirby extends Provider
         $this->kirby->session()->set('bnomei.kart.'.$this->name.'.session_id', $session_id);
         $this->kirby->session()->set('bnomei.kart.'.$this->name.'.cart_hash', $this->kart->cart()->hash());
 
+        // TEMPLATE FOR BUILDING PROVIDERS
+        /*
+        $options = $this->option('checkout_options', false);
+        if ($options instanceof \Closure) {
+            $options = $options($this->kart);
+        }
+
+        $lineItem = $this->option('checkout_line', false);
+        if ($lineItem instanceof Closure === false) {
+            $lineItem = fn ($kart, $item) => [];
+        }
+
+        $lines = A::get($options, 'lines', []);
+        unset($options['lines']);
+
+        $data = array_filter(array_merge([
+            'success_url' => url(Router::PROVIDER_SUCCESS).'?session_id='.$session_id,
+            'lines' => array_merge($lines, $this->kart->cart()->lines()->values(fn (CartLine $l) => array_merge([
+                'sku' => $l->product()?->uuid()->id().($l->variant() ? '|'.$l->variant() : ''), // used on completed again to find the product
+                'type' => $l->product()?->ptype()->isNotEmpty() ? // @phpstan-ignore-line
+                    $l->product()?->ptype()->value() : 'physical', // @phpstan-ignore-line
+                'description' => $l->product()?->title()->value(),
+                'quantity' => $l->quantity(),
+                'unitPrice' => [
+                    'currency' => $this->kart->currency(),
+                    'value' => number_format($l->product()?->price()->toFloat(), 2),
+                ],
+                'totalAmount' => [
+                    'currency' => $this->kart->currency(),
+                    'value' => number_format($l->product()?->price()->toFloat() * $l->quantity(), 2),
+                ],
+                'imageUrl' => $l->product()?->firstGalleryImageUrl(),
+                'productUrl' => $l->product()?->url(),
+                'vatRate' => 0, // use checkout_line to adjust
+                'vatAmount' => [
+                    'currency' => $this->kart->currency(),
+                    'value' => number_format(0, 2),
+                ], // use checkout_line to adjust
+                'discountAmount' => [
+                    'currency' => $this->kart->currency(),
+                    'value' => number_format(0, 2),
+                ], // use checkout_line to adjust
+            ], $lineItem($this->kart, $l)))),
+        ], $options));
+        */
+
+        // kirby_cms provider does not call external API with $data but simply redirects to the PROVIDER_PAYMENT.
+        // the $data will be constructed from the cart after PROVIDER_SUCCESS and used to create the order.
         return parent::checkout() ? Router::provider_payment([
             'success_url' => url(Router::PROVIDER_SUCCESS).'?session_id='.$session_id,
         ]) : '/';

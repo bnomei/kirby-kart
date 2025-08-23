@@ -9,6 +9,7 @@
  */
 
 use Bnomei\Kart\Cart;
+use Bnomei\Kart\Models\ProductPage;
 use Kirby\Toolkit\Str;
 
 beforeEach(function (): void {
