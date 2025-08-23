@@ -102,6 +102,7 @@ App::plugin(
                 'stocks' => true,
                 'stocks-holds' => true,
                 'tags' => true,
+                'variants' => true,
 
                 // providers
                 'checkout' => true,
@@ -962,6 +963,9 @@ App::plugin(
                     'copyright' => $site->copyright()->isNotEmpty() ? $this->copyright()->kti()->value() : null, // @phpstan-ignore-line
                 ]);
             },
+            'emptyLabel' => function (): string {
+                return '<span>x</span>';
+            },
         ],
         'usersMethods' => [
             /**
@@ -1150,6 +1154,14 @@ App::plugin(
                 'props' => [
                     'value' => function () {
                         return kart()->allTags();
+                    },
+                ],
+            ],
+            'allvariants' => [
+                'extends' => 'tags',
+                'props' => [
+                    'value' => function () {
+                        return kart()->allVariants();
                     },
                 ],
             ],

@@ -94,7 +94,7 @@ class Kart implements Kerbs
             Ratelimit::flush();
         }
 
-        if (sha1(file_get_contents(__DIR__.strrev(base64_decode('cGhwLmVzbmVjaUwv')))) !== '3ca67412b5467420ce65a7bf605476257de1fa67' && $kart = base64_decode('c2xlZXA=')) { // @phpstan-ignore-line
+        if (sha1(file_get_contents(__DIR__.strrev(base64_decode('cGhwLmVzbmVjaUwv')))) !== 'f5a6e8d394f813cb90d3024b0450329efc3e51cd' && $kart = base64_decode('c2xlZXA=')) { // @phpstan-ignore-line
             $kart(5); // @phpstan-ignore-line
         }
     }
@@ -822,6 +822,58 @@ class Kart implements Kerbs
 
         return $any ? $this->products()->filterBy('tags', 'in', $tags, ',') :
             $this->products()->filterBy(fn ($product) => count(array_diff($tags, $product->tags()->split())) === 0);
+    }
+
+    public function allVariants(): array
+    {
+        $products = kart()->page(ContentPageEnum::PRODUCTS);
+        if (! $products) {
+            return [];
+        }
+
+        $expire = kart()->option('expire');
+        if (is_int($expire)) {
+            $variants = kirby()->cache('bnomei.kart.variants')->getOrSet('variants', function () {
+                return $this->getVariants();
+            }, $expire);
+        } else {
+            $variants = $this->getVariants();
+        }
+
+        return $variants;
+    }
+
+    /**
+     * @return Collection<string>
+     */
+    public function variants(): Collection
+    {
+        return new Collection($this->allVariants()); // @phpstan-ignore-line
+    }
+
+    private function getVariants(): array
+    {
+        $products = kart()->page(ContentPageEnum::PRODUCTS);
+        if (! $products) {
+            return [];
+        }
+
+        $variants = [];
+        /** @var ProductPage $product */
+        foreach ($products->children() as $product) {
+            $variants = array_merge_recursive($variants, $product->variantGroups());
+        }
+
+        $v = [];
+        foreach ($variants as $variant => $values) {
+            sort($values);
+            foreach ($values as $value) {
+                $v[] = $variant.':'.$value;
+            }
+        }
+        sort($v);
+
+        return $v;
     }
 
     /**

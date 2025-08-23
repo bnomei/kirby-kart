@@ -271,6 +271,10 @@ class ProductPage extends Page implements Kerbs
                                         'variant' => [
                                             'label' => 'bnomei.kart.variant',
                                             'type' => 'tags',
+                                            'options' => [
+                                                'type' => 'query',
+                                                'query' => 'site.kart.allVariants',
+                                            ],
                                         ],
                                         'price' => [
                                             'label' => 'bnomei.kart.price',

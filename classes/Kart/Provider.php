@@ -14,6 +14,7 @@ use Closure;
 use Kirby\Cache\Cache;
 use Kirby\Cms\App;
 use Kirby\Cms\User;
+use Kirby\Content\Field;
 use Kirby\Data\Yaml;
 use Kirby\Filesystem\F;
 use Kirby\Toolkit\A;
@@ -154,8 +155,9 @@ abstract class Provider
         } elseif (is_string($sync)) {
             $u .= '-'.$sync;
         }
+        $u = $this->cache()->get($u);
 
-        return $this->cache()->get($u, '?');
+        return $u ? (new Field(null, 'updatedAt', $u))->toDate(kart()->dateFormat()) : '?';
     }
 
     public function findImagesFromUrls(string|array $urls): array
