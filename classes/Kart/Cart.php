@@ -388,6 +388,7 @@ class Cart implements Kerbs
             'user' => $customer,
             'order' => $order,
         ]);
+        kirby()->session()->remove('bnomei.kart.checkout_form_data');
 
         $this->clear();
         $this->save();

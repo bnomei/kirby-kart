@@ -296,6 +296,12 @@ abstract class Provider
 
     public function completed(array $data = []): array
     {
+        $checkout = kirby()->session()->get('bnomei.kart.checkout_form_data', []);
+        $completed = kart()->option('completed');
+        if ($completed instanceof Closure) {
+            $data = $completed($data, $checkout) ?? $data;
+        }
+
         kirby()->trigger('kart.provider.'.$this->name.'.completed', ['data' => $data]);
 
         return $data;

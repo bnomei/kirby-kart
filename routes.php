@@ -611,6 +611,14 @@ return function (App $kirby) {
                     Response::go('/');
                 }
 
+                kirby()->session()->set(
+                    'bnomei.kart.checkout_form_data',
+                    A::without(
+                        kirby()->request()->data(),
+                        ['redirect', 'token', 'keq']
+                    )
+                );
+
                 Response::go(kart()->provider()->checkout());
             },
         ],

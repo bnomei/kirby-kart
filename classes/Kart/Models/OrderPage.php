@@ -525,9 +525,15 @@ class OrderPage extends Page implements Kerbs
                 }
             }
 
+            $zipper = kart()->option('orders.order.zip', false);
+            if ($zipper instanceof Closure) {
+                $zipper($this, $tmpDir);
+            }
+
+            clearstatcache(true, $tmpDir); // make extra sure all file changes have been applied
             $existingFiles = Dir::read($tmpDir);
 
-            if (count($existingFiles) === 0) {
+            if (! is_dir($tmpDir) || count($existingFiles) === 0) {
                 Dir::remove($tmpDir);
 
                 return null;

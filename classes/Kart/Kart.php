@@ -915,6 +915,19 @@ class Kart implements Kerbs
         ]);
     }
 
+    /**
+     * set on checkout
+     *
+     * @see Router::CART_CHECKOUT
+     */
+    public function checkoutFormData(): array
+    {
+        return kirby()->session()->get(
+            'bnomei.kart.checkout_form_data',
+            []
+        );
+    }
+
     protected ?array $kerbs = null;
 
     public function toKerbs(): array

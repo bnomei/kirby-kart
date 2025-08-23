@@ -50,12 +50,16 @@ use Kirby\Toolkit\Str;
 
 // register class aliases
 if (defined('KART_CLASS_ALIAS') === false || constant('KART_CLASS_ALIAS') !== false) {
+    class_alias(CartLine::class, 'CartLine');
     class_alias(Category::class, 'Category');
     class_alias(Kart::class, 'Kart');
     class_alias(ProductPage::class, 'ProductPage');
+    class_alias(ProductsPage::class, 'ProductsPage');
     class_alias(OrderLine::class, 'OrderLine');
     class_alias(OrderPage::class, 'OrderPage');
+    class_alias(OrdersPage::class, 'OrdersPage');
     class_alias(StockPage::class, 'StockPage');
+    class_alias(StocksPage::class, 'StocksPage');
     class_alias(Tag::class, 'Tag');
 }
 
@@ -146,6 +150,13 @@ App::plugin(
             'currency' => 'EUR', // uppercase 3-letter code
             'successPage' => null, // id of the page to redirect to after checkout flow, defaults to page of order
             'dateformat' => 'Y-m-d H:i',
+            'completed' => function (array $data, array $checkoutFormData): array {
+                // use this to add custom data to the order before the kart.provider.NAME.completed hook is triggered.
+                // the form data of the checkout is available in $checkoutFormData in case you want to add custom data to the order based on the checkout form.
+                // you can also pull in any other data here like from the current user or kirby()->session().
+
+                return $data; // return the modified data
+            },
             'orders' => [
                 'enabled' => true,
                 'page' => 'orders',
@@ -154,6 +165,10 @@ App::plugin(
                     'create-missing-zips' => true,
                     'maxapo' => 10, // max amount of a single product per order, keep this low to prevent stock hostages, set per product instead
                     'maxlpo' => 10, // max different products per order aka lines in cart, check your providers API docs before increasing this
+                    'zip' => function (OrderPage $order, string $zipDir): void {
+                        // this callback allows you to do late adjustments to the zip directory
+                        // you can use this to add, filter by extension or remove files
+                    },
                 ],
             ],
             'products' => [
@@ -267,6 +282,14 @@ App::plugin(
                 ],
                 'invoice_ninja' => [],
                 'kirby_cms' => [
+                    'checkout_options' => function (Kart $kart) {
+                        // configure the checkout based on current kart instance
+                        return [];
+                    },
+                    'checkout_line' => function (Kart $kart, CartLine $line) {
+                        // add custom data to the current checkout line
+                        return [];
+                    },
                     'virtual' => false,
                 ],
                 'lemonsqueezy' => [
