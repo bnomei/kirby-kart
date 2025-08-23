@@ -67,7 +67,7 @@ return [
     'bnomei.kart.timestamp' => 'Zeitstempel',
     'bnomei.kart.total' => 'Total',
     'bnomei.kart.variant' => 'Variante',
-    'bnomei.kart.variants' => 'Vartianten',
+    'bnomei.kart.variants' => 'Varianten',
     'login.email.login-magic.subject' => 'Login Link für {{ site.title }}',
     'bnomei.kerbs.add-to-cart' => 'In den Warenkorb',
     'bnomei.kerbs.all' => 'Alle',
