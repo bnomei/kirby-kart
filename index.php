@@ -647,6 +647,7 @@ App::plugin(
                     kirby()->cache('bnomei.kart.products')->flush();
                     kirby()->cache('bnomei.kart.tags')->flush();
                     kirby()->cache('bnomei.kart.stocks')->flush();
+                    kirby()->cache('bnomei.kart.variants')->flush();
                 }
             },
             'page.update:before' => function (Page $page, array $values, array $strings): void {
@@ -664,6 +665,7 @@ App::plugin(
                     kirby()->cache('bnomei.kart.categories')->flush();
                     kirby()->cache('bnomei.kart.products')->flush();
                     kirby()->cache('bnomei.kart.tags')->flush();
+                    kirby()->cache('bnomei.kart.variants')->flush();
                 }
             },
             'page.update:after' => function (Page $newPage, Page $oldPage): void {
@@ -685,6 +687,7 @@ App::plugin(
                     kirby()->cache('bnomei.kart.products')->flush();
                     kirby()->cache('bnomei.kart.tags')->flush();
                     // kirby()->cache('bnomei.kart.stocks')->flush(); // can safely be ignored
+                    kirby()->cache('bnomei.kart.variants')->flush();
                 }
             },
             /*
