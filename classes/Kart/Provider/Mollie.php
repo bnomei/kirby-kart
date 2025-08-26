@@ -85,7 +85,7 @@ class Mollie extends Provider
                     'order_id' => $uuid,
                 ],
                 'locale' => strval($locale),
-                'method' => ['applepay', 'creditcard', 'paypal', 'twint'],
+                // 'method' => ['applepay', 'creditcard', 'paypal', 'twint'], // defaults to those set in your Mollie account or set via checkout_options to force them
                 'customerId' => $customerId,
                 'redirectUrl' => url(Router::PROVIDER_SUCCESS).'?session_id='.urlencode($uuid),
                 'cancelUrl' => url(Router::PROVIDER_CANCEL),
