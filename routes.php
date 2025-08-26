@@ -611,12 +611,20 @@ return function (App $kirby) {
                     Response::go('/');
                 }
 
+                $checkoutFormData = A::without(
+                    kirby()->request()->data(),
+                    ['redirect', 'token', 'keq']
+                );
+                $validation = kart()->option('checkoutFormData');
+                if (is_callable($validation)) {
+                    $checkoutFormData = $validation($checkoutFormData);
+                    if (! $checkoutFormData) {
+                        Router::go(Router::idWithParams(Router::CART_CHECKOUT), code: 302);
+                    }
+                }
                 kirby()->session()->set(
                     'bnomei.kart.checkout_form_data',
-                    A::without(
-                        kirby()->request()->data(),
-                        ['redirect', 'token', 'keq']
-                    )
+                    $checkoutFormData
                 );
 
                 Response::go(kart()->provider()->checkout());

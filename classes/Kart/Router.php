@@ -149,7 +149,7 @@ class Router
         }
 
         if ($mode === 'go') {
-            $url = strval($url ?? Router::get('redirect', '/'));
+            $url = strval(Router::get('redirect', $url ?? '/'));
             Response::go($url, $code); // NOTE: code provided but a redirect will always be a 302, use the JSON API if you need the code
             // NOTE: this does not redirect
             // header('Location: ' . $url, true, $code);

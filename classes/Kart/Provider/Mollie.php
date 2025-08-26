@@ -104,11 +104,11 @@ class Mollie extends Provider
                     'quantity' => $l->quantity(),
                     'unitPrice' => [
                         'currency' => $this->kart->currency(),
-                        'value' => number_format($l->product()?->price()->toFloat(), 2),
+                        'value' => number_format($l->price(), 2),
                     ],
                     'totalAmount' => [
                         'currency' => $this->kart->currency(),
-                        'value' => number_format($l->product()?->price()->toFloat() * $l->quantity(), 2),
+                        'value' => number_format($l->subtotal(), 2),
                     ],
                     'imageUrl' => $l->product()?->firstGalleryImageUrl(),
                     'productUrl' => $l->product()?->url(),

@@ -132,7 +132,7 @@ class Paypal extends Provider
                             // 'category' => A::get($l->product()?->raw()->yaml(), 'category'),
                             'unit_amount' => [
                                 'currency_code' => $currency,
-                                'value' => number_format($l->product()?->price()->toFloat(), 2),
+                                'value' => number_format($l->price(), 2),
                             ],
                             'image_url' => A::get($l->product()?->raw()->yaml(), 'image_url', $l->product()?->firstGalleryImageUrl()),
                             'url' => $l->product()?->url(),

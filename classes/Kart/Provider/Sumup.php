@@ -126,8 +126,8 @@ class Sumup extends Provider
                 'variant' => $l->variant(),
                 'quantity' => $l->quantity(),
                 'price' => $l->price(), // per item
-                'total' => $l->quantity() * $l->price(), // -discount +tax
-                'subtotal' => $l->quantity() * $l->price(),
+                'total' => $l->subtotal(), // -discount +tax
+                'subtotal' => $l->subtotal(),
                 'tax' => 0,
                 'discount' => 0,
                 'licensekey' => $likey(['line' => $l->toArray()]),
