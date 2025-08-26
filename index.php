@@ -150,7 +150,15 @@ App::plugin(
             'currency' => 'EUR', // uppercase 3-letter code
             'successPage' => null, // id of the page to redirect to after checkout flow, defaults to page of order
             'dateformat' => 'Y-m-d H:i',
+            'checkoutFormData' => function (array $checkoutFormData): ?array {
+                // !!! THIS IS HAPPENING BEFORE CHECKOUT !!!
+                // use this to validate or modify the checkout form data. return the array to continue.
+                // to abort write errors to session and flush them manually or use kart()->message() and THEN return null instead.
+
+                return $checkoutFormData; // return the validated/modified data
+            },
             'completed' => function (array $data, array $checkoutFormData): array {
+                // !!! THIS IS HAPPENING AFTER SUCCESSFUL CHECKOUT !!!
                 // use this to add custom data to the order before the kart.provider.NAME.completed hook is triggered.
                 // the form data of the checkout is available in $checkoutFormData in case you want to add custom data to the order based on the checkout form.
                 // you can also pull in any other data here like from the current user or kirby()->session().

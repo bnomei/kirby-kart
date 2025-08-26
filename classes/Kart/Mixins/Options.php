@@ -38,6 +38,7 @@ trait Options
             'captcha.current',
             'captcha.get',
             'captcha.set',
+            'checkoutFormData',
             'completed',
             'licenses.activate',
             'licenses.deactivate',
