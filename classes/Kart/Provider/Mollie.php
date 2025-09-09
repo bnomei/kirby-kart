@@ -181,7 +181,7 @@ class Mollie extends Provider
         }
         $data = array_merge($data, array_filter([
             // 'session_id' => $sessionId,
-            'uuid' => A::get($json, 'metadata.order_id'),
+            // 'uuid' => A::get($json, 'metadata.order_id'),
             'email' => A::get($customer, 'email'),
             'customer' => ! empty($customer) ? [
                 'id' => A::get($customer, 'id'),

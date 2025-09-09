@@ -121,17 +121,19 @@ class OrdersPage extends Page
             return null;
         }
 
+        // remove a few fields that were set in [provider]->completed()
+        // but should not be forwarded as content to the order itself.
+        // keep the remaining kvs as they might be from checkoutFormData.
+        unset($data['uuid']);
+        unset($data['email']);
+        unset($data['customer']);
+
         /** @var Page $p */
         $p = kirby()->impersonate('kirby', fn () => self::createChild([
             'template' => kart()->option('orders.order.template', 'order'),
             'model' => kart()->option('orders.order.model', 'order'),
             // id, title, slug and uuid are automatically generated
-            'content' => A::get($data, [
-                'paidDate',
-                'paymentMethod',
-                'paymentComplete',
-                'items',
-            ]) + [
+            'content' => $data + [
                 'customer' => [$customer?->uuid()->toString()], // kirby user field expects an array
             ],
         ]));

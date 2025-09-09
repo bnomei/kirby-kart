@@ -181,7 +181,7 @@ class Paypal extends Provider
         }
         $data = array_merge($data, array_filter([
             // 'session_id' => $sessionId,
-            'uuid' => A::get($json, 'purchase_units.0.custom_id'),
+            // 'uuid' => A::get($json, 'purchase_units.0.custom_id'),
             'email' => A::get($json, 'payer.email_address'),
             'customer' => [
                 'id' => A::get($json, 'payer.payer_id'),
