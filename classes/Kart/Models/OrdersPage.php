@@ -124,9 +124,11 @@ class OrdersPage extends Page
         // remove a few fields that were set in [provider]->completed()
         // but should not be forwarded as content to the order itself.
         // keep the remaining kvs as they might be from checkoutFormData.
-        unset($data['uuid']);
-        unset($data['email']);
-        unset($data['customer']);
+        unset($data['uuid']); // some providers have uuids but we use our own
+        if (! $customer) {
+            unset($data['email']); // this might be useful if not customers are created, so lets keep it around
+        }
+        unset($data['customer']); // used to create/update the customer
 
         /** @var Page $p */
         $p = kirby()->impersonate('kirby', fn () => self::createChild([
