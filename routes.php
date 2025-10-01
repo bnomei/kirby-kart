@@ -618,7 +618,7 @@ return function (App $kirby) {
                 $validation = kart()->option('checkoutFormData');
                 if (is_callable($validation)) {
                     $checkoutFormData = $validation($checkoutFormData);
-                    if (! $checkoutFormData) {
+                    if ($checkoutFormData === null) {
                         Router::go(Router::idWithParams(Router::CART_CHECKOUT), code: 302);
                     }
                 }
