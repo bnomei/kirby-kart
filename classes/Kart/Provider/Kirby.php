@@ -53,8 +53,8 @@ class Kirby extends Provider
             'success_url' => url(Router::PROVIDER_SUCCESS).'?session_id='.$session_id,
             'lines' => array_merge($lines, $this->kart->cart()->lines()->values(fn (CartLine $l) => array_merge([
                 'sku' => $l->product()?->uuid()->id().($l->variant() ? '|'.$l->variant() : ''), // used on completed again to find the product
-                'type' => $l->product()?->ptype()->isNotEmpty() ? // @phpstan-ignore-line
-                    $l->product()?->ptype()->value() : 'physical', // @phpstan-ignore-line
+                'type' => $l->product()?->ptype()->isNotEmpty() ?
+                    $l->product()?->ptype()->value() : 'physical',
                 'description' => $l->product()?->title()->value(),
                 'quantity' => $l->quantity(),
                 'unitPrice' => [

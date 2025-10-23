@@ -25,15 +25,24 @@ class ProductStorage extends PlainTextStorage
         $content = parent::read($versionId, $language);
 
         // hydrate with provider
-        if (kart()->provider()->virtual()) {
+        $virtual = kart()->provider()->virtual();
+        if ($virtual !== false) {
             $uuid = kart()->option('products.product.uuid');
             if ($uuid instanceof Closure === false) {
                 throw new Exception('kart.products.product.uuid must be a closure');
             }
             foreach (kart()->provider()->products() as $product) {
                 if (A::get($content, 'uuid', time()) === $uuid(null, $product)) {
-                    // provider overwrites local changes
-                    $content = A::merge($content, A::get($product, 'content', []));
+                    // provider overwrites local changes for allowed virtual fields
+                    $virtualContent = A::get($product, 'content', []);
+                    $virtualFields = is_array($virtual) ? $virtual : array_keys(A::filter(
+                        $this->model()->blueprint()->fields(),
+                        fn ($field) => A::get($field, 'virtual') === true
+                    ));
+                    foreach ($virtualFields as $field) {
+                        unset($virtualContent[$field]);
+                    }
+                    $content = A::merge($content, $virtualContent);
                     break;
                 }
             }

@@ -150,7 +150,7 @@ App::plugin(
             'currency' => 'EUR', // uppercase 3-letter code
             'successPage' => null, // id of the page to redirect to after checkout flow, defaults to page of order
             'dateformat' => 'Y-m-d H:i',
-            'checkoutFormData' => function (array $checkoutFormData): ?array {
+            'checkoutFormData' => function (array $checkoutFormData): ?array { // @phpstan-ignore-line
                 // !!! THIS IS HAPPENING BEFORE CHECKOUT !!!
                 // use this to validate or modify the checkout form data. return the array to continue.
                 // to abort write errors to session and flush them manually or use kart()->message() and THEN return null instead.

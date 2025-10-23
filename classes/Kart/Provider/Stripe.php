@@ -238,6 +238,11 @@ class Stripe extends Provider
                         'variants' => function ($i) {
                             $variants = [];
                             foreach (A::get($i, 'prices', []) as $price) {
+                                $v = A::get($price, 'metadata.variant', '');
+                                if (! $v || empty(trim($v))) {
+                                    continue;
+                                }
+
                                 $variants[] = [
                                     'price_id' => $price['id'],
                                     'variant' => A::get($price, 'metadata.variant', ''),

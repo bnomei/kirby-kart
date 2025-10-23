@@ -268,6 +268,10 @@ class Paddle extends Provider
                     'variants' => function ($i) {
                         $variants = [];
                         foreach (A::get($i, 'prices', []) as $price) {
+                            $v = A::get($price, 'custom_data.variant', '');
+                            if (! $v || empty(trim($v))) {
+                                continue;
+                            }
                             if (A::get($price, 'status') !== 'active') {
                                 continue;
                             }
@@ -277,7 +281,7 @@ class Paddle extends Provider
 
                             $variants[] = [
                                 'price_id' => $price['id'],
-                                'variant' => A::get($price, 'custom_data.variant', ''),
+                                'variant' => $v,
                                 'price' => round(A::get($price, 'unit_amount', 0) / 100.0, 2),
                                 'image' => explode(',', A::get($price, 'custom_data.image', '')),
                             ];
