@@ -532,7 +532,7 @@ App::plugin(
         'cacheTypes' => [
             'kart-uuid' => UuidCache::class,
         ],
-        'routes' => require_once __DIR__.'/routes.php',
+        'routes' => require __DIR__.'/routes.php',
         'snippets' => [
             'kart/account-delete' => __DIR__.'/snippets/kart/account-delete.php',
             'kart/captcha' => __DIR__.'/snippets/kart/captcha.php',
