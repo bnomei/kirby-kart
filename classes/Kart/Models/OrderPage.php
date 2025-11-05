@@ -514,8 +514,17 @@ class OrderPage extends Page implements Kerbs
             }
 
             foreach ($this->items()->toStructure() as $item) {
-                foreach ($item->key()->toPage()?->downloads()->toFiles() as $file) {
+                $product = $item->key()->toPage();
+                if (! $product) {
+                    continue;
+                }
+                foreach ($product->downloads()->toFiles() as $file) {
                     F::copy($file->root(), $tmpDir.'/'.$file->filename());
+                }
+                foreach ($product->variants()->toStructure() as $variant) {
+                    foreach ($variant->downloads()->toFiles() as $file) {
+                        F::copy($file->root(), $tmpDir.'/'.$file->filename());
+                    }
                 }
             }
 
