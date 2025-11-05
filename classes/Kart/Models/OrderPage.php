@@ -138,12 +138,12 @@ class OrderPage extends Page implements Kerbs
                             'type' => 'stats',
                             'reports' => [
                                 [
-                                    // 'label' => 'bnomei.kart.invoiceNumber', Invoice Number'),
+                                    'label' => 'bnomei.kart.invoiceNumber',
                                     'value' => '#{{ page.invoiceNumber }}',
                                     'info' => '{{ page.paidDate.toDate(site.kart.dateformat) }}',
                                 ],
                                 [
-                                    // 'label' => 'bnomei.kart.sum', Sum'),
+                                    'label' => 'bnomei.kart.total',
                                     'value' => '{{ page.formattedSubtotal }}',
                                     'info' => '+ {{ page.formattedTax }}',
                                 ],
