@@ -362,7 +362,7 @@ class ProductPage extends Page implements Kerbs
         /** @var StocksPage $stocks */
         $stocks = kart()->page(ContentPageEnum::STOCKS);
 
-        return $stocks->stock($this->uuid()->toString(), $withHold, $variant) ?? '∞';
+        return $stocks?->stock($this->uuid()->toString(), $withHold, $variant) ?? '∞';
     }
 
     public function stockUrl(): ?string
@@ -551,6 +551,19 @@ class ProductPage extends Page implements Kerbs
             round(($this->rrprice()->toFloat() - $this->price()->toFloat()) / $this->rrprice()->toFloat() * 100) : 0;
     }
 
+    public function urlWithVariant(?string $variant = null): string
+    {
+        if (empty($variant)) {
+            return $this->url();
+        }
+
+        $variants = array_map('trim', explode(',', $variant));
+        sort($variants);
+        $variant = implode(',', $variants); // no whitespace
+
+        return $this->url().'?'.str_replace([', ', ',', ':', ' '], ['&', '&', '=', '%20'], $variant);
+    }
+
     protected ?array $vardat = null;
 
     public function variantData(bool $resolveImage = false): array
@@ -559,12 +572,12 @@ class ProductPage extends Page implements Kerbs
             return $this->vardat;
         }
 
-        return $this->vardat = $this->variants()->toStructure()->values(function ($i) use ($resolveImage) {
+        $values = $this->variants()->toStructure()->values(function (StructureObject $i) use ($resolveImage) {
             $variants = $i->variant()->split();
             sort($variants);
             $variant = implode(',', $variants); // no whitespace
 
-            return array_filter([
+            return array_filter(array_merge($i->toArray(), [
                 'options' => $variants,
                 'price_id' => $i->price_id()->isNotEmpty() ? $i->price_id()->value() : null,
                 'price' => $i->price()->isNotEmpty() ? $i->price()->toFloat() : null,
@@ -572,8 +585,28 @@ class ProductPage extends Page implements Kerbs
                 'image' => $resolveImage ? $i->image()->toFile()?->toKerbs() : $i->image()->toFile()?->name(),
                 'variant' => $variant,
                 'inStock' => $this->stock(withHold: kart()->cart()->sessionToken(), variant: $variant) !== 0,
-            ]);
+            ]));
         });
+
+        $this->vardat = [];
+        foreach ($values as $value) {
+            $this->vardat[$value['variant']] = $value;
+        }
+
+        return $this->vardat;
+    }
+
+    public function variantDataForVariant(?string $variant = null, bool $resolveImage = false): ?array
+    {
+        if (empty($variant)) {
+            return null;
+        }
+
+        $variants = array_map('trim', explode(',', $variant));
+        sort($variants);
+        $variant = implode(',', $variants);
+
+        return A::get($this->variantData($resolveImage), $variant);
     }
 
     /*
@@ -644,6 +677,10 @@ class ProductPage extends Page implements Kerbs
             return false;
         }
 
+        $variants = array_map('trim', explode(',', $variant));
+        sort($variants);
+        $variant = implode(',', $variants);
+
         // using the parsed groups to allow alternative spellings like: x:1,x=1,x.1
         // all tags within the variant must be present for a match to succeed
         $tags = explode(',', $variant);
@@ -693,8 +730,25 @@ class ProductPage extends Page implements Kerbs
         return empty($variant) ? null : implode(',', $variant);
     }
 
+    public function pricesForVariants(bool $mustBeInStock = true): array
+    {
+        $prices = [];
+        foreach ($this->variantData() as $v) {
+            if ($mustBeInStock && ! $v['inStock']) {
+                continue;
+            }
+            $prices[$v['variant']] = A::get($v, 'price');
+        }
+
+        return array_filter($prices);
+    }
+
     public function priceWithVariant(?string $variant = null): float
     {
+        $variants = array_map('trim', explode(',', $variant));
+        sort($variants);
+        $variant = implode(',', $variants);
+
         foreach ($this->variantData(false) as $v) {
             if ($v['variant'] === $variant) {
                 if ($price = A::get($v, 'price')) {
@@ -708,6 +762,10 @@ class ProductPage extends Page implements Kerbs
 
     public function priceIdForVariant(string $variant): ?string
     {
+        $variants = array_map('trim', explode(',', $variant));
+        sort($variants);
+        $variant = implode(',', $variants);
+
         foreach ($this->variantData(false) as $v) {
             if ($v['variant'] === $variant) {
                 if ($priceId = A::get($v, 'price_id')) {
