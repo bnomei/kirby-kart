@@ -359,7 +359,7 @@ class ProductPage extends Page implements Kerbs
      */
     public function stock(?string $withHold = null, ?string $variant = null): int|string
     {
-        /** @var StocksPage $stocks */
+        /** @var StocksPage|null $stocks */
         $stocks = kart()->page(ContentPageEnum::STOCKS);
 
         return $stocks?->stock($this->uuid()->toString(), $withHold, $variant) ?? '∞';
@@ -745,6 +745,10 @@ class ProductPage extends Page implements Kerbs
 
     public function priceWithVariant(?string $variant = null): float
     {
+        if (empty($variant)) {
+            return $this->price()->toFloat();
+        }
+
         $variants = array_map('trim', explode(',', $variant));
         sort($variants);
         $variant = implode(',', $variants);
