@@ -433,6 +433,9 @@ class Kart implements Kerbs
         if (! $this->provider) {
             $class = strval($this->option('provider'));
             // try finding provider from string if it's not a class yet
+            if ($class === 'kirby') { // should have been kirby_cms
+                $class = Kirby::class;
+            }
             if (in_array(strtolower($class), array_map(fn ($i) => $i->value, ProviderEnum::cases()))) {
                 $c = ucfirst(strtolower($class));
                 $class = "\\Bnomei\\Kart\\Provider\\{$c}";
