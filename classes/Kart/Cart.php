@@ -448,6 +448,8 @@ class Cart implements Kerbs
 
     public function save(bool $writeToUser = true): void
     {
+        $this->lines = $this->lines->filterBy(fn ($i) => ! empty($i));
+
         $this->kirby->session()->set($this->id, $this->lines->toArray());
 
         // NOTE: no impersonation as that would shift to the kirby user.
