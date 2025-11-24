@@ -1,7 +1,7 @@
 {
   "name": "bnomei/kirby-kart",
   "type": "kirby-plugin",
-  "version": "5.7.1",
+  "version": "5.7.2",
   "description": "Streamlined E-Commerce Shopping Cart Solution",
   "license": "proprietary",
   "authors": [
@@ -65,7 +65,7 @@
     "s1syphos/php-simple-captcha": "^2.3"
   },
   "require-dev": {
-    "getkirby/cms": "5.1.0-rc.1",
+    "getkirby/cms": "^5.1.0-rc.1",
     "larastan/larastan": "^v3.0.0",
     "laravel/pint": "^1.13",
     "pestphp/pest": "^v3.5.1",

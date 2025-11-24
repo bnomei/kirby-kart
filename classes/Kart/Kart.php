@@ -146,11 +146,10 @@ class Kart implements Kerbs
         if ($password instanceof Closure) {
             $password = $password();
         }
+        if ($json || is_array($data)) {
+            $data = json_encode($data) ?: '';
+        }
         if (! empty($password) && is_string($password) && SymmetricCrypto::isAvailable()) {
-            if ($json || is_array($data)) {
-                $data = json_encode($data) ?: '';
-            }
-
             // encryption is slowish thus using a cache
             $expire = kart()->option('expire');
             if (is_int($expire)) {
