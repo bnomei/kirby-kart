@@ -49,6 +49,8 @@ trait Options
             'products.product.uuid',
             'stocks.stock.uuid',
             // mutators
+            'providers.chargebee.checkout_line',
+            'providers.chargebee.checkout_options',
             'providers.checkout.checkout_line',
             'providers.checkout.checkout_options',
             'providers.fastspring.checkout_line',
@@ -69,6 +71,8 @@ trait Options
             'providers.payone.checkout_options',
             'providers.paypal.checkout_line',
             'providers.paypal.checkout_options',
+            'providers.polar.checkout_line',
+            'providers.polar.checkout_options',
             'providers.shopify.checkout_line',
             'providers.shopify.checkout_options',
             'providers.snipcart.checkout_line',

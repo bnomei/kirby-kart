@@ -12,6 +12,7 @@ namespace Bnomei\Kart;
 
 enum ProviderEnum: string
 {
+    case CHARGEBEE = 'chargebee';
     case CHECKOUT = 'checkout';
     case FASTSPRING = 'fastspring';
     case GUMROAD = 'gumroad';
@@ -22,6 +23,7 @@ enum ProviderEnum: string
     case PADDLE = 'paddle';
     case PAYPAL = 'paypal';
     case PAYONE = 'payone';
+    case POLAR = 'polar';
     case SHOPIFY = 'shopify';
     case SQUARE = 'square';
     case SNIPCART = 'snipcart';

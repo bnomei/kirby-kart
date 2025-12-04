@@ -109,6 +109,7 @@ App::plugin(
                 'variants' => true,
 
                 // providers
+                'chargebee' => true,
                 'checkout' => true,
                 'fastspring' => true,
                 'gumroad' => true,
@@ -119,6 +120,7 @@ App::plugin(
                 'paddle' => true,
                 'paypal' => true,
                 'payone' => true,
+                'polar' => true,
                 'shopify' => true,
                 'square' => true,
                 'snipcart' => true,
@@ -269,6 +271,7 @@ App::plugin(
             'provider' => 'kirby_cms', // see ProviderEnum (kirby_cms, stripe, mollie, paddle, ...) or use \Kart\Provider\Kirby::class etc.
             'providers' => [
                 'checkout' => [],
+                'chargebee' => [],
                 'fastspring' => [
                     'store_url' => fn () => kart_env('FASTSPRING_STORE_URL', 'https://acme.onfastspring.com'),
                     'username' => fn () => kart_env('FASTSPRING_USERNAME'),
@@ -355,6 +358,7 @@ App::plugin(
                     },
                     'virtual' => ['raw', 'title', 'description', 'gallery'],
                 ],
+                'polar' => [],
                 'shopify' => [],
                 'square' => [
                     'access_token' => fn () => kart_env('SQUARE_ACCESS_TOKEN'),
