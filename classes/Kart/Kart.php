@@ -186,6 +186,10 @@ class Kart implements Kerbs
 
     public static function checkSignature(string $signature, string $url, ?array $without = null): bool
     {
+        if (! kart()->option('crypto.signature')) {
+            return true;
+        }
+
         return hash_equals(
             $signature,
             self::signature($url, $without)
@@ -194,6 +198,10 @@ class Kart implements Kerbs
 
     public function validateSignatureOrGo(string $redirect = '/', ?string $url = null): void
     {
+        if (! kart()->option('crypto.signature')) {
+            return;
+        }
+
         $url ??= kirby()->request()->url();
         $signature = get('signature');
         if (! is_string($signature) || self::checkSignature($signature, $url) === false) {

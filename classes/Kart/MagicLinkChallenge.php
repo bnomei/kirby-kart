@@ -56,7 +56,9 @@ class MagicLinkChallenge extends Challenge
             $link .= '&name='.urlencode($options['name']);
         }
 
-        $link .= '&signature='.Kart::signature($link);
+        if (kart()->option('crypto.signature')) {
+            $link .= '&signature='.Kart::signature($link);
+        }
 
         $data = [
             'user' => $user,

@@ -147,6 +147,7 @@ App::plugin(
                     'CRYPTO_SALT',
                     kirby()->cache('bnomei.kart.crypto')->getOrSet('salt', fn () => Str::random(64))
                 ),
+                'signature' => true, // sign various urls with a signature
             ],
             'locale' => 'en_EN', // or current locale on multilanguage setups
             'currency' => 'EUR', // uppercase 3-letter code

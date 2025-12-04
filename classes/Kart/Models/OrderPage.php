@@ -465,9 +465,12 @@ class OrderPage extends Page implements Kerbs
     public function invoice(): string
     {
         $url = $this->url().'.pdf';
-        $signature = Kart::signature($url);
 
-        return $this->invoiceurl()->isNotEmpty() ? strval($this->invoiceurl()->value()) : $url.'?signature='.$signature;
+        if (kart()->option('crypto.signature')) {
+            $url .= '?signature='.Kart::signature($url);
+        }
+
+        return $this->invoiceurl()->isNotEmpty() ? strval($this->invoiceurl()->value()) : $url;
     }
 
     /**
@@ -476,10 +479,13 @@ class OrderPage extends Page implements Kerbs
     public function download(): ?string
     {
         $url = $this->url().'.zip?token='.time();
-        $signature = Kart::signature($url);
+
+        if (kart()->option('crypto.signature')) {
+            $url .= '&signature='.Kart::signature($url);
+        }
 
         // append time to allow for easier tracking and cache busting
-        return $this->downloads() && $this->isPayed() ? $url.'&signature='.$signature : null;
+        return $this->downloads() && $this->isPayed() ? $url : null;
     }
 
     public function downloads(): ?File
@@ -615,9 +621,12 @@ class OrderPage extends Page implements Kerbs
     public function urlWithSignature(string|array|null $options = null): string
     {
         $url = $this->url($options);
-        $signature = Kart::signature($url);
 
-        return $url.'?signature='.$signature;
+        if (kart()->option('crypto.signature')) {
+            $url .= '&signature='.Kart::signature($url);
+        }
+
+        return $url;
     }
 
     protected ?array $kerbs = null;
