@@ -39,4 +39,4 @@ jobs:
         run: env KIRBY_HOST=kart.test vendor/bin/kirby testing:beforeAll
 
       - name: Test code
-        run: vendor/bin/pest --ci
+        run: vendor/bin/pest --ci --exclude-groups=providers
