@@ -14,6 +14,7 @@ use Bnomei\Kart\ContentPageEnum;
 use Bnomei\Kart\Provider;
 use Bnomei\Kart\ProviderEnum;
 use Bnomei\Kart\VirtualPage;
+use Bnomei\Kart\WebhookResult;
 use Kirby\Http\Remote;
 use Kirby\Toolkit\A;
 use Kirby\Uuid\Uuid;
@@ -36,6 +37,87 @@ class Snipcart extends Provider
     {
         // NOTE: webhook-only integration; Snipcart order completion should be confirmed via webhooks, no session/redirect is started here.
         return parent::checkout();
+    }
+
+    public function supportsWebhooks(): bool
+    {
+        return true;
+    }
+
+    public function handleWebhook(array $payload, array $headers = []): WebhookResult
+    {
+        // https://docs.snipcart.com/v3/webhooks/introduction (token validation endpoint)
+        $token = trim(strval(A::get($headers, 'x-snipcart-requesttoken', '')));
+        if ($token === '') {
+            return WebhookResult::invalid('missing webhook token');
+        }
+
+        $remote = Remote::get('https://app.snipcart.com/api/requestvalidation/'.$token, [
+            'headers' => $this->headers(),
+        ]);
+
+        if ($remote->code() !== 200) {
+            return WebhookResult::invalid('invalid webhook token');
+        }
+
+        $event = strtolower(strval(A::get($payload, 'eventName', '')));
+        $content = A::get($payload, 'content', []);
+        if (! is_array($content)) {
+            return WebhookResult::invalid('missing webhook content');
+        }
+
+        $eventId = $event.'|'.strval(A::get($content, 'token', A::get($payload, 'token', '')));
+        if ($eventId && $this->isDuplicateWebhook($eventId)) {
+            return WebhookResult::ignored('duplicate webhook');
+        }
+
+        $paymentStatus = strtolower(strval(A::get($content, 'paymentStatus', A::get($content, 'status', ''))));
+
+        $data = array_filter([
+            'email' => A::get($content, 'email', A::get($content, 'user.email')),
+            'customer' => array_filter([
+                'id' => A::get($content, 'user.id'),
+                'email' => A::get($content, 'user.email'),
+                'name' => A::get($content, 'user.billingAddress.fullName'),
+            ]),
+            'paidDate' => ($date = A::get($content, 'completionDate', A::get($payload, 'createdOn'))) ? date('Y-m-d H:i:s', strtotime((string) $date)) : null,
+            'paymentMethod' => A::get($content, 'paymentMethod'),
+            'paymentComplete' => in_array($paymentStatus, ['paid', 'processed'], true),
+            'invoiceurl' => A::get($content, 'invoiceNumber'),
+            'paymentId' => A::get($content, 'token'),
+        ], fn ($v) => $v !== null && $v !== [] && $v !== '');
+
+        $uuid = kart()->option('products.product.uuid');
+        if ($uuid instanceof \Closure === false) {
+            return WebhookResult::invalid('missing product uuid resolver');
+        }
+
+        /** @var \Closure $likey */
+        $likey = kart()->option('licenses.license.uuid');
+
+        foreach (A::get($content, 'items', []) as $line) {
+            $unitPrice = A::get($line, 'unitPrice', A::get($line, 'price', 0));
+            $quantity = max(1, intval(A::get($line, 'quantity', 1)));
+            $total = A::get($line, 'totalPrice', $unitPrice * $quantity);
+
+            $data['items'][] = array_filter([
+                'key' => ['page://'.$uuid(null, ['id' => A::get($line, 'id')])], // pages field expects array
+                'variant' => A::get($line, 'metadata.variant', ''),
+                'quantity' => $quantity,
+                'price' => round(floatval($unitPrice), 2),
+                'total' => round(floatval($total), 2),
+                'subtotal' => round(floatval($total), 2),
+                'tax' => 0,
+                'discount' => 0,
+                'licensekey' => $likey($data + $line + ['line' => $line]),
+            ], fn ($v) => $v !== null && $v !== '' && $v !== []);
+        }
+
+        if ($eventId) {
+            $this->rememberWebhook($eventId);
+        }
+
+        return WebhookResult::ok($data, 'Snipcart webhook processed');
     }
 
     public function fetchProducts(): array
