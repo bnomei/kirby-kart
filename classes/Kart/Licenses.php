@@ -23,7 +23,11 @@ class Licenses
             foreach (kart()->orders() as $order) {
                 /** @var OrderLine $line */
                 foreach ($order->orderLines() as $line) {
-                    $data[$line->licensekey()] = [$line->licensekey(), $order->uuid()->toString()];
+                    $key = $line->licensekey();
+                    if (! is_string($key) || $key === '') {
+                        continue;
+                    }
+                    $data[$key] = [$key, $order->uuid()->toString()];
                 }
             }
 
