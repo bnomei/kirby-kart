@@ -272,7 +272,21 @@ App::plugin(
             'provider' => 'kirby_cms', // see ProviderEnum (kirby_cms, stripe, mollie, paddle, ...) or use \Kart\Provider\Kirby::class etc.
             'providers' => [
                 'checkout' => [],
-                'chargebee' => [],
+                'chargebee' => [
+                    'api_key' => fn () => kart_env('CHARGEBEE_API_KEY'),
+                    'site' => fn () => kart_env('CHARGEBEE_SITE'),
+                    'api_version' => fn () => kart_env('CHARGEBEE_API_VERSION'), // optional: defaults to Chargebee account setting
+                    'checkout_options' => function (Kart $kart) {
+                        // configure the checkout based on current kart instance
+                        // https://apidocs.chargebee.com/docs/api/hosted_pages#create_a_checkout_for_one_time_purchases_for_items
+                        return [];
+                    },
+                    'checkout_line' => function (Kart $kart, CartLine $line) {
+                        // add custom data to the current checkout line
+                        return [];
+                    },
+                    'virtual' => ['raw', 'description', 'gallery', 'downloads', 'price', 'tags', 'categories', 'title'],
+                ],
                 'fastspring' => [
                     'store_url' => fn () => kart_env('FASTSPRING_STORE_URL', 'https://acme.onfastspring.com'),
                     'username' => fn () => kart_env('FASTSPRING_USERNAME'),
@@ -359,7 +373,20 @@ App::plugin(
                     },
                     'virtual' => ['raw', 'title', 'description', 'gallery'],
                 ],
-                'polar' => [],
+                'polar' => [
+                    'access_token' => fn () => kart_env('POLAR_ACCESS_TOKEN'),
+                    'endpoint' => fn () => kart_env('POLAR_ENDPOINT', 'https://sandbox-api.polar.sh/v1'), // set to https://api.polar.sh/v1 for live
+                    'checkout_options' => function (Kart $kart) {
+                        // configure the checkout based on current kart instance
+                        // https://polar.sh/docs/api-reference/checkouts/create-session
+                        return [];
+                    },
+                    'checkout_line' => function (Kart $kart, CartLine $line) {
+                        // add custom data to the current checkout line
+                        return [];
+                    },
+                    'virtual' => ['raw', 'description', 'gallery', 'downloads', 'price', 'tags', 'categories', 'title'],
+                ],
                 'shopify' => [],
                 'square' => [
                     'access_token' => fn () => kart_env('SQUARE_ACCESS_TOKEN'),
