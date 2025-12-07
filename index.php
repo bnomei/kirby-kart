@@ -119,7 +119,6 @@ App::plugin(
                 'mollie' => true,
                 'paddle' => true,
                 'paypal' => true,
-                'payone' => true,
                 'polar' => true,
                 'shopify' => true,
                 'square' => true,
@@ -271,7 +270,6 @@ App::plugin(
             ],
             'provider' => 'kirby_cms', // see ProviderEnum (kirby_cms, stripe, mollie, paddle, ...) or use \Kart\Provider\Kirby::class etc.
             'providers' => [
-                'checkout' => [],
                 'chargebee' => [
                     'api_key' => fn () => kart_env('CHARGEBEE_API_KEY'),
                     'site' => fn () => kart_env('CHARGEBEE_SITE'),
@@ -300,13 +298,22 @@ App::plugin(
                         // add custom data to the current checkout line
                         return [];
                     },
-                    'virtual' => ['raw', 'title', 'description', 'gallery'],
+                    'virtual' => ['raw', 'title', 'description', 'gallery', 'price'],
                 ],
                 'gumroad' => [
                     'access_token' => fn () => kart_env('GUMROAD_ACCESS_TOKEN'),
                     'virtual' => ['raw', 'description', 'gallery', 'price', 'tags', 'title'],
                 ],
-                'invoice_ninja' => [],
+                'invoice_ninja' => [
+                    'endpoint' => fn () => kart_env('INVOICENINJA_ENDPOINT', 'https://app.invoicing.co/api/v1'),
+                    'token' => fn () => kart_env('INVOICENINJA_TOKEN'),
+                    'company_key' => fn () => kart_env('INVOICENINJA_COMPANY_KEY'),
+                    'checkout_options' => function (Kart $kart) {
+                        // https://api-docs.invoicing.co/#description/need-help
+                        return [];
+                    },
+                    'virtual' => ['raw', 'description', 'price', 'tags', 'categories', 'title'],
+                ],
                 'kirby_cms' => [
                     'checkout_options' => function (Kart $kart) {
                         // configure the checkout based on current kart instance
@@ -357,7 +364,6 @@ App::plugin(
                     },
                     'virtual' => ['raw', 'description', 'gallery', 'downloads', 'price', 'tags', 'categories', 'variants', 'title', 'featured'],
                 ],
-                'payone' => [],
                 'paypal' => [
                     'endpoint' => fn () => kart_env('PAYPAL_ENDPOINT', 'https://api-m.sandbox.paypal.com'),
                     'client_id' => fn () => kart_env('PAYPAL_CLIENT_ID'),
@@ -387,7 +393,21 @@ App::plugin(
                     },
                     'virtual' => ['raw', 'description', 'gallery', 'downloads', 'price', 'tags', 'categories', 'title'],
                 ],
-                'shopify' => [],
+                'shopify' => [
+                    'store_domain' => fn () => kart_env('SHOPIFY_STORE_DOMAIN'),
+                    'admin_token' => fn () => kart_env('SHOPIFY_ADMIN_TOKEN'),
+                    'storefront_token' => fn () => kart_env('SHOPIFY_STOREFRONT_TOKEN'),
+                    'api_version' => fn () => kart_env('SHOPIFY_API_VERSION', '2024-07'),
+                    'webhook_secret' => fn () => kart_env('SHOPIFY_WEBHOOK_SECRET'),
+                    'checkout_options' => function (Kart $kart) {
+                        // https://shopify.dev/docs/api/storefront/latest/mutations/checkoutCreate
+                        return [];
+                    },
+                    'checkout_line' => function (Kart $kart, CartLine $line) {
+                        return [];
+                    },
+                    'virtual' => ['raw', 'description', 'gallery', 'price', 'tags', 'variants', 'title'],
+                ],
                 'square' => [
                     'access_token' => fn () => kart_env('SQUARE_ACCESS_TOKEN'),
                     'location_id' => fn () => kart_env('SQUARE_LOCATION_ID'),
@@ -858,7 +878,7 @@ App::plugin(
              * @kql-allowed
              */
             'sum' => function (string $field): float|int {
-                /** @var Pages $pages */
+                /** @var Pages<Page> $pages */
                 $pages = $this;
 
                 return array_sum($pages->values(function (Page $page) use ($field) {
