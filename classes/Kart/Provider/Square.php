@@ -41,7 +41,7 @@ class Square extends Provider
         $uuid = Str::uuid();
 
         // https://developer.squareup.com/reference/square/checkout-api/create-payment-link
-        $remote = Remote::post('https://connect.squareup.com/v2/online-checkout/payment-link', [
+        $remote = Remote::post('https://connect.squareup.com/v2/online-checkout/payment-links', [
             'headers' => array_filter([
                 'Content-Type' => 'application/json',
                 'Authorization' => 'Bearer '.strval($this->option('access_token')),
@@ -152,7 +152,7 @@ class Square extends Provider
         /** @var \Closure $likey */
         $likey = kart()->option('licenses.license.uuid');
 
-        foreach (A::get($json, 'line_items') as $line) {
+        foreach (A::get($json, 'order.line_items', []) as $line) {
             $data['items'][] = [
                 // 'key' => ['page://'.$uuid(null, ['id' => A::get($price, 'product_id')])],  // pages field expect an array
                 'key' => ['page://'.A::get($line, 'metadata.product_uuid')],  // pages field expect an array
