@@ -10,12 +10,10 @@
 
 namespace Bnomei\Kart\Provider;
 
-use Bnomei\Kart\CartLine;
 use Bnomei\Kart\ContentPageEnum;
 use Bnomei\Kart\Provider;
 use Bnomei\Kart\ProviderEnum;
 use Bnomei\Kart\VirtualPage;
-use Closure;
 use Kirby\Http\Remote;
 use Kirby\Toolkit\A;
 
@@ -35,43 +33,8 @@ class Fastspring extends Provider
 
     public function checkout(): string
     {
-        $options = $this->option('checkout_options', false);
-        if ($options instanceof Closure) {
-            $options = $options($this->kart);
-        }
-
-        $lineItem = $this->option('checkout_line', false);
-        if ($lineItem instanceof Closure === false) {
-            $lineItem = fn ($kart, $item) => [];
-        }
-
-        $lines = A::get($options, 'items', []);
-        unset($options['items']);
-
-        // https://developer.fastspring.com/reference/create-a-session
-        $remote = Remote::post('https://api.fastspring.com/sessions', [
-            'headers' => $this->headers(),
-            'data' => json_encode(array_filter(array_merge([
-                'account' => $this->kart->provider()->userData('customerId'), // TODO: required
-                'items' => array_merge($lines, $this->kart->cart()->lines()->values(fn (CartLine $l) => array_merge([
-                    'product' => A::get($l->product()?->raw()->yaml(), 'product', ''),
-                    'quantity' => $l->quantity(),
-                ], $lineItem($this->kart, $l)))),
-            ], $options))),
-        ]);
-
-        $session_id = null;
-
-        $json = $remote->code() === 200 ? $remote->json() : null;
-        if (! is_array($json)) {
-            throw new \Exception('Fastspring: checkout failed');
-        }
-
-        $session_id = A::get($remote->json(), 'id');
-        $this->kirby->session()->set('kart.'.$this->name.'.session_id', $session_id);
-
-        return parent::checkout() && $remote->code() === 200 && $session_id ?
-            strval($this->option('store_url')).'/session/'.$session_id : '/';
+        // NOTE: webhook-only integration; Kart expects FastSpring webhooks to finalize orders and does not initiate sessions here.
+        return parent::checkout();
     }
 
     public function fetchProducts(): array

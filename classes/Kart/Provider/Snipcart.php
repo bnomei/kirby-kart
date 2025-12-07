@@ -13,7 +13,6 @@ namespace Bnomei\Kart\Provider;
 use Bnomei\Kart\ContentPageEnum;
 use Bnomei\Kart\Provider;
 use Bnomei\Kart\ProviderEnum;
-use Bnomei\Kart\Router;
 use Bnomei\Kart\VirtualPage;
 use Kirby\Http\Remote;
 use Kirby\Toolkit\A;
@@ -35,12 +34,8 @@ class Snipcart extends Provider
 
     public function checkout(): ?string
     {
-        $session_id = Uuid::generate();
-        $this->kirby->session()->set('bnomei.kart.'.$this->name.'.session_id', $session_id);
-
-        return parent::checkout() ? Router::provider_payment([
-            'session_id' => $session_id,
-        ]) : '/';
+        // NOTE: webhook-only integration; Snipcart order completion should be confirmed via webhooks, no session/redirect is started here.
+        return parent::checkout();
     }
 
     public function fetchProducts(): array

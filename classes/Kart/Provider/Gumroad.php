@@ -23,10 +23,8 @@ class Gumroad extends Provider
 
     public function checkout(): string
     {
-        $product = $this->kart->cart()->lines()->first()?->product(); // @phpstan-ignore-line
-
-        return parent::checkout() && $product ?
-            A::get($product->raw()->yaml(), 'short_url') : '/';
+        // NOTE: webhook-only integration; Kart expects Gumroad sale webhook/licensing to finalize, no redirect is initiated here.
+        return parent::checkout();
     }
 
     public function fetchProducts(): array
