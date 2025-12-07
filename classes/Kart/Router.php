@@ -69,6 +69,8 @@ class Router
 
     const PROVIDER_PORTAL = 'kart/provider-portal';
 
+    const PROVIDER_WEBHOOK = 'kart/provider-webhook';
+
     const PROVIDER_SUCCESS = 'kart/provider-success';
 
     const PROVIDER_SYNC = 'kart/provider-sync';
@@ -105,10 +107,6 @@ class Router
     public static function middlewares(array $middlewares = []): ?int
     {
         if (count($middlewares) === 0) {
-            return null;
-        }
-
-        if (! kirby()->environment()->isLocal() && kirby()->plugin('bnomei/kart')->license()->status()->value() !== 'active') {
             return null;
         }
 
