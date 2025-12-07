@@ -14,6 +14,7 @@ use Bnomei\Kart\ContentPageEnum;
 use Bnomei\Kart\Provider;
 use Bnomei\Kart\ProviderEnum;
 use Bnomei\Kart\VirtualPage;
+use Bnomei\Kart\WebhookResult;
 use Kirby\Http\Remote;
 use Kirby\Toolkit\A;
 
@@ -24,7 +25,87 @@ class Gumroad extends Provider
     public function checkout(): string
     {
         // NOTE: webhook-only integration; Kart expects Gumroad sale webhook/licensing to finalize, no redirect is initiated here.
-        return parent::checkout();
+        return parent::checkout() ?? '/';
+    }
+
+    public function supportsWebhooks(): bool
+    {
+        return true;
+    }
+
+    public function handleWebhook(array $payload, array $headers = []): WebhookResult
+    {
+        // https://rollout.com/integration-guides/gumroad/quick-guide-to-implementing-webhooks-in-gumroad
+        $raw = strval(A::get($headers, '@raw_body', A::get($payload, '_raw', '')));
+        $secret = strval($this->option('webhook_secret', true) ?? '');
+        $signature = trim(strval(A::get($headers, 'x-gumroad-signature', '')));
+
+        if ($secret === '' || $raw === '' || $signature === '') {
+            return WebhookResult::invalid('missing webhook secret, raw body, or signature');
+        }
+
+        $expected = hash_hmac('sha256', $raw, $secret);
+        if (! hash_equals($expected, $signature)) {
+            return WebhookResult::invalid('invalid webhook signature');
+        }
+
+        $event = strtolower(strval(A::get($payload, 'event', 'sale')));
+        $sale = A::get($payload, 'sale', $payload);
+
+        $eventId = strval(A::get($sale, 'id', A::get($payload, 'id', '')));
+        if ($eventId && $this->isDuplicateWebhook($eventId)) {
+            return WebhookResult::ignored('duplicate webhook');
+        }
+
+        $paidAt = A::get($sale, 'purchased_at', A::get($payload, 'created_at'));
+        $refunded = boolval(A::get($sale, 'refunded', false) || A::get($sale, 'disputed', false));
+
+        $data = array_filter([
+            'email' => A::get($sale, 'email', A::get($sale, 'buyer_email')),
+            'customer' => array_filter([
+                'id' => A::get($sale, 'customer_id', A::get($sale, 'buyer_id')),
+                'email' => A::get($sale, 'email', A::get($sale, 'buyer_email')),
+                'name' => A::get($sale, 'full_name', A::get($sale, 'buyer_name')),
+            ]),
+            'paidDate' => $paidAt ? date('Y-m-d H:i:s', strtotime((string) $paidAt)) : null,
+            'paymentMethod' => A::get($sale, 'card', ''),
+            'paymentComplete' => ! $refunded,
+            'invoiceurl' => A::get($sale, 'receipt_url', A::get($sale, 'short_url')),
+            'paymentId' => $eventId,
+        ], fn ($v) => $v !== null && $v !== [] && $v !== '');
+
+        $uuid = kart()->option('products.product.uuid');
+        if ($uuid instanceof \Closure === false) {
+            return WebhookResult::invalid('missing product uuid resolver');
+        }
+
+        /** @var \Closure $likey */
+        $likey = kart()->option('licenses.license.uuid');
+
+        $quantity = max(1, intval(A::get($sale, 'quantity', 1)));
+        $unit = floatval(A::get($sale, 'price', 0));
+        if ($unit > 0 && $unit >= 100) {
+            $unit = $unit / 100.0; // Gumroad often reports cents
+        }
+        $total = $unit * $quantity;
+
+        $data['items'][] = array_filter([
+            'key' => ['page://'.$uuid(null, ['id' => A::get($sale, 'product_id', A::get($sale, 'product_permalink'))])], // pages field expects array
+            'variant' => A::get($sale, 'variants', ''),
+            'quantity' => $quantity,
+            'price' => round($unit, 2),
+            'total' => round($total, 2),
+            'subtotal' => round($total, 2),
+            'tax' => 0,
+            'discount' => 0,
+            'licensekey' => $likey($data + $sale + ['line' => $sale]),
+        ], fn ($v) => $v !== null && $v !== '' && $v !== []);
+
+        if ($eventId) {
+            $this->rememberWebhook($eventId);
+        }
+
+        return WebhookResult::ok($data, 'Gumroad webhook processed');
     }
 
     public function fetchProducts(): array
