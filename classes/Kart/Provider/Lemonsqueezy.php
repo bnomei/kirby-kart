@@ -226,7 +226,7 @@ class Lemonsqueezy extends Provider
                 ];
             }
 
-            if (A::get($json, 'meta.page.lastPage') >= $page) {
+            if (A::get($json, 'meta.page.lastPage') <= $page) {
                 break;
             }
             $page++;
