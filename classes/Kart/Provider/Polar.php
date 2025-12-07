@@ -72,6 +72,7 @@ class Polar extends Provider
             'return_url' => url(Router::PROVIDER_CANCEL),
         ], $options));
 
+        // https://polar.sh/docs/api-reference/operations/checkouts_create
         $remote = Remote::post($this->endpoint().'/checkouts', [
             'headers' => $this->headers(true),
             'data' => json_encode($payload),
@@ -106,7 +107,7 @@ class Polar extends Provider
             return round(intval($value) / 100.0, 2);
         };
 
-        // https://polar.sh/docs/api-reference#tag/Checkouts/operation/Checkouts_get
+        // https://polar.sh/docs/api-reference/operations/checkouts_get
         $remote = Remote::get($this->endpoint().'/checkouts/'.$checkoutId, [
             'headers' => $this->headers(),
         ]);
@@ -140,13 +141,13 @@ class Polar extends Provider
             'paymentId' => A::get($checkout, 'id'),
         ]));
 
-        // fetch the related order to build detailed line items
+        // https://polar.sh/docs/api-reference/operations/orders_list
         $remote = Remote::get($this->endpoint().'/orders', [
             'headers' => $this->headers(),
-            'data' => array_filter([
+            'data' => [
                 'checkoutId' => $checkoutId,
                 'limit' => 1,
-            ]),
+            ],
         ]);
 
         $orderResponse = $remote->code() === 200 ? $remote->json() : null;
@@ -209,14 +210,15 @@ class Polar extends Provider
         $page = 1;
 
         while (true) {
+            // https://polar.sh/docs/api-reference/operations/products_list
             $remote = Remote::get($this->endpoint().'/products', [
                 'headers' => $this->headers(),
-                'data' => array_filter([
+                'data' => [
                     'page' => $page,
                     'limit' => 100,
                     'is_archived' => 'false',
                     'is_recurring' => 'false', // one-time purchases only
-                ]),
+                ],
             ]);
 
             $json = $remote->code() === 200 ? $remote->json() : null;
