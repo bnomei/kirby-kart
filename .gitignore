@@ -1,6 +1,7 @@
 # OS files
 .DS_Store
 .idea
+.env*
 *.cache
 
 /tests/.env
@@ -37,3 +38,4 @@
 /vendor/**/tests/*
 /vendor/**/php4/*
 /vendor/getkirby/composer-installer
+/vendor/nesbot/carbon
