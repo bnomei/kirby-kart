@@ -39,6 +39,7 @@ class Chargebee extends Provider
         $lines = A::get($options, 'item_prices', []);
         unset($options['item_prices']);
 
+        // https://apidocs.chargebee.com/docs/api/hosted_pages#checkout_new_for_items
         $payload = array_filter(array_merge([
             'redirect_url' => url(Router::PROVIDER_SUCCESS),
             'cancel_url' => url(Router::PROVIDER_CANCEL),
@@ -135,7 +136,7 @@ class Chargebee extends Provider
             ],
             'paidDate' => date('Y-m-d H:i:s', is_numeric($paidAt) ? intval($paidAt) : time()),
             'paymentMethod' => empty($paymentMethod) ? null : implode(' ', $paymentMethod),
-            'paymentComplete' => A::get($invoice, 'status') === 'paid' || A::get($hosted, 'state') === 'succeeded',
+            'paymentComplete' => A::get($invoice, 'status') === 'paid',
             'invoiceurl' => A::get($invoice, 'id'),
             'paymentId' => A::get($invoice, 'id', A::get($hosted, 'id')),
         ]));
@@ -182,6 +183,7 @@ class Chargebee extends Provider
         $offset = null;
 
         while (true) {
+            // https://apidocs.chargebee.com/docs/api/item_prices#list_item_prices
             $remote = Remote::get($this->endpoint().'/item_prices', [
                 'headers' => $this->headers(),
                 'data' => array_filter([
@@ -241,6 +243,7 @@ class Chargebee extends Provider
             return null;
         }
 
+        // https://apidocs.chargebee.com/docs/api/portal_sessions#create_a_portal_session_for_a_customer
         $remote = Remote::post($this->endpoint().'/portal_sessions', [
             'headers' => $this->headers(true),
             'data' => json_encode(array_filter([
