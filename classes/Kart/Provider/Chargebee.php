@@ -10,8 +10,15 @@
 
 namespace Bnomei\Kart\Provider;
 
+use Bnomei\Kart\CartLine;
+use Bnomei\Kart\ContentPageEnum;
 use Bnomei\Kart\Provider;
 use Bnomei\Kart\ProviderEnum;
+use Bnomei\Kart\Router;
+use Bnomei\Kart\VirtualPage;
+use Closure;
+use Kirby\Http\Remote;
+use Kirby\Toolkit\A;
 
 class Chargebee extends Provider
 {
@@ -19,6 +26,167 @@ class Chargebee extends Provider
 
     public function checkout(): string
     {
-        return '/';
+        $options = $this->option('checkout_options', false);
+        if ($options instanceof Closure) {
+            $options = $options($this->kart);
+        }
+
+        $lineItem = $this->option('checkout_line', false);
+        if ($lineItem instanceof Closure === false) {
+            $lineItem = fn ($kart, $item) => [];
+        }
+
+        $lines = A::get($options, 'item_prices', []);
+        unset($options['item_prices']);
+
+        $payload = array_filter(array_merge([
+            'redirect_url' => url(Router::PROVIDER_SUCCESS),
+            'cancel_url' => url(Router::PROVIDER_CANCEL),
+            'item_prices' => array_merge($lines, $this->kart->cart()->lines()->values(function (CartLine $line) use ($lineItem) {
+                $raw = $line->product()?->raw()->yaml() ?? [];
+                $priceId = A::get($raw, 'id');
+
+                // fall back to first active non-recurring price if present
+                if (! $priceId) {
+                    foreach (A::get($raw, 'prices', []) as $price) {
+                        if (A::get($price, 'status') === 'active') {
+                            $priceId = A::get($price, 'id');
+                            break;
+                        }
+                    }
+                }
+
+                return array_merge([
+                    'item_price_id' => $priceId,
+                    'quantity' => $line->quantity(),
+                ], $lineItem($this->kart, $line));
+            })),
+        ], $options));
+
+        $remote = Remote::post($this->endpoint().'/hosted_pages/checkout_new_for_items', [
+            'headers' => $this->headers(true),
+            'data' => json_encode($payload),
+        ]);
+
+        $json = in_array($remote->code(), [200, 201]) ? $remote->json() : null;
+        if (! is_array($json)) {
+            throw new \Exception('Checkout failed', $remote->code());
+        }
+
+        $sessionId = A::get($json, 'hosted_page.id');
+        if ($sessionId) {
+            $this->kirby->session()->set('bnomei.kart.'.$this->name.'.session_id', $sessionId);
+        }
+
+        return parent::checkout() && $remote->code() === 200 ?
+            A::get($json, 'hosted_page.url', '/') : '/';
+    }
+
+    public function fetchProducts(): array
+    {
+        $products = [];
+        $offset = null;
+
+        while (true) {
+            $remote = Remote::get($this->endpoint().'/item_prices', [
+                'headers' => $this->headers(),
+                'data' => array_filter([
+                    'item_type[is]' => 'non_recurring',
+                    'status[is]' => 'active',
+                    'limit' => 100,
+                    'offset' => $offset,
+                ]),
+            ]);
+
+            $json = $remote->code() === 200 ? $remote->json() : null;
+            if (! is_array($json)) {
+                break;
+            }
+
+            foreach (A::get($json, 'list', []) as $entry) {
+                $itemPrice = A::get($entry, 'item_price', []);
+                if (! is_array($itemPrice)) {
+                    continue;
+                }
+
+                $products[A::get($itemPrice, 'id')] = $itemPrice;
+            }
+
+            $offset = A::get($json, 'next_offset');
+            if (! $offset) {
+                break;
+            }
+        }
+
+        return array_map(fn (array $data) => (new VirtualPage(
+            $data,
+            [
+                'id' => 'id',
+                'title' => fn ($i) => A::get($i, 'name', A::get($i, 'item_id', A::get($i, 'id'))),
+                'content' => [
+                    'description' => 'description',
+                    'price' => fn ($i) => round(A::get($i, 'price', 0) / 100.0, 2),
+                    'tags' => fn ($i) => A::get($i, 'metadata.tags', ''),
+                    'categories' => fn ($i) => A::get($i, 'metadata.categories', ''),
+                    'gallery' => fn ($i) => $this->findImagesFromUrls(
+                        A::get($i, 'metadata.gallery', [])
+                    ),
+                    'downloads' => fn ($i) => $this->findFilesFromUrls(
+                        A::get($i, 'metadata.downloads', [])
+                    ),
+                ],
+            ],
+            $this->kart->page(ContentPageEnum::PRODUCTS))
+        )->mixinProduct($data)->toArray(), $products);
+    }
+
+    public function portal(?string $returnUrl = null): ?string
+    {
+        $customer = $this->userData('customerId');
+        if (! $customer) {
+            return null;
+        }
+
+        $remote = Remote::post($this->endpoint().'/portal_sessions', [
+            'headers' => $this->headers(true),
+            'data' => json_encode(array_filter([
+                'customer' => [
+                    'id' => $customer,
+                ],
+                'redirect_url' => $returnUrl,
+            ])),
+        ]);
+
+        $json = in_array($remote->code(), [200, 201]) ? $remote->json() : null;
+        if (! is_array($json)) {
+            return null;
+        }
+
+        return A::get($json, 'portal_session.access_url');
+    }
+
+    private function endpoint(): string
+    {
+        $site = strval($this->option('site'));
+
+        return 'https://'.$site.'.chargebee.com/api/v2';
+    }
+
+    private function headers(bool $json = false): array
+    {
+        $headers = [
+            'Authorization' => 'Basic '.base64_encode(strval($this->option('api_key')).':'),
+            'Accept' => 'application/json',
+        ];
+
+        if ($json) {
+            $headers['Content-Type'] = 'application/json';
+        }
+
+        if ($version = $this->option('api_version')) {
+            $headers['Chargebee-Api-Version'] = $version;
+        }
+
+        return $headers;
     }
 }
