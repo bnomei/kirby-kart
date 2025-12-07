@@ -14,6 +14,7 @@ use Bnomei\Kart\ContentPageEnum;
 use Bnomei\Kart\Provider;
 use Bnomei\Kart\ProviderEnum;
 use Bnomei\Kart\VirtualPage;
+use Bnomei\Kart\WebhookResult;
 use Kirby\Http\Remote;
 use Kirby\Toolkit\A;
 
@@ -23,7 +24,7 @@ class Fastspring extends Provider
 
     private function headers(): array
     {
-        // https://docs.snipcart.com/v3/api-reference/authentication
+        // https://developer.fastspring.com/reference/authentication
         return [
             'Content-Type' => 'application/json',
             'Accept' => 'application/json',
@@ -34,7 +35,18 @@ class Fastspring extends Provider
     public function checkout(): string
     {
         // NOTE: webhook-only integration; Kart expects FastSpring webhooks to finalize orders and does not initiate sessions here.
-        return parent::checkout();
+        return parent::checkout() ?? '/';
+    }
+
+    public function supportsWebhooks(): bool
+    {
+        return true;
+    }
+
+    public function handleWebhook(array $payload, array $headers = []): WebhookResult
+    {
+        // TODO: implement FastSpring webhook parsing, signature verification, idempotency check, and mapping to orderData.
+        return WebhookResult::ignored('FastSpring webhook handling not implemented yet.');
     }
 
     public function fetchProducts(): array
