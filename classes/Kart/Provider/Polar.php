@@ -235,42 +235,41 @@ class Polar extends Provider
             $page++;
         }
 
-        return array_map(fn (array $data) =>
-            (new VirtualPage(
-                $data,
-                [
-                    'id' => 'id',
-                    'title' => 'name',
-                    'content' => [
-                        'description' => 'description',
-                        'price' => function ($i) {
-                            $price = null;
-                            foreach (A::get($i, 'prices', []) as $p) {
-                                if (A::get($p, 'type') === 'recurring') {
-                                    continue; // skip subscriptions
-                                }
-                                if (A::get($p, 'is_archived') === true) {
-                                    continue;
-                                }
-                                if (A::get($p, 'price_amount') !== null) {
-                                    $price = round(A::get($p, 'price_amount', 0) / 100.0, 2);
-                                    break;
-                                }
+        return array_map(fn (array $data) => (new VirtualPage(
+            $data,
+            [
+                'id' => 'id',
+                'title' => 'name',
+                'content' => [
+                    'description' => 'description',
+                    'price' => function ($i) {
+                        $price = null;
+                        foreach (A::get($i, 'prices', []) as $p) {
+                            if (A::get($p, 'type') === 'recurring') {
+                                continue; // skip subscriptions
                             }
+                            if (A::get($p, 'is_archived') === true) {
+                                continue;
+                            }
+                            if (A::get($p, 'price_amount') !== null) {
+                                $price = round(A::get($p, 'price_amount', 0) / 100.0, 2);
+                                break;
+                            }
+                        }
 
-                            return $price;
-                        },
-                        'tags' => fn ($i) => A::get($i, 'metadata.tags', ''),
-                        'categories' => fn ($i) => A::get($i, 'metadata.categories', ''),
-                        'gallery' => fn ($i) => $this->findImagesFromUrls(array_filter(array_map(
-                            fn ($m) => A::get($m, 'public_url'), A::get($i, 'medias', [])
-                        ))),
-                        'downloads' => fn ($i) => $this->findFilesFromUrls(
-                            A::get($i, 'metadata.downloads', [])
-                        ),
-                    ],
+                        return $price;
+                    },
+                    'tags' => fn ($i) => A::get($i, 'metadata.tags', ''),
+                    'categories' => fn ($i) => A::get($i, 'metadata.categories', ''),
+                    'gallery' => fn ($i) => $this->findImagesFromUrls(array_filter(array_map(
+                        fn ($m) => A::get($m, 'public_url'), A::get($i, 'medias', [])
+                    ))),
+                    'downloads' => fn ($i) => $this->findFilesFromUrls(
+                        A::get($i, 'metadata.downloads', [])
+                    ),
                 ],
-                $this->kart->page(ContentPageEnum::PRODUCTS))
+            ],
+            $this->kart->page(ContentPageEnum::PRODUCTS))
         )->mixinProduct($data)->toArray(), $products);
     }
 
