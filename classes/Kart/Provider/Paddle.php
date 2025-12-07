@@ -115,7 +115,7 @@ class Paddle extends Provider
         }
 
         $invoice_url = null;
-        // https://developer.paddle.com/api-reference/transactions/get-invoice-pdf
+        // https://developer.paddle.com/api-reference/transactions/get-transaction-invoice (short-lived PDF URL)
         $remote = Remote::get($endpoint.'/transactions/'.$sessionId.'/invoice', [
             'headers' => [
                 'Content-Type' => 'application/json',
@@ -304,7 +304,7 @@ class Paddle extends Provider
 
         $endpoint = strval($this->option('endpoint'));
 
-        // https://developer.paddle.com/api-reference/customer-portals/create-customer-portal-session
+        // https://developer.paddle.com/api-reference/customer-portal/create-customer-portal-session
         $remote = Remote::post("$endpoint/customers/$customer/portal-sessions", [
             'headers' => [
                 'Content-Type' => 'application/json',
@@ -312,11 +312,11 @@ class Paddle extends Provider
             ],
         ]);
 
-        $json = $remote->code() === 200 ? $remote->json() : null;
+        $json = in_array($remote->code(), [200, 201]) ? $remote->json() : null;
         if (! is_array($json)) {
             return null;
         }
 
-        return A::get($json, 'data.urls.general.overview');
+        return A::get($json, 'data.urls.general.overview') ?? A::get($json, 'data.url');
     }
 }
