@@ -104,9 +104,9 @@ class Paddle extends Provider
                 'Authorization' => 'Bearer '.strval($this->option('secret_key')),
             ],
             'data' => [
-                'include' => [
+                'include' => implode(',', [
                     'customer',
-                ],
+                ]),
             ]]);
 
         $json = $remote->code() === 200 ? $remote->json() : null;
