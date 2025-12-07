@@ -14,6 +14,7 @@ use Bnomei\Kart\ContentPageEnum;
 use Bnomei\Kart\Provider;
 use Bnomei\Kart\ProviderEnum;
 use Bnomei\Kart\VirtualPage;
+use Bnomei\Kart\WebhookResult;
 use Kirby\Http\Remote;
 use Kirby\Toolkit\A;
 
@@ -24,7 +25,53 @@ class Invoiceninja extends Provider
     public function checkout(): string
     {
         // NOTE: webhook-only integration; Kart expects Invoice Ninja webhooks for payment confirmation and does not initiate hosted links here.
-        return parent::checkout();
+        return parent::checkout() ?? '/';
+    }
+
+    public function supportsWebhooks(): bool
+    {
+        return true;
+    }
+
+    public function handleWebhook(array $payload, array $headers = []): WebhookResult
+    {
+        $headers = array_change_key_case($headers, CASE_LOWER);
+        $eventId = $this->extractEventId($payload, $headers);
+
+        if ($eventId && $this->isDuplicateWebhook($eventId)) {
+            return WebhookResult::ignored('duplicate webhook');
+        }
+
+        if (! $this->verifySignature($payload, $headers)) {
+            return WebhookResult::invalid('invalid signature');
+        }
+
+        $event = $this->extractEventName($payload);
+        $allowed = $this->option('webhook_events');
+        if (is_array($allowed) && ! empty($allowed) && $event && ! in_array($event, array_map('strtolower', $allowed), true)) {
+            return WebhookResult::ignored('event not handled');
+        }
+
+        $invoice = $this->extractInvoiceFromPayload($payload);
+        if (! $invoice && ($invoiceId = $this->extractInvoiceId($payload))) {
+            $invoice = $this->fetchInvoice($invoiceId);
+        }
+
+        if (! is_array($invoice)) {
+            return WebhookResult::invalid('invoice missing');
+        }
+
+        if (! $this->isInvoicePaid($invoice)) {
+            return WebhookResult::ignored('invoice not paid');
+        }
+
+        $orderData = $this->buildOrderData($invoice, $payload);
+
+        if ($eventId) {
+            $this->rememberWebhook($eventId);
+        }
+
+        return WebhookResult::ok($orderData, $event ?: 'invoice.ninja.webhook');
     }
 
     public function completed(array $data = []): array
@@ -41,6 +88,7 @@ class Invoiceninja extends Provider
         $page = 1;
 
         while (true) {
+            // https://api-docs.invoiceninja.com/#/products/getProducts
             $remote = Remote::get($this->endpoint().'/products', [
                 'headers' => $this->headers(),
                 'data' => [
@@ -79,6 +127,271 @@ class Invoiceninja extends Provider
             ],
             $this->kart->page(ContentPageEnum::PRODUCTS))
         )->mixinProduct($data)->toArray(), $products);
+    }
+
+    private function extractEventName(array $payload): ?string
+    {
+        $event = A::get($payload, 'event') ??
+            A::get($payload, 'event_name') ??
+            A::get($payload, 'type') ??
+            A::get($payload, 'activity');
+
+        return $event ? strtolower(strval($event)) : null;
+    }
+
+    private function extractEventId(array $payload, array $headers): ?string
+    {
+        $candidates = [
+            A::get($payload, 'event_id'),
+            A::get($payload, 'id'),
+            A::get($payload, 'activity_id'),
+            A::get($payload, 'data.id'),
+            A::get($payload, 'data.event_id'),
+            A::get($headers, 'x-event-id'),
+            A::get($headers, 'x-invoiceninja-event'),
+        ];
+
+        foreach ($candidates as $candidate) {
+            if ($candidate) {
+                return strval($candidate);
+            }
+        }
+
+        return null;
+    }
+
+    private function extractInvoiceId(array $payload): ?string
+    {
+        $candidates = [
+            A::get($payload, 'invoice_id'),
+            A::get($payload, 'invoiceId'),
+            A::get($payload, 'data.invoice_id'),
+            A::get($payload, 'data.invoice.id'),
+            A::get($payload, 'data.payment.invoice_id'),
+            A::get($payload, 'invoice.id'),
+        ];
+
+        foreach ($candidates as $candidate) {
+            if ($candidate) {
+                return strval($candidate);
+            }
+        }
+
+        return null;
+    }
+
+    private function extractInvoiceFromPayload(array $payload): ?array
+    {
+        $candidates = [
+            A::get($payload, 'invoice'),
+            A::get($payload, 'data.invoice'),
+            A::get($payload, 'data.data.invoice'),
+        ];
+
+        foreach ($candidates as $candidate) {
+            if (is_array($candidate)) {
+                return $candidate;
+            }
+        }
+
+        return null;
+    }
+
+    private function extractPaymentFromPayload(array $payload): array
+    {
+        $candidates = [
+            A::get($payload, 'payment'),
+            A::get($payload, 'data.payment'),
+            A::get($payload, 'data.data.payment'),
+        ];
+
+        foreach ($candidates as $candidate) {
+            if (is_array($candidate)) {
+                return $candidate;
+            }
+        }
+
+        return [];
+    }
+
+    private function verifySignature(array $payload, array $headers): bool
+    {
+        $secret = strval($this->option('webhook_secret') ?? '');
+        if (! $secret) {
+            return true; // opt-out: treat as valid when no secret configured
+        }
+
+        $signature = A::get($headers, 'x-api-signature') ??
+            A::get($headers, 'x-ninja-signature') ??
+            A::get($headers, 'x-invoiceninja-signature') ??
+            A::get($headers, 'x-signature');
+
+        if (! $signature) {
+            return false;
+        }
+
+        $encoded = strval($payload['_raw'] ?? '');
+        if (! $encoded) {
+            $encoded = json_encode($payload, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+        }
+        if (! $encoded) {
+            return false;
+        }
+
+        return hash_equals($signature, hash_hmac('sha256', $encoded, $secret));
+    }
+
+    private function fetchInvoice(string $invoiceId): ?array
+    {
+        // https://api-docs.invoiceninja.com/#/invoices/getInvoice
+        $remote = Remote::get($this->endpoint().'/invoices/'.$invoiceId, [
+            'headers' => $this->headers(),
+            'data' => [
+                'include' => 'client,client.contacts',
+            ],
+        ]);
+
+        $json = $remote->code() === 200 ? $remote->json() : null;
+        $invoice = is_array($json) ? A::get($json, 'data', $json) : null;
+
+        return is_array($invoice) ? $invoice : null;
+    }
+
+    private function isInvoicePaid(array $invoice): bool
+    {
+        $amount = floatval(A::get($invoice, 'amount', 0));
+        $balance = floatval(A::get($invoice, 'balance', 0));
+        $paid = floatval(A::get($invoice, 'paid_to_date', 0));
+        $statusId = intval(A::get($invoice, 'status_id', 0));
+
+        if ($amount > 0 && $balance <= 0.0) {
+            return true;
+        }
+
+        if ($paid >= $amount && $amount > 0) {
+            return true;
+        }
+
+        // Invoice Ninja paid/partial statuses are >= 4
+        return in_array($statusId, [4, 5, 6], true);
+    }
+
+    private function buildOrderData(array $invoice, array $payload): array
+    {
+        $client = A::get($invoice, 'client', []);
+        $contacts = A::get($client, 'contacts', []);
+
+        $contactEmail = null;
+        foreach ($contacts as $contact) {
+            if ($contactEmail = A::get($contact, 'email')) {
+                break;
+            }
+        }
+
+        $payment = $this->extractPaymentFromPayload($payload);
+
+        $email = $contactEmail ??
+            A::get($client, 'email') ??
+            A::get($invoice, 'customer.email') ??
+            A::get($payload, 'customer.email');
+
+        $name = A::get($client, 'name') ??
+            trim((A::get($contacts, '0.first_name', '').' '.A::get($contacts, '0.last_name', '')));
+
+        $items = $this->mapLineItems(A::get($invoice, 'line_items', []), $invoice, $payment);
+
+        $subtotal = floatval(A::get($invoice, 'amount', 0));
+        $tax = floatval(A::get($invoice, 'total_taxes', A::get($invoice, 'tax_amount', 0)));
+        $discount = floatval(A::get($invoice, 'discount', 0));
+
+        return array_filter([
+            'invoiceId' => A::get($invoice, 'id'),
+            'invoiceNumber' => A::get($invoice, 'number'),
+            'currency' => A::get($invoice, 'currency_id'),
+            'email' => $email,
+            'customer' => array_filter([
+                'id' => A::get($client, 'id'),
+                'email' => $email,
+                'name' => $name,
+            ]),
+            'paidDate' => $this->normalizeDate(
+                A::get($payment, 'date') ??
+                A::get($payment, 'created_at') ??
+                A::get($invoice, 'paid_at') ??
+                A::get($invoice, 'date')
+            ),
+            'paymentMethod' => A::get($payment, 'type') ?? A::get($payment, 'gateway') ?? A::get($payment, 'payment_method'),
+            'paymentId' => A::get($payment, 'transaction_reference') ?? A::get($payment, 'id'),
+            'paymentComplete' => $this->isInvoicePaid($invoice),
+            'invoiceurl' => A::get($invoice, 'download_link') ?? A::get($invoice, 'pdf_url') ?? A::get($invoice, 'url'),
+            'items' => $items,
+            'subtotal' => $subtotal,
+            'tax' => $tax,
+            'discount' => $discount,
+            'total' => floatval(A::get($invoice, 'amount', $subtotal)),
+        ], fn ($value) => $value !== null && $value !== '' && ! (is_array($value) && empty($value)));
+    }
+
+    private function mapLineItems(array $lineItems, array $invoice, array $payment = []): array
+    {
+        $items = [];
+        $uuid = kart()->option('products.product.uuid');
+        $license = kart()->option('licenses.license.uuid');
+
+        foreach ($lineItems as $line) {
+            $quantity = floatval(A::get($line, 'quantity', 1));
+            $price = floatval(A::get($line, 'cost', A::get($line, 'price', 0)));
+            $total = floatval(A::get($line, 'line_total', $price * $quantity));
+            $tax = floatval(A::get($line, 'tax', A::get($line, 'tax_total', 0)));
+            $discount = floatval(A::get($line, 'discount', A::get($line, 'discount_total', 0)));
+            $productId = strval(A::get($line, 'product_id', A::get($line, 'product_key', A::get($line, 'id', ''))));
+
+            $key = [];
+            if ($productId && $uuid instanceof \Closure) {
+                $key = ['page://'.$uuid(null, ['id' => $productId])];
+            }
+
+            $licenseKey = null;
+            if ($license instanceof \Closure) {
+                $licenseKey = $license([
+                    'invoice' => $invoice,
+                    'payment' => $payment,
+                    'line' => $line,
+                ]);
+            }
+
+            $items[] = array_filter([
+                'key' => $key,
+                'variant' => A::get($line, 'custom_value1', ''),
+                'quantity' => $quantity,
+                'price' => $price,
+                'total' => $total,
+                'subtotal' => floatval(A::get($line, 'subtotal', $total)),
+                'tax' => $tax,
+                'discount' => $discount,
+                'licensekey' => $licenseKey,
+            ], fn ($value) => $value !== null && $value !== '' && ! (is_array($value) && empty($value)));
+        }
+
+        return $items;
+    }
+
+    private function normalizeDate(int|string|null $value): ?string
+    {
+        if ($value === null || $value === '') {
+            return null;
+        }
+
+        if (is_numeric($value)) {
+            $timestamp = intval($value);
+            if ($timestamp > 0 && $timestamp < 10_000_000_000) {
+                return date('Y-m-d H:i:s', $timestamp);
+            }
+        }
+
+        $time = strtotime(strval($value));
+
+        return $time ? date('Y-m-d H:i:s', $time) : null;
     }
 
     private function endpoint(): string
