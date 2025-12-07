@@ -640,7 +640,7 @@ class Kart implements Kerbs
             $tags = $this->getTags($path);
         }
 
-        return new Collection(array_map(fn ($c) => new Tag($c), $tags)); // @phpstan-ignore-line
+        return new Collection(array_map(fn ($c) => new Tag($c), $tags));
     }
 
     public function tag(bool $multiple = false): ?string
@@ -730,7 +730,7 @@ class Kart implements Kerbs
             $categories = $this->getCategories($path);
         }
 
-        return new Collection(array_map(fn ($c) => new Category($c), $categories));  // @phpstan-ignore-line
+        return new Collection(array_map(fn ($c) => new Category($c), $categories));
     }
 
     public function category(bool $multiple = false): ?string
@@ -858,7 +858,7 @@ class Kart implements Kerbs
      */
     public function variants(): Collection
     {
-        return new Collection($this->allVariants()); // @phpstan-ignore-line
+        return new Collection($this->allVariants());
     }
 
     private function getVariants(): array
