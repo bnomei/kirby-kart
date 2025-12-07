@@ -10,7 +10,6 @@
 
 use Bnomei\Kart\Provider\Lemonsqueezy;
 use Dotenv\Dotenv;
-use Kirby\Cms\Collection;
 use Kirby\Http\Remote;
 use Kirby\Toolkit\A;
 
@@ -147,24 +146,21 @@ it('creates a checkout url', function (): void {
     kart()->setOption('providers.lemonsqueezy.store_id', $this->lsqStore);
 
     // inject a minimal cart line stub that exposes product() + variant()
-    $stubLine = new class ($variant['variant_id']) {
-        public function __construct(private string $variantId)
-        {
-        }
+    $stubLine = new class($variant['variant_id'])
+    {
+        public function __construct(private string $variantId) {}
 
         public function product(): object
         {
-            return new class ($this->variantId) {
-                public function __construct(private string $variantId)
-                {
-                }
+            return new class($this->variantId)
+            {
+                public function __construct(private string $variantId) {}
 
                 public function raw(): object
                 {
-                    return new class ($this->variantId) {
-                        public function __construct(private string $variantId)
-                        {
-                        }
+                    return new class($this->variantId)
+                    {
+                        public function __construct(private string $variantId) {}
 
                         public function yaml(): array
                         {
@@ -202,7 +198,7 @@ it('creates a checkout url', function (): void {
         expect($url)->toBeString()
             ->and(str_starts_with($url, 'http'))->toBeTrue();
     } catch (Throwable $e) {
-        fwrite(STDERR, "Lemon checkout error: ".$e->getMessage()."\n");
+        fwrite(STDERR, 'Lemon checkout error: '.$e->getMessage()."\n");
         $this->markTestSkipped('Checkout failed: '.$e->getMessage());
     }
 });
