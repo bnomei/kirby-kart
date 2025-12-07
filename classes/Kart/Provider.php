@@ -286,6 +286,31 @@ abstract class Provider
         return '/';
     }
 
+    public function supportsWebhooks(): bool
+    {
+        return false;
+    }
+
+    public function handleWebhook(array $payload, array $headers = []): WebhookResult
+    {
+        return WebhookResult::ignored('Webhooks not implemented for '.$this->name);
+    }
+
+    protected function webhookCacheKey(string $eventId): string
+    {
+        return 'webhook.'.$eventId;
+    }
+
+    protected function isDuplicateWebhook(string $eventId): bool
+    {
+        return $this->cache()->get($this->webhookCacheKey($eventId)) !== null;
+    }
+
+    protected function rememberWebhook(string $eventId, int $days = 7): void
+    {
+        $this->cache()->set($this->webhookCacheKey($eventId), true, $days * 24 * 60);
+    }
+
     public function canceled(): string
     {
         kirby()->trigger('kart.provider.'.$this->name.'.canceled');
