@@ -211,7 +211,7 @@ class Paddle extends Provider
                     'status' => 'active',
                     'after' => $cursor,
                     'per_page' => 200,
-                    'include' => 'prices',
+                    'include' => implode(',', ['prices']),
                 ]),
             ]);
 
