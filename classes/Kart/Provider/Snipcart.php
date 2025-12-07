@@ -61,7 +61,8 @@ class Snipcart extends Provider
             }
 
             foreach (A::get($json, 'items') as $product) {
-                if (! A::get($product, 'archived')) {
+                // keep active products; skip archived ones
+                if (A::get($product, 'archived')) {
                     continue;
                 }
                 $products[$product['id']] = $product;
