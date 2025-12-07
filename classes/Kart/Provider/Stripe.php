@@ -121,9 +121,11 @@ class Stripe extends Provider
             'headers' => [
                 'Content-Type' => 'application/json',
                 'Authorization' => 'Bearer '.strval($this->option('secret_key')),
-            ], [
+            ],
+            'data' => [
                 'limit' => 100, // is max without pagination. $this->kart->cart()->lines()->count(),
-            ]]);
+            ],
+        ]);
 
         $json = $remote->code() === 200 ? $remote->json() : null;
         if (! is_array($json)) {
