@@ -16,6 +16,7 @@ use Kirby\Cms\User;
 use Kirby\Content\Field;
 
 /**
+ * @method Field chargebee()
  * @method Field fastspring()
  * @method Field gumroad()
  * @method Field invoice_ninja()
@@ -23,13 +24,14 @@ use Kirby\Content\Field;
  * @method Field lemonsqueezy()
  * @method Field mollie()
  * @method Field paddle()
- * @method Field payone()
  * @method Field paypal()
+ * @method Field polar()
+ * @method Field shopify()
  * @method Field snipcart()
+ * @method Field square()
  * @method Field stripe()
+ * @method Field sumup()
  * @method Kart kart()
- * @method Pages<string, OrderPage> completedOrders()
- * @method Pages<string, OrderPage> orders()
  * @method array toKerbs()
  * @method bool hasMadePaymentFor(string $provider, ProductPage $productPage)
  * @method bool hasPurchased(ProductPage|string $product)
