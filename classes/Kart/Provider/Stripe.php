@@ -268,9 +268,9 @@ class Stripe extends Provider
             return null;
         }
 
-        $remote = Remote::get('https://api.stripe.com/v1/billing_portal/sessions', [
+        $remote = Remote::post('https://api.stripe.com/v1/billing_portal/sessions', [
             'headers' => [
-                'Content-Type' => 'application/json',
+                'Content-Type' => 'application/x-www-form-urlencoded',
                 'Authorization' => 'Bearer '.strval($this->option('secret_key')),
             ],
             'data' => array_filter([
