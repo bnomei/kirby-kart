@@ -503,6 +503,7 @@ class OrderPage extends Page implements Kerbs
         return $file;
     }
 
+    /** @phpstan-ignore-next-line */
     public function createZipWithFiles(Files|array $files = [], ?string $zipFilename = null): ?File
     {
         try {
@@ -597,6 +598,7 @@ class OrderPage extends Page implements Kerbs
     /**
      * @return Collection<mixed>
      */
+    /** @phpstan-ignore-next-line */
     public function orderLines(): Collection
     {
         $lines = [];

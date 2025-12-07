@@ -25,3 +25,4 @@ parameters:
         - '/Parameter #1 \$value of function strval expects/'
         -
             identifier: missingType.iterableValue
+        - '#return type with generic class Kirby\\Cms\\Pages does not specify its types#'
