@@ -14,6 +14,7 @@ use Bnomei\Kart\ContentPageEnum;
 use Bnomei\Kart\Provider;
 use Bnomei\Kart\ProviderEnum;
 use Bnomei\Kart\VirtualPage;
+use Bnomei\Kart\WebhookResult;
 use Kirby\Http\Remote;
 use Kirby\Toolkit\A;
 
@@ -24,7 +25,86 @@ class Shopify extends Provider
     public function checkout(): string
     {
         // NOTE: webhook-only integration; Shopify requires webhooks for checkout completion and disallows polling for status.
-        return parent::checkout();
+        return parent::checkout() ?? '/';
+    }
+
+    public function supportsWebhooks(): bool
+    {
+        return true;
+    }
+
+    public function handleWebhook(array $payload, array $headers = []): WebhookResult
+    {
+        $raw = strval(A::get($headers, '@raw_body', A::get($payload, '_raw', '')));
+        $hmac = trim(strval(A::get($headers, 'x-shopify-hmac-sha256', '')));
+        $secret = strval($this->option('webhook_secret'));
+
+        if ($secret === '' || $raw === '' || $hmac === '') {
+            return WebhookResult::invalid('missing webhook secret or signature');
+        }
+
+        $digest = base64_encode(hash_hmac('sha256', $raw, $secret, true));
+        if (! hash_equals($digest, $hmac)) {
+            return WebhookResult::invalid('invalid signature');
+        }
+
+        $eventId = strval(A::get($headers, 'x-shopify-event-id', A::get($headers, 'x-shopify-webhook-id', '')));
+        if ($eventId && $this->isDuplicateWebhook($eventId)) {
+            return WebhookResult::ignored('duplicate webhook');
+        }
+        if ($eventId) {
+            $this->rememberWebhook($eventId);
+        }
+
+        $topic = strval(A::get($headers, 'x-shopify-topic', ''));
+        if (! in_array($topic, ['orders/create', 'orders/paid', 'orders/fulfilled'], true)) {
+            return WebhookResult::ignored('topic not handled');
+        }
+
+        $orderId = strval(A::get($payload, 'id', ''));
+        if (! $orderId) {
+            return WebhookResult::invalid('missing order id');
+        }
+
+        $uuid = kart()->option('products.product.uuid');
+        $likey = kart()->option('licenses.license.uuid');
+
+        $items = [];
+        foreach (A::get($payload, 'line_items', []) as $line) {
+            $quantity = max(1, intval(A::get($line, 'quantity', 1)));
+            $unitPrice = round(floatval(A::get($line, 'price_set.shop_money.amount', A::get($line, 'price', 0))), 2);
+            $linePrice = round($unitPrice * $quantity, 2);
+            $discount = round(floatval(A::get($line, 'total_discount_set.shop_money.amount', 0)), 2);
+
+            $key = null;
+            if ($uuid instanceof \Closure) {
+                $key = 'page://'.$uuid(null, ['id' => strval(A::get($line, 'product_id'))]);
+            }
+
+            $items[] = array_filter([
+                'key' => $key ? [$key] : null,
+                'variant' => strval(A::get($line, 'variant_title', '')),
+                'quantity' => $quantity,
+                'price' => $unitPrice,
+                'subtotal' => $linePrice,
+                'discount' => $discount,
+                'total' => max(0, $linePrice - $discount),
+                'licensekey' => $likey instanceof \Closure ? $likey(['order' => $payload, 'line' => $line]) : null,
+            ], fn ($v) => $v !== null && $v !== '');
+        }
+
+        $orderData = array_filter([
+            'order_id' => $orderId,
+            'email' => A::get($payload, 'email'),
+            'paymentComplete' => A::get($payload, 'financial_status') === 'paid',
+            'paidDate' => ($processed = A::get($payload, 'processed_at')) ? date('Y-m-d H:i:s', strtotime((string) $processed)) : null,
+            'shop' => A::get($headers, 'x-shopify-shop-domain'),
+            'topic' => $topic,
+            'items' => $items,
+            'raw' => $payload,
+        ], fn ($v) => $v !== null && $v !== []);
+
+        return WebhookResult::ok($orderData, 'Shopify webhook processed');
     }
 
     public function completed(array $data = []): array
@@ -42,6 +122,7 @@ class Shopify extends Provider
 
         // REST Admin products listing
         while (true) {
+            // https://shopify.dev/docs/api/admin-rest/2024-07/resources/product#get-products
             $remote = Remote::get($this->adminEndpoint().'/products.json', [
                 'headers' => $this->adminHeaders(),
                 'data' => array_filter([
@@ -61,7 +142,8 @@ class Shopify extends Provider
             }
 
             // Shopify pagination via Link header
-            $link = $remote->header('Link');
+            $headers = $remote->headers();
+            $link = A::get($headers, 'Link', A::get($headers, 'link'));
             if ($link && str_contains($link, 'rel="next"')) {
                 preg_match('/page_info=([^&>]+)/', $link, $m);
                 $pageInfo = $m[1] ?? null;
@@ -117,13 +199,5 @@ class Shopify extends Provider
             'X-Shopify-Access-Token' => strval($this->option('admin_token')),
             'Accept' => 'application/json',
         ];
-    }
-
-    private function storefrontEndpoint(): string
-    {
-        $domain = rtrim(strval($this->option('store_domain')), '/');
-        $version = strval($this->option('api_version') ?? '2024-07');
-
-        return 'https://'.$domain.'/api/'.$version.'/graphql.json';
     }
 }
