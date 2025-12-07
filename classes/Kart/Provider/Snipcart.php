@@ -66,8 +66,9 @@ class Snipcart extends Provider
             return WebhookResult::invalid('missing webhook content');
         }
 
-        $eventId = $event.'|'.strval(A::get($content, 'token', A::get($payload, 'token', '')));
-        if ($eventId && $this->isDuplicateWebhook($eventId)) {
+        $eventToken = strval(A::get($content, 'token', A::get($payload, 'token', '')));
+        $eventId = $eventToken !== '' ? $event.'|'.$eventToken : '';
+        if ($eventId !== '' && $this->isDuplicateWebhook($eventId)) {
             return WebhookResult::ignored('duplicate webhook');
         }
 
@@ -80,7 +81,9 @@ class Snipcart extends Provider
                 'email' => A::get($content, 'user.email'),
                 'name' => A::get($content, 'user.billingAddress.fullName'),
             ]),
-            'paidDate' => ($date = A::get($content, 'completionDate', A::get($payload, 'createdOn'))) ? date('Y-m-d H:i:s', strtotime((string) $date)) : null,
+            'paidDate' => ($date = A::get($content, 'completionDate', A::get($payload, 'createdOn'))) && ($timestamp = strtotime((string) $date)) !== false
+                ? date('Y-m-d H:i:s', $timestamp)
+                : null,
             'paymentMethod' => A::get($content, 'paymentMethod'),
             'paymentComplete' => in_array($paymentStatus, ['paid', 'processed'], true),
             'invoiceurl' => A::get($content, 'invoiceNumber'),
@@ -113,7 +116,7 @@ class Snipcart extends Provider
             ], fn ($v) => $v !== null && $v !== '' && $v !== []);
         }
 
-        if ($eventId) {
+        if ($eventId !== '') {
             $this->rememberWebhook($eventId);
         }
 

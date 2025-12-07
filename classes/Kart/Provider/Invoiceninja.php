@@ -48,7 +48,10 @@ class Invoiceninja extends Provider
 
         $event = $this->extractEventName($payload);
         $allowed = $this->option('webhook_events');
-        if (is_array($allowed) && ! empty($allowed) && $event && ! in_array($event, array_map('strtolower', $allowed), true)) {
+        if (is_array($allowed) && ! empty($allowed) && $event && ! in_array($event, array_map(
+            static fn ($value) => strtolower(strval($value)),
+            $allowed
+        ), true)) {
             return WebhookResult::ignored('event not handled');
         }
 

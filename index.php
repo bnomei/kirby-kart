@@ -285,6 +285,21 @@ App::plugin(
                     },
                     'virtual' => ['raw', 'description', 'gallery', 'downloads', 'price', 'tags', 'categories', 'title'],
                 ],
+                'checkout' => [
+                    'endpoint' => fn () => kart_env('CHECKOUT_ENDPOINT', 'https://api.checkout.com'),
+                    'secret_key' => fn () => kart_env('CHECKOUT_SECRET_KEY'),
+                    'public_key' => fn () => kart_env('CHECKOUT_PUBLIC_KEY'),
+                    'checkout_options' => function (Kart $kart) {
+                        // configure the checkout based on current kart instance
+                        // https://www.checkout.com/docs/payments/accept-payments/accept-a-payment-on-a-hosted-page/manage-your-hosted-payments-page
+                        return [];
+                    },
+                    'checkout_line' => function (Kart $kart, CartLine $line) {
+                        // add custom data to the current checkout line
+                        return [];
+                    },
+                    'virtual' => false,
+                ],
                 'fastspring' => [
                     'store_url' => fn () => kart_env('FASTSPRING_STORE_URL', 'https://acme.onfastspring.com'),
                     'username' => fn () => kart_env('FASTSPRING_USERNAME'),

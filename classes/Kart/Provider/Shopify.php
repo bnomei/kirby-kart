@@ -97,7 +97,9 @@ class Shopify extends Provider
             'order_id' => $orderId,
             'email' => A::get($payload, 'email'),
             'paymentComplete' => A::get($payload, 'financial_status') === 'paid',
-            'paidDate' => ($processed = A::get($payload, 'processed_at')) ? date('Y-m-d H:i:s', strtotime((string) $processed)) : null,
+            'paidDate' => ($processed = A::get($payload, 'processed_at')) && ($processedTimestamp = strtotime((string) $processed)) !== false
+                ? date('Y-m-d H:i:s', $processedTimestamp)
+                : null,
             'shop' => A::get($headers, 'x-shopify-shop-domain'),
             'topic' => $topic,
             'items' => $items,

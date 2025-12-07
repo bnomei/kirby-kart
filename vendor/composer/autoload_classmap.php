@@ -36,6 +36,7 @@ return array(
     'Bnomei\\Kart\\Provider' => $baseDir . '/classes/Kart/Provider.php',
     'Bnomei\\Kart\\ProviderEnum' => $baseDir . '/classes/Kart/ProviderEnum.php',
     'Bnomei\\Kart\\Provider\\Chargebee' => $baseDir . '/classes/Kart/Provider/Chargebee.php',
+    'Bnomei\\Kart\\Provider\\Checkout' => $baseDir . '/classes/Kart/Provider/Checkout.php',
     'Bnomei\\Kart\\Provider\\Fastspring' => $baseDir . '/classes/Kart/Provider/Fastspring.php',
     'Bnomei\\Kart\\Provider\\Gumroad' => $baseDir . '/classes/Kart/Provider/Gumroad.php',
     'Bnomei\\Kart\\Provider\\Invoiceninja' => $baseDir . '/classes/Kart/Provider/Invoiceninja.php',

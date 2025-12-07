@@ -51,6 +51,8 @@ trait Options
             // mutators
             'providers.chargebee.checkout_line',
             'providers.chargebee.checkout_options',
+            'providers.checkout.checkout_line',
+            'providers.checkout.checkout_options',
             'providers.fastspring.checkout_line',
             'providers.fastspring.checkout_options',
             'providers.gumroad.checkout_line',

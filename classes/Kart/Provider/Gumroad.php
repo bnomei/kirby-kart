@@ -60,6 +60,8 @@ class Gumroad extends Provider
         $paidAt = A::get($sale, 'purchased_at', A::get($payload, 'created_at'));
         $refunded = boolval(A::get($sale, 'refunded', false) || A::get($sale, 'disputed', false));
 
+        $paidAtTimestamp = $paidAt ? strtotime((string) $paidAt) : false;
+
         $data = array_filter([
             'email' => A::get($sale, 'email', A::get($sale, 'buyer_email')),
             'customer' => array_filter([
@@ -67,7 +69,7 @@ class Gumroad extends Provider
                 'email' => A::get($sale, 'email', A::get($sale, 'buyer_email')),
                 'name' => A::get($sale, 'full_name', A::get($sale, 'buyer_name')),
             ]),
-            'paidDate' => $paidAt ? date('Y-m-d H:i:s', strtotime((string) $paidAt)) : null,
+            'paidDate' => $paidAtTimestamp !== false ? date('Y-m-d H:i:s', $paidAtTimestamp) : null,
             'paymentMethod' => A::get($sale, 'card', ''),
             'paymentComplete' => ! $refunded,
             'invoiceurl' => A::get($sale, 'receipt_url', A::get($sale, 'short_url')),

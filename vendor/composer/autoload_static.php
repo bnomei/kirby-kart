@@ -67,6 +67,7 @@ class ComposerStaticInit33432ab03ec2d17bd09746e8b1c408ba
         'Bnomei\\Kart\\Provider' => __DIR__ . '/../..' . '/classes/Kart/Provider.php',
         'Bnomei\\Kart\\ProviderEnum' => __DIR__ . '/../..' . '/classes/Kart/ProviderEnum.php',
         'Bnomei\\Kart\\Provider\\Chargebee' => __DIR__ . '/../..' . '/classes/Kart/Provider/Chargebee.php',
+        'Bnomei\\Kart\\Provider\\Checkout' => __DIR__ . '/../..' . '/classes/Kart/Provider/Checkout.php',
         'Bnomei\\Kart\\Provider\\Fastspring' => __DIR__ . '/../..' . '/classes/Kart/Provider/Fastspring.php',
         'Bnomei\\Kart\\Provider\\Gumroad' => __DIR__ . '/../..' . '/classes/Kart/Provider/Gumroad.php',
         'Bnomei\\Kart\\Provider\\Invoiceninja' => __DIR__ . '/../..' . '/classes/Kart/Provider/Invoiceninja.php',
