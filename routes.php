@@ -698,6 +698,59 @@ return function (App $kirby) {
             },
         ],
         [
+            'pattern' => Router::PROVIDER_WEBHOOK,
+            'method' => 'POST',
+            'action' => function () use ($kirby) {
+                if ($r = Router::denied([
+                    Router::class.'::hasBlacklist',
+                    Router::class.'::hasRatelimit',
+                ], exclusive: true)) {
+                    return $r;
+                }
+
+                $provider = kart()->provider();
+
+                if (! $provider->supportsWebhooks()) {
+                    return Response::json(['status' => 'ignored'], 403);
+                }
+
+                $maxSize = intval(kart()->option('router.webhook.maxSize', 1024 * 1024)); // default 1MB
+                $raw = file_get_contents('php://input', false, null, 0, $maxSize + 1) ?: '';
+                if (strlen($raw) > $maxSize) {
+                    return Response::json(['status' => 'invalid', 'message' => 'payload too large'], 413);
+                }
+
+                try {
+                    $payload = json_decode($raw ?: '[]', true, 10, JSON_THROW_ON_ERROR);
+                } catch (\JsonException) {
+                    return Response::json(['status' => 'invalid', 'message' => 'invalid json'], 400);
+                }
+                $payload = is_array($payload) ? $payload : [];
+                $payload['_raw'] = $raw;
+
+                $headers = $kirby->request()->headers();
+                $headers = is_array($headers) ? array_change_key_case($headers, CASE_LOWER) : [];
+
+                $result = $provider->handleWebhook($payload, $headers + ['@raw_body' => $raw]);
+
+                if ($result->isOk() && ! empty($result->orderData)) {
+                    $provider->completed($result->orderData);
+                }
+
+                $response = [
+                    'status' => $result->status,
+                    'message' => $result->message,
+                ];
+
+                $code = match ($result->status) {
+                    \Bnomei\Kart\WebhookResult::STATUS_INVALID => 400,
+                    default => 200,
+                };
+
+                return Response::json($response, $code);
+            },
+        ],
+        [
             'pattern' => Router::PROVIDER_SYNC,
             'method' => 'GET',
             'action' => function () {
