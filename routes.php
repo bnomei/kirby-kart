@@ -622,6 +622,9 @@ return function (App $kirby) {
                         Router::go(Router::idWithParams(Router::CART_CHECKOUT), code: 302);
                     }
                 }
+
+                $checkoutFormData = Kart::sanitize($checkoutFormData);
+
                 kirby()->session()->set(
                     'bnomei.kart.checkout_form_data',
                     $checkoutFormData
