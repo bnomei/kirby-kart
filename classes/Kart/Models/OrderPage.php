@@ -625,7 +625,7 @@ class OrderPage extends Page implements Kerbs
         $url = $this->url($options);
 
         if (kart()->option('crypto.signature')) {
-            $url .= '&signature='.Kart::signature($url);
+            $url .= '?signature='.Kart::signature($url);
         }
 
         return $url;
