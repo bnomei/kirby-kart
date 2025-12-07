@@ -137,7 +137,7 @@ it('creates a checkout transaction url', function (): void {
         $url = $this->paddle->checkout();
         expect($url)->toBeString();
     } catch (Throwable $e) {
-        fwrite(STDERR, "Paddle checkout error: ".$e->getMessage()."\n");
+        fwrite(STDERR, 'Paddle checkout error: '.$e->getMessage()."\n");
         $this->markTestSkipped('Checkout failed: '.$e->getMessage());
     }
 });

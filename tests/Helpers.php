@@ -1,8 +1,8 @@
 <?php
 
-use Kirby\Cms\User;
 use Bnomei\Kart\Cart;
 use Kirby\Cms\Collection;
+use Kirby\Cms\User;
 
 /**
  * Shared test helpers for provider flows.

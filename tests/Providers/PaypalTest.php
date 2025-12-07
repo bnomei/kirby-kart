@@ -8,11 +8,9 @@
  * Unauthorized copying, modification, or distribution is prohibited.
  */
 
-use Bnomei\Kart\Provider\Paypal;
 use Bnomei\Kart\Cart;
-use Bnomei\Kart\CartLine;
+use Bnomei\Kart\Provider\Paypal;
 use Dotenv\Dotenv;
-use Kirby\Cms\Collection;
 
 uses()->group('providers');
 
@@ -83,7 +81,7 @@ it('fetches products via provider', function (): void {
         expect($first)->toBeArray()
             ->and($first)->toHaveKey('id');
     } catch (Throwable $e) {
-        fwrite(STDERR, "PayPal products error: ".$e->getMessage()."\n");
+        fwrite(STDERR, 'PayPal products error: '.$e->getMessage()."\n");
         $this->markTestSkipped('Products fetch failed: '.$e->getMessage());
     }
 });
@@ -124,7 +122,7 @@ it('creates a checkout url', function (): void {
         expect($url)->toBeString()
             ->and(str_starts_with($url, 'http'))->toBeTrue();
     } catch (Throwable $e) {
-        fwrite(STDERR, "PayPal checkout error: ".$e->getMessage()."\n");
+        fwrite(STDERR, 'PayPal checkout error: '.$e->getMessage()."\n");
         $this->markTestSkipped('Checkout failed: '.$e->getMessage());
     }
 });

@@ -88,7 +88,7 @@ it('creates a checkout payment url', function (): void {
         expect($url)->toBeString()
             ->and(str_starts_with($url, 'http'))->toBeTrue();
     } catch (Throwable $e) {
-        fwrite(STDERR, "Mollie checkout error: ".$e->getMessage()."\n");
+        fwrite(STDERR, 'Mollie checkout error: '.$e->getMessage()."\n");
         $this->markTestSkipped('Checkout failed: '.$e->getMessage());
     }
 });

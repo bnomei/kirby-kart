@@ -118,7 +118,7 @@ it('creates a checkout session url', function (): void {
         expect($url)->toBeString()
             ->and(str_starts_with($url, 'http'))->toBeTrue();
     } catch (Throwable $e) {
-        fwrite(STDERR, "Stripe checkout error: ".$e->getMessage()."\n");
+        fwrite(STDERR, 'Stripe checkout error: '.$e->getMessage()."\n");
         $this->markTestSkipped('Checkout failed: '.$e->getMessage());
     }
 });
