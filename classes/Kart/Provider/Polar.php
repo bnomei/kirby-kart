@@ -91,6 +91,118 @@ class Polar extends Provider
             A::get($json, 'url', '/') : '/';
     }
 
+    public function completed(array $data = []): array
+    {
+        $checkoutId = get('checkout_id');
+        if (! $checkoutId || ! is_string($checkoutId) || $checkoutId !== $this->kirby->session()->get('bnomei.kart.'.$this->name.'.session_id')) {
+            return [];
+        }
+
+        $formatAmount = function (int|string|null $value): float {
+            if (is_string($value)) {
+                return str_contains($value, '.') ? round(floatval($value), 2) : round(intval($value) / 100.0, 2);
+            }
+
+            return round(intval($value) / 100.0, 2);
+        };
+
+        // https://polar.sh/docs/api-reference#tag/Checkouts/operation/Checkouts_get
+        $remote = Remote::get($this->endpoint().'/checkouts/'.$checkoutId, [
+            'headers' => $this->headers(),
+        ]);
+
+        $json = $remote->code() === 200 ? $remote->json() : null;
+        if (! is_array($json)) {
+            return [];
+        }
+
+        $checkout = A::get($json, 'checkout', $json);
+        if (! is_array($checkout)) {
+            return [];
+        }
+
+        $status = strtolower(strval(A::get($checkout, 'status', '')));
+        if (! in_array($status, ['completed', 'paid', 'succeeded', 'confirmed', 'ready', 'closed'], true)) {
+            return [];
+        }
+
+        $paidAt = A::get($checkout, 'updated_at', A::get($checkout, 'created_at', time()));
+        $data = array_merge($data, array_filter([
+            'email' => A::get($checkout, 'customer_email'),
+            'customer' => [
+                'id' => A::get($checkout, 'customer_id'),
+                'email' => A::get($checkout, 'customer_email'),
+                'name' => A::get($checkout, 'customer_name'),
+            ],
+            'paidDate' => date('Y-m-d H:i:s', is_numeric($paidAt) ? intval($paidAt) : strtotime($paidAt ?: 'now')),
+            'paymentComplete' => in_array($status, ['completed', 'paid', 'succeeded'], true),
+            'invoiceurl' => A::get($checkout, 'invoice_id'),
+            'paymentId' => A::get($checkout, 'id'),
+        ]));
+
+        // fetch the related order to build detailed line items
+        $remote = Remote::get($this->endpoint().'/orders', [
+            'headers' => $this->headers(),
+            'data' => array_filter([
+                'checkoutId' => $checkoutId,
+                'limit' => 1,
+            ]),
+        ]);
+
+        $orderResponse = $remote->code() === 200 ? $remote->json() : null;
+        $order = null;
+        if (is_array($orderResponse)) {
+            $order = A::get($orderResponse, 'orders.0', A::get($orderResponse, 'items.0'));
+        }
+
+        if (is_array($order)) {
+            $orderPaid = boolval(A::get($order, 'paid', false) || in_array(strtolower(strval(A::get($order, 'status', ''))), ['completed', 'paid', 'succeeded', 'fulfilled'], true));
+            $data['paymentComplete'] = $data['paymentComplete'] || $orderPaid;
+            $data['invoiceurl'] = $data['invoiceurl'] ?? A::get($order, 'invoice_number', A::get($order, 'invoice_id'));
+            $data['paymentId'] = $data['paymentId'] ?? A::get($order, 'id');
+            $created = A::get($order, 'created_at', A::get($order, 'created'));
+            if ($created) {
+                $data['paidDate'] = date('Y-m-d H:i:s', is_numeric($created) ? intval($created) : strtotime($created));
+            }
+
+            $uuid = kart()->option('products.product.uuid');
+            if ($uuid instanceof Closure === false) {
+                return [];
+            }
+
+            /** @var \Closure $likey */
+            $likey = kart()->option('licenses.license.uuid');
+
+            foreach (A::get($order, 'items', []) as $line) {
+                $productId = A::get($line, 'product_id', A::get($line, 'id'));
+                if (! $productId) {
+                    continue;
+                }
+
+                $amount = $formatAmount(A::get($line, 'amount', 0));
+                $tax = $formatAmount(A::get($line, 'tax_amount', 0));
+                $discount = $formatAmount(A::get($line, 'discount_amount', 0));
+
+                $data['items'][] = [
+                    'key' => ['page://'.$uuid(null, ['id' => $productId])],  // pages field expect an array
+                    'variant' => A::get($line, 'description', A::get($line, 'name', '')),
+                    'quantity' => intval(A::get($line, 'quantity', 1)),
+                    'price' => $formatAmount(A::get($line, 'unit_price', A::get($line, 'unit_amount', $amount))),
+                    // these values include the multiplication with quantity
+                    'total' => $amount,
+                    'subtotal' => max(0, $amount - $tax - $discount),
+                    'tax' => $tax,
+                    'discount' => $discount,
+                    'licensekey' => $likey($data + ['line' => $line, 'order' => $order]),
+                ];
+            }
+        }
+
+        $this->kirby->session()->remove('bnomei.kart.'.$this->name.'.session_id');
+
+        return parent::completed($data);
+    }
+
     public function fetchProducts(): array
     {
         $products = [];
