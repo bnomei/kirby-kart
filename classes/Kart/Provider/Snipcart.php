@@ -68,6 +68,11 @@ class Snipcart extends Provider
 
         $paymentStatus = strtolower(strval(A::get($content, 'paymentStatus', A::get($content, 'status', ''))));
 
+        // process only paid/processed or completed orders to avoid duplicate drafts
+        if ($event !== 'order.completed' && ! in_array($paymentStatus, ['paid', 'processed'], true)) {
+            return WebhookResult::ignored('payment not completed');
+        }
+
         $data = array_filter([
             'email' => A::get($content, 'email', A::get($content, 'user.email')),
             'customer' => array_filter([
@@ -113,6 +118,8 @@ class Snipcart extends Provider
         if ($eventId !== '') {
             $this->rememberWebhook($eventId);
         }
+
+        kart()->cart()->complete($data);
 
         return WebhookResult::ok($data, 'Snipcart webhook processed');
     }
