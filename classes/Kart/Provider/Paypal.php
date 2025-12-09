@@ -82,6 +82,43 @@ class Paypal extends Provider
         $lines = A::get($options, 'items', []);
         unset($options['items']);
 
+        // allow checkout_options to pass optional breakdown adjustments
+        $cartSubtotal = $this->kart->cart()->subtotal();
+        $taxTotal = floatval(A::pull($options, 'tax_total', 0));
+        $shipping = floatval(A::pull($options, 'shipping', 0));
+        $handling = floatval(A::pull($options, 'handling', 0));
+        $insurance = floatval(A::pull($options, 'insurance', 0));
+        $shippingDiscount = floatval(A::pull($options, 'shipping_discount', 0));
+        $discount = floatval(A::pull($options, 'discount', 0));
+
+        $money = fn (float $amount) => [
+            'currency_code' => $currency,
+            'value' => number_format(max(0, $amount), 2),
+        ];
+
+        $breakdown = [
+            'item_total' => $money($cartSubtotal),
+            'tax_total' => $money($taxTotal),
+        ];
+
+        if ($shipping > 0) {
+            $breakdown['shipping'] = $money($shipping);
+        }
+        if ($handling > 0) {
+            $breakdown['handling'] = $money($handling);
+        }
+        if ($insurance > 0) {
+            $breakdown['insurance'] = $money($insurance);
+        }
+        if ($shippingDiscount > 0) {
+            $breakdown['shipping_discount'] = $money($shippingDiscount);
+        }
+        if ($discount > 0) {
+            $breakdown['discount'] = $money($discount);
+        }
+
+        $amountValue = $cartSubtotal + $taxTotal + $shipping + $handling + $insurance - $shippingDiscount - $discount;
+
         // https://developer.paypal.com/docs/api/orders/v2/#orders_create
         $remote = Remote::post($endpoint.'/v2/checkout/orders', [
             'headers' => $this->headers(),
@@ -106,23 +143,9 @@ class Paypal extends Provider
                         // 'invoice_id' => strtoupper($uuid), // TODO: get invnum for next? locking?
                         'amount' => [
                             'currency_code' => $currency,
-                            'value' => number_format($this->kart->cart()->subtotal(), 2),
+                            'value' => number_format(max(0, $amountValue), 2),
                             // https://developer.paypal.com/docs/api/orders/v2/#orders_create!ct=application/json&path=purchase_units/amount/breakdown&t=request
-                            'breakdown' => [
-                                'item_total' => [
-                                    'currency_code' => $currency,
-                                    'value' => number_format($this->kart->cart()->subtotal(), 2),
-                                ],
-                                'tax_total' => [
-                                    'currency_code' => $currency,
-                                    'value' => number_format(0, 2),
-                                ],
-                                'discount' => [
-                                    'currency_code' => $currency,
-                                    'value' => number_format(0, 2),
-                                ],
-                                // 'shipping' => [],
-                            ],
+                            'breakdown' => $breakdown,
                         ],
                         'items' => array_merge($lines, $this->kart->cart()->lines()->values(fn (CartLine $l) => array_merge([
                             'sku' => $l->product()?->uuid()->id(), // used on completed again to find the product
