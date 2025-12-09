@@ -32,12 +32,6 @@ class Fastspring extends Provider
         ];
     }
 
-    public function checkout(): string
-    {
-        // NOTE: webhook-only integration; Kart expects FastSpring webhooks to finalize orders and does not initiate sessions here.
-        return parent::checkout() ?? '/';
-    }
-
     public function supportsWebhooks(): bool
     {
         return true;
