@@ -17,6 +17,7 @@ use Bnomei\Kart\VirtualPage;
 use Bnomei\Kart\WebhookResult;
 use Kirby\Http\Remote;
 use Kirby\Toolkit\A;
+use Kirby\Toolkit\Str;
 
 class Invoiceninja extends Provider
 {
@@ -24,8 +25,50 @@ class Invoiceninja extends Provider
 
     public function checkout(): string
     {
-        // NOTE: webhook-only integration; Kart expects Invoice Ninja webhooks for payment confirmation and does not initiate hosted links here.
-        return parent::checkout() ?? '/';
+        // create invoice + hosted payment link
+        $clientId = strval($this->option('client_id', true) ?? '');
+        if ($clientId === '') {
+            return '/';
+        }
+
+        $lineItems = [];
+        foreach ($this->kart->cart()->lines() as $line) {
+            $price = floatval($line->price());
+            $lineItems[] = array_filter([
+                'product_key' => $line->product()?->id() ?? $line->id(),
+                'notes' => $line->product()?->title()->value(),
+                'cost' => $price,
+                'quantity' => max(1, intval($line->quantity())),
+            ], fn ($value) => $value !== null && $value !== '' && $value !== []);
+        }
+
+        if (empty($lineItems)) {
+            return '/';
+        }
+
+        $remote = Remote::post($this->endpoint().'/invoices', [
+            'headers' => $this->headers(json: true),
+            'data' => json_encode(array_filter([
+                'client_id' => $clientId,
+                'line_items' => $lineItems,
+                'status_id' => 1, // draft sent for payment
+            ]), JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE),
+        ]);
+
+        $json = in_array($remote->code(), [200, 201]) ? $remote->json() : null;
+        if (! is_array($json)) {
+            return '/';
+        }
+
+        $invoice = A::get($json, 'data', $json);
+        $invitation = A::first(
+            A::get($invoice, 'invitations', []),
+            fn ($i) => is_array($i) && (A::get($i, 'link') || A::get($i, 'key'))
+        );
+
+        $link = is_array($invitation) ? (A::get($invitation, 'link') ?: $this->portalLinkFromKey(strval(A::get($invitation, 'key')))) : null;
+
+        return parent::checkout() && $link ? $link : '/';
     }
 
     public function supportsWebhooks(): bool
@@ -36,7 +79,16 @@ class Invoiceninja extends Provider
     public function handleWebhook(array $payload, array $headers = []): WebhookResult
     {
         $headers = array_change_key_case($headers, CASE_LOWER);
-        $eventId = $this->extractEventId($payload, $headers);
+        $eventId = $this->firstValue([
+            A::get($payload, 'event_id'),
+            A::get($payload, 'id'),
+            A::get($payload, 'activity_id'),
+            A::get($payload, 'data.id'),
+            A::get($payload, 'data.event_id'),
+            A::get($headers, 'x-event-id'),
+            A::get($headers, 'x-invoiceninja-event'),
+        ]);
+        $eventId = $eventId ? strval($eventId) : null;
 
         if ($eventId && $this->isDuplicateWebhook($eventId)) {
             return WebhookResult::ignored('duplicate webhook');
@@ -46,7 +98,13 @@ class Invoiceninja extends Provider
             return WebhookResult::invalid('invalid signature');
         }
 
-        $event = $this->extractEventName($payload);
+        $event = $this->firstValue([
+            A::get($payload, 'event'),
+            A::get($payload, 'event_name'),
+            A::get($payload, 'type'),
+            A::get($payload, 'activity'),
+        ]);
+        $event = $event ? strtolower(strval($event)) : null;
         $allowed = $this->option('webhook_events');
         if (is_array($allowed) && ! empty($allowed) && $event && ! in_array($event, array_map(
             static fn ($value) => strtolower(strval($value)),
@@ -55,9 +113,20 @@ class Invoiceninja extends Provider
             return WebhookResult::ignored('event not handled');
         }
 
-        $invoice = $this->extractInvoiceFromPayload($payload);
-        if (! $invoice && ($invoiceId = $this->extractInvoiceId($payload))) {
-            $invoice = $this->fetchInvoice($invoiceId);
+        $invoice = $this->firstArray([
+            A::get($payload, 'invoice'),
+            A::get($payload, 'data.invoice'),
+            A::get($payload, 'data.data.invoice'),
+        ]);
+        if (! $invoice && ($invoiceId = $this->firstValue([
+            A::get($payload, 'invoice_id'),
+            A::get($payload, 'invoiceId'),
+            A::get($payload, 'data.invoice_id'),
+            A::get($payload, 'data.invoice.id'),
+            A::get($payload, 'data.payment.invoice_id'),
+            A::get($payload, 'invoice.id'),
+        ]))) {
+            $invoice = $this->fetchInvoice(strval($invoiceId));
         }
 
         if (! is_array($invoice)) {
@@ -75,14 +144,6 @@ class Invoiceninja extends Provider
         }
 
         return WebhookResult::ok($orderData, $event ?: 'invoice.ninja.webhook');
-    }
-
-    public function completed(array $data = []): array
-    {
-        // Invoice Ninja requires webhooks to confirm payments; nothing to poll here.
-        $this->kirby->session()->remove('bnomei.kart.'.$this->name.'.session_id');
-
-        return parent::completed($data);
     }
 
     public function fetchProducts(): array
@@ -130,91 +191,6 @@ class Invoiceninja extends Provider
             ],
             $this->kart->page(ContentPageEnum::PRODUCTS))
         )->mixinProduct($data)->toArray(), $products);
-    }
-
-    private function extractEventName(array $payload): ?string
-    {
-        $event = A::get($payload, 'event') ??
-            A::get($payload, 'event_name') ??
-            A::get($payload, 'type') ??
-            A::get($payload, 'activity');
-
-        return $event ? strtolower(strval($event)) : null;
-    }
-
-    private function extractEventId(array $payload, array $headers): ?string
-    {
-        $candidates = [
-            A::get($payload, 'event_id'),
-            A::get($payload, 'id'),
-            A::get($payload, 'activity_id'),
-            A::get($payload, 'data.id'),
-            A::get($payload, 'data.event_id'),
-            A::get($headers, 'x-event-id'),
-            A::get($headers, 'x-invoiceninja-event'),
-        ];
-
-        foreach ($candidates as $candidate) {
-            if ($candidate) {
-                return strval($candidate);
-            }
-        }
-
-        return null;
-    }
-
-    private function extractInvoiceId(array $payload): ?string
-    {
-        $candidates = [
-            A::get($payload, 'invoice_id'),
-            A::get($payload, 'invoiceId'),
-            A::get($payload, 'data.invoice_id'),
-            A::get($payload, 'data.invoice.id'),
-            A::get($payload, 'data.payment.invoice_id'),
-            A::get($payload, 'invoice.id'),
-        ];
-
-        foreach ($candidates as $candidate) {
-            if ($candidate) {
-                return strval($candidate);
-            }
-        }
-
-        return null;
-    }
-
-    private function extractInvoiceFromPayload(array $payload): ?array
-    {
-        $candidates = [
-            A::get($payload, 'invoice'),
-            A::get($payload, 'data.invoice'),
-            A::get($payload, 'data.data.invoice'),
-        ];
-
-        foreach ($candidates as $candidate) {
-            if (is_array($candidate)) {
-                return $candidate;
-            }
-        }
-
-        return null;
-    }
-
-    private function extractPaymentFromPayload(array $payload): array
-    {
-        $candidates = [
-            A::get($payload, 'payment'),
-            A::get($payload, 'data.payment'),
-            A::get($payload, 'data.data.payment'),
-        ];
-
-        foreach ($candidates as $candidate) {
-            if (is_array($candidate)) {
-                return $candidate;
-            }
-        }
-
-        return [];
     }
 
     private function verifySignature(array $payload, array $headers): bool
@@ -291,7 +267,11 @@ class Invoiceninja extends Provider
             }
         }
 
-        $payment = $this->extractPaymentFromPayload($payload);
+        $payment = $this->firstArray([
+            A::get($payload, 'payment'),
+            A::get($payload, 'data.payment'),
+            A::get($payload, 'data.data.payment'),
+        ]) ?? [];
 
         $email = $contactEmail ??
             A::get($client, 'email') ??
@@ -379,6 +359,28 @@ class Invoiceninja extends Provider
         return $items;
     }
 
+    private function firstValue(array $candidates): mixed
+    {
+        foreach ($candidates as $candidate) {
+            if ($candidate) {
+                return $candidate;
+            }
+        }
+
+        return null;
+    }
+
+    private function firstArray(array $candidates): ?array
+    {
+        foreach ($candidates as $candidate) {
+            if (is_array($candidate)) {
+                return $candidate;
+            }
+        }
+
+        return null;
+    }
+
     private function normalizeDate(int|string|null $value): ?string
     {
         if ($value === null || $value === '') {
@@ -402,6 +404,20 @@ class Invoiceninja extends Provider
         $endpoint = strval($this->option('endpoint'));
 
         return rtrim($endpoint ?: 'https://app.invoicing.co/api/v1', '/');
+    }
+
+    private function portalLinkFromKey(string $invitationKey): ?string
+    {
+        if ($invitationKey === '') {
+            return null;
+        }
+
+        $base = rtrim(Str::before($this->endpoint(), '/api'), '/');
+        if ($base === '') {
+            $base = 'https://app.invoicing.co';
+        }
+
+        return $base.'/client/invoice/'.$invitationKey;
     }
 
     private function headers(bool $json = false): array
