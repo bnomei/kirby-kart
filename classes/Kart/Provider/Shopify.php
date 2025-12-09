@@ -10,6 +10,7 @@
 
 namespace Bnomei\Kart\Provider;
 
+use Bnomei\Kart\CartLine;
 use Bnomei\Kart\ContentPageEnum;
 use Bnomei\Kart\Provider;
 use Bnomei\Kart\ProviderEnum;
@@ -21,6 +22,92 @@ use Kirby\Toolkit\A;
 class Shopify extends Provider
 {
     protected string $name = ProviderEnum::SHOPIFY->value;
+
+    public function checkout(): string
+    {
+        $lines = [];
+        foreach ($this->kart->cart()->lines() as $line) {
+            $product = $line->product();
+            $variantData = $product?->variantDataForVariant($line->variant(), resolveImage: false);
+            if (! $variantData && $product) {
+                $variants = $product->variantData(false);
+                $variantData = reset($variants) ?: null;
+            }
+
+            $variantId = $variantData['price_id'] ?? null;
+            if (! $variantId) {
+                continue;
+            }
+
+            $lines[] = [
+                'merchandiseId' => $this->variantGid(strval($variantId)),
+                'quantity' => max(1, $line->quantity()),
+            ];
+        }
+
+        if (empty($lines)) {
+            throw new \RuntimeException('No Shopify cart lines to process');
+        }
+
+        $checkoutFormData = $this->kirby->session()->get('bnomei.kart.checkout_form_data', []);
+        $buyerIdentity = array_filter([
+            'email' => A::get($checkoutFormData, 'email') ?? $this->kirby->user()?->email(),
+            'phone' => A::get($checkoutFormData, 'phone'),
+            'firstName' => A::get($checkoutFormData, 'first_name'),
+            'lastName' => A::get($checkoutFormData, 'last_name'),
+        ], fn ($v) => $v !== null && $v !== '');
+
+        $input = array_filter([
+            'lines' => $lines,
+            'buyerIdentity' => empty($buyerIdentity) ? null : $buyerIdentity,
+        ]);
+
+        $remote = Remote::post($this->storefrontEndpoint(), [
+            'headers' => $this->storefrontHeaders(),
+            'data' => json_encode([
+                'query' => <<<'GQL'
+mutation cartCreate($input: CartInput!) {
+  cartCreate(input: $input) {
+    cart {
+      id
+      checkoutUrl
+    }
+    userErrors {
+      field
+      message
+    }
+  }
+}
+GQL,
+                'variables' => [
+                    'input' => $input,
+                ],
+            ]),
+        ]);
+
+        $json = $remote->code() === 200 ? $remote->json() : null;
+        $errors = is_array($json) ? A::get($json, 'errors', []) : [];
+        $userErrors = is_array($json) ? A::get($json, 'data.cartCreate.userErrors', []) : [];
+
+        if (! empty($errors)) {
+            throw new \RuntimeException('Shopify cartCreate failed: '.json_encode($errors));
+        }
+        if (! empty($userErrors)) {
+            throw new \RuntimeException('Shopify cartCreate user errors: '.json_encode($userErrors));
+        }
+
+        $checkoutUrl = is_array($json) ? A::get($json, 'data.cartCreate.cart.checkoutUrl') : null;
+        if (! $checkoutUrl) {
+            throw new \RuntimeException('Shopify cartCreate returned no checkoutUrl');
+        }
+
+        $channel = strval($this->option('checkout_channel') ?? 'headless-storefront');
+        if ($channel !== '') {
+            $checkoutUrl .= (str_contains($checkoutUrl, '?') ? '&' : '?').'channel='.$channel;
+        }
+
+        return parent::checkout() ? $checkoutUrl : '/';
+    }
 
     public function supportsWebhooks(): bool
     {
@@ -51,7 +138,7 @@ class Shopify extends Provider
         }
 
         $topic = strval(A::get($headers, 'x-shopify-topic', ''));
-        if (! in_array($topic, ['orders/create', 'orders/paid', 'orders/fulfilled'], true)) {
+        if ($topic !== 'orders/paid') {
             return WebhookResult::ignored('topic not handled');
         }
 
@@ -99,6 +186,8 @@ class Shopify extends Provider
             'items' => $items,
             'raw' => $payload,
         ], fn ($v) => $v !== null && $v !== []);
+
+        kart()->cart()->complete($orderData);
 
         return WebhookResult::ok($orderData, 'Shopify webhook processed');
     }
@@ -187,5 +276,26 @@ class Shopify extends Provider
             'X-Shopify-Access-Token' => strval($this->option('admin_token')),
             'Accept' => 'application/json',
         ];
+    }
+
+    private function storefrontEndpoint(): string
+    {
+        $domain = rtrim(strval($this->option('store_domain')), '/');
+        $version = strval($this->option('api_version') ?? '2025-01');
+
+        return 'https://'.$domain.'/api/'.$version.'/graphql.json';
+    }
+
+    private function storefrontHeaders(): array
+    {
+        return [
+            'Content-Type' => 'application/json',
+            'X-Shopify-Storefront-Access-Token' => strval($this->option('storefront_token')),
+        ];
+    }
+
+    private function variantGid(string $variantId): string
+    {
+        return str_contains($variantId, 'gid://') ? $variantId : 'gid://shopify/ProductVariant/'.$variantId;
     }
 }

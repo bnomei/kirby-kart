@@ -412,10 +412,11 @@ App::plugin(
                     'store_domain' => fn () => kart_env('SHOPIFY_STORE_DOMAIN'),
                     'admin_token' => fn () => kart_env('SHOPIFY_ADMIN_TOKEN'),
                     'storefront_token' => fn () => kart_env('SHOPIFY_STOREFRONT_TOKEN'),
-                    'api_version' => fn () => kart_env('SHOPIFY_API_VERSION', '2024-07'),
+                    'api_version' => fn () => kart_env('SHOPIFY_API_VERSION', '2025-01'),
+                    'checkout_channel' => fn () => kart_env('SHOPIFY_CHECKOUT_CHANNEL', 'headless-storefront'),
                     'webhook_secret' => fn () => kart_env('SHOPIFY_WEBHOOK_SECRET'),
                     'checkout_options' => function (Kart $kart) {
-                        // https://shopify.dev/docs/api/storefront/latest/mutations/checkoutCreate
+                        // https://shopify.dev/docs/storefronts/headless/building-with-the-storefront-api/cart/manage
                         return [];
                     },
                     'checkout_line' => function (Kart $kart, CartLine $line) {
