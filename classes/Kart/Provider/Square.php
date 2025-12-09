@@ -44,6 +44,10 @@ class Square extends Provider
         $quickPay = A::get($options, 'quick_pay');
         unset($options['quick_pay']);
 
+        if (is_array($quickPay) && ! array_key_exists('location_id', $quickPay)) {
+            $quickPay['location_id'] = $this->option('location_id');
+        }
+
         $orderLines = A::get($orderOptions, 'line_items', []);
         unset($orderOptions['line_items']);
 
@@ -56,7 +60,7 @@ class Square extends Provider
                 'quantity' => strval($l->quantity()),
                 'item_type' => 'ITEM',
                 'base_price_money' => [
-                    'amount' => intval($l->price() * 100),
+                    'amount' => (int) round($l->price() * 100),
                     'currency' => $this->kart->currency(),
                 ],
                 // catalog_object_id
@@ -110,7 +114,7 @@ class Square extends Provider
     public function completed(array $data = []): array
     {
         // get session from current session id param
-        $sessionId = get('order_id');
+        $sessionId = get('orderId') ?? get('order_id');
         if (! $sessionId || ! is_string($sessionId) || $sessionId !== $this->kirby->session()->get('bnomei.kart.'.$this->name.'.session_id')) {
             return [];
         }
