@@ -299,7 +299,7 @@ class Lemonsqueezy extends Provider
                 'email' => A::get($attributes, 'user_email'),
                 'name' => A::get($attributes, 'user_name'),
             ]),
-            'paidDate' => ($created = A::get($attributes, 'created_at')) ? date('Y-m-d H:i:s', strtotime((string) $created)) : null,
+            'paidDate' => $this->normalizeDate(A::get($attributes, 'created_at')),
             'paymentComplete' => A::get($attributes, 'status') === 'paid' && ! A::get($attributes, 'refunded', false),
             'invoiceurl' => A::get($attributes, 'urls.receipt'),
             'paymentId' => A::get($order, 'id'),
@@ -310,7 +310,6 @@ class Lemonsqueezy extends Provider
             return [];
         }
 
-        /** @var \Closure $likey */
         $likey = kart()->option('licenses.license.uuid');
 
         $firstItem = A::get($attributes, 'first_order_item', []);
@@ -347,7 +346,7 @@ class Lemonsqueezy extends Provider
                 'email' => A::get($attributes, 'user_email'),
                 'name' => A::get($attributes, 'user_name'),
             ]),
-            'paidDate' => ($created = A::get($attributes, 'created_at')) ? date('Y-m-d H:i:s', strtotime((string) $created)) : null,
+            'paidDate' => $this->normalizeDate(A::get($attributes, 'created_at')),
             'paymentComplete' => A::get($attributes, 'status') === 'paid' && ! A::get($attributes, 'refunded', false),
             'invoiceurl' => A::get($attributes, 'urls.invoice_url'),
             'paymentId' => A::get($invoice, 'id'),
@@ -358,7 +357,6 @@ class Lemonsqueezy extends Provider
             return [];
         }
 
-        /** @var \Closure $likey */
         $likey = kart()->option('licenses.license.uuid');
 
         $productId = A::get($subscriptionAttributes, 'product_id');
@@ -366,7 +364,7 @@ class Lemonsqueezy extends Provider
             $quantity = max(1, intval(A::get($subscriptionAttributes, 'first_subscription_item.quantity', 1)));
             $total = round(A::get($attributes, 'total', 0) / 100.0, 2);
             $subtotal = round(A::get($attributes, 'subtotal', $total) / 100.0, 2);
-            $price = $quantity > 0 ? round($subtotal / $quantity, 2) : $subtotal;
+            $price = round($subtotal / max(1, $quantity), 2);
             $data['items'][] = array_filter([
                 'key' => ['page://'.$uuid(null, ['id' => $productId])],
                 'variant' => 'variant:'.A::get($subscriptionAttributes, 'variant_name', 'default'),
@@ -381,6 +379,17 @@ class Lemonsqueezy extends Provider
         }
 
         return $data;
+    }
+
+    private function normalizeDate(int|string|null $value): ?string
+    {
+        if ($value === null || $value === '') {
+            return null;
+        }
+
+        $timestamp = is_numeric($value) ? intval($value) : strtotime((string) $value);
+
+        return $timestamp !== false ? date('Y-m-d H:i:s', $timestamp) : null;
     }
 
     private function fetchOrder(string $orderId): ?array
