@@ -61,10 +61,17 @@ class Invoiceninja extends Provider
         }
 
         $invoice = A::get($json, 'data', $json);
-        $invitation = A::first(
-            A::get($invoice, 'invitations', []),
-            fn ($i) => is_array($i) && (A::get($i, 'link') || A::get($i, 'key'))
-        );
+        $invitation = null;
+        foreach (A::get($invoice, 'invitations', []) as $candidate) {
+            if (! is_array($candidate)) {
+                continue;
+            }
+
+            if (A::get($candidate, 'link') || A::get($candidate, 'key')) {
+                $invitation = $candidate;
+                break;
+            }
+        }
 
         $link = is_array($invitation) ? (A::get($invitation, 'link') ?: $this->portalLinkFromKey(strval(A::get($invitation, 'key')))) : null;
 
