@@ -22,12 +22,6 @@ class Shopify extends Provider
 {
     protected string $name = ProviderEnum::SHOPIFY->value;
 
-    public function checkout(): string
-    {
-        // NOTE: webhook-only integration; Shopify requires webhooks for checkout completion and disallows polling for status.
-        return parent::checkout() ?? '/';
-    }
-
     public function supportsWebhooks(): bool
     {
         return true;
@@ -107,14 +101,6 @@ class Shopify extends Provider
         ], fn ($v) => $v !== null && $v !== []);
 
         return WebhookResult::ok($orderData, 'Shopify webhook processed');
-    }
-
-    public function completed(array $data = []): array
-    {
-        // Shopify checkout completion should be handled via webhooks; there is no safe polling path here.
-        $this->kirby->session()->remove('bnomei.kart.'.$this->name.'.session_id');
-
-        return parent::completed($data);
     }
 
     public function fetchProducts(): array
