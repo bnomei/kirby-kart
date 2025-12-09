@@ -84,12 +84,18 @@ class Paypal extends Provider
 
         // allow checkout_options to pass optional breakdown adjustments
         $cartSubtotal = $this->kart->cart()->subtotal();
-        $taxTotal = floatval(A::pull($options, 'tax_total', 0));
-        $shipping = floatval(A::pull($options, 'shipping', 0));
-        $handling = floatval(A::pull($options, 'handling', 0));
-        $insurance = floatval(A::pull($options, 'insurance', 0));
-        $shippingDiscount = floatval(A::pull($options, 'shipping_discount', 0));
-        $discount = floatval(A::pull($options, 'discount', 0));
+        $taxTotal = floatval($options['tax_total'] ?? 0);
+        unset($options['tax_total']);
+        $shipping = floatval($options['shipping'] ?? 0);
+        unset($options['shipping']);
+        $handling = floatval($options['handling'] ?? 0);
+        unset($options['handling']);
+        $insurance = floatval($options['insurance'] ?? 0);
+        unset($options['insurance']);
+        $shippingDiscount = floatval($options['shipping_discount'] ?? 0);
+        unset($options['shipping_discount']);
+        $discount = floatval($options['discount'] ?? 0);
+        unset($options['discount']);
 
         $money = fn (float $amount) => [
             'currency_code' => $currency,
