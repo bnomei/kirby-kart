@@ -15,6 +15,7 @@ use Bnomei\Kart\Provider;
 use Bnomei\Kart\ProviderEnum;
 use Bnomei\Kart\Router;
 use Bnomei\Kart\VirtualPage;
+use Bnomei\Kart\WebhookResult;
 use Closure;
 use Kirby\Http\Remote;
 use Kirby\Toolkit\A;
@@ -100,71 +101,79 @@ class Lemonsqueezy extends Provider
             A::get($json, 'data.attributes.url') : '/';
     }
 
-    public function completed(array $data = []): array
+    public function supportsWebhooks(): bool
     {
-        // get session from current session id param
-        $sessionId = $this->kirby->session()->get('bnomei.kart.'.$this->name.'.session_id');
-        if (! $sessionId || ! is_string($sessionId)) {
-            return [];
+        return true;
+    }
+
+    public function handleWebhook(array $payload, array $headers = []): WebhookResult
+    {
+        // https://docs.lemonsqueezy.com/help/webhooks/signing-requests
+        $headers = array_change_key_case($headers, CASE_LOWER);
+        $raw = strval(A::get($headers, '@raw_body', A::get($payload, '_raw', '')));
+        $signature = trim(strval(A::get($headers, 'x-signature', '')));
+        $secret = strval($this->option('webhook_secret', true) ?? '');
+
+        if ($secret === '' || $raw === '' || $signature === '') {
+            return WebhookResult::invalid('missing webhook secret, raw body, or signature');
         }
 
-        $orderId = get('order_id');
-        if (! $orderId || ! is_string($orderId)) {
-            return [];
+        if (! hash_equals(hash_hmac('sha256', $raw, $secret), $signature)) {
+            return WebhookResult::invalid('invalid webhook signature');
         }
 
-        $remote = Remote::get('https://api.lemonsqueezy.com/v1/orders/'.$orderId, [
-            'headers' => [
-                'Content-Type' => 'application/vnd.api+json',
-                'Authorization' => 'Bearer '.strval($this->option('secret_key')),
-            ],
-        ]);
+        $event = strtolower(strval(A::get($payload, 'meta.event_name', A::get($headers, 'x-event-name', ''))));
 
-        $json = $remote->code() === 200 ? $remote->json() : null;
-        if (! is_array($json)) {
-            return [];
+        $allowed = $this->option('webhook_events');
+        if (is_array($allowed) && $event && ! in_array($event, array_map(
+            static fn ($value) => strtolower(strval($value)),
+            $allowed
+        ), true)) {
+            return WebhookResult::ignored('event not handled');
         }
 
-        $data = array_merge($data, array_filter([
-            // 'session_id' => $sessionId,
-            'email' => A::get($json, 'data.attributes.user_email'),
-            'customer' => [
-                'id' => A::get($json, 'data.attributes.customer_id'),
-                'email' => A::get($json, 'data.attributes.user_email'),
-                'name' => A::get($json, 'data.attributes.user_name'),
-            ],
-            'paidDate' => date('Y-m-d H:i:s', strtotime(A::get($json, 'data.attributes.created_at'))),
-            // 'paymentMethod' => implode(',', A::get($json, 'payment_method_types', [])),
-            'paymentComplete' => A::get($json, 'data.attributes.status') === 'paid',
-            'invoiceurl' => A::get($json, 'data.attributes.urls.receipt'), // NOTE: only set for subscriptions
-            'paymentId' => A::get($json, 'data.id'),
-        ]));
-
-        $uuid = kart()->option('products.product.uuid');
-        if ($uuid instanceof Closure === false) {
-            return [];
+        $data = A::get($payload, 'data', $payload);
+        if (! is_array($data)) {
+            return WebhookResult::invalid('missing webhook payload data');
         }
 
-        /** @var \Closure $likey */
-        $likey = kart()->option('licenses.license.uuid');
+        $eventId = strval(
+            A::get($headers, 'x-event-id') ??
+            A::get($payload, 'meta.event_id') ??
+            A::get($data, 'id')
+        );
+        if ($eventId !== '' && $this->isDuplicateWebhook($eventId)) {
+            return WebhookResult::ignored('duplicate webhook');
+        }
 
-        // https://docs.lemonsqueezy.com/api/variants/the-variant-object
-        $data['items'][] = [
-            'key' => ['page://'.$uuid(null, ['id' => A::get($json, 'data.attributes.first_order_item.product_id')])],  // pages field expect an array
-            'variant' => 'variant:'.A::get($json, 'data.attributes.first_order_item.variant_name', 'default'),
-            'quantity' => 1, // lemonsqueeze ever only sells one item at a time
-            'price' => round(A::get($json, 'data.attributes.first_order_item.price', 0) / 100.0, 2),
-            // these values include the multiplication with quantity
-            'total' => round(A::get($json, 'data.attributes.total', 0) / 100.0, 2),
-            'subtotal' => round(A::get($json, 'data.attributes.subtotal', 0) / 100.0, 2),
-            'tax' => round(A::get($json, 'data.attributes.tax', 0) / 100.0, 2),
-            'discount' => round(A::get($json, 'data.attributes.discount_total', 0) / 100.0, 2),
-            'licensekey' => $likey($data + $json), // TODO: get the id and instance name and join with |
-        ];
+        $type = strtolower(strval(A::get($data, 'type', A::get($payload, 'type', ''))));
+        $orderData = [];
 
-        $this->kirby->session()->remove('bnomei.kart.'.$this->name.'.session_id');
+        if ($type === 'orders') {
+            $orderData = $this->mapOrderData($data);
+        } elseif (in_array($type, ['subscription-invoices', 'subscription_invoices'], true)) {
+            $subscription = null;
+            $subscriptionId = strval(A::get($data, 'attributes.subscription_id', A::get($payload, 'subscription_id', '')));
+            if ($subscriptionId !== '') {
+                $subscription = $this->fetchSubscription($subscriptionId);
+            }
+            $orderData = $this->mapSubscriptionInvoice($data, $subscription);
+        } elseif ($orderId = strval(A::get($payload, 'order_id', ''))) {
+            $order = $this->fetchOrder($orderId);
+            if ($order) {
+                $orderData = $this->mapOrderData($order);
+            }
+        }
 
-        return parent::completed($data);
+        if (empty($orderData)) {
+            return WebhookResult::invalid('unable to map webhook payload');
+        }
+
+        if ($eventId !== '') {
+            $this->rememberWebhook($eventId);
+        }
+
+        return WebhookResult::ok($orderData, 'Lemon Squeezy webhook processed');
     }
 
     public function fetchProducts(): array
@@ -277,5 +286,128 @@ class Lemonsqueezy extends Provider
 
         // one-time orders
         return 'https://app.lemonsqueezy.com/my-orders';
+    }
+
+    private function mapOrderData(array $order): array
+    {
+        $attributes = A::get($order, 'attributes', $order);
+
+        $data = array_filter([
+            'email' => A::get($attributes, 'user_email'),
+            'customer' => array_filter([
+                'id' => A::get($attributes, 'customer_id'),
+                'email' => A::get($attributes, 'user_email'),
+                'name' => A::get($attributes, 'user_name'),
+            ]),
+            'paidDate' => ($created = A::get($attributes, 'created_at')) ? date('Y-m-d H:i:s', strtotime((string) $created)) : null,
+            'paymentComplete' => A::get($attributes, 'status') === 'paid' && ! A::get($attributes, 'refunded', false),
+            'invoiceurl' => A::get($attributes, 'urls.receipt'),
+            'paymentId' => A::get($order, 'id'),
+        ]);
+
+        $uuid = kart()->option('products.product.uuid');
+        if ($uuid instanceof Closure === false) {
+            return [];
+        }
+
+        /** @var \Closure $likey */
+        $likey = kart()->option('licenses.license.uuid');
+
+        $firstItem = A::get($attributes, 'first_order_item', []);
+        $productId = A::get($firstItem, 'product_id');
+
+        if ($productId) {
+            $price = round(A::get($firstItem, 'price', 0) / 100.0, 2);
+            $total = round(A::get($attributes, 'total', A::get($firstItem, 'price', 0)) / 100.0, 2);
+            $data['items'][] = array_filter([
+                'key' => ['page://'.$uuid(null, ['id' => $productId])],
+                'variant' => 'variant:'.A::get($firstItem, 'variant_name', 'default'),
+                'quantity' => 1,
+                'price' => $price,
+                'total' => $total,
+                'subtotal' => round(A::get($attributes, 'subtotal', $total) / 100.0, 2),
+                'tax' => round(A::get($attributes, 'tax', 0) / 100.0, 2),
+                'discount' => round(A::get($attributes, 'discount_total', 0) / 100.0, 2),
+                'licensekey' => $likey instanceof Closure ? $likey($data + $attributes + $order) : null,
+            ], fn ($v) => $v !== null && $v !== '' && $v !== []);
+        }
+
+        return $data;
+    }
+
+    private function mapSubscriptionInvoice(array $invoice, ?array $subscription = null): array
+    {
+        $attributes = A::get($invoice, 'attributes', $invoice);
+        $subscriptionAttributes = $subscription ? A::get($subscription, 'attributes', $subscription) : [];
+
+        $data = array_filter([
+            'email' => A::get($attributes, 'user_email'),
+            'customer' => array_filter([
+                'id' => A::get($attributes, 'customer_id'),
+                'email' => A::get($attributes, 'user_email'),
+                'name' => A::get($attributes, 'user_name'),
+            ]),
+            'paidDate' => ($created = A::get($attributes, 'created_at')) ? date('Y-m-d H:i:s', strtotime((string) $created)) : null,
+            'paymentComplete' => A::get($attributes, 'status') === 'paid' && ! A::get($attributes, 'refunded', false),
+            'invoiceurl' => A::get($attributes, 'urls.invoice_url'),
+            'paymentId' => A::get($invoice, 'id'),
+        ]);
+
+        $uuid = kart()->option('products.product.uuid');
+        if ($uuid instanceof Closure === false) {
+            return [];
+        }
+
+        /** @var \Closure $likey */
+        $likey = kart()->option('licenses.license.uuid');
+
+        $productId = A::get($subscriptionAttributes, 'product_id');
+        if ($productId) {
+            $quantity = max(1, intval(A::get($subscriptionAttributes, 'first_subscription_item.quantity', 1)));
+            $total = round(A::get($attributes, 'total', 0) / 100.0, 2);
+            $subtotal = round(A::get($attributes, 'subtotal', $total) / 100.0, 2);
+            $price = $quantity > 0 ? round($subtotal / $quantity, 2) : $subtotal;
+            $data['items'][] = array_filter([
+                'key' => ['page://'.$uuid(null, ['id' => $productId])],
+                'variant' => 'variant:'.A::get($subscriptionAttributes, 'variant_name', 'default'),
+                'quantity' => $quantity,
+                'price' => $price,
+                'total' => $total,
+                'subtotal' => $subtotal,
+                'tax' => round(A::get($attributes, 'tax', 0) / 100.0, 2),
+                'discount' => round(A::get($attributes, 'discount_total', 0) / 100.0, 2),
+                'licensekey' => $likey instanceof Closure ? $likey($data + $attributes + ['subscription' => $subscriptionAttributes]) : null,
+            ], fn ($v) => $v !== null && $v !== '' && $v !== []);
+        }
+
+        return $data;
+    }
+
+    private function fetchOrder(string $orderId): ?array
+    {
+        $remote = Remote::get('https://api.lemonsqueezy.com/v1/orders/'.$orderId, [
+            'headers' => [
+                'Content-Type' => 'application/vnd.api+json',
+                'Authorization' => 'Bearer '.strval($this->option('secret_key')),
+            ],
+        ]);
+
+        $json = $remote->code() === 200 ? $remote->json() : null;
+
+        return is_array($json) ? A::get($json, 'data') : null;
+    }
+
+    private function fetchSubscription(string $subscriptionId): ?array
+    {
+        $remote = Remote::get('https://api.lemonsqueezy.com/v1/subscriptions/'.$subscriptionId, [
+            'headers' => [
+                'Content-Type' => 'application/vnd.api+json',
+                'Authorization' => 'Bearer '.strval($this->option('secret_key')),
+            ],
+        ]);
+
+        $json = $remote->code() === 200 ? $remote->json() : null;
+
+        return is_array($json) ? A::get($json, 'data') : null;
     }
 }
