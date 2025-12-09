@@ -38,6 +38,37 @@ class Square extends Provider
         $lines = A::get($options, 'line_items', []);
         unset($options['line_items']);
 
+        $orderOptions = A::get($options, 'order', []);
+        unset($options['order']);
+
+        $quickPay = A::get($options, 'quick_pay');
+        unset($options['quick_pay']);
+
+        $orderLines = A::get($orderOptions, 'line_items', []);
+        unset($orderOptions['line_items']);
+
+        $lineItems = array_merge($lines, $orderLines, $this->kart->cart()->lines()->values(function (CartLine $l) use ($lineItem) {
+            return array_merge([
+                'metadata' => [
+                    'product_uuid' => $l->product()?->uuid()->id(),
+                ],
+                'name' => $l->product()?->title()->value(),
+                'quantity' => strval($l->quantity()),
+                'item_type' => 'ITEM',
+                'base_price_money' => [
+                    'amount' => intval($l->price() * 100),
+                    'currency' => $this->kart->currency(),
+                ],
+                // catalog_object_id
+            ], $lineItem($this->kart, $l));
+        }));
+
+        $order = array_filter(array_merge([
+            'location_id' => $this->option('location_id'),
+            'customer_id' => $this->userData('customerId'),
+            'line_items' => $lineItems,
+        ], $orderOptions));
+
         $uuid = Str::uuid();
 
         // https://developer.squareup.com/reference/square/checkout-api/create-payment-link
@@ -49,8 +80,6 @@ class Square extends Provider
             ]),
             'data' => json_encode(array_filter(array_merge([
                 'idempotency_key' => $uuid,
-                'location_id' => $this->option('location_id'),
-                'customer_id' => $this->userData('customerId'),
                 // https://developer.squareup.com/reference/square/checkout-api/create-payment-link#request__property-checkout_options
                 'checkout_options' => [
                     // 'ask_for_shipping_address' => true,
@@ -61,21 +90,7 @@ class Square extends Provider
                     // ?checkoutId=xxxxxx&amp;orderId=xxxxxx&amp;referenceId=xxxxxx&amp;transactionId=xxxxxx
                     'redirect_url' => url(Router::PROVIDER_SUCCESS),
                 ],
-                'line_items' => array_merge($lines, $this->kart->cart()->lines()->values(function (CartLine $l) use ($lineItem) {
-                    return array_merge([
-                        'metadata' => [
-                            'product_uuid' => $l->product()?->uuid()->id(),
-                        ],
-                        'name' => $l->product()?->title()->value(),
-                        'quantity' => $l->quantity(),
-                        'item_type' => 'ITEM',
-                        'base_price_money' => [
-                            'amount' => intval($l->price() * 100),
-                            'currency' => $this->kart->currency(),
-                        ],
-                        // catalog_object_id
-                    ], $lineItem($this->kart, $l));
-                })),
+                $quickPay ? 'quick_pay' : 'order' => $quickPay ?: $order,
             ], $options))),
         ]);
 
