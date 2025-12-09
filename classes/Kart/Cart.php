@@ -359,9 +359,9 @@ class Cart implements Kerbs
         return true;
     }
 
-    public function complete(): string
+    public function complete(?array $data = null): string
     {
-        $data = $this->kart->provider()->completed();
+        $data ??= $this->kart->provider()->completed();
 
         // if the completed URL has been called with an invalid state, die silently
         if (empty($data)) {
