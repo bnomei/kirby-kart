@@ -10,7 +10,6 @@
 
 namespace Bnomei\Kart\Provider;
 
-use Bnomei\Kart\CartLine;
 use Bnomei\Kart\ContentPageEnum;
 use Bnomei\Kart\Provider;
 use Bnomei\Kart\ProviderEnum;
