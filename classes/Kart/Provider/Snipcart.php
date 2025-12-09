@@ -33,12 +33,6 @@ class Snipcart extends Provider
         ];
     }
 
-    public function checkout(): ?string
-    {
-        // NOTE: webhook-only integration; Snipcart order completion should be confirmed via webhooks, no session/redirect is started here.
-        return parent::checkout();
-    }
-
     public function supportsWebhooks(): bool
     {
         return true;
