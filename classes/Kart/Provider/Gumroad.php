@@ -57,8 +57,15 @@ class Gumroad extends Provider
             return WebhookResult::ignored('duplicate webhook');
         }
 
+        if ($event !== 'sale') {
+            return WebhookResult::ignored('event not handled');
+        }
+
         $paidAt = A::get($sale, 'purchased_at', A::get($payload, 'created_at'));
         $refunded = boolval(A::get($sale, 'refunded', false) || A::get($sale, 'disputed', false));
+        if ($refunded) {
+            return WebhookResult::ignored('refunded or disputed');
+        }
 
         $paidAtTimestamp = $paidAt ? strtotime((string) $paidAt) : false;
 
@@ -71,7 +78,7 @@ class Gumroad extends Provider
             ]),
             'paidDate' => $paidAtTimestamp !== false ? date('Y-m-d H:i:s', $paidAtTimestamp) : null,
             'paymentMethod' => A::get($sale, 'card', ''),
-            'paymentComplete' => ! $refunded,
+            'paymentComplete' => true,
             'invoiceurl' => A::get($sale, 'receipt_url', A::get($sale, 'short_url')),
             'paymentId' => $eventId,
         ], fn ($v) => $v !== null && $v !== [] && $v !== '');
@@ -85,10 +92,9 @@ class Gumroad extends Provider
         $likey = kart()->option('licenses.license.uuid');
 
         $quantity = max(1, intval(A::get($sale, 'quantity', 1)));
-        $unit = floatval(A::get($sale, 'price', 0));
-        if ($unit > 0 && $unit >= 100) {
-            $unit = $unit / 100.0; // Gumroad often reports cents
-        }
+        $unitRaw = A::get($sale, 'price', A::get($sale, 'price_cents', 0));
+        $unit = is_int($unitRaw) ? ($unitRaw / 100.0) :
+            (is_string($unitRaw) && ctype_digit($unitRaw) ? (intval($unitRaw) / 100.0) : floatval($unitRaw));
         $total = $unit * $quantity;
 
         $data['items'][] = array_filter([
