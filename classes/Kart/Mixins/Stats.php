@@ -20,7 +20,7 @@ trait Stats
             $customers = kirby()->users()
                 ->customers()
                 ->count();
-            kirby()->cache('bnomei.klub.stats')->set('customers', $customers, 15);
+            kirby()->cache('bnomei.kart.stats')->set('customers', $customers, 15);
         }
 
         $info = null;
