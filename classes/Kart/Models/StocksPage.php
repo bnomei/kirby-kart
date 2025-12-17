@@ -154,7 +154,8 @@ class StocksPage extends Page
 
         // decrement by stock in hold
         if ($withHold && $id && kart()->option('stocks.hold')) {
-            foreach ($this->kirby()->cache('bnomei.kart.stocks-holds')->get('hold-'.Kart::hash($id), []) as $sid => $hold) {
+            $holdKey = 'hold-'.Kart::hash($id.($variant ? '|'.$variant : ''));
+            foreach ($this->kirby()->cache('bnomei.kart.stocks-holds')->get($holdKey, []) as $sid => $hold) {
                 if (strval($sid) === $withHold) {
 
                     continue; // ignore own holds
