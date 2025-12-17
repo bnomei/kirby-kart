@@ -150,8 +150,6 @@ class Invoiceninja extends Provider
             $this->rememberWebhook($eventId);
         }
 
-        kart()->cart()->complete($orderData);
-
         return WebhookResult::ok($orderData, $event ?: 'invoice.ninja.webhook');
     }
 
