@@ -20,7 +20,6 @@ parameters:
         - '#Call to an undefined static method Kirby\\Toolkit\\V::#'
         - '#Cannot call method license\(\) on Kirby\\Plugin\\Plugin\|null#'
         - '#Undefined variable: \$this#'
-        - '/Parameter #1 \$value of function floatval expects/'
         - '/Parameter #1 \$value of function intval expects/'
         - '/Parameter #1 \$value of function strval expects/'
         -
