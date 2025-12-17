@@ -88,7 +88,7 @@ class Polar extends Provider
             $this->kirby->session()->set('bnomei.kart.'.$this->name.'.session_id', $sessionId);
         }
 
-        return parent::checkout() && $remote->code() === 200 ?
+        return parent::checkout() && $remote->code() < 300 ?
             A::get($json, 'url', '/') : '/';
     }
 
