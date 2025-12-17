@@ -39,9 +39,10 @@ class ProductStorage extends PlainTextStorage
                         $this->model()->blueprint()->fields(),
                         fn ($field) => A::get($field, 'virtual') === true
                     ));
-                    foreach ($virtualFields as $field) {
-                        unset($virtualContent[$field]);
-                    }
+                    $virtualContent = array_intersect_key(
+                        $virtualContent,
+                        array_flip($virtualFields)
+                    );
                     $content = A::merge($content, $virtualContent);
                     break;
                 }
