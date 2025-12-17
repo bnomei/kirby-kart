@@ -136,7 +136,7 @@ class OrdersPage extends Page
             'model' => kart()->option('orders.order.model', 'order'),
             // id, title, slug and uuid are automatically generated
             'content' => $data + [
-                'customer' => [$customer?->uuid()->toString()], // kirby user field expects an array
+                'customer' => array_filter([$customer?->uuid()->toString()]), // kirby user field expects an array
             ],
         ]));
 
