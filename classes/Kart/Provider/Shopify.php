@@ -175,6 +175,7 @@ GQL,
 
         $orderData = array_filter([
             'order_id' => $orderId,
+            'paymentId' => 'shopify:'.$orderId,
             'email' => A::get($payload, 'email'),
             'paymentComplete' => A::get($payload, 'financial_status') === 'paid',
             'paidDate' => ($processed = A::get($payload, 'processed_at')) && ($processedTimestamp = strtotime((string) $processed)) !== false
@@ -185,8 +186,6 @@ GQL,
             'items' => $items,
             'raw' => $payload,
         ], fn ($v) => $v !== null && $v !== []);
-
-        kart()->cart()->complete($orderData);
 
         return WebhookResult::ok($orderData, 'Shopify webhook processed');
     }
