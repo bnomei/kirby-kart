@@ -251,9 +251,10 @@ class Kart implements Kerbs
                     $data = (new SymmetricCrypto(password: $password))->decrypt($data);
                 }
             }
-            if ($json) {
-                $data = json_decode((string) $data, true);
-            }
+        }
+
+        if ($json) {
+            $data = json_decode((string) $data, true);
         }
 
         return $data;
