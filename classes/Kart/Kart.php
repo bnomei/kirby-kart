@@ -618,7 +618,7 @@ class Kart implements Kerbs
 
             return new Pages(array_filter(kirby()->cache('bnomei.kart.products')->getOrSet($key, function () use ($categories, $any) {
                 $products = $any ? $this->products()->filterBy('categories', 'in', $categories, ',') :
-                    $this->products()->filterBy(fn ($product) => count(array_diff($categories, $product->tags()->split())) === 0);
+                    $this->products()->filterBy(fn ($product) => count(array_diff($categories, $product->categories()->split())) === 0);
 
                 return array_values($products->toArray(fn (ProductPage $product) => $product->uuid()->toString()));
             }, $expire)), fn ($id) => $this->kirby()->page($id) !== null);
