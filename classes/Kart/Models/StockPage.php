@@ -250,7 +250,10 @@ class StockPage extends Page
     {
         if ($variant) {
             foreach ($this->variants()->toStructure() as $variantItem) {
-                if ($variantItem->variant()->value() === $variant) {
+                $variants = $variantItem->variant()->split();
+                sort($variants);
+                $v = implode(',', $variants); // no whitespace
+                if ($v === $variant) {
                     return new Field($this, 'stock_'.Kart::hash($variant),
                         $variantItem->stock()->isNotEmpty() ? $variantItem->stock()->toInt() : null
                     );
