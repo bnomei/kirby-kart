@@ -187,6 +187,8 @@ GQL,
             'raw' => $payload,
         ], fn ($v) => $v !== null && $v !== []);
 
+        kart()->cart()->complete($orderData);
+
         return WebhookResult::ok($orderData, 'Shopify webhook processed');
     }
 

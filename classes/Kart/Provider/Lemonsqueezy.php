@@ -211,6 +211,8 @@ class Lemonsqueezy extends Provider
             $this->rememberWebhook($eventId);
         }
 
+        kart()->cart()->complete($orderData);
+
         return WebhookResult::ok($orderData, 'Lemon Squeezy webhook processed');
     }
 
