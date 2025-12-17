@@ -44,7 +44,7 @@ class Licenses
         $order = $order ? page($order) : null; // find order by stored uuid
         $customer = $order?->customer()->toUser();
         if (is_null($order)) {
-            $error = 'Order for license key not found';
+            $error ??= 'Order for license key not found';
         }
 
         return [
