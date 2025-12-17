@@ -150,8 +150,6 @@ class Invoiceninja extends Provider
             $this->rememberWebhook($eventId);
         }
 
-        kart()->cart()->complete($orderData);
-
         return WebhookResult::ok($orderData, $event ?: 'invoice.ninja.webhook');
     }
 
@@ -313,7 +311,10 @@ class Invoiceninja extends Provider
                 A::get($invoice, 'date')
             ),
             'paymentMethod' => A::get($payment, 'type') ?? A::get($payment, 'gateway') ?? A::get($payment, 'payment_method'),
-            'paymentId' => A::get($payment, 'transaction_reference') ?? A::get($payment, 'id'),
+            'paymentId' => A::get($payment, 'transaction_reference') ??
+                A::get($payment, 'id') ??
+                A::get($invoice, 'id') ??
+                A::get($invoice, 'number'),
             'paymentComplete' => $this->isInvoicePaid($invoice),
             'invoiceurl' => A::get($invoice, 'download_link') ?? A::get($invoice, 'pdf_url') ?? A::get($invoice, 'url'),
             'items' => $items,
