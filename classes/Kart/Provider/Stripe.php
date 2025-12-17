@@ -70,7 +70,7 @@ class Stripe extends Provider
 
         $this->kirby->session()->set('bnomei.kart.'.$this->name.'.session_id', A::get($json, 'id'));
 
-        return parent::checkout() && $remote->code() === 200 ?
+        return parent::checkout() && in_array($remote->code(), [200, 201], true) ?
             A::get($json, 'url') : '/';
     }
 
