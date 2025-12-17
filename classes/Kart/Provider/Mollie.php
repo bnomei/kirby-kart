@@ -60,6 +60,10 @@ class Mollie extends Provider
             if (is_array($customer)) {
                 $customerId = A::get($customer, 'id');
             }
+
+            if ($customerId && $this->kirby()->user()) {
+                $this->setUserData(['customerId' => $customerId], $this->kirby()->user());
+            }
         }
 
         $locale = $this->kirby->multilang() ? $this->kirby->language()?->locale() : null;
@@ -91,7 +95,7 @@ class Mollie extends Provider
                 'cancelUrl' => url(Router::PROVIDER_CANCEL),
                 'amount' => [
                     'currency' => $this->kart->currency(),
-                    'value' => number_format($this->kart->cart()->subtotal(), 2),
+                    'value' => number_format(max(0, $this->kart->cart()->subtotal()), 2, '.', ''),
                 ],
                 'billingAddress' => $this->kirby()->user() ? [
                     'email' => $this->kirby()->user()->email(),
@@ -104,22 +108,22 @@ class Mollie extends Provider
                     'quantity' => $l->quantity(),
                     'unitPrice' => [
                         'currency' => $this->kart->currency(),
-                        'value' => number_format($l->price(), 2),
+                        'value' => number_format(max(0, $l->price()), 2, '.', ''),
                     ],
                     'totalAmount' => [
                         'currency' => $this->kart->currency(),
-                        'value' => number_format($l->subtotal(), 2),
+                        'value' => number_format(max(0, $l->subtotal()), 2, '.', ''),
                     ],
                     'imageUrl' => $l->product()?->firstGalleryImageUrl(),
                     'productUrl' => $l->product()?->url(),
                     'vatRate' => 0, // use checkout_line to adjust
                     'vatAmount' => [
                         'currency' => $this->kart->currency(),
-                        'value' => number_format(0, 2),
+                        'value' => number_format(0, 2, '.', ''),
                     ], // use checkout_line to adjust
                     'discountAmount' => [
                         'currency' => $this->kart->currency(),
-                        'value' => number_format(0, 2),
+                        'value' => number_format(0, 2, '.', ''),
                     ], // use checkout_line to adjust
                 ], $lineItem($this->kart, $l)))),
             ], $options)),
@@ -158,6 +162,13 @@ class Mollie extends Provider
             return [];
         }
 
+        if (A::get($json, 'status') !== 'paid') {
+            $this->kirby->session()->remove('bnomei.kart.'.$this->name.'.session_id');
+            kart()->cart()->releaseStock();
+
+            return [];
+        }
+
         $customer = [];
         // this only works if the user has been linked on checkout creation
         if ($customerId = A::get($json, 'customerId')) {
@@ -190,7 +201,7 @@ class Mollie extends Provider
             ] : null,
             'paidDate' => date('Y-m-d H:i:s', strtotime(A::get($json, 'paidAt', A::get($json, 'createdAt')))),
             'paymentMethod' => $paymentMethod,
-            'paymentComplete' => A::get($json, 'status') === 'paid',
+            'paymentComplete' => true,
             // 'invoiceurl' => A::get($json, 'invoice'),
             'paymentId' => A::get($json, 'id'),
         ]));
