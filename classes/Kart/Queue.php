@@ -90,6 +90,8 @@ class Queue
                     if ($fileHandle && flock($fileHandle, LOCK_EX | LOCK_NB, $eWouldBlock) && ! $eWouldBlock) {
                         $fs = filesize($file);
                         if (! $fs) {
+                            flock($fileHandle, LOCK_UN);
+                            fclose($fileHandle);
                             $jobs[$key] = ''; // broken but keep around to fail later
 
                             continue;
