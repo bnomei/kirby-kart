@@ -723,21 +723,35 @@ return function (App $kirby) {
                     return Response::json(['status' => 'invalid', 'message' => 'payload too large'], 413);
                 }
 
-                try {
-                    $payload = json_decode($raw ?: '[]', true, 10, JSON_THROW_ON_ERROR);
-                } catch (\JsonException) {
-                    return Response::json(['status' => 'invalid', 'message' => 'invalid json'], 400);
-                }
-                $payload = is_array($payload) ? $payload : [];
-                $payload['_raw'] = $raw;
-
                 $headers = $kirby->request()->headers();
                 $headers = is_array($headers) ? array_change_key_case($headers, CASE_LOWER) : [];
+
+                $payload = [];
+                $contentType = strtolower(strval(A::get($headers, 'content-type', '')));
+                $trimmed = ltrim($raw);
+                $isJson = str_contains($contentType, 'application/json') ||
+                    str_starts_with($trimmed, '{') ||
+                    str_starts_with($trimmed, '[');
+
+                if ($isJson) {
+                    try {
+                        $payload = json_decode($raw ?: '[]', true, 10, JSON_THROW_ON_ERROR);
+                    } catch (\JsonException) {
+                        return Response::json(['status' => 'invalid', 'message' => 'invalid json'], 400);
+                    }
+                } else {
+                    parse_str($raw, $payload);
+                }
+
+                $payload = is_array($payload) ? $payload : [];
+                $payload['_raw'] = $raw;
 
                 $result = $provider->handleWebhook($payload, $headers + ['@raw_body' => $raw]);
 
                 if ($result->isOk() && ! empty($result->orderData)) {
-                    $provider->completed($result->orderData);
+                    kart()->cart()->complete(
+                        $provider->completed($result->orderData)
+                    );
                 }
 
                 $response = [
