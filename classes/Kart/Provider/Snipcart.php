@@ -119,8 +119,6 @@ class Snipcart extends Provider
             $this->rememberWebhook($eventId);
         }
 
-        kart()->cart()->complete($data);
-
         return WebhookResult::ok($data, 'Snipcart webhook processed');
     }
 
