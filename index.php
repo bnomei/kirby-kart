@@ -825,18 +825,14 @@ App::plugin(
             /**
              * @kql-allowed
              */
-            'toFormattedNumber' => function ($field, bool $prefix = false): string {
-                $field->value = Kart::formatNumber(floatval($field->value), $prefix);
-
-                return $field;
+            'toFormattedNumber' => function (Field $field, bool $prefix = false): string {
+                return Kart::formatNumber($field->toFloat(), $prefix);
             },
             /**
              * @kql-allowed
              */
             'toFormattedCurrency' => function (Field $field): string {
-                $field->value = Kart::formatCurrency(floatval($field->value));
-
-                return $field;
+                return Kart::formatCurrency($field->toFloat());
             },
             /**
              * @kql-allowed
