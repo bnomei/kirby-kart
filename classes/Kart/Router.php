@@ -111,12 +111,19 @@ class Router
         }
 
         foreach ($middlewares as $middleware) {
+            $code = null;
             if ($middleware instanceof Closure) {
-                return $middleware();
+                $code = $middleware();
+            } else {
+                $parts = explode('::', (string) $middleware, 2);
+                if (count($parts) !== 2) {
+                    continue;
+                }
+                [$class, $method] = $parts;
+                $code = $class::$method();
             }
-            [$class, $method] = explode('::', (string) $middleware);
-            $code = $class::$method();
-            if (! is_null($code)) {
+
+            if ($code !== null) {
                 return $code;
             }
         }
@@ -216,7 +223,16 @@ class Router
             return null;
         }
 
-        return Kart::decrypt($props, kart()->option('router.salt'), true); // @phpstan-ignore-line
+        $password = kart()->option('router.salt');
+        if ($password instanceof Closure) {
+            $password = $password();
+        }
+
+        if (! is_string($password) || $password === '') {
+            return null;
+        }
+
+        return Kart::decrypt($props, $password, true);
     }
 
     public static function getSnippet(?string $path = null): ?string
