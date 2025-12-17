@@ -107,7 +107,7 @@ class Square extends Provider
         $this->kirby->session()->set('bnomei.kart.'.$this->name.'.session_id', $session_id);
 
         // https://developer.squareup.com/reference/square/checkout-api/create-payment-link#response__property-payment_link
-        return parent::checkout() && $remote->code() === 200 ?
+        return parent::checkout() && $remote->code() < 300 ?
             A::get($json, 'payment_link.long_url') : '/';
     }
 
