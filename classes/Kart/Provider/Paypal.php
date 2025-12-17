@@ -26,11 +26,6 @@ class Paypal extends Provider
 
     protected ?string $token = null;
 
-    private function moneyValue(float $amount): string
-    {
-        return number_format(max(0, $amount), 2, '.', '');
-    }
-
     private function token(): ?string
     {
         if ($this->token) {

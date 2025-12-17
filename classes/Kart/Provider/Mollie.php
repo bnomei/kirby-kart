@@ -95,7 +95,7 @@ class Mollie extends Provider
                 'cancelUrl' => url(Router::PROVIDER_CANCEL),
                 'amount' => [
                     'currency' => $this->kart->currency(),
-                    'value' => number_format(max(0, $this->kart->cart()->subtotal()), 2, '.', ''),
+                    'value' => $this->moneyValue($this->kart->cart()->subtotal()),
                 ],
                 'billingAddress' => $this->kirby()->user() ? [
                     'email' => $this->kirby()->user()->email(),
@@ -108,22 +108,22 @@ class Mollie extends Provider
                     'quantity' => $l->quantity(),
                     'unitPrice' => [
                         'currency' => $this->kart->currency(),
-                        'value' => number_format(max(0, $l->price()), 2, '.', ''),
+                        'value' => $this->moneyValue($l->price()),
                     ],
                     'totalAmount' => [
                         'currency' => $this->kart->currency(),
-                        'value' => number_format(max(0, $l->subtotal()), 2, '.', ''),
+                        'value' => $this->moneyValue($l->subtotal()),
                     ],
                     'imageUrl' => $l->product()?->firstGalleryImageUrl(),
                     'productUrl' => $l->product()?->url(),
                     'vatRate' => 0, // use checkout_line to adjust
                     'vatAmount' => [
                         'currency' => $this->kart->currency(),
-                        'value' => number_format(0, 2, '.', ''),
+                        'value' => $this->moneyValue(0),
                     ], // use checkout_line to adjust
                     'discountAmount' => [
                         'currency' => $this->kart->currency(),
-                        'value' => number_format(0, 2, '.', ''),
+                        'value' => $this->moneyValue(0),
                     ], // use checkout_line to adjust
                 ], $lineItem($this->kart, $l)))),
             ], $options)),

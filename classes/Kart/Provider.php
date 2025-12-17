@@ -187,6 +187,11 @@ abstract class Provider
         return $this->name;
     }
 
+    protected function moneyValue(float|int $amount): string
+    {
+        return number_format(max(0, $amount), 2, '.', '');
+    }
+
     public function findFilesFromUrls(string|array $urls): array
     {
         if (empty($urls)) {

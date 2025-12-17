@@ -59,22 +59,22 @@ class Kirby extends Provider
                 'quantity' => $l->quantity(),
                 'unitPrice' => [
                     'currency' => $this->kart->currency(),
-                    'value' => number_format($l->price(), 2),
+                    'value' => $this->moneyValue($l->price()),
                 ],
                 'totalAmount' => [
                     'currency' => $this->kart->currency(),
-                    'value' => number_format($l->subtotal(), 2),
+                    'value' => $this->moneyValue($l->subtotal()),
                 ],
                 'imageUrl' => $l->product()?->firstGalleryImageUrl(),
                 'productUrl' => $l->product()?->url(),
                 'vatRate' => 0, // use checkout_line to adjust
                 'vatAmount' => [
                     'currency' => $this->kart->currency(),
-                    'value' => number_format(0, 2),
+                    'value' => $this->moneyValue(0),
                 ], // use checkout_line to adjust
                 'discountAmount' => [
                     'currency' => $this->kart->currency(),
-                    'value' => number_format(0, 2),
+                    'value' => $this->moneyValue(0),
                 ], // use checkout_line to adjust
             ], $lineItem($this->kart, $l)))),
         ], $options));
