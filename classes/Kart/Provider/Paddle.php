@@ -282,7 +282,7 @@ class Paddle extends Provider
                             $variants[] = [
                                 'price_id' => $price['id'],
                                 'variant' => $v,
-                                'price' => round(A::get($price, 'unit_amount', 0) / 100.0, 2),
+                                'price' => round(A::get($price, 'unit_price.amount', 0) / 100.0, 2),
                                 'image' => explode(',', A::get($price, 'custom_data.image', '')),
                             ];
                         }
