@@ -75,7 +75,7 @@
     "vlucas/phpdotenv": "^5.6"
   },
   "scripts": {
-    "stan": "./vendor/bin/phpstan",
+    "stan": "./vendor/bin/phpstan analyse --memory-limit=1G",
     "fix": "./vendor/bin/pint",
     "testBefore": "env KIRBY_HOST=kart.test vendor/bin/kirby testing:beforeAll",
     "testAfter": "env KIRBY_HOST=kart.test vendor/bin/kirby testing:afterAll",
