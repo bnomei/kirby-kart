@@ -300,7 +300,7 @@ return function (App $kirby) {
                     return $r;
                 }
 
-                if (Kart::checkSignature(get('signature'), kirby()->request()->url()) === false) {
+                if (Kart::checkSignature(strval(get('signature', '')), kirby()->request()->url()) === false) {
                     return Response::json([], 401);
                 }
 
@@ -732,6 +732,7 @@ return function (App $kirby) {
                 $isJson = str_contains($contentType, 'application/json') ||
                     str_starts_with($trimmed, '{') ||
                     str_starts_with($trimmed, '[');
+                $isForm = str_contains($contentType, 'application/x-www-form-urlencoded');
 
                 if ($isJson) {
                     try {
@@ -739,8 +740,13 @@ return function (App $kirby) {
                     } catch (\JsonException) {
                         return Response::json(['status' => 'invalid', 'message' => 'invalid json'], 400);
                     }
-                } else {
+                } elseif ($isForm) {
                     parse_str($raw, $payload);
+                } else {
+                    return Response::json([
+                        'status' => 'invalid',
+                        'message' => 'unsupported content-type',
+                    ], 415);
                 }
 
                 $payload = is_array($payload) ? $payload : [];
@@ -795,7 +801,7 @@ return function (App $kirby) {
             'pattern' => '(:all)',
             'action' => function ($path) {
                 if (kirby()->request()->header('Accept') === 'application/json' &&
-                    in_array($path, kart()->option('router.snippets'))) {
+                    Router::getSnippet($path) !== null) {
 
                     if ($r = Router::denied([
                         Router::class.'::hasBlacklist',
