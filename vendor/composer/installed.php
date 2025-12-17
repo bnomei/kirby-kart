@@ -1,8 +1,8 @@
 <?php return array(
     'root' => array(
         'name' => 'bnomei/kirby-kart',
-        'pretty_version' => '5.8.3',
-        'version' => '5.8.3.0',
+        'pretty_version' => '5.9.0',
+        'version' => '5.9.0.0',
         'reference' => null,
         'type' => 'kirby-plugin',
         'install_path' => __DIR__ . '/../../',
@@ -11,8 +11,8 @@
     ),
     'versions' => array(
         'bnomei/kirby-kart' => array(
-            'pretty_version' => '5.8.3',
-            'version' => '5.8.3.0',
+            'pretty_version' => '5.9.0',
+            'version' => '5.9.0.0',
             'reference' => null,
             'type' => 'kirby-plugin',
             'install_path' => __DIR__ . '/../../',
