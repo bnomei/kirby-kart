@@ -375,6 +375,36 @@ class Cart implements Kerbs
 
         /** @var OrdersPage|null $orders */
         $orders = $this->kart->page(ContentPageEnum::ORDERS);
+
+        $existingOrder = null;
+        if ($orders) {
+            $paymentId = A::get($data, 'paymentId');
+            if (is_scalar($paymentId) && strval($paymentId) !== '') {
+                $existingOrder = $orders->children()->findBy('paymentId', strval($paymentId));
+            }
+
+            if (! $existingOrder) {
+                $orderId = A::get($data, 'order_id');
+                if (is_scalar($orderId) && strval($orderId) !== '') {
+                    $existingOrder = $orders->children()->findBy('order_id', strval($orderId));
+                }
+            }
+        }
+
+        if ($existingOrder) {
+            // Cleanup current session cart/holds but avoid duplicate stock updates and events.
+            $this->releaseStock();
+            kirby()->session()->remove('bnomei.kart.checkout_form_data');
+
+            $this->clear();
+            $this->save();
+
+            return $this->kirby->session()->pull(
+                'kart.redirect.success',
+                $existingOrder instanceof OrderPage ? $existingOrder->urlWithSignature() : $existingOrder->url()
+            );
+        }
+
         /** @var OrderPage|null $order */
         $order = $orders?->createOrder($data, $customer);
         $order?->createZipWithFiles();
