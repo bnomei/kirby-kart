@@ -26,6 +26,11 @@ class Paypal extends Provider
 
     protected ?string $token = null;
 
+    private function moneyValue(float $amount): string
+    {
+        return number_format(max(0, $amount), 2, '.', '');
+    }
+
     private function token(): ?string
     {
         if ($this->token) {
@@ -99,7 +104,7 @@ class Paypal extends Provider
 
         $money = fn (float $amount) => [
             'currency_code' => $currency,
-            'value' => number_format(max(0, $amount), 2),
+            'value' => $this->moneyValue($amount),
         ];
 
         $breakdown = [
@@ -130,7 +135,6 @@ class Paypal extends Provider
             'headers' => $this->headers(),
             'data' => json_encode(array_filter(array_merge([
                 'intent' => 'CAPTURE',
-                'payee' => ['email_address' => $this->kirby->user()?->email()],
                 'payment_source' => [
                     'paypal' => [
                         'experience_context' => [
@@ -149,7 +153,7 @@ class Paypal extends Provider
                         // 'invoice_id' => strtoupper($uuid), // TODO: get invnum for next? locking?
                         'amount' => [
                             'currency_code' => $currency,
-                            'value' => number_format(max(0, $amountValue), 2),
+                            'value' => $this->moneyValue($amountValue),
                             // https://developer.paypal.com/docs/api/orders/v2/#orders_create!ct=application/json&path=purchase_units/amount/breakdown&t=request
                             'breakdown' => $breakdown,
                         ],
@@ -161,11 +165,11 @@ class Paypal extends Provider
                             // 'category' => A::get($l->product()?->raw()->yaml(), 'category'),
                             'unit_amount' => [
                                 'currency_code' => $currency,
-                                'value' => number_format($l->price(), 2),
+                                'value' => $this->moneyValue($l->price()),
                             ],
                             'image_url' => A::get($l->product()?->raw()->yaml(), 'image_url', $l->product()?->firstGalleryImageUrl()),
                             'url' => $l->product()?->url(),
-                            'quantity' => $l->quantity(),
+                            'quantity' => strval($l->quantity()),
                         ], $lineItem($this->kart, $l)))),
                     ],
                 ],
@@ -180,27 +184,49 @@ class Paypal extends Provider
         $this->kirby->session()->set('kart.paypal.order.id', A::get($json, 'id'));
         $this->kirby->session()->set('kart.paypal.cart.hash', $this->kart->cart()->hash());
 
+        $approveUrl = null;
+        foreach (A::get($json, 'links', []) as $link) {
+            if (! is_array($link)) {
+                continue;
+            }
+            $rel = strtolower(strval(A::get($link, 'rel', '')));
+            if (in_array($rel, ['approve', 'payer-action', 'payer_action'], true)) {
+                $approveUrl = A::get($link, 'href');
+                break;
+            }
+        }
+
         // https://www.sandbox.paypal.com/checkoutnow?token=...
-        return parent::checkout() && $remote->code() === 200 ?
-            A::get($json, 'links.1.href') : '/';
+        return parent::checkout() && $approveUrl && $remote->code() < 300 ?
+            $approveUrl : '/';
     }
 
     public function completed(array $data = []): array
     {
-        // get session from current session id param
+        // get session from current session id
         $sessionId = $this->kirby->session()->get('kart.paypal.order.id');
         if (! is_string($sessionId)) {
             return [];
         }
 
         $endpoint = strval($this->option('endpoint'));
-        // https://developer.paypal.com/docs/api/orders/v2/#orders_get
-        $remote = Remote::get($endpoint.'/v2/checkout/orders/'.$sessionId, [
+
+        // https://developer.paypal.com/docs/api/orders/v2/#orders_capture
+        $remote = Remote::post($endpoint.'/v2/checkout/orders/'.$sessionId.'/capture', [
             'headers' => $this->headers(),
         ]);
 
-        $json = $remote->code() === 200 ? $remote->json() : null;
+        $json = in_array($remote->code(), [200, 201]) ? $remote->json() : null;
         if (! is_array($json)) {
+            return [];
+        }
+
+        $capture = A::get($json, 'purchase_units.0.payments.captures.0', []);
+        $captureStatus = strtoupper(strval(A::get($capture, 'status', '')));
+        $orderStatus = strtoupper(strval(A::get($json, 'status', '')));
+
+        // only proceed when payment has actually been captured
+        if (! in_array($orderStatus, ['COMPLETED'], true) || ! in_array($captureStatus, ['COMPLETED'], true)) {
             return [];
         }
 
@@ -208,26 +234,30 @@ class Paypal extends Provider
         if (is_array($paymentMethod)) {
             $paymentMethod = implode(',', array_keys($paymentMethod));
         }
+
+        $paidAt = A::get($capture, 'update_time', A::get($capture, 'create_time', A::get($json, 'update_time', A::get($json, 'create_time'))));
+        $paidTimestamp = $paidAt ? strtotime(strval($paidAt)) : false;
+
+        $payerName = trim(strval(A::get($json, 'payer.name.given_name')).' '.strval(A::get($json, 'payer.name.surname')));
+        if ($payerName === '') {
+            $payerName = trim(strval(A::get($json, 'payer.given_name')).' '.strval(A::get($json, 'payer.surname')));
+        }
+
         $data = array_merge($data, array_filter([
             // 'session_id' => $sessionId,
             // 'uuid' => A::get($json, 'purchase_units.0.custom_id'),
             'email' => A::get($json, 'payer.email_address'),
             'customer' => [
                 'id' => A::get($json, 'payer.payer_id'),
-                'email' => A::get($json, 'payer.email'),
-                'name' => A::get($json, 'payer.given_name').' '.A::get($json, 'payer.surname'),
+                'email' => A::get($json, 'payer.email_address'),
+                'name' => $payerName,
             ],
-            'paidDate' => date('Y-m-d H:i:s', strtotime(A::get($json, 'create_time'))),
+            'paidDate' => $paidTimestamp !== false ? date('Y-m-d H:i:s', $paidTimestamp) : date('Y-m-d H:i:s'),
             'paymentMethod' => $paymentMethod,
-            'paymentComplete' => A::get($json, 'status') === 'APPROVED',
+            'paymentComplete' => true,
             // 'invoiceurl' => A::get($json, 'invoice'),
             'paymentId' => A::get($json, 'id'),
         ]));
-
-        $uuid = kart()->option('products.product.uuid');
-        if ($uuid instanceof Closure === false) {
-            return [];
-        }
 
         /** @var \Closure $likey */
         $likey = kart()->option('licenses.license.uuid');
@@ -247,6 +277,9 @@ class Paypal extends Provider
             ];
         }
         // TODO: maybe add a line without a product linked if a global discount was set
+
+        $this->kirby->session()->remove('kart.paypal.order.id');
+        $this->kirby->session()->remove('kart.paypal.cart.hash');
 
         return parent::completed($data);
     }
