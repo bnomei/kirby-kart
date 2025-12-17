@@ -50,6 +50,9 @@ class Lemonsqueezy extends Provider
             $variantId = $product->priceIdForVariant($line->variant());
         }
 
+        $state = Str::uuid();
+        $this->kirby->session()->set('bnomei.kart.'.$this->name.'.redirect_state', $state);
+
         // https://docs.lemonsqueezy.com/api/checkouts/create-checkout
         $remote = Remote::post('https://api.lemonsqueezy.com/v1/checkouts', [
             'headers' => [
@@ -76,7 +79,7 @@ class Lemonsqueezy extends Provider
                     'attributes' => array_filter(array_merge([
                         'product_options' => [
                             'enabled_variants' => [$variantId], // NOTE: array
-                            'redirect_url' => url(Router::PROVIDER_SUCCESS).'?order_id=[order_id]',
+                            'redirect_url' => url(Router::PROVIDER_SUCCESS).'?order_id=[order_id]&state='.$state,
                         ],
                         'checkout_data' => array_filter([
                             'email' => $this->kirby->user()?->email(),
@@ -99,6 +102,37 @@ class Lemonsqueezy extends Provider
 
         return parent::checkout() && in_array($remote->code(), [200, 201]) ?
             A::get($json, 'data.attributes.url') : '/';
+    }
+
+    public function completed(array $data = []): array
+    {
+        // webhook calls may forward already-mapped data
+        if (! empty($data)) {
+            return parent::completed($data);
+        }
+
+        $orderId = strval(get('order_id', ''));
+        $state = strval(get('state', ''));
+        $expectedState = $this->kirby->session()->get('bnomei.kart.'.$this->name.'.redirect_state');
+
+        if ($orderId === '' || $state === '' || ! is_string($expectedState) || $expectedState === '' || $state !== $expectedState) {
+            return [];
+        }
+
+        $order = $this->fetchOrder($orderId);
+        if (! $order) {
+            return [];
+        }
+
+        $orderData = $this->mapOrderData($order);
+        if (empty($orderData) || A::get($orderData, 'paymentComplete') !== true) {
+            return [];
+        }
+
+        $this->kirby->session()->remove('bnomei.kart.'.$this->name.'.redirect_state');
+        $this->kirby->session()->remove('bnomei.kart.'.$this->name.'.session_id');
+
+        return parent::completed($orderData);
     }
 
     public function supportsWebhooks(): bool
@@ -169,11 +203,13 @@ class Lemonsqueezy extends Provider
             return WebhookResult::invalid('unable to map webhook payload');
         }
 
+        if (A::get($orderData, 'paymentComplete') !== true) {
+            return WebhookResult::ignored('payment not completed');
+        }
+
         if ($eventId !== '') {
             $this->rememberWebhook($eventId);
         }
-
-        kart()->cart()->complete($orderData);
 
         return WebhookResult::ok($orderData, 'Lemon Squeezy webhook processed');
     }
