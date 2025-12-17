@@ -26,8 +26,13 @@ class UuidCache extends FileCache
 
         // preload all
         foreach (array_filter(explode(PHP_EOL, F::read($file) ?: ''), fn ($v) => ! empty($v)) as $line) {
-            [$created, $k, $value] = explode("\t", $line);
-            $value = str_contains($value, ':') ? unserialize($value) : $value;
+            [$created, $k, $value] = explode("\t", $line, 3);
+            if (preg_match('/^(?:N;|[aObisdCR]:)/', $value) === 1) {
+                $unserialized = @unserialize($value, ['allowed_classes' => false]);
+                if ($unserialized !== false || $value === 'b:0;') {
+                    $value = $unserialized;
+                }
+            }
             $this->lines[$k] = new Value($value, 0, intval($created));
         }
     }
