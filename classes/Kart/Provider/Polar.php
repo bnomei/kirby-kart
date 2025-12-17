@@ -199,6 +199,12 @@ class Polar extends Provider
             }
         }
 
+        if (A::get($data, 'paymentComplete') !== true) {
+            $this->kirby->session()->remove('bnomei.kart.'.$this->name.'.session_id');
+
+            return [];
+        }
+
         $this->kirby->session()->remove('bnomei.kart.'.$this->name.'.session_id');
 
         return parent::completed($data);
