@@ -41,16 +41,15 @@ trait ContentPages
                     'parent' => count($parts) ? page(implode('/', $parts)) : null,
                 ];
                 if (kirby()->multilang()) {
+                    $props['translations'] = [];
                     foreach (kirby()->languages() as $language) {
                         $languageCode = $language->code();
-                        $props['translations'] = [
-                            $languageCode => [
-                                'code' => $languageCode,
-                                'content' => array_filter([
-                                    'title' => t("bnomei.kart.{$key}", ucfirst($key), $languageCode),
-                                    'uuid' => $languageCode === kirby()->defaultLanguage()?->code() ? $key : null, // match key to make them easier to find
-                                ]),
-                            ],
+                        $props['translations'][$languageCode] = [
+                            'code' => $languageCode,
+                            'content' => array_filter([
+                                'title' => t("bnomei.kart.{$key}", ucfirst($key), $languageCode),
+                                'uuid' => $languageCode === kirby()->defaultLanguage()?->code() ? $key : null, // match key to make them easier to find
+                            ]),
                         ];
                     }
                 } else {
