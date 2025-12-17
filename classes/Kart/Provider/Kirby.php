@@ -134,7 +134,8 @@ class Kirby extends Provider
             ]),
         ]));
 
-        $this->kirby->session()->remove('kart.'.$this->name.'.session_id');
+        $this->kirby->session()->remove('bnomei.kart.'.$this->name.'.session_id');
+        $this->kirby->session()->remove('bnomei.kart.'.$this->name.'.cart_hash');
 
         return parent::completed($data);
     }
