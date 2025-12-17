@@ -20,6 +20,11 @@ function findOrCreateTestUser(string $email = 'b@bnomei.com'): User
     }
 
     $user->loginPasswordless();
+    // Provider tests should not depend on persisted user cart state.
+    kart()->cart()->clear();
+    kart()->cart()->save(false);
+    kart()->wishlist()->clear();
+    kart()->wishlist()->save(false);
 
     return $user;
 }
