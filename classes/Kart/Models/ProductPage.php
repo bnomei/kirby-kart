@@ -755,7 +755,8 @@ class ProductPage extends Page implements Kerbs
 
         foreach ($this->variantData(false) as $v) {
             if ($v['variant'] === $variant) {
-                if ($price = A::get($v, 'price')) {
+                $price = A::get($v, 'price');
+                if ($price !== null) {
                     return $price;
                 }
             }
