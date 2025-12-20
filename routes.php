@@ -783,8 +783,9 @@ return function (App $kirby) {
                     return $r;
                 }
 
-                $page = Router::get('page');
-                $url = page('page://'.$page)?->panel()->url();
+                $productsPage = kart()->page(ContentPageEnum::PRODUCTS);
+                $page = $productsPage?->uuid()->id();
+                $url = $productsPage?->panel()->url() ?? site()->url();
 
                 $from = Router::get('user');
                 $user = kirby()->user();
