@@ -186,24 +186,6 @@ class StocksPage extends Page
         return $c;
     }
 
-    /*
-     * @todo
-     */
-    public function children(): Pages
-    {
-        return parent::children();
-
-        /*
-        if ($this->children instanceof Pages) {
-            return $this->children;
-        }
-
-        return $this->children = parent::children()->merge(
-            Pages::factory(kart()->provider()->stocks(), $this)
-        );
-        */
-    }
-
     public function updateStocks(array $data, int $mod = 1): ?int
     {
         $count = 0;

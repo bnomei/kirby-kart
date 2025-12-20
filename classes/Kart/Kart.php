@@ -372,9 +372,9 @@ class Kart implements Kerbs
         return $this->urls()->logout();
     }
 
-    public function sync(Page|string|null $page = null): string
+    public function sync(): string
     {
-        return $this->urls()->sync($page);
+        return $this->urls()->sync();
     }
 
     public function cart(): Cart

@@ -79,6 +79,11 @@ class Paypal extends Provider
             $lineItem = fn ($kart, $item) => [];
         }
 
+        $contact = $this->checkoutContact();
+        $name = $this->checkoutNameParts();
+        $shippingAddress = $this->checkoutShippingAddress();
+        $shippingRate = $this->checkoutShippingRate();
+
         $lines = A::get($options, 'items', []);
         unset($options['items']);
 
@@ -86,6 +91,7 @@ class Paypal extends Provider
         $cartSubtotal = $this->kart->cart()->subtotal();
         $taxTotal = floatval($options['tax_total'] ?? 0);
         unset($options['tax_total']);
+        $shippingProvided = array_key_exists('shipping', $options);
         $shipping = floatval($options['shipping'] ?? 0);
         unset($options['shipping']);
         $handling = floatval($options['handling'] ?? 0);
@@ -96,6 +102,10 @@ class Paypal extends Provider
         unset($options['shipping_discount']);
         $discount = floatval($options['discount'] ?? 0);
         unset($options['discount']);
+
+        if (! $shippingProvided && $shippingRate !== null) {
+            $shipping = $shippingRate;
+        }
 
         $money = fn (float $amount) => [
             'currency_code' => $currency,
@@ -125,17 +135,42 @@ class Paypal extends Provider
 
         $amountValue = $cartSubtotal + $taxTotal + $shipping + $handling + $insurance - $shippingDiscount - $discount;
 
+        $payer = array_filter([
+            'email_address' => $contact['email'] ?? null,
+            'name' => array_filter([
+                'given_name' => $name['first'] ?? null,
+                'surname' => $name['last'] ?? null,
+            ]),
+        ], fn ($value) => $value !== null && $value !== [] && $value !== '');
+
+        $shippingPayload = [];
+        if (! empty($shippingAddress)) {
+            $shippingName = $shippingAddress['name'] ?? $contact['name'] ?? null;
+            $shippingPayload = array_filter([
+                'name' => $shippingName ? ['full_name' => $shippingName] : null,
+                'address' => array_filter([
+                    'address_line_1' => $shippingAddress['address1'] ?? null,
+                    'address_line_2' => $shippingAddress['address2'] ?? null,
+                    'admin_area_2' => $shippingAddress['city'] ?? null,
+                    'admin_area_1' => $shippingAddress['state'] ?? null,
+                    'postal_code' => $shippingAddress['postal_code'] ?? null,
+                    'country_code' => isset($shippingAddress['country']) ? strtoupper($shippingAddress['country']) : null,
+                ], fn ($value) => $value !== null && $value !== ''),
+            ], fn ($value) => $value !== null && $value !== [] && $value !== '');
+        }
+
         // https://developer.paypal.com/docs/api/orders/v2/#orders_create
         $remote = Remote::post($endpoint.'/v2/checkout/orders', [
             'headers' => $this->headers(),
             'data' => json_encode(array_filter(array_merge([
                 'intent' => 'CAPTURE',
+                'payer' => $payer,
                 'payment_source' => [
                     'paypal' => [
                         'experience_context' => [
                             'payment_method_preference' => 'IMMEDIATE_PAYMENT_REQUIRED',
                             'landing_page' => 'LOGIN',
-                            'shipping_preference' => 'GET_FROM_FILE',
+                            'shipping_preference' => empty($shippingPayload) ? 'GET_FROM_FILE' : 'SET_PROVIDED_ADDRESS',
                             'user_action' => 'PAY_NOW',
                             'return_url' => url(Router::PROVIDER_SUCCESS),
                             'cancel_url' => url(Router::PROVIDER_CANCEL),
@@ -152,6 +187,7 @@ class Paypal extends Provider
                             // https://developer.paypal.com/docs/api/orders/v2/#orders_create!ct=application/json&path=purchase_units/amount/breakdown&t=request
                             'breakdown' => $breakdown,
                         ],
+                        'shipping' => empty($shippingPayload) ? null : $shippingPayload,
                         'items' => array_merge($lines, $this->kart->cart()->lines()->values(fn (CartLine $l) => array_merge([
                             'sku' => $l->product()?->uuid()->id(), // used on completed again to find the product
                             'name' => $l->product()?->title()->value(),

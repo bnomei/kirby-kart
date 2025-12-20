@@ -35,6 +35,23 @@ class Square extends Provider
             $lineItem = fn ($kart, $item) => [];
         }
 
+        $contact = $this->checkoutContact();
+        $shippingAddress = $this->checkoutShippingAddress();
+        $buyerAddress = ! empty($shippingAddress) ? array_filter([
+            'address_line_1' => $shippingAddress['address1'] ?? null,
+            'address_line_2' => $shippingAddress['address2'] ?? null,
+            'locality' => $shippingAddress['city'] ?? null,
+            'administrative_district_level_1' => $shippingAddress['state'] ?? null,
+            'postal_code' => $shippingAddress['postal_code'] ?? null,
+            'country' => isset($shippingAddress['country']) ? strtoupper($shippingAddress['country']) : null,
+        ], fn ($value) => $value !== null && $value !== '') : [];
+
+        $prePopulated = array_filter([
+            'buyer_email' => $contact['email'] ?? null,
+            'buyer_phone_number' => $contact['phone'] ?? null,
+            'buyer_address' => $buyerAddress ?: null,
+        ], fn ($value) => $value !== null && $value !== '');
+
         $lines = A::get($options, 'line_items', []);
         unset($options['line_items']);
 
@@ -94,6 +111,7 @@ class Square extends Provider
                     // ?checkoutId=xxxxxx&amp;orderId=xxxxxx&amp;referenceId=xxxxxx&amp;transactionId=xxxxxx
                     'redirect_url' => url(Router::PROVIDER_SUCCESS),
                 ],
+                'pre_populated_data' => empty($prePopulated) ? null : $prePopulated,
                 $quickPay ? 'quick_pay' : 'order' => $quickPay ?: $order,
             ], $options))),
         ]);

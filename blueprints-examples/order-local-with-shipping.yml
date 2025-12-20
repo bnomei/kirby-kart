@@ -1,0 +1,96 @@
+# Example only. Copy into site/blueprints/tabs/order-local.yml to activate.
+# Field names align with snippets/kart/checkout-form.php.
+
+fields:
+  contact_headline:
+    type: headline
+    label: Contact
+  email:
+    type: text
+    label: Email
+  phone:
+    type: text
+    label: Phone
+  first_name:
+    type: text
+    label: First name
+  last_name:
+    type: text
+    label: Last name
+  shipping_line:
+    type: line
+  shipping_headline:
+    type: headline
+    label: Shipping
+  company:
+    type: text
+    label: Company
+  address1:
+    type: text
+    label: Address line 1
+  address2:
+    type: text
+    label: Address line 2
+  city:
+    type: text
+    label: City
+  state:
+    type: text
+    label: State / Province
+  postal_code:
+    type: text
+    label: Postal code
+  country:
+    type: text
+    label: Country (ISO-2)
+  shipping_method:
+    type: text
+    label: Shipping method
+  shipping_rate:
+    type: number
+    label: Shipping rate
+    min: 0
+    step: 0.01
+    after: '{{ kirby.option("bnomei.kart.currency") }}'
+  billing_line:
+    type: line
+  billing_headline:
+    type: headline
+    label: Billing
+  billing_same_as_shipping:
+    type: toggle
+    label: Same as shipping
+    text:
+      - No
+      - Yes
+    default: true
+  billing_first_name:
+    type: text
+    label: First name
+  billing_last_name:
+    type: text
+    label: Last name
+  billing_company:
+    type: text
+    label: Company
+  billing_address1:
+    type: text
+    label: Address line 1
+  billing_address2:
+    type: text
+    label: Address line 2
+  billing_city:
+    type: text
+    label: City
+  billing_state:
+    type: text
+    label: State / Province
+  billing_postal_code:
+    type: text
+    label: Postal code
+  billing_country:
+    type: text
+    label: Country (ISO-2)
+  billing_phone:
+    type: text
+    label: Phone

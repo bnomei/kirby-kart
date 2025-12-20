@@ -39,7 +39,7 @@ class ProductsPage extends Page
                 'sync' => [
                     'icon' => 'refresh',
                     'text' => 'bnomei.kart.sync-provider',
-                    'link' => '{< site.kart.urls.sync("products") >}',
+                    'link' => '{< site.kart.urls.sync() >}',
                 ],
                 'status' => true,
             ],

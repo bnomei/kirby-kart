@@ -96,11 +96,3 @@ it('can be completed', function (): void {
 it('can fetch products', function (): void {
     expect($this->p->products())->toBeArray();
 });
-
-it('can fetch orders', function (): void {
-    expect($this->p->orders())->toBeArray();
-});
-
-it('can fetch stocks', function (): void {
-    expect($this->p->stocks())->toBeArray();
-});

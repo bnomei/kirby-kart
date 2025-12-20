@@ -36,8 +36,26 @@ class Stripe extends Provider
             $lineItem = fn ($kart, $item) => [];
         }
 
+        $contact = $this->checkoutContact();
+        $shippingRate = $this->checkoutShippingRate();
+        $shippingMethod = $this->checkoutShippingMethod();
+
         $lines = A::get($options, 'line_items', []);
         unset($options['line_items']);
+
+        $shippingOptions = null;
+        if (! array_key_exists('shipping_options', $options) && $shippingRate !== null) {
+            $shippingOptions = [[
+                'shipping_rate_data' => [
+                    'display_name' => $shippingMethod ?: 'Shipping',
+                    'type' => 'fixed_amount',
+                    'fixed_amount' => [
+                        'amount' => (int) round($shippingRate * 100),
+                        'currency' => strtolower($this->kart->currency()),
+                    ],
+                ],
+            ]];
+        }
 
         // https://docs.stripe.com/api/checkout/sessions/create?lang=curl
         $remote = Remote::post('https://api.stripe.com/v1/checkout/sessions', [
@@ -49,10 +67,11 @@ class Stripe extends Provider
                 'mode' => 'payment', // NOTE: if price is a recurring price this must be a `subscription`
                 'payment_method_types' => ['card'],
                 'currency' => strtolower($this->kart->currency()),
-                'customer_email' => $this->kirby->user()?->email(),
+                'customer_email' => $contact['email'] ?? $this->kirby->user()?->email(),
                 'success_url' => url(Router::PROVIDER_SUCCESS).'?session_id={CHECKOUT_SESSION_ID}',
                 'cancel_url' => url(Router::PROVIDER_CANCEL),
                 'invoice_creation' => ['enabled' => 'true'],
+                'shipping_options' => $shippingOptions,
                 'line_items' => array_merge($lines, $this->kart->cart()->lines()->values(fn (CartLine $l) => array_merge([
                     'price' => $l->variant() ?
                             $l->product()?->priceIdForVariant($l->variant()) :

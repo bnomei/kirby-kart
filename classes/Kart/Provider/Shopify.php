@@ -48,13 +48,33 @@ class Shopify extends Provider
             throw new \RuntimeException('No Shopify cart lines to process');
         }
 
-        $checkoutFormData = $this->kirby->session()->get('bnomei.kart.checkout_form_data', []);
+        $contact = $this->checkoutContact();
+        $name = $this->checkoutNameParts();
+        $shippingAddress = $this->checkoutShippingAddress();
+
         $buyerIdentity = array_filter([
-            'email' => A::get($checkoutFormData, 'email') ?? $this->kirby->user()?->email(),
-            'phone' => A::get($checkoutFormData, 'phone'),
-            'firstName' => A::get($checkoutFormData, 'first_name'),
-            'lastName' => A::get($checkoutFormData, 'last_name'),
+            'email' => $contact['email'] ?? $this->kirby->user()?->email(),
+            'phone' => $contact['phone'] ?? null,
+            'firstName' => $name['first'] ?? null,
+            'lastName' => $name['last'] ?? null,
         ], fn ($v) => $v !== null && $v !== '');
+
+        if (! empty($shippingAddress)) {
+            $buyerIdentity['deliveryAddressPreferences'] = [[
+                'deliveryAddress' => array_filter([
+                    'address1' => $shippingAddress['address1'] ?? null,
+                    'address2' => $shippingAddress['address2'] ?? null,
+                    'city' => $shippingAddress['city'] ?? null,
+                    'province' => $shippingAddress['state'] ?? null,
+                    'zip' => $shippingAddress['postal_code'] ?? null,
+                    'country' => isset($shippingAddress['country']) ? strtoupper($shippingAddress['country']) : null,
+                    'firstName' => $shippingAddress['first_name'] ?? ($name['first'] ?? null),
+                    'lastName' => $shippingAddress['last_name'] ?? ($name['last'] ?? null),
+                    'phone' => $shippingAddress['phone'] ?? ($contact['phone'] ?? null),
+                    'company' => $shippingAddress['company'] ?? null,
+                ], fn ($v) => $v !== null && $v !== ''),
+            ]];
+        }
 
         $input = array_filter([
             'lines' => $lines,

@@ -22,6 +22,26 @@ class Mollie extends Provider
 {
     protected string $name = ProviderEnum::MOLLIE->value;
 
+    private function buildAddress(array $address, array $contact = []): array
+    {
+        if (empty($address)) {
+            return [];
+        }
+
+        return array_filter([
+            'streetAndNumber' => $address['address1'] ?? null,
+            'streetAdditional' => $address['address2'] ?? null,
+            'postalCode' => $address['postal_code'] ?? null,
+            'city' => $address['city'] ?? null,
+            'region' => $address['state'] ?? null,
+            'country' => isset($address['country']) ? strtoupper($address['country']) : null,
+            'givenName' => $address['first_name'] ?? null,
+            'familyName' => $address['last_name'] ?? null,
+            'organizationName' => $address['company'] ?? null,
+            'email' => $contact['email'] ?? null,
+        ], fn ($value) => $value !== null && $value !== '');
+    }
+
     public function checkout(): string
     {
         $options = $this->option('checkout_options', false);
@@ -39,10 +59,14 @@ class Mollie extends Provider
             $lineItem = fn ($kart, $item) => [];
         }
 
+        $contact = $this->checkoutContact();
+        $billingAddress = $this->buildAddress($this->checkoutBillingAddress(), $contact);
+        $shippingAddress = $this->buildAddress($this->checkoutShippingAddress(), $contact);
+
         $customerId = $this->kirby()->user() ? $this->kart->provider()->userData('customerId') : null;
         if (! $customerId) {
-            $email = get('email', $this->kirby()->user()?->email());
-            $name = get('name', $this->kirby()->user()?->name()->value());
+            $email = $contact['email'] ?? $this->kirby()->user()?->email();
+            $name = $contact['name'] ?? $this->kirby()->user()?->name()->value();
 
             // https://docs.mollie.com/reference/create-customer
             $remote = Remote::post('https://api.mollie.com/v2/customers', [
@@ -97,9 +121,10 @@ class Mollie extends Provider
                     'currency' => $this->kart->currency(),
                     'value' => $this->moneyValue($this->kart->cart()->subtotal()),
                 ],
-                'billingAddress' => $this->kirby()->user() ? [
-                    'email' => $this->kirby()->user()->email(),
-                ] : null,
+                'billingAddress' => ! empty($billingAddress) ? $billingAddress : array_filter([
+                    'email' => $contact['email'] ?? null,
+                ]),
+                'shippingAddress' => $shippingAddress ?: null,
                 'lines' => array_merge($lines, $this->kart->cart()->lines()->values(fn (CartLine $l) => array_merge([
                     'sku' => $l->product()?->uuid()->id().($l->variant() ? '|'.$l->variant() : ''), // used on completed again to find the product
                     'type' => $l->product()?->ptype()->isNotEmpty() ? // @phpstan-ignore-line

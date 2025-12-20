@@ -24,6 +24,25 @@ class Chargebee extends Provider
 {
     protected string $name = ProviderEnum::CHARGEBEE->value;
 
+    private function buildAddress(array $address, array $contact = []): array
+    {
+        if (empty($address)) {
+            return [];
+        }
+
+        return array_filter([
+            'first_name' => $address['first_name'] ?? $contact['first_name'] ?? null,
+            'last_name' => $address['last_name'] ?? $contact['last_name'] ?? null,
+            'company' => $address['company'] ?? null,
+            'line1' => $address['address1'] ?? null,
+            'line2' => $address['address2'] ?? null,
+            'city' => $address['city'] ?? null,
+            'state' => $address['state'] ?? null,
+            'zip' => $address['postal_code'] ?? null,
+            'country' => isset($address['country']) ? strtoupper($address['country']) : null,
+        ], fn ($value) => $value !== null && $value !== '');
+    }
+
     public function checkout(): string
     {
         $options = $this->option('checkout_options', false);
@@ -36,6 +55,10 @@ class Chargebee extends Provider
             $lineItem = fn ($kart, $item) => [];
         }
 
+        $contact = $this->checkoutContact();
+        $billingAddress = $this->buildAddress($this->checkoutBillingAddress(), $contact);
+        $shippingAddress = $this->buildAddress($this->checkoutShippingAddress(), $contact);
+
         $lines = A::get($options, 'item_prices', []);
         unset($options['item_prices']);
 
@@ -43,6 +66,13 @@ class Chargebee extends Provider
         $payload = array_filter(array_merge([
             'redirect_url' => url(Router::PROVIDER_SUCCESS),
             'cancel_url' => url(Router::PROVIDER_CANCEL),
+            'customer' => array_filter([
+                'email' => $contact['email'] ?? null,
+                'first_name' => $contact['first_name'] ?? null,
+                'last_name' => $contact['last_name'] ?? null,
+            ]),
+            'billing_address' => $billingAddress ?: null,
+            'shipping_address' => $shippingAddress ?: null,
             'item_prices' => array_merge($lines, $this->kart->cart()->lines()->values(function (CartLine $line) use ($lineItem) {
                 $raw = $line->product()?->raw()->yaml() ?? [];
                 $priceId = A::get($raw, 'id');

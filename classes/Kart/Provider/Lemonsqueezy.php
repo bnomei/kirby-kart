@@ -45,6 +45,8 @@ class Lemonsqueezy extends Provider
             $options = $options($this->kart);
         }
 
+        $contact = $this->checkoutContact();
+
         $variantId = A::get($product?->raw()->yaml(), 'variants.0.id');
         if ($product && $line->variant()) {
             $variantId = $product->priceIdForVariant($line->variant());
@@ -82,8 +84,8 @@ class Lemonsqueezy extends Provider
                             'redirect_url' => url(Router::PROVIDER_SUCCESS).'?order_id=[order_id]&state='.$state,
                         ],
                         'checkout_data' => array_filter([
-                            'email' => $this->kirby->user()?->email(),
-                            'name' => $this->kirby->user()?->name()->value(),
+                            'email' => $contact['email'] ?? $this->kirby->user()?->email(),
+                            'name' => $contact['name'] ?? $this->kirby->user()?->name()->value(),
                         ]),
                         'test_mode' => $this->kirby->environment()->isLocal(),
                         'expires_at' => date('c', time() + 60 * 60), // 1h

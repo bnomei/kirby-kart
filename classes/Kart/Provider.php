@@ -73,6 +73,225 @@ abstract class Provider
         return $this->kirby;
     }
 
+    protected function checkoutFormData(): array
+    {
+        $data = $this->kart->checkoutFormData();
+        if (! is_array($data)) {
+            return [];
+        }
+
+        $data = Kart::sanitize($data);
+
+        return is_array($data) ? $data : [];
+    }
+
+    protected function checkoutValue(array $data, string $key, ?string $fallbackKey = null): ?string
+    {
+        $value = A::get($data, $key);
+        if (($value === null || $value === '') && $fallbackKey) {
+            $value = A::get($data, $fallbackKey);
+        }
+
+        if (is_array($value)) {
+            return null;
+        }
+
+        if (is_bool($value)) {
+            return $value ? '1' : '0';
+        }
+
+        if (is_int($value) || is_float($value)) {
+            return strval($value);
+        }
+
+        if (! is_string($value)) {
+            return null;
+        }
+
+        $value = trim($value);
+
+        return $value !== '' ? $value : null;
+    }
+
+    protected function checkoutBool(array $data, string $key, bool $default = false): bool
+    {
+        $value = A::get($data, $key);
+        if ($value === null || $value === '') {
+            return $default;
+        }
+
+        if (is_bool($value)) {
+            return $value;
+        }
+
+        if (is_numeric($value)) {
+            return intval($value) === 1;
+        }
+
+        if (is_string($value)) {
+            $value = strtolower(trim($value));
+
+            return in_array($value, ['1', 'true', 'yes', 'on'], true);
+        }
+
+        return $default;
+    }
+
+    protected function checkoutNameParts(?array $data = null): array
+    {
+        $data ??= $this->checkoutFormData();
+
+        $first = $this->checkoutValue($data, 'first_name', 'first');
+        $last = $this->checkoutValue($data, 'last_name', 'last');
+        $full = $this->checkoutValue($data, 'name');
+
+        if (! $full) {
+            $full = trim(strval($first ?? '').' '.strval($last ?? ''));
+            $full = $full !== '' ? $full : null;
+        }
+
+        if ((! $first || ! $last) && $full && str_contains($full, ' ')) {
+            $parts = preg_split('/\s+/', $full, 2);
+            $first ??= $parts[0] ?? null;
+            $last ??= $parts[1] ?? null;
+        }
+
+        return array_filter([
+            'first' => $first,
+            'last' => $last,
+            'full' => $full,
+        ], fn ($value) => $value !== null && $value !== '');
+    }
+
+    protected function checkoutContact(): array
+    {
+        $data = $this->checkoutFormData();
+        $name = $this->checkoutNameParts($data);
+
+        $email = $this->checkoutValue($data, 'email');
+        if (! $email) {
+            $email = $this->kirby->user()?->email();
+        }
+
+        $phone = $this->checkoutValue($data, 'phone', 'phone_number');
+        $fullName = $name['full'] ?? trim(
+            strval($name['first'] ?? '').' '.strval($name['last'] ?? '')
+        );
+        $fullName = $fullName !== '' ? $fullName : null;
+
+        return array_filter([
+            'email' => $email,
+            'phone' => $phone,
+            'name' => $fullName,
+            'first_name' => $name['first'] ?? null,
+            'last_name' => $name['last'] ?? null,
+        ], fn ($value) => $value !== null && $value !== '');
+    }
+
+    protected function checkoutAddress(string $prefix = '', ?array $data = null): array
+    {
+        $data ??= $this->checkoutFormData();
+
+        $address = array_filter([
+            'first_name' => $this->checkoutValue($data, $prefix.'first_name', $prefix.'first'),
+            'last_name' => $this->checkoutValue($data, $prefix.'last_name', $prefix.'last'),
+            'company' => $this->checkoutValue($data, $prefix.'company'),
+            'address1' => $this->checkoutValue($data, $prefix.'address1', $prefix.'address_1'),
+            'address2' => $this->checkoutValue($data, $prefix.'address2', $prefix.'address_2'),
+            'city' => $this->checkoutValue($data, $prefix.'city'),
+            'state' => $this->checkoutValue($data, $prefix.'state'),
+            'postal_code' => $this->checkoutValue($data, $prefix.'postal_code', $prefix.'zip'),
+            'country' => $this->checkoutValue($data, $prefix.'country', $prefix.'country_code'),
+            'phone' => $this->checkoutValue($data, $prefix.'phone'),
+        ], fn ($value) => $value !== null && $value !== '');
+
+        $name = trim(strval($address['first_name'] ?? '').' '.strval($address['last_name'] ?? ''));
+        if ($name !== '') {
+            $address['name'] = $name;
+        }
+
+        return $address;
+    }
+
+    protected function checkoutHasBillingFields(?array $data = null): bool
+    {
+        $data ??= $this->checkoutFormData();
+        foreach ($data as $key => $value) {
+            $key = strval($key);
+            if (! str_starts_with($key, 'billing_')) {
+                continue;
+            }
+            if ($key === 'billing_same_as_shipping') {
+                continue;
+            }
+            if ($value !== null && $value !== '') {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    protected function checkoutShippingAddress(): array
+    {
+        $data = $this->checkoutFormData();
+        $address = $this->checkoutAddress('', $data);
+        if (empty($address)) {
+            return [];
+        }
+
+        $contact = $this->checkoutContact();
+        if (! isset($address['first_name']) && isset($contact['first_name'])) {
+            $address['first_name'] = $contact['first_name'];
+        }
+        if (! isset($address['last_name']) && isset($contact['last_name'])) {
+            $address['last_name'] = $contact['last_name'];
+        }
+        if (! isset($address['phone']) && isset($contact['phone'])) {
+            $address['phone'] = $contact['phone'];
+        }
+        if (! isset($address['name']) && isset($contact['name'])) {
+            $address['name'] = $contact['name'];
+        }
+
+        return $address;
+    }
+
+    protected function checkoutBillingAddress(): array
+    {
+        $data = $this->checkoutFormData();
+        $billingSame = $this->checkoutBool($data, 'billing_same_as_shipping', true);
+        if ($billingSame && $this->checkoutHasBillingFields($data)) {
+            $billingSame = false;
+        }
+
+        $billing = $billingSame ? [] : $this->checkoutAddress('billing_', $data);
+        if (empty($billing) && $billingSame) {
+            $billing = $this->checkoutShippingAddress();
+        }
+
+        return $billing;
+    }
+
+    protected function checkoutShippingRate(): ?float
+    {
+        $data = $this->checkoutFormData();
+        $value = $this->checkoutValue($data, 'shipping_rate', 'shipping_amount');
+        if ($value === null || ! is_numeric($value)) {
+            return null;
+        }
+
+        return floatval($value);
+    }
+
+    protected function checkoutShippingMethod(): ?string
+    {
+        $data = $this->checkoutFormData();
+        $value = $this->checkoutValue($data, 'shipping_method', 'shipping_option');
+
+        return $value ?: null;
+    }
+
     public function userData(string $key): mixed
     {
         return A::get($this->getUserData(), $key);
@@ -116,7 +335,7 @@ abstract class Provider
 
     public function sync(ContentPageEnum|string|null $sync = null): int
     {
-        $all = array_map(fn ($c) => $c->value, ContentPageEnum::cases());
+        $all = [ContentPageEnum::PRODUCTS->value];
 
         if (! $sync) {
             $sync = $all;
@@ -226,6 +445,10 @@ abstract class Provider
 
     public function read(string $interface): array
     {
+        if ($interface !== ContentPageEnum::PRODUCTS->value) {
+            return [];
+        }
+
         // static per request cache
         if ($data = A::get($this->cache, $interface)) {
             return $data;
@@ -255,16 +478,6 @@ abstract class Provider
         $this->cache()->set('updatedAt-'.$interface, $t);
 
         return $data;
-    }
-
-    public function orders(): array
-    {
-        return $this->read('orders');
-    }
-
-    public function stocks(): array
-    {
-        return $this->read('stocks');
     }
 
     public function checkout(): ?string
@@ -338,16 +551,6 @@ abstract class Provider
     }
 
     public function fetchProducts(): array
-    {
-        return [];
-    }
-
-    public function fetchOrders(): array
-    {
-        return [];
-    }
-
-    public function fetchStocks(): array
     {
         return [];
     }

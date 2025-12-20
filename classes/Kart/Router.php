@@ -14,7 +14,6 @@ use Bnomei\Kart\Mixins\Captcha;
 use Bnomei\Kart\Mixins\Turnstile;
 use Bnomei\Kart\Models\ProductPage;
 use Closure;
-use Kirby\Cms\Page;
 use Kirby\Cms\Response;
 use Kirby\Http\Uri;
 use Kirby\Toolkit\A;
@@ -586,22 +585,16 @@ class Router
         return url(self::CAPTCHA);
     }
 
-    public static function sync(Page|string|null $page): string
+    public static function sync(): string
     {
-        if (! $page) {
-            $page = kart()->page(ContentPageEnum::PRODUCTS);
-        }
-
-        if ($page instanceof Page) {
-            $page = $page->uuid()->id();
-        }
+        $pageId = kart()->page(ContentPageEnum::PRODUCTS)?->uuid()->id();
 
         return self::factory(
             self::PROVIDER_SYNC,
-            [
-                'page' => $page,
+            array_filter([
+                'page' => $pageId,
                 'user' => kirby()->user()?->id(),
-            ]
+            ])
         );
     }
 

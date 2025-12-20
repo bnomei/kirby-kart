@@ -11,7 +11,6 @@
 namespace Bnomei\Kart\Models;
 
 use Kirby\Cms\Page;
-use Kirby\Cms\Pages;
 use Kirby\Cms\User;
 use Kirby\Content\Field;
 use Kirby\Toolkit\A;
@@ -95,24 +94,6 @@ class OrdersPage extends Page
                 ],
             ],
         ];
-    }
-
-    /*
-     * @todo
-     */
-    public function children(): Pages
-    {
-        return parent::children();
-
-        /*
-        if ($this->children instanceof Pages) {
-            return $this->children;
-        }
-
-        return $this->children = parent::children()->merge(
-            Pages::factory(kart()->provider()->orders(), $this)
-        );
-        */
     }
 
     public function createOrder(array $data, ?User $customer = null): ?Page

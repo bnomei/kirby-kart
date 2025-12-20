@@ -34,7 +34,7 @@ class Fastspring extends Provider
 
     public function supportsWebhooks(): bool
     {
-        return true;
+        return false;
     }
 
     public function handleWebhook(array $payload, array $headers = []): WebhookResult

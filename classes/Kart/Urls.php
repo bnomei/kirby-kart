@@ -11,7 +11,6 @@
 namespace Bnomei\Kart;
 
 use Bnomei\Kart\Models\ProductPage;
-use Kirby\Cms\Page;
 
 /**
  * Kart URL helper
@@ -37,7 +36,7 @@ use Kirby\Cms\Page;
  * @method string provider_payment(array $params = [])
  * @method string provider_success(array $params = [])
  * @method string signup_magic(?string $email = null)
- * @method string sync(Page|null|string $page)
+ * @method string sync()
  * @method string wishlist_add(ProductPage $product)
  * @method string wishlist_now(ProductPage $product)
  * @method string wishlist_remove(ProductPage $product)

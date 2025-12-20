@@ -52,6 +52,26 @@ class Checkout extends Provider
             $lineItem = fn ($kart, $item) => [];
         }
 
+        $contact = $this->checkoutContact();
+        $billing = $this->checkoutBillingAddress();
+        $shipping = $this->checkoutShippingAddress();
+
+        $billingAddress = ! empty($billing) ? array_filter([
+            'address_line1' => $billing['address1'] ?? null,
+            'address_line2' => $billing['address2'] ?? null,
+            'city' => $billing['city'] ?? null,
+            'zip' => $billing['postal_code'] ?? null,
+            'country' => isset($billing['country']) ? strtoupper($billing['country']) : null,
+        ], fn ($value) => $value !== null && $value !== '') : [];
+
+        $shippingAddress = ! empty($shipping) ? array_filter([
+            'address_line1' => $shipping['address1'] ?? null,
+            'address_line2' => $shipping['address2'] ?? null,
+            'city' => $shipping['city'] ?? null,
+            'zip' => $shipping['postal_code'] ?? null,
+            'country' => isset($shipping['country']) ? strtoupper($shipping['country']) : null,
+        ], fn ($value) => $value !== null && $value !== '') : [];
+
         $products = A::get($options, 'products', []);
         unset($options['products']);
 
@@ -71,9 +91,13 @@ class Checkout extends Provider
             'failure_url' => url(Router::PROVIDER_CANCEL),
             'cancel_url' => url(Router::PROVIDER_CANCEL),
             'customer' => array_filter([
-                'email' => $this->kirby->user()?->email() ?? get('email'),
-                'name' => $this->kirby->user()?->name()->value() ?? get('name'),
+                'email' => $contact['email'] ?? $this->kirby->user()?->email(),
+                'name' => $contact['name'] ?? $this->kirby->user()?->name()->value(),
             ]),
+            'billing' => empty($billingAddress) ? null : [
+                'address' => $billingAddress,
+            ],
+            'shipping' => empty($shippingAddress) ? null : $shippingAddress,
             'products' => array_merge($products, $this->kart->cart()->lines()->values(fn (CartLine $l) => array_merge([
                 'name' => $l->product()?->title()->value(),
                 'quantity' => $l->quantity(),
