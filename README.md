@@ -29,7 +29,8 @@ can [purchase a license here](https://buy-kart.bnomei.com).
 2. 🏎️ Access the `/kart`-route on your local setup to initialize Kart and start the demo.
 3. 🪞 Copy the snippets and templates from the plugin into your project `site`-folder.
 4. 🎨 Modify the copied snippets and templates to match your projects style and site structure.
-5. 🔗 Link Kart to a Provider (like Stripe or Paypal) and fetch your products from them. Alternativly use Kirby to manage the products and the provider only for checkout. 
+5. 🔗 Link Kart to a Provider (like Stripe or Paypal) and fetch your products from them. Alternativly use Kirby to manage
+   the products and the provider only for checkout.
 6. 💅 Enhance your products within Kirby with additional text, images and downloadable files.
 7. 🪪 Buy a license for Kirby Kart, register it in the config-file and go online with your shop.
 8. 💰 The streamlined shopping cart, invoices and downloads will make your customers happy.
@@ -38,6 +39,28 @@ can [purchase a license here](https://buy-kart.bnomei.com).
 ## Documentation
 
 You can find the full [documentation for Kirby Kart](https://kart.bnomei.com) on its dedicated website.
+
+## Provider feature matrix
+
+| Provider      | Hosted | JS | Order   | Webhook | Product sync | Portal |
+|---------------|--------|----|---------|---------|--------------|--------| 
+| chargebee     | ✅      | -  | return  | -       | ✅            | ✅      |
+| checkout      | ✅      | -  | return  | -       | -            | -      |
+| fastspring    | -      | -  | none    | -       | ✅            | -      |
+| gumroad       | -      | -  | webhook | 🌐      | ✅            | -      |
+| invoice_ninja | ✅      | -  | webhook | 🌐      | ✅            | -      |
+| lemonsqueezy  | ✅      | -  | both    | 🌐      | ✅            | ✅      |
+| mollie        | ✅      | -  | return  | -       | -            | -      |
+| paddle        | -      | ✅  | return  | -       | ✅            | ✅      |
+| paypal        | ✅      | -  | return  | -       | ✅            | -      |
+| polar         | ✅      | -  | return  | -       | ✅            | -      |
+| shopify       | ✅      | -  | webhook | 🌐      | ✅            | -      |
+| snipcart      | -      | ✅  | webhook | 🌐      | ✅            | -      |
+| square        | ✅      | -  | return  | -       | -            | -      |
+| stripe        | ✅      | -  | return  | -       | ✅            | ✅      |
+| sumup         | -      | ✅  | return  | -       | -            | -      |
+
+`✅` = yes, `-` = no, `🌐` = webhook enabled.
 
 ## Disclaimer
 
