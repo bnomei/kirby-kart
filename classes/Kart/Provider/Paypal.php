@@ -156,7 +156,7 @@ class Paypal extends Provider
                     'postal_code' => $shippingAddress['postal_code'] ?? null,
                     'country_code' => isset($shippingAddress['country']) ? strtoupper($shippingAddress['country']) : null,
                 ], fn ($value) => $value !== null && $value !== ''),
-            ], fn ($value) => $value !== null && $value !== [] && $value !== '');
+            ], fn ($value) => $value !== null && $value !== []);
         }
 
         // https://developer.paypal.com/docs/api/orders/v2/#orders_create
@@ -333,7 +333,24 @@ class Paypal extends Provider
             }
 
             foreach (A::get($json, 'products') as $product) {
-                $remote = Remote::get($product['links'][0]['href'], [
+                $detailsUrl = null;
+                foreach (A::get($product, 'links', []) as $link) {
+                    if (! is_array($link)) {
+                        continue;
+                    }
+                    if (strtolower(strval(A::get($link, 'rel', ''))) === 'self') {
+                        $detailsUrl = A::get($link, 'href');
+                        break;
+                    }
+                }
+                if (! $detailsUrl && isset($product['id'])) {
+                    $detailsUrl = $endpoint.'/v1/catalogs/products/'.$product['id'];
+                }
+                if (! $detailsUrl || ! is_string($detailsUrl)) {
+                    continue;
+                }
+
+                $remote = Remote::get($detailsUrl, [
                     'headers' => $this->headers(),
                 ]);
 

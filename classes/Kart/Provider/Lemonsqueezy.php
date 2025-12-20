@@ -261,7 +261,7 @@ class Lemonsqueezy extends Provider
                 if (is_array($productVariants)) {
                     foreach (A::get($productVariants, 'data', []) as $variant) {
                         // NOTE: the default variant will always be pending status
-                        if (strtolower(A::get($variant, 'name', 'default')) !== 'default' &&
+                        if (strtolower(A::get($variant, 'attributes.name', 'default')) !== 'default' &&
                         A::get($variant, 'attributes.status') !== 'published') {
                             continue;
                         }

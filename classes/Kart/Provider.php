@@ -75,14 +75,12 @@ abstract class Provider
 
     protected function checkoutFormData(): array
     {
-        $data = $this->kart->checkoutFormData();
+        $data = Kart::sanitize($this->kart->checkoutFormData());
         if (! is_array($data)) {
             return [];
         }
 
-        $data = Kart::sanitize($data);
-
-        return is_array($data) ? $data : [];
+        return $data;
     }
 
     protected function checkoutValue(array $data, string $key, ?string $fallbackKey = null): ?string

@@ -239,13 +239,27 @@ GQL,
             // Shopify pagination via Link header
             $headers = $remote->headers();
             $link = A::get($headers, 'Link', A::get($headers, 'link'));
-            if ($link && str_contains($link, 'rel="next"')) {
-                preg_match('/page_info=([^&>]+)/', $link, $m);
-                $pageInfo = $m[1] ?? null;
-                if (! $pageInfo) {
-                    break;
+            $nextUrl = null;
+            if (is_string($link) && $link !== '') {
+                foreach (explode(',', $link) as $part) {
+                    if (str_contains($part, 'rel="next"') && preg_match('/<([^>]+)>/', $part, $match)) {
+                        $nextUrl = $match[1];
+                        break;
+                    }
                 }
-            } else {
+            }
+
+            if (! $nextUrl) {
+                break;
+            }
+
+            $query = parse_url($nextUrl, PHP_URL_QUERY);
+            $pageInfo = null;
+            if (is_string($query) && $query !== '') {
+                parse_str($query, $params);
+                $pageInfo = $params['page_info'] ?? null;
+            }
+            if (! $pageInfo) {
                 break;
             }
         }

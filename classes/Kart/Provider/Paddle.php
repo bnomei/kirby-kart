@@ -220,14 +220,40 @@ class Paddle extends Provider
                 break;
             }
 
-            foreach (A::get($json, 'data') as $product) {
-                $cursor = A::get($product, 'id');
-                $products[$product['id']] = $product;
-            }
-
-            if (! A::get($json, 'meta.pagination.has_more')) {
+            $items = A::get($json, 'data', []);
+            if (! is_array($items) || $items === []) {
                 break;
             }
+
+            foreach ($items as $product) {
+                if (! is_array($product)) {
+                    continue;
+                }
+                $id = $product['id'] ?? null;
+                if (! is_string($id) && ! is_int($id)) {
+                    continue;
+                }
+                $id = (string) $id;
+                if ($id === '') {
+                    continue;
+                }
+                $products[$id] = $product;
+            }
+
+            $next = A::get($json, 'meta.pagination.next');
+            $nextCursor = null;
+            if (is_string($next) && $next !== '') {
+                $query = parse_url($next, PHP_URL_QUERY);
+                if (is_string($query) && $query !== '') {
+                    parse_str($query, $params);
+                    $nextCursor = $params['after'] ?? null;
+                }
+            }
+
+            if (! $nextCursor || $nextCursor === $cursor) {
+                break;
+            }
+            $cursor = $nextCursor;
         }
 
         return array_map(fn (array $data) => // NOTE: changes here require a cache flush to take effect

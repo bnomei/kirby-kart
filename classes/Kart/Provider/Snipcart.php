@@ -139,15 +139,32 @@ class Snipcart extends Provider
                 break;
             }
 
-            foreach (A::get($json, 'items') as $product) {
+            $items = A::get($json, 'items', []);
+            if (! is_array($items) || $items === []) {
+                break;
+            }
+
+            foreach ($items as $product) {
+                if (! is_array($product)) {
+                    continue;
+                }
                 // keep active products; skip archived ones
                 if (A::get($product, 'archived')) {
                     continue;
                 }
-                $products[$product['id']] = $product;
+                $id = $product['id'] ?? null;
+                if (! is_string($id) && ! is_int($id)) {
+                    continue;
+                }
+                $id = (string) $id;
+                if ($id === '') {
+                    continue;
+                }
+                $products[$id] = $product;
             }
 
-            if (count($products) >= intval(A::get($json, 'totalItems', 0))) {
+            $totalItems = intval(A::get($json, 'totalItems', 0));
+            if ($offset + $limit >= $totalItems) {
                 break;
             }
             $offset += $limit;
