@@ -156,6 +156,7 @@ App::plugin(
                 // !!! THIS IS HAPPENING BEFORE CHECKOUT !!!
                 // use this to validate or modify the checkout form data. return the array to continue.
                 // to abort write errors to session and flush them manually or use kart()->message() and THEN return null instead.
+                // if you use an allowlist here, include the field names from snippets/kart/checkout-form.php.
 
                 return $checkoutFormData; // return the validated/modified data
             },
