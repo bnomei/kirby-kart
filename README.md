@@ -42,23 +42,23 @@ You can find the full [documentation for Kirby Kart](https://kart.bnomei.com) on
 
 ## Provider feature matrix
 
-| Provider      | Hosted Checkout | Order Flow          | Product sync | Hosted Portal |
-|---------------|-----------------|---------------------|--------------|---------------| 
-| chargebee     | ✅               | return URL          | ✅            | ✅             |
-| checkout      | ✅               | return URL          | -            | -             |
-| fastspring    | external        | -                   | ✅            | -             |
-| gumroad       | external        | webhook             | ✅            | -             |
-| invoice_ninja | ✅               | webhook             | ✅            | -             |
-| lemonsqueezy  | ✅               | return URL, webhook | ✅            | ✅             |
-| mollie        | ✅               | return URL          | -            | -             |
-| paddle        | JS snippet      | return URL          | ✅            | ✅             |
-| paypal        | ✅               | return URL          | ✅            | -             |
-| polar         | ✅               | return URL          | ✅            | -             |
-| shopify       | ✅               | webhook             | ✅            | -             |
-| snipcart      | JS snippet      | webhook             | ✅            | -             |
-| square        | ✅               | return URL          | -            | -             |
-| stripe        | ✅               | return URL          | ✅            | ✅             |
-| sumup         | JS snippet      | return URL          | -            | -             |
+| Provider      | Hosted Checkout | Order Flow          | Product sync | Hosted Portal | Invoice URL |
+|---------------|-----------------|---------------------|--------------|---------------|-------------|
+| chargebee     | ✅               | return URL          | ✅            | ✅             | -           |
+| checkout      | ✅               | return URL          | -            | -             | -           |
+| fastspring    | external        | -                   | ✅            | -             | -           |
+| gumroad       | external        | webhook             | ✅            | -             | ✅           |
+| invoice_ninja | ✅               | webhook             | ✅            | -             | ✅           |
+| lemonsqueezy  | ✅               | return URL, webhook | ✅            | ✅             | ✅           |
+| mollie        | ✅               | return URL          | -            | -             | -           |
+| paddle        | JS snippet      | return URL          | ✅            | ✅             | ✅           |
+| paypal        | ✅               | return URL          | ✅            | -             | -           |
+| polar         | ✅               | return URL          | ✅            | -             | -           |
+| shopify       | ✅               | webhook             | ✅            | -             | -           |
+| snipcart      | JS snippet      | webhook             | ✅            | -             | -           |
+| square        | ✅               | return URL          | -            | -             | -           |
+| stripe        | ✅               | return URL          | ✅            | ✅             | -           |
+| sumup         | JS snippet      | return URL          | -            | -             | -           |
 
 ## Disclaimer
 
