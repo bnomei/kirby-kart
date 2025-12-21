@@ -151,6 +151,23 @@ class Square extends Provider
             return [];
         }
 
+        $receiptUrl = null;
+        $paymentId = A::get($json, 'order.tenders.0.payment_id') ?? A::get($json, 'order.payment_ids.0');
+        if (is_string($paymentId) && $paymentId !== '') {
+            // https://developer.squareup.com/reference/square/payments-api/get-payment
+            $remote = Remote::get('https://connect.squareup.com/v2/payments/'.$paymentId, [
+                'headers' => array_filter([
+                    'Content-Type' => 'application/json',
+                    'Authorization' => 'Bearer '.strval($this->option('access_token')),
+                    'Square-Version' => $this->option('api_version'),
+                ]),
+            ]);
+            $payment = $remote->code() === 200 ? $remote->json() : null;
+            if (is_array($payment)) {
+                $receiptUrl = A::get($payment, 'payment.receipt_url');
+            }
+        }
+
         $customer = [];
         // https://developer.squareup.com/reference/square/customers-api/retrieve-customer
         $remote = Remote::get('https://connect.squareup.com/v2/customers/'.A::get($json, 'order.customer_id'), [
@@ -177,7 +194,7 @@ class Square extends Provider
             'paidDate' => date('Y-m-d H:i:s', strtotime(A::get($json, 'order.updated_at'))),
             // 'paymentMethod' => implode(',', A::get($json, 'payment_method_types', [])),
             'paymentComplete' => A::get($json, 'order.state') === 'COMPLETED',
-            // 'invoiceurl' => '',
+            'invoiceurl' => $receiptUrl,
             'paymentId' => A::get($json, 'order.id'),
         ]));
 

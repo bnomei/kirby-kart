@@ -166,6 +166,22 @@ class Polar extends Provider
                 $data['paidDate'] = date('Y-m-d H:i:s', is_numeric($created) ? intval($created) : strtotime($created));
             }
 
+            $invoiceUrl = null;
+            $orderId = A::get($order, 'id');
+            if (is_string($orderId) && $orderId !== '') {
+                // https://docs.polar.sh/api-reference/orders/get-invoice
+                $remote = Remote::post($this->endpoint().'/orders/'.$orderId.'/invoice', [
+                    'headers' => $this->headers(),
+                ]);
+                $invoiceJson = $remote->code() === 200 ? $remote->json() : null;
+                if (is_array($invoiceJson)) {
+                    $invoiceUrl = A::get($invoiceJson, 'url');
+                }
+            }
+            if ($invoiceUrl) {
+                $data['invoiceurl'] = $invoiceUrl;
+            }
+
             $uuid = kart()->option('products.product.uuid');
             if ($uuid instanceof Closure === false) {
                 return [];

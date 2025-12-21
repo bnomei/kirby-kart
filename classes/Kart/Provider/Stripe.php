@@ -121,6 +121,21 @@ class Stripe extends Provider
         if (is_array($paymentMethod)) {
             $paymentMethod = implode(',', $paymentMethod);
         }
+        $invoiceId = A::get($json, 'invoice');
+        $invoiceUrl = null;
+        if (is_string($invoiceId) && $invoiceId !== '') {
+            $remote = Remote::get('https://api.stripe.com/v1/invoices/'.$invoiceId, [
+                'headers' => [
+                    'Content-Type' => 'application/json',
+                    'Authorization' => 'Bearer '.strval($this->option('secret_key')),
+                ],
+            ]);
+            $invoiceJson = $remote->code() === 200 ? $remote->json() : null;
+            if (is_array($invoiceJson)) {
+                $invoiceUrl = A::get($invoiceJson, 'hosted_invoice_url') ?? A::get($invoiceJson, 'invoice_pdf');
+            }
+        }
+        $invoiceValue = $invoiceUrl ?: $invoiceId;
         $data = array_merge($data, array_filter([
             // 'session_id' => $sessionId,
             'email' => A::get($json, 'customer_email'),
@@ -132,7 +147,7 @@ class Stripe extends Provider
             'paidDate' => date('Y-m-d H:i:s', A::get($json, 'created', time())),
             'paymentMethod' => $paymentMethod,
             'paymentComplete' => A::get($json, 'payment_status') === 'paid',
-            'invoiceurl' => A::get($json, 'invoice'),
+            'invoiceurl' => $invoiceValue,
             'paymentId' => A::get($json, 'id', A::get($json, 'payment_intent')),
         ]));
 

@@ -142,6 +142,16 @@ class Chargebee extends Provider
         $content = A::get($hosted, 'content', []);
         $invoice = A::get($content, 'invoice', []);
         $customer = A::get($content, 'customer', []);
+        $invoiceId = A::get($invoice, 'id');
+        $invoiceUrl = A::get($invoice, 'download_url')
+            ?? A::get($invoice, 'download_link')
+            ?? A::get($invoice, 'pdf_url')
+            ?? A::get($invoice, 'invoice_url')
+            ?? A::get($invoice, 'url');
+        if (! $invoiceUrl && is_string($invoiceId) && $invoiceId !== '') {
+            $invoiceUrl = $this->fetchInvoicePdfUrl($invoiceId);
+        }
+        $invoiceValue = $invoiceUrl ?: $invoiceId;
 
         $formatAmount = function (int|string|null $value): float {
             if (is_string($value)) {
@@ -167,7 +177,7 @@ class Chargebee extends Provider
             'paidDate' => date('Y-m-d H:i:s', is_numeric($paidAt) ? intval($paidAt) : time()),
             'paymentMethod' => empty($paymentMethod) ? null : implode(' ', $paymentMethod),
             'paymentComplete' => A::get($invoice, 'status') === 'paid',
-            'invoiceurl' => A::get($invoice, 'id'),
+            'invoiceurl' => $invoiceValue,
             'paymentId' => A::get($invoice, 'id', A::get($hosted, 'id')),
         ]));
 
@@ -205,6 +215,31 @@ class Chargebee extends Provider
         $this->kirby->session()->remove('bnomei.kart.'.$this->name.'.session_id');
 
         return parent::completed($data);
+    }
+
+    private function fetchInvoicePdfUrl(string $invoiceId): ?string
+    {
+        // Chargebee PDF links are short-lived; fetch on demand.
+        $endpoint = $this->endpoint().'/invoices/'.$invoiceId.'/pdf';
+        $remote = Remote::post($endpoint, [
+            'headers' => $this->headers(),
+        ]);
+
+        if ($remote->code() !== 200) {
+            $remote = Remote::get($endpoint, [
+                'headers' => $this->headers(),
+            ]);
+        }
+
+        $json = in_array($remote->code(), [200, 201]) ? $remote->json() : null;
+        if (! is_array($json)) {
+            return null;
+        }
+
+        return A::get($json, 'download.download_url')
+            ?? A::get($json, 'download_url')
+            ?? A::get($json, 'pdf_url')
+            ?? A::get($json, 'url');
     }
 
     public function fetchProducts(): array
