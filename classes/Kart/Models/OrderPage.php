@@ -656,6 +656,6 @@ class OrderPage extends Page implements Kerbs
             'title' => $this->title()->value(),
             'total' => $this->total(),
             'url' => $this->urlWithSignature(),
-        ]);
+        ], fn ($value) => $value !== null);
     }
 }

@@ -956,6 +956,6 @@ class Kart implements Kerbs
             ],
             'urls' => $this->urls()->toKerbs(),
             'wishlist' => $this->wishlist()->toKerbs(),
-        ]);
+        ], fn ($value) => $value !== null);
     }
 }

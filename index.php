@@ -73,7 +73,7 @@ if (! function_exists('kart')) {
 if (! function_exists('kerbs')) {
     function kerbs(?array $props = null, ?string $template = null): void
     {
-        snippet('kerbs/inertia', array_filter(['props' => $props, 'template' => $template]));
+        snippet('kerbs/inertia', array_filter(['props' => $props, 'template' => $template], fn ($value) => $value !== null));
     }
 }
 
@@ -974,7 +974,7 @@ App::plugin(
                     'srcset' => $this->srcset('default'),
                     'thumb' => $this->thumb('default')->url(),
                     // 'url' => $this->url(),
-                ]);
+                ], fn ($value) => $value !== null);
             },
         ],
         'pageMethods' => [
@@ -1026,7 +1026,7 @@ App::plugin(
                     'url' => $this->url(),
                     'layouts' => $this->layout()->or($this->layouts())->toKerbs('layouts'),
                     'blocks' => $this->blocks()->isEmpty() ? null : $this->blocks()->toKerbs('blocks'),
-                ]);
+                ], fn ($value) => $value !== null);
             },
         ],
         'siteMethods' => [
@@ -1060,7 +1060,7 @@ App::plugin(
                     'meta' => is_array($metadata) ? $metadata : [],
                     'listed' => $site->children()->listed()->values(fn (Page $p) => $p->toKerbs()), // @phpstan-ignore-line
                     'copyright' => $site->copyright()->isNotEmpty() ? $this->copyright()->kti()->value() : null, // @phpstan-ignore-line
-                ]);
+                ], fn ($value) => $value !== null);
             },
             'emptyLabel' => function (): string {
                 return '<span>x</span>';
@@ -1089,7 +1089,7 @@ App::plugin(
                     'name' => $this->name()->value(),
                     'orders' => kart()->ordersWithCustomer($this)->values(fn (OrderPage $product) => $product->toKerbs()),
                     'url' => url(Router::ACCOUNT),
-                ]);
+                ], fn ($value) => $value !== null);
             },
             /**
              * @kql-allowed

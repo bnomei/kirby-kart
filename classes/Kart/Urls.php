@@ -76,6 +76,6 @@ class Urls implements Kerbs
             'logout' => $this->logout(),
             'products' => kart()->page(ContentPageEnum::PRODUCTS->value)?->url() ?? '',
             'signup_magic' => $this->signup_magic(),
-        ]);
+        ], fn ($value) => $value !== null);
     }
 }

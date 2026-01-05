@@ -585,7 +585,7 @@ class ProductPage extends Page implements Kerbs
                 'image' => $resolveImage ? $i->image()->toFile()?->toKerbs() : $i->image()->toFile()?->name(),
                 'variant' => $variant,
                 'inStock' => $this->stock(withHold: kart()->cart()->sessionToken(), variant: $variant) !== 0,
-            ]));
+            ]), fn ($value) => $value !== null);
         });
 
         $this->vardat = [];
@@ -740,7 +740,7 @@ class ProductPage extends Page implements Kerbs
             $prices[$v['variant']] = A::get($v, 'price');
         }
 
-        return array_filter($prices);
+        return array_filter($prices, fn ($value) => $value !== null);
     }
 
     public function priceWithVariant(?string $variant = null): float

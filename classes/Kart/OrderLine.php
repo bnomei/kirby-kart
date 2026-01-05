@@ -123,6 +123,6 @@ class OrderLine implements Kerbs
             'tax' => $this->tax(),
             'total' => $this->total(),
             'variant' => $this->variant(),
-        ]);
+        ], fn ($value) => $value !== null);
     }
 }

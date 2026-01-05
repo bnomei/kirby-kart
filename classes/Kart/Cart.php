@@ -543,6 +543,6 @@ class Cart implements Kerbs
             'quantity' => $this->quantity(),
             'subtotal' => $this->subtotal(),
             'url' => page($this->id)?->url(),
-        ]);
+        ], fn ($value) => $value !== null);
     }
 }

@@ -25,7 +25,7 @@ $inertia = array_filter([
     'props' => $props ?? [],
     'url' => $request->url()->toString(),
     'version' => kart()->option('kerbs.version'),
-]);
+], fn ($value) => $value !== null);
 
 // only return partial props when requested
 $only = array_filter(explode(',', $request->header('X-Inertia-Partial-Data') ?? ''));
@@ -48,7 +48,7 @@ $inertia['props'] = array_filter(array_map(function ($value) {
     $value = $value instanceof Field ? $value->value() : $value;
 
     return $value instanceof Closure ? $value() : $value;
-}, $inertia['props']));
+}, $inertia['props']), fn ($value) => $value !== null);
 
 // return json when in inertia mode
 if ($request->method() === 'GET' && $request->header('X-Inertia')) {

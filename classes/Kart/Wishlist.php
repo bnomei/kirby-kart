@@ -36,6 +36,6 @@ class Wishlist extends Cart
             'id',
             'lines',
             'url',
-        ]));
+        ]), fn ($value) => $value !== null);
     }
 }
