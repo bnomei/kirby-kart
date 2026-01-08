@@ -31,7 +31,6 @@ use Kirby\Toolkit\Str;
 use Kirby\Toolkit\SymmetricCrypto;
 use Kirby\Toolkit\V;
 use Kirby\Uuid\Uuid;
-use NumberFormatter;
 
 /**
  * Kart
@@ -872,7 +871,7 @@ class Kart implements Kerbs
         $variants = [];
         /** @var ProductPage $product */
         foreach ($products->children() as $product) {
-            $variants = array_merge_recursive($variants, $product->variantGroups());
+            $variants = A::merge($variants, $product->variantGroups(), A::MERGE_OVERWRITE);
         }
 
         $v = [];
