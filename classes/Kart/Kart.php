@@ -31,6 +31,7 @@ use Kirby\Toolkit\Str;
 use Kirby\Toolkit\SymmetricCrypto;
 use Kirby\Toolkit\V;
 use Kirby\Uuid\Uuid;
+use NumberFormatter;
 
 /**
  * Kart

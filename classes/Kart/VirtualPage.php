@@ -138,6 +138,9 @@ class VirtualPage extends Obj
         // remove all null values in content so when hydration with
         // local file happens the local value will be kept
         $result['content'] = array_filter($result['content'], fn ($value) => $value !== null);
+        if (array_key_exists('raw', $result['content']) && is_array($result['content']['raw']) && $result['content']['raw'] === []) {
+            unset($result['content']['raw']);
+        }
 
         // convert all arrays in content to yaml
         foreach ($result['content'] as $key => $value) {
