@@ -279,7 +279,7 @@ class Kart implements Kerbs
             $locale = array_shift($locale);
         }
         if (is_null($locale)) {
-            $locale = kart()->option('locale', 'en_EN');
+            $locale = kart()->option('locale', 'en_US');
         }
 
         if (! $kirby->environment()->isLocal() && $kirby->plugin('bnomei/kart')->license()->status()->value() !== 'active') {
