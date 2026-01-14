@@ -42,6 +42,30 @@ class Mollie extends Provider
         ], fn ($value) => $value !== null && $value !== '');
     }
 
+    private function normalizeBillingAddress(array $billingAddress, array $contact = []): array
+    {
+        if (empty($billingAddress)) {
+            return [];
+        }
+
+        $hasFullPostal = isset(
+            $billingAddress['streetAndNumber'],
+            $billingAddress['postalCode'],
+            $billingAddress['city'],
+            $billingAddress['country']
+        );
+
+        if ($hasFullPostal) {
+            return $billingAddress;
+        }
+
+        $email = $billingAddress['email'] ?? ($contact['email'] ?? null);
+
+        return array_filter([
+            'email' => $email,
+        ], fn ($value) => $value !== null && $value !== '');
+    }
+
     public function checkout(): string
     {
         $options = $this->option('checkout_options', false);
@@ -61,6 +85,7 @@ class Mollie extends Provider
 
         $contact = $this->checkoutContact();
         $billingAddress = $this->buildAddress($this->checkoutBillingAddress(), $contact);
+        $billingAddress = $this->normalizeBillingAddress($billingAddress, $contact);
         $shippingAddress = $this->buildAddress($this->checkoutShippingAddress(), $contact);
 
         $customerId = $this->kirby()->user() ? $this->kart->provider()->userData('customerId') : null;
@@ -95,7 +120,7 @@ class Mollie extends Provider
             $locale = array_shift($locale);
         }
         if (is_null($locale)) {
-            $locale = kart()->option('locale', 'en_EN');
+            $locale = kart()->option('locale', 'en_US');
         }
 
         $lines = A::get($options, 'lines', []);
