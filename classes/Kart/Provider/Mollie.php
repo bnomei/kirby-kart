@@ -11,6 +11,7 @@
 namespace Bnomei\Kart\Provider;
 
 use Bnomei\Kart\CartLine;
+use Bnomei\Kart\Models\ProductPage;
 use Bnomei\Kart\Provider;
 use Bnomei\Kart\ProviderEnum;
 use Bnomei\Kart\Router;
@@ -151,7 +152,7 @@ class Mollie extends Provider
                 ]),
                 'shippingAddress' => $shippingAddress ?: null,
                 'lines' => array_merge($lines, $this->kart->cart()->lines()->values(fn (CartLine $l) => array_merge([
-                    'sku' => $l->product()?->uuid()->id().($l->variant() ? '|'.$l->variant() : ''), // used on completed again to find the product
+                    'sku' => $l->product()?->uuid()->id().($l->variant() ? '|'.md5($l->variant()) : ''), // <= 64c, used on completed again to find the product
                     'type' => $l->product()?->ptype()->isNotEmpty() ? // @phpstan-ignore-line
                         $l->product()?->ptype()->value() : 'physical', // @phpstan-ignore-line
                     'description' => $l->product()?->title()->value(),
@@ -261,9 +262,16 @@ class Mollie extends Provider
 
         foreach (A::get($json, 'lines') as $line) {
             $sku = A::get($line, 'sku');
-            $variant = '';
             if (str_contains($sku, '|')) {
-                [$sku, $variant] = explode('|', $sku);
+                [$sku, $variantAsMd5] = explode('|', $sku);
+            }
+            $variant = $variantAsMd5;
+            /** @var ProductPage $product */
+            $product = $this->kirby()->page('page://'.$sku);
+            foreach ($product?->variantData() as $variantData) {
+                if (md5($variantData['variant']) === $variant) {
+                    $variant = $variantData['variant'];
+                }
             }
             $data['items'][] = [
                 'key' => ['page://'.$sku],  // pages field expect an array
