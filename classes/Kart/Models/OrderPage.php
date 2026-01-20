@@ -503,6 +503,18 @@ class OrderPage extends Page implements Kerbs
         return $file;
     }
 
+    private static function normalizeVariant(?string $variant): ?string
+    {
+        if (empty($variant)) {
+            return null;
+        }
+
+        $variants = array_map('trim', explode(',', $variant));
+        sort($variants);
+
+        return implode(',', $variants);
+    }
+
     /** @phpstan-ignore-next-line */
     public function createZipWithFiles(Files|array $files = [], ?string $zipFilename = null): ?File
     {
@@ -528,10 +540,20 @@ class OrderPage extends Page implements Kerbs
                 foreach ($product->downloads()->toFiles() as $file) {
                     F::copy($file->root(), $tmpDir.'/'.$file->filename());
                 }
+
+                $lineVariant = self::normalizeVariant($item->variant()->value());
+                if ($lineVariant === null) {
+                    continue;
+                }
+
                 foreach ($product->variants()->toStructure() as $variant) {
+                    if (self::normalizeVariant($variant->variant()->value()) !== $lineVariant) {
+                        continue;
+                    }
                     foreach ($variant->downloads()->toFiles() as $file) {
                         F::copy($file->root(), $tmpDir.'/'.$file->filename());
                     }
+                    break;
                 }
             }
 
