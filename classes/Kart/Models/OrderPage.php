@@ -38,6 +38,7 @@ use ZipArchive;
  * @method Field paymentId()
  * @method Field paymentMethod()
  */
+#[\AllowDynamicProperties]
 class OrderPage extends Page implements Kerbs
 {
     use ModelWithTurbo;
@@ -71,31 +72,47 @@ class OrderPage extends Page implements Kerbs
     {
         $page = $this;
         $pageId = $this->id();
-        $current = $page->invnumber()->isEmpty() ? null : $page->invnumber()->toInt();
+        $current = $page->invnumber()->isEmpty()
+            ? null
+            : $page->invnumber()->toInt();
 
         // if this order does have a num (from Merx) use that
         if ($page->num() !== null) {
             $current = $page->num();
             if ($this->invnumber()->toInt() !== $current) {
-                $this->kirby()->impersonate('kirby', fn () => page($pageId)?->update([
-                    'invnumber' => $current,
-                ]));
+                $this->kirby()->impersonate(
+                    'kirby',
+                    fn () => page($pageId)?->update([
+                        'invnumber' => $current,
+                    ]),
+                );
             }
         }
 
         // if the current is higher than the tracker in the parent then update the parent with current
         if ($current && $page->parent()?->invnumber()->toInt() <= $current) {
-            $this->kirby()->impersonate('kirby', function () use ($pageId, $current): void {
-                page($pageId)?->parent()?->update([
-                    'invnumber' => $current,
-                ]);
+            $this->kirby()->impersonate('kirby', function () use (
+                $pageId,
+                $current,
+            ): void {
+                page($pageId)
+                    ?->parent()
+                    ?->update([
+                        'invnumber' => $current,
+                    ]);
             });
         }
 
         // if the order does not have an invoice number increment and fetch from parent
         if ($page->invnumber()->isEmpty()) {
-            $page = $this->kirby()->impersonate('kirby', function () use ($pageId) {
-                $next = page($pageId)?->parent()?->increment('invnumber', 1)->invnumber()->toInt();
+            $page = $this->kirby()->impersonate('kirby', function () use (
+                $pageId,
+            ) {
+                $next = page($pageId)
+                    ?->parent()
+                    ?->increment('invnumber', 1)
+                    ->invnumber()
+                    ->toInt();
 
                 return page($pageId)?->update([
                     'invnumber' => $next,
@@ -190,7 +207,8 @@ class OrderPage extends Page implements Kerbs
                                     'width' => '1/4',
                                     'translate' => false,
                                 ],
-                                'paidDate' => [ // Merx 1.7+ https://github.com/wagnerwagner/merx/blob/8cadc64a0c4e98144c33b476094601560f204191/models/orderPageAbstract.php#L76C25-L76C33
+                                'paidDate' => [
+                                    // Merx 1.7+ https://github.com/wagnerwagner/merx/blob/8cadc64a0c4e98144c33b476094601560f204191/models/orderPageAbstract.php#L76C25-L76C33
                                     'label' => 'bnomei.kart.paidDate',
                                     'type' => 'date',
                                     'required' => true,
@@ -214,12 +232,14 @@ class OrderPage extends Page implements Kerbs
                                 'line' => [
                                     'type' => 'line',
                                 ],
-                                'items' => [ // use `items` for Merx compatibility
+                                'items' => [
+                                    // use `items` for Merx compatibility
                                     'label' => 'bnomei.kart.items',
                                     'type' => 'structure',
                                     'translate' => false,
                                     'fields' => [
-                                        'key' => [ // use `key` for Merx compatibility, `id` breaks Structures
+                                        'key' => [
+                                            // use `key` for Merx compatibility, `id` breaks Structures
                                             'label' => 'bnomei.kart.product',
                                             'type' => 'pages',
                                             'query' => 'site.kart.page("products")',
@@ -230,42 +250,48 @@ class OrderPage extends Page implements Kerbs
                                             'label' => 'bnomei.kart.variant',
                                             'type' => 'tags',
                                         ],
-                                        'price' => [ // Merx
+                                        'price' => [
+                                            // Merx
                                             'label' => 'bnomei.kart.price',
                                             'type' => 'number',
                                             'min' => 0,
                                             'step' => 0.01,
                                             'default' => 0,
                                         ],
-                                        'quantity' => [ // Merx
+                                        'quantity' => [
+                                            // Merx
                                             'label' => 'bnomei.kart.quantity',
                                             'type' => 'number',
                                             'min' => 1,
                                             'step' => 1,
                                             'default' => 1,
                                         ],
-                                        'total' => [ // (price * quantity - discount) * tax
+                                        'total' => [
+                                            // (price * quantity - discount) * tax
                                             'label' => 'bnomei.kart.total',
                                             'type' => 'number',
                                             'min' => 0,
                                             'step' => 0.01,
                                             'default' => 0,
                                         ],
-                                        'subtotal' => [ // (price * quantity - discount)
+                                        'subtotal' => [
+                                            // (price * quantity - discount)
                                             'label' => 'bnomei.kart.subtotal',
                                             'type' => 'number',
                                             'min' => 0,
                                             'step' => 0.01,
                                             'default' => 0,
                                         ],
-                                        'tax' => [ // plain tax value (not taxrate)
+                                        'tax' => [
+                                            // plain tax value (not taxrate)
                                             'label' => 'bnomei.kart.tax',
                                             'type' => 'number',
                                             'min' => 0,
                                             'step' => 0.01,
                                             'default' => 0,
                                         ],
-                                        'discount' => [ // total discount applied to price * quantity
+                                        'discount' => [
+                                            // total discount applied to price * quantity
                                             'label' => 'bnomei.kart.discount',
                                             'type' => 'number',
                                             'min' => 0,
@@ -309,13 +335,18 @@ class OrderPage extends Page implements Kerbs
         ];
     }
 
-    public function hasProduct(string|ProductPage $key, ?string $variant = null): bool
-    {
+    public function hasProduct(
+        string|ProductPage $key,
+        ?string $variant = null,
+    ): bool {
         return $this->productsCount($key, true) > 0;
     }
 
-    public function productsCount(string|ProductPage|null $key = null, bool $oneIsEnough = false, ?string $variant = null): int
-    {
+    public function productsCount(
+        string|ProductPage|null $key = null,
+        bool $oneIsEnough = false,
+        ?string $variant = null,
+    ): int {
         if ($key instanceof ProductPage) {
             $key = $key->id();
         }
@@ -323,13 +354,16 @@ class OrderPage extends Page implements Kerbs
         $sum = 0;
         foreach ($this->items()->toStructure() as $item) {
             // it does not matter if id or uuid is stored with this query
-            if (! $key || $item->key()->toPage()?->id() === $key || $item->key()->toPage()?->uuid()->toString() === $key) {
+            if (
+                ! $key ||
+                $item->key()->toPage()?->id() === $key ||
+                $item->key()->toPage()?->uuid()->toString() === $key
+            ) {
                 if ($variant && $variant !== $item->variant()->value()) {
                     continue;
                 }
                 $sum += $item->quantity()->toInt();
                 if ($oneIsEnough) {
-
                     return $sum;
                 }
             }
@@ -407,8 +441,9 @@ class OrderPage extends Page implements Kerbs
     /**
      * @kql-allowed
      */
-    public function sum(): float // Merx
+    public function sum(): float
     {
+        // Merx
         return $this->itemsSum('subtotal');
     }
 
@@ -439,8 +474,9 @@ class OrderPage extends Page implements Kerbs
     /**
      * @kql-allowed
      */
-    public function sumtax(): float // Merx
+    public function sumtax(): float
     {
+        // Merx
         return $this->itemsSum('total');
     }
 
@@ -456,7 +492,12 @@ class OrderPage extends Page implements Kerbs
     {
         // $page = $this->updateInvoiceNumber(); // this would auto-fix Merx pages but it's not needed otherwise
 
-        return str_pad(strval($this->invnumber()->value()), 5, '0', STR_PAD_LEFT);
+        return str_pad(
+            strval($this->invnumber()->value()),
+            5,
+            '0',
+            STR_PAD_LEFT,
+        );
     }
 
     /**
@@ -470,7 +511,9 @@ class OrderPage extends Page implements Kerbs
             $url .= '?signature='.Kart::signature($url);
         }
 
-        return $this->invoiceurl()->isNotEmpty() ? strval($this->invoiceurl()->value()) : $url;
+        return $this->invoiceurl()->isNotEmpty()
+            ? strval($this->invoiceurl()->value())
+            : $url;
     }
 
     /**
@@ -496,7 +539,10 @@ class OrderPage extends Page implements Kerbs
             ->sortBy('modified', 'desc')
             ->first();
 
-        if ($file === null && kart()->option('orders.order.create-missing-zips')) {
+        if (
+            $file === null &&
+            kart()->option('orders.order.create-missing-zips')
+        ) {
             $file = $this->createZipWithFiles();
         }
 
@@ -516,8 +562,10 @@ class OrderPage extends Page implements Kerbs
     }
 
     /** @phpstan-ignore-next-line */
-    public function createZipWithFiles(Files|array $files = [], ?string $zipFilename = null): ?File
-    {
+    public function createZipWithFiles(
+        Files|array $files = [],
+        ?string $zipFilename = null,
+    ): ?File {
         try {
             $tmpId = date('U-v');
             $tmpDir = kirby()->root('cache').'/zips/'.$tmpId;
@@ -527,7 +575,10 @@ class OrderPage extends Page implements Kerbs
                 /** @var File $file */
                 foreach ($files as $file) {
                     if ($file->root()) {
-                        F::copy($file->root(), $tmpDir.'/'.$file->filename());
+                        F::copy(
+                            $file->root(),
+                            $tmpDir.'/'.$file->filename(),
+                        );
                     }
                 }
             }
@@ -541,17 +592,25 @@ class OrderPage extends Page implements Kerbs
                     F::copy($file->root(), $tmpDir.'/'.$file->filename());
                 }
 
-                $lineVariant = self::normalizeVariant($item->variant()->value());
+                $lineVariant = self::normalizeVariant(
+                    $item->variant()->value(),
+                );
                 if ($lineVariant === null) {
                     continue;
                 }
 
                 foreach ($product->variants()->toStructure() as $variant) {
-                    if (self::normalizeVariant($variant->variant()->value()) !== $lineVariant) {
+                    if (
+                        self::normalizeVariant($variant->variant()->value()) !==
+                        $lineVariant
+                    ) {
                         continue;
                     }
                     foreach ($variant->downloads()->toFiles() as $file) {
-                        F::copy($file->root(), $tmpDir.'/'.$file->filename());
+                        F::copy(
+                            $file->root(),
+                            $tmpDir.'/'.$file->filename(),
+                        );
                     }
                     break;
                 }
@@ -577,7 +636,11 @@ class OrderPage extends Page implements Kerbs
                 return null;
             }
 
-            if (count($existingFiles) === 1 && pathinfo((string) $existingFiles[0], PATHINFO_EXTENSION) === 'zip') {
+            if (
+                count($existingFiles) === 1 &&
+                pathinfo((string) $existingFiles[0], PATHINFO_EXTENSION) ===
+                    'zip'
+            ) {
                 $zipFile = $tmpDir.'/'.$existingFiles[0];
             } else {
                 $zipFile = $tmpDir.'.zip';
@@ -586,18 +649,30 @@ class OrderPage extends Page implements Kerbs
                     foreach (Dir::read($tmpDir) as $file) {
                         $filePath = $tmpDir.'/'.$file;
                         if (is_file($filePath)) {
-                            $zip->addFile($filePath, $this->slug().'/'.$file);
-                            $zip->setCompressionName($file, ZipArchive::CM_STORE); // store is quickest
+                            $zip->addFile(
+                                $filePath,
+                                $this->slug().'/'.$file,
+                            );
+                            $zip->setCompressionName(
+                                $file,
+                                ZipArchive::CM_STORE,
+                            ); // store is quickest
                         }
                     }
                     $zip->close();
                 }
             }
 
-            $file = kirby()->impersonate('kirby', fn () => $this->createFile([
-                'filename' => $zipFilename ?? md5($tmpId).'.zip', // make unguessable
-                'source' => $zipFile,
-            ], move: true));
+            $file = kirby()->impersonate(
+                'kirby',
+                fn () => $this->createFile(
+                    [
+                        'filename' => $zipFilename ?? md5($tmpId).'.zip', // make unguessable
+                        'source' => $zipFile,
+                    ],
+                    move: true,
+                ),
+            );
 
             Dir::remove($tmpDir);
 
@@ -625,9 +700,13 @@ class OrderPage extends Page implements Kerbs
     {
         $lines = [];
         foreach ($this->items()->toStructure() as $line) {
-            $variant = $line->variant()->isNotEmpty() ? $line->variant()->value() : null;
+            $variant = $line->variant()->isNotEmpty()
+                ? $line->variant()->value()
+                : null;
             $lines[] = new OrderLine(
-                ($line->key()->toPage()?->uuid()->toString() ?? $line->key()->value()[0]).($variant ? '|'.$variant : ''),
+                ($line->key()->toPage()?->uuid()->toString() ??
+                    $line->key()->value()[0]).
+                    ($variant ? '|'.$variant : ''),
                 $line->price()->toFloat(),
                 $line->quantity()->toInt(),
                 $line->total()->toFloat(),
@@ -661,23 +740,28 @@ class OrderPage extends Page implements Kerbs
             return $this->kerbs;
         }
 
-        return $this->kerbs = array_filter([
-            'discount' => $this->discount(),
-            'download' => $this->download(),
-            'formattedDiscount' => $this->formattedDiscount(),
-            'formattedSubtotal' => $this->formattedSubtotal(),
-            'formattedTax' => $this->formattedTax(),
-            'formattedTotal' => $this->formattedTotal(),
-            'invoice' => $this->invoice(),
-            'invoiceNumber' => $this->invoiceNumber(),
-            'isPayed' => $this->isPayed(),
-            'orderLines' => $this->orderLines()->values(fn (OrderLine $o) => $o->toKerbs()),
-            'paidDate' => $this->paidDate()->toDate('c'), // ISO 8601 date
-            'subtotal' => $this->subtotal(),
-            'tax' => $this->tax(),
-            'title' => $this->title()->value(),
-            'total' => $this->total(),
-            'url' => $this->urlWithSignature(),
-        ], fn ($value) => $value !== null);
+        return $this->kerbs = array_filter(
+            [
+                'discount' => $this->discount(),
+                'download' => $this->download(),
+                'formattedDiscount' => $this->formattedDiscount(),
+                'formattedSubtotal' => $this->formattedSubtotal(),
+                'formattedTax' => $this->formattedTax(),
+                'formattedTotal' => $this->formattedTotal(),
+                'invoice' => $this->invoice(),
+                'invoiceNumber' => $this->invoiceNumber(),
+                'isPayed' => $this->isPayed(),
+                'orderLines' => $this->orderLines()->values(
+                    fn (OrderLine $o) => $o->toKerbs(),
+                ),
+                'paidDate' => $this->paidDate()->toDate('c'), // ISO 8601 date
+                'subtotal' => $this->subtotal(),
+                'tax' => $this->tax(),
+                'title' => $this->title()->value(),
+                'total' => $this->total(),
+                'url' => $this->urlWithSignature(),
+            ],
+            fn ($value) => $value !== null,
+        );
     }
 }

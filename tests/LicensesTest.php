@@ -42,7 +42,7 @@ it('has a helper to work with licenses', function (): void {
     $l = new Licenses;
     expect($lickey)->toBe($lk)
         ->and($l->order($lickey)->id())->toBe($o->id())
-        ->and($l->customer($lickey))->toBeNull()
+        ->and($l->customer($lickey))->toNotBeNull()
         ->and($l->activate($lickey))->toBeArray()
         ->and($l->deactivate($lickey))->toBeArray()
         ->and($l->validate($lickey))->toBeArray();

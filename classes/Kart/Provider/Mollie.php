@@ -29,22 +29,29 @@ class Mollie extends Provider
             return [];
         }
 
-        return array_filter([
-            'streetAndNumber' => $address['address1'] ?? null,
-            'streetAdditional' => $address['address2'] ?? null,
-            'postalCode' => $address['postal_code'] ?? null,
-            'city' => $address['city'] ?? null,
-            'region' => $address['state'] ?? null,
-            'country' => isset($address['country']) ? strtoupper($address['country']) : null,
-            'givenName' => $address['first_name'] ?? null,
-            'familyName' => $address['last_name'] ?? null,
-            'organizationName' => $address['company'] ?? null,
-            'email' => $contact['email'] ?? null,
-        ], fn ($value) => $value !== null && $value !== '');
+        return array_filter(
+            [
+                'streetAndNumber' => $address['address1'] ?? null,
+                'streetAdditional' => $address['address2'] ?? null,
+                'postalCode' => $address['postal_code'] ?? null,
+                'city' => $address['city'] ?? null,
+                'region' => $address['state'] ?? null,
+                'country' => isset($address['country'])
+                    ? strtoupper($address['country'])
+                    : null,
+                'givenName' => $address['first_name'] ?? null,
+                'familyName' => $address['last_name'] ?? null,
+                'organizationName' => $address['company'] ?? null,
+                'email' => $contact['email'] ?? null,
+            ],
+            fn ($value) => $value !== null && $value !== '',
+        );
     }
 
-    private function normalizeBillingAddress(array $billingAddress, array $contact = []): array
-    {
+    private function normalizeBillingAddress(
+        array $billingAddress,
+        array $contact = [],
+    ): array {
         if (empty($billingAddress)) {
             return [];
         }
@@ -53,7 +60,7 @@ class Mollie extends Provider
             $billingAddress['streetAndNumber'],
             $billingAddress['postalCode'],
             $billingAddress['city'],
-            $billingAddress['country']
+            $billingAddress['country'],
         );
 
         if ($hasFullPostal) {
@@ -62,9 +69,12 @@ class Mollie extends Provider
 
         $email = $billingAddress['email'] ?? ($contact['email'] ?? null);
 
-        return array_filter([
-            'email' => $email,
-        ], fn ($value) => $value !== null && $value !== '');
+        return array_filter(
+            [
+                'email' => $email,
+            ],
+            fn ($value) => $value !== null && $value !== '',
+        );
     }
 
     public function checkout(): string
@@ -85,14 +95,26 @@ class Mollie extends Provider
         }
 
         $contact = $this->checkoutContact();
-        $billingAddress = $this->buildAddress($this->checkoutBillingAddress(), $contact);
-        $billingAddress = $this->normalizeBillingAddress($billingAddress, $contact);
-        $shippingAddress = $this->buildAddress($this->checkoutShippingAddress(), $contact);
+        $billingAddress = $this->buildAddress(
+            $this->checkoutBillingAddress(),
+            $contact,
+        );
+        $billingAddress = $this->normalizeBillingAddress(
+            $billingAddress,
+            $contact,
+        );
+        $shippingAddress = $this->buildAddress(
+            $this->checkoutShippingAddress(),
+            $contact,
+        );
 
-        $customerId = $this->kirby()->user() ? $this->kart->provider()->userData('customerId') : null;
+        $customerId = $this->kirby()->user()
+            ? $this->kart->provider()->userData('customerId')
+            : null;
         if (! $customerId) {
             $email = $contact['email'] ?? $this->kirby()->user()?->email();
-            $name = $contact['name'] ?? $this->kirby()->user()?->name()->value();
+            $name =
+                $contact['name'] ?? $this->kirby()->user()?->name()->value();
 
             // https://docs.mollie.com/reference/create-customer
             $remote = Remote::post('https://api.mollie.com/v2/customers', [
@@ -106,17 +128,24 @@ class Mollie extends Provider
                 ]),
             ]);
 
-            $customer = in_array($remote->code(), [200, 201]) ? $remote->json() : null;
+            $customer = in_array($remote->code(), [200, 201])
+                ? $remote->json()
+                : null;
             if (is_array($customer)) {
                 $customerId = A::get($customer, 'id');
             }
 
             if ($customerId && $this->kirby()->user()) {
-                $this->setUserData(['customerId' => $customerId], $this->kirby()->user());
+                $this->setUserData(
+                    ['customerId' => $customerId],
+                    $this->kirby()->user(),
+                );
             }
         }
 
-        $locale = $this->kirby->multilang() ? $this->kirby->language()?->locale() : null;
+        $locale = $this->kirby->multilang()
+            ? $this->kirby->language()?->locale()
+            : null;
         if (is_array($locale)) {
             $locale = array_shift($locale);
         }
@@ -133,51 +162,94 @@ class Mollie extends Provider
                 'Content-Type' => 'application/x-www-form-urlencoded',
                 'Authorization' => 'Bearer '.strval($this->option('secret_key')),
             ],
-            'data' => array_filter(array_merge([
-                'description' => strval(t('bnomei.kart.order')).' '.strtoupper($uuid),
-                'metadata' => [
-                    'order_id' => $uuid,
-                ],
-                'locale' => strval($locale),
-                // 'method' => ['applepay', 'creditcard', 'paypal', 'twint'], // defaults to those set in your Mollie account or set via checkout_options to force them
-                'customerId' => $customerId,
-                'redirectUrl' => url(Router::PROVIDER_SUCCESS).'?session_id='.urlencode($uuid),
-                'cancelUrl' => url(Router::PROVIDER_CANCEL),
-                'amount' => [
-                    'currency' => $this->kart->currency(),
-                    'value' => $this->moneyValue($this->kart->cart()->subtotal()),
-                ],
-                'billingAddress' => ! empty($billingAddress) ? $billingAddress : array_filter([
-                    'email' => $contact['email'] ?? null,
-                ]),
-                'shippingAddress' => $shippingAddress ?: null,
-                'lines' => array_merge($lines, $this->kart->cart()->lines()->values(fn (CartLine $l) => array_merge([
-                    'sku' => $l->product()?->uuid()->id().($l->variant() ? '|'.md5($l->variant()) : ''), // <= 64c, used on completed again to find the product
-                    'type' => $l->product()?->ptype()->isNotEmpty() ? // @phpstan-ignore-line
-                        $l->product()?->ptype()->value() : 'physical', // @phpstan-ignore-line
-                    'description' => $l->product()?->title()->value(),
-                    'quantity' => $l->quantity(),
-                    'unitPrice' => [
-                        'currency' => $this->kart->currency(),
-                        'value' => $this->moneyValue($l->price()),
+            'data' => array_filter(
+                array_merge(
+                    [
+                        'description' => strval(t('bnomei.kart.order')).
+                            ' '.
+                            strtoupper($uuid),
+                        'metadata' => [
+                            'order_id' => $uuid,
+                        ],
+                        'locale' => strval($locale),
+                        // 'method' => ['applepay', 'creditcard', 'paypal', 'twint'], // defaults to those set in your Mollie account or set via checkout_options to force them
+                        'customerId' => $customerId,
+                        'redirectUrl' => url(Router::PROVIDER_SUCCESS).
+                            '?session_id='.
+                            urlencode($uuid),
+                        'cancelUrl' => url(Router::PROVIDER_CANCEL),
+                        'amount' => [
+                            'currency' => $this->kart->currency(),
+                            'value' => $this->moneyValue(
+                                $this->kart->cart()->subtotal(),
+                            ),
+                        ],
+                        'billingAddress' => ! empty($billingAddress)
+                            ? $billingAddress
+                            : array_filter([
+                                'email' => $contact['email'] ?? null,
+                            ]),
+                        'shippingAddress' => $shippingAddress ?: null,
+                        'lines' => array_merge(
+                            $lines,
+                            $this->kart->cart()->lines()->values(
+                                function (CartLine $l) use ($lineItem): array {
+                                    $product = $l->product();
+
+                                    return array_merge(
+                                        [
+                                            'sku' => $product?->uuid()->id().
+                                                ($l->variant()
+                                                    ? '|'.md5($l->variant())
+                                                    : ''), // <= 64c, used on completed again to find the product
+                                            'type' => $product &&
+                                                $product
+                                                    ->ptype()
+                                                    ->isNotEmpty()
+                                                ? $product->ptype()->value()
+                                                : 'physical',
+                                            'description' => $product
+                                                ?->title()
+                                                ->value(),
+                                            'quantity' => $l->quantity(),
+                                            'unitPrice' => [
+                                                'currency' => $this->kart->currency(),
+                                                'value' => $this->moneyValue(
+                                                    $l->price(),
+                                                ),
+                                            ],
+                                            'totalAmount' => [
+                                                'currency' => $this->kart->currency(),
+                                                'value' => $this->moneyValue(
+                                                    $l->subtotal(),
+                                                ),
+                                            ],
+                                            'imageUrl' => $product
+                                                ?->firstGalleryImageUrl(),
+                                            'productUrl' => $product?->url(),
+                                            'vatRate' => 0, // use checkout_line to adjust
+                                            'vatAmount' => [
+                                                'currency' => $this->kart->currency(),
+                                                'value' => $this->moneyValue(
+                                                    0,
+                                                ),
+                                            ], // use checkout_line to adjust
+                                            'discountAmount' => [
+                                                'currency' => $this->kart->currency(),
+                                                'value' => $this->moneyValue(
+                                                    0,
+                                                ),
+                                            ], // use checkout_line to adjust
+                                        ],
+                                        $lineItem($this->kart, $l),
+                                    );
+                                },
+                            ),
+                        ),
                     ],
-                    'totalAmount' => [
-                        'currency' => $this->kart->currency(),
-                        'value' => $this->moneyValue($l->subtotal()),
-                    ],
-                    'imageUrl' => $l->product()?->firstGalleryImageUrl(),
-                    'productUrl' => $l->product()?->url(),
-                    'vatRate' => 0, // use checkout_line to adjust
-                    'vatAmount' => [
-                        'currency' => $this->kart->currency(),
-                        'value' => $this->moneyValue(0),
-                    ], // use checkout_line to adjust
-                    'discountAmount' => [
-                        'currency' => $this->kart->currency(),
-                        'value' => $this->moneyValue(0),
-                    ], // use checkout_line to adjust
-                ], $lineItem($this->kart, $l)))),
-            ], $options)),
+                    $options,
+                ),
+            ),
         ]);
 
         $json = in_array($remote->code(), [200, 201]) ? $remote->json() : null;
@@ -186,27 +258,35 @@ class Mollie extends Provider
         }
 
         $session_id = A::get($json, 'id'); // tr_...
-        $this->kirby->session()->set('bnomei.kart.'.$this->name.'.session_id', $session_id);
+        $this->kirby
+            ->session()
+            ->set('bnomei.kart.'.$this->name.'.session_id', $session_id);
 
-        return parent::checkout() && in_array($remote->code(), [200, 201]) ?
-            A::get($json, '_links.checkout.href') : '/';
+        return parent::checkout() && in_array($remote->code(), [200, 201])
+            ? A::get($json, '_links.checkout.href')
+            : '/';
     }
 
     public function completed(array $data = []): array
     {
         // get session from current PHP session
-        $sessionId = $this->kirby->session()->get('bnomei.kart.'.$this->name.'.session_id');
+        $sessionId = $this->kirby
+            ->session()
+            ->get('bnomei.kart.'.$this->name.'.session_id');
         if (! $sessionId || ! is_string($sessionId)) {
             return [];
         }
 
         // https://docs.mollie.com/reference/get-payment
-        $remote = Remote::get('https://api.mollie.com/v2/payments/'.$sessionId, [
-            'headers' => [
-                'Content-Type' => 'application/json',
-                'Authorization' => 'Bearer '.strval($this->option('secret_key')),
+        $remote = Remote::get(
+            'https://api.mollie.com/v2/payments/'.$sessionId,
+            [
+                'headers' => [
+                    'Content-Type' => 'application/json',
+                    'Authorization' => 'Bearer '.strval($this->option('secret_key')),
+                ],
             ],
-        ]);
+        );
 
         $json = $remote->code() === 200 ? $remote->json() : null;
         if (! is_array($json)) {
@@ -214,7 +294,9 @@ class Mollie extends Provider
         }
 
         if (A::get($json, 'status') !== 'paid') {
-            $this->kirby->session()->remove('bnomei.kart.'.$this->name.'.session_id');
+            $this->kirby
+                ->session()
+                ->remove('bnomei.kart.'.$this->name.'.session_id');
             kart()->cart()->releaseStock();
 
             return [];
@@ -224,12 +306,15 @@ class Mollie extends Provider
         // this only works if the user has been linked on checkout creation
         if ($customerId = A::get($json, 'customerId')) {
             // https://docs.mollie.com/reference/get-customer
-            $remote = Remote::get('https://api.mollie.com/v2/customers/'.$customerId, [
-                'headers' => [
-                    'Content-Type' => 'application/json',
-                    'Authorization' => 'Bearer '.strval($this->option('secret_key')),
+            $remote = Remote::get(
+                'https://api.mollie.com/v2/customers/'.$customerId,
+                [
+                    'headers' => [
+                        'Content-Type' => 'application/json',
+                        'Authorization' => 'Bearer '.strval($this->option('secret_key')),
+                    ],
                 ],
-            ]);
+            );
 
             $customer = $remote->code() === 200 ? $remote->json() : null;
             if (! is_array($customer)) {
@@ -241,21 +326,31 @@ class Mollie extends Provider
         if (is_array($paymentMethod)) {
             $paymentMethod = implode(',', $paymentMethod);
         }
-        $data = array_merge($data, array_filter([
-            // 'session_id' => $sessionId,
-            // 'uuid' => A::get($json, 'metadata.order_id'),
-            'email' => A::get($customer, 'email'),
-            'customer' => ! empty($customer) ? [
-                'id' => A::get($customer, 'id'),
+        $data = array_merge(
+            $data,
+            array_filter([
+                // 'session_id' => $sessionId,
+                // 'uuid' => A::get($json, 'metadata.order_id'),
                 'email' => A::get($customer, 'email'),
-                'name' => A::get($customer, 'name'),
-            ] : null,
-            'paidDate' => date('Y-m-d H:i:s', strtotime(A::get($json, 'paidAt', A::get($json, 'createdAt')))),
-            'paymentMethod' => $paymentMethod,
-            'paymentComplete' => true,
-            // 'invoiceurl' => A::get($json, 'invoice'),
-            'paymentId' => A::get($json, 'id'),
-        ]));
+                'customer' => ! empty($customer)
+                    ? [
+                        'id' => A::get($customer, 'id'),
+                        'email' => A::get($customer, 'email'),
+                        'name' => A::get($customer, 'name'),
+                    ]
+                    : null,
+                'paidDate' => date(
+                    'Y-m-d H:i:s',
+                    strtotime(
+                        A::get($json, 'paidAt', A::get($json, 'createdAt')),
+                    ),
+                ),
+                'paymentMethod' => $paymentMethod,
+                'paymentComplete' => true,
+                // 'invoiceurl' => A::get($json, 'invoice'),
+                'paymentId' => A::get($json, 'id'),
+            ]),
+        );
 
         /** @var \Closure $likey */
         $likey = kart()->option('licenses.license.uuid');
@@ -265,29 +360,48 @@ class Mollie extends Provider
             if (str_contains($sku, '|')) {
                 [$sku, $variantAsMd5] = explode('|', $sku);
             }
-            $variant = $variantAsMd5;
-            /** @var ProductPage $product */
+            $variant = $variantAsMd5 ?? '';
             $product = $this->kirby()->page('page://'.$sku);
-            foreach ($product?->variantData() as $variantData) {
-                if (md5($variantData['variant']) === $variant) {
-                    $variant = $variantData['variant'];
+
+            if ($product instanceof ProductPage) {
+                foreach ($product->variantData() as $variantData) {
+                    if (md5($variantData['variant']) === $variant) {
+                        $variant = $variantData['variant'];
+                    }
                 }
             }
             $data['items'][] = [
-                'key' => ['page://'.$sku],  // pages field expect an array
+                'key' => ['page://'.$sku], // pages field expect an array
                 'variant' => $variant,
                 'quantity' => A::get($line, 'quantity'),
-                'price' => round(floatval(A::get($line, 'unitPrice.value', 0)), 2),
+                'price' => round(
+                    floatval(A::get($line, 'unitPrice.value', 0)),
+                    2,
+                ),
                 // these values include the multiplication with quantity
-                'total' => round(floatval(A::get($line, 'totalAmount.value', 0)), 2),
-                'subtotal' => round(floatval(A::get($line, 'totalAmount.value', 0)), 2),
-                'tax' => round(floatval(A::get($line, 'vatAmount.value', 0)), 2),
-                'discount' => round(floatval(A::get($line, 'discountAmount.value', 0)), 2),
+                'total' => round(
+                    floatval(A::get($line, 'totalAmount.value', 0)),
+                    2,
+                ),
+                'subtotal' => round(
+                    floatval(A::get($line, 'totalAmount.value', 0)),
+                    2,
+                ),
+                'tax' => round(
+                    floatval(A::get($line, 'vatAmount.value', 0)),
+                    2,
+                ),
+                'discount' => round(
+                    floatval(A::get($line, 'discountAmount.value', 0)),
+                    2,
+                ),
                 'licensekey' => $likey($data + ['line' => $line]),
             ];
         }
 
-        $this->kirby->session()->remove('bnomei.kart.'.$this->name.'.session_id');
+        $this->kirby
+            ->session()
+            ->remove('bnomei.kart.'.$this->name.'.session_id');
 
         return parent::completed($data);
     }

@@ -39,12 +39,14 @@ use Kirby\Toolkit\Str;
  * @method Field layouts()
  * @method Field maxapo()
  * @method Field price()
+ * @method Field ptype()
  * @method Field raw()
  * @method Field rrprice()
  * @method Field tags()
  * @method Field tax()
  * @method Field variants()
  */
+#[\AllowDynamicProperties]
 class ProductPage extends Page implements Kerbs
 {
     use ModelWithTurbo;
@@ -63,7 +65,10 @@ class ProductPage extends Page implements Kerbs
 
         $props['parent'] = $parent;
         // $props['isDraft'] = false;
-        $props['template'] = kart()->option('products.product.template', 'product');
+        $props['template'] = kart()->option(
+            'products.product.template',
+            'product',
+        );
         $props['model'] = kart()->option('products.product.model', 'product');
 
         /** @var ProductPage $p */
@@ -357,22 +362,36 @@ class ProductPage extends Page implements Kerbs
     /**
      * @kql-allowed
      */
-    public function stock(?string $withHold = null, ?string $variant = null): int|string
-    {
+    public function stock(
+        ?string $withHold = null,
+        ?string $variant = null,
+    ): int|string {
         /** @var StocksPage|null $stocks */
         $stocks = kart()->page(ContentPageEnum::STOCKS);
 
-        return $stocks?->stock($this->uuid()->toString(), $withHold, $variant) ?? '∞';
+        return $stocks?->stock(
+            $this->uuid()->toString(),
+            $withHold,
+            $variant,
+        ) ?? '∞';
     }
 
     public function stockUrl(): ?string
     {
         /** @var Page|null $p */
-        $p = kart()->stocks()
-            ->filterBy(fn (StockPage $page) => $page->page()->toPage()?->uuid()->id() === $this->uuid()->id())
+        $p = kart()
+            ->stocks()
+            ->filterBy(
+                fn (StockPage $page) => $page
+                    ->page()
+                    ->toPage()
+                    ?->uuid()
+                    ->id() === $this->uuid()->id(),
+            )
             ->first();
 
-        return $p?->panel()->url() ?? kart()->page(ContentPageEnum::STOCKS)?->panel()->url();
+        return $p?->panel()->url() ??
+            kart()->page(ContentPageEnum::STOCKS)?->panel()->url();
     }
 
     /**
@@ -380,9 +399,11 @@ class ProductPage extends Page implements Kerbs
      */
     public function salesCount(): ?int
     {
-        return array_sum(kart()->orders()->toArray(
-            fn (OrderPage $order) => $order->productsCount($this)
-        ));
+        return array_sum(
+            kart()
+                ->orders()
+                ->toArray(fn (OrderPage $order) => $order->productsCount($this)),
+        );
     }
 
     /**
@@ -513,11 +534,16 @@ class ProductPage extends Page implements Kerbs
      */
     public function maxAmountPerOrder(): ?int
     {
-        return $this->maxapo()->isEmpty() ? intval(kart()->option('orders.order.maxapo')) : $this->maxapo()->toInt();
+        return $this->maxapo()->isEmpty()
+            ? intval(kart()->option('orders.order.maxapo'))
+            : $this->maxapo()->toInt();
     }
 
-    public function updateStock(int $quantity, bool $set = false, ?string $variant = null): ProductPage
-    {
+    public function updateStock(
+        int $quantity,
+        bool $set = false,
+        ?string $variant = null,
+    ): ProductPage {
         /** @var StocksPage $stocks */
         $stocks = kart()->page(ContentPageEnum::STOCKS);
 
@@ -547,8 +573,13 @@ class ProductPage extends Page implements Kerbs
      */
     public function rrpp(): float
     {
-        return $this->rrprice()->isNotEmpty() && $this->rrprice()->toInt() !== 0 ?
-            round(($this->rrprice()->toFloat() - $this->price()->toFloat()) / $this->rrprice()->toFloat() * 100) : 0;
+        return $this->rrprice()->isNotEmpty() && $this->rrprice()->toInt() !== 0
+            ? round(
+                (($this->rrprice()->toFloat() - $this->price()->toFloat()) /
+                    $this->rrprice()->toFloat()) *
+                    100,
+            )
+            : 0;
     }
 
     public function urlWithVariant(?string $variant = null): string
@@ -561,7 +592,13 @@ class ProductPage extends Page implements Kerbs
         sort($variants);
         $variant = implode(',', $variants); // no whitespace
 
-        return $this->url().'?'.str_replace([', ', ',', ':', ' '], ['&', '&', '=', '%20'], $variant);
+        return $this->url().
+            '?'.
+            str_replace(
+                [', ', ',', ':', ' '],
+                ['&', '&', '=', '%20'],
+                $variant,
+            );
     }
 
     protected ?array $vardat = null;
@@ -572,21 +609,37 @@ class ProductPage extends Page implements Kerbs
             return $this->vardat;
         }
 
-        $values = $this->variants()->toStructure()->values(function (StructureObject $i) use ($resolveImage) {
-            $variants = $i->variant()->split();
-            sort($variants);
-            $variant = implode(',', $variants); // no whitespace
+        $values = $this->variants()
+            ->toStructure()
+            ->values(function (StructureObject $i) use ($resolveImage) {
+                $variants = $i->variant()->split();
+                sort($variants);
+                $variant = implode(',', $variants); // no whitespace
 
-            return array_filter(array_merge($i->toArray(), [
-                'options' => $variants,
-                'price_id' => $i->price_id()->isNotEmpty() ? $i->price_id()->value() : null,
-                'price' => $i->price()->isNotEmpty() ? $i->price()->toFloat() : null,
-                'formattedPrice' => $i->price()->isNotEmpty() ? $i->price()->toFormattedCurrency() : null,
-                'image' => $resolveImage ? $i->image()->toFile()?->toKerbs() : $i->image()->toFile()?->name(),
-                'variant' => $variant,
-                'inStock' => $this->stock(withHold: kart()->cart()->sessionToken(), variant: $variant) !== 0,
-            ]), fn ($value) => $value !== null);
-        });
+                return array_filter(
+                    array_merge($i->toArray(), [
+                        'options' => $variants,
+                        'price_id' => $i->price_id()->isNotEmpty()
+                            ? $i->price_id()->value()
+                            : null,
+                        'price' => $i->price()->isNotEmpty()
+                            ? $i->price()->toFloat()
+                            : null,
+                        'formattedPrice' => $i->price()->isNotEmpty()
+                            ? $i->price()->toFormattedCurrency()
+                            : null,
+                        'image' => $resolveImage
+                            ? $i->image()->toFile()?->toKerbs()
+                            : $i->image()->toFile()?->name(),
+                        'variant' => $variant,
+                        'inStock' => $this->stock(
+                            withHold: kart()->cart()->sessionToken(),
+                            variant: $variant,
+                        ) !== 0,
+                    ]),
+                    fn ($value) => $value !== null,
+                );
+            });
 
         $this->vardat = [];
         foreach ($values as $value) {
@@ -596,8 +649,10 @@ class ProductPage extends Page implements Kerbs
         return $this->vardat;
     }
 
-    public function variantDataForVariant(?string $variant = null, bool $resolveImage = false): ?array
-    {
+    public function variantDataForVariant(
+        ?string $variant = null,
+        bool $resolveImage = false,
+    ): ?array {
         if (empty($variant)) {
             return null;
         }
@@ -626,7 +681,6 @@ class ProductPage extends Page implements Kerbs
 
         $groups = [];
         foreach ($this->variants()->toStructure() as $item) {
-
             $tags = $item->variant()->split();
             sort($tags);
             foreach ($tags as $tag) {
@@ -644,7 +698,9 @@ class ProductPage extends Page implements Kerbs
                 if (count($kv) === 2) {
                     $key = trim($kv[0]);
                     $var = trim($kv[1]);
-                    $groups[$key][$var] = strval(t($key.'.'.$var, str_replace('-', ' ', $var)));
+                    $groups[$key][$var] = strval(
+                        t($key.'.'.$var, str_replace('-', ' ', $var)),
+                    );
                 }
             }
         }
@@ -685,7 +741,12 @@ class ProductPage extends Page implements Kerbs
         // all tags within the variant must be present for a match to succeed
         $tags = explode(',', $variant);
         foreach ($tags as $tag) {
-            if (! A::get($this->variantGroups(), str_replace([':', '='], ['.', '.'], $tag))) {
+            if (
+                ! A::get(
+                    $this->variantGroups(),
+                    str_replace([':', '='], ['.', '.'], $tag),
+                )
+            ) {
                 return false;
             }
         }
@@ -802,7 +863,9 @@ class ProductPage extends Page implements Kerbs
 
         $this->kerbs['partial'] = [
             'add' => $this->add(),
-            'blocks' => $this->blocks()->isEmpty() ? null : $this->blocks()->toKerbs('blocks'),
+            'blocks' => $this->blocks()->isEmpty()
+                ? null
+                : $this->blocks()->toKerbs('blocks'),
             'buy' => $this->buy(),
             'categories' => $this->categories()->split(),
             'description' => $this->description()->kti()->value(),
@@ -810,16 +873,22 @@ class ProductPage extends Page implements Kerbs
             'firstGalleryImage' => $this->firstGalleryImage()?->toKerbs(), // @phpstan-ignore-line
             'forget' => $this->forget(),
             'formattedPrice' => $this->formattedPrice(),
-            'formattedRRPrice' => $this->rrprice()->isNotEmpty() ? $this->rrprice()->toFormattedCurrency() : null,
+            'formattedRRPrice' => $this->rrprice()->isNotEmpty()
+                ? $this->rrprice()->toFormattedCurrency()
+                : null,
             'id' => $this->id(),
             'inStock' => $this->stock(kart()->cart()->sessionToken()) !== 0,
             'later' => $this->later(),
-            'layouts' => $this->layout()->or($this->layouts())->toKerbs('layouts'),
+            'layouts' => $this->layout()
+                ->or($this->layouts())
+                ->toKerbs('layouts'),
             'now' => $this->now(),
             'price' => $this->price()->toFloat(),
             'remove' => $this->remove(),
             'rrpp' => $this->rrpp(),
-            'rrprice' => $this->rrprice()->isNotEmpty() ? $this->rrprice()->toFloat() : null,
+            'rrprice' => $this->rrprice()->isNotEmpty()
+                ? $this->rrprice()->toFloat()
+                : null,
             'setAmountInCart' => $this->setAmountInCart(),
             // 'stock' => $this->stock(withHold: true),
             'tags' => $this->tags()->split(),
@@ -832,17 +901,35 @@ class ProductPage extends Page implements Kerbs
         ];
 
         $this->kerbs['full'] = array_merge($this->kerbs['partial'], [
-            'details' => $full ? $this->details()->toStructure()->values(function (StructureObject $i) {
-                $s = $i->summary()->value() ?? '';
+            'details' => $full
+                ? $this->details()
+                    ->toStructure()
+                    ->values(function (StructureObject $i) {
+                        $s = $i->summary()->value() ?? '';
 
-                return [
-                    'summary' => ! empty($s) ? Kart::query(t($s, $s), $this) : '',
-                    'text' => Kart::query($i->text()->kt()->value(), $this),
-                    'open' => $i->open()->toBool(),
-                ];
-            }) : null,
-            'gallery' => $full ? $this->gallery()->toFiles()->values(fn (File $f) => $f->toKerbs()) : null,
-            'related' => $full ? kart()->productsRelated($this)->not($this)->values(fn (ProductPage $p) => $p->id()) : null,
+                        return [
+                            'summary' => ! empty($s)
+                                ? Kart::query(t($s, $s), $this)
+                                : '',
+                            'text' => Kart::query(
+                                $i->text()->kt()->value(),
+                                $this,
+                            ),
+                            'open' => $i->open()->toBool(),
+                        ];
+                    })
+                : null,
+            'gallery' => $full
+                ? $this->gallery()
+                    ->toFiles()
+                    ->values(fn (File $f) => $f->toKerbs())
+                : null,
+            'related' => $full
+                ? kart()
+                    ->productsRelated($this)
+                    ->not($this)
+                    ->values(fn (ProductPage $p) => $p->id())
+                : null,
         ]);
 
         return $this->kerbs[$full ? 'full' : 'partial'];

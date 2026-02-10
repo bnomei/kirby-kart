@@ -24,6 +24,7 @@ use Stringable;
  * @method string url()
  * @method string urlWithParams()
  */
+#[\AllowDynamicProperties]
 class Category extends Obj implements Stringable
 {
     public function __toString(): string

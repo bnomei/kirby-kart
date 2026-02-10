@@ -64,7 +64,8 @@ class Urls implements Kerbs
             return $this->kerbs;
         }
 
-        return $this->kerbs = array_filter([
+        /** @var array<string, mixed|null> $kerbs */
+        $kerbs = [
             'account' => $this->account(),
             'account_delete' => $this->account_delete(),
             'captcha' => $this->captcha(),
@@ -76,6 +77,8 @@ class Urls implements Kerbs
             'logout' => $this->logout(),
             'products' => kart()->page(ContentPageEnum::PRODUCTS->value)?->url() ?? '',
             'signup_magic' => $this->signup_magic(),
-        ], fn ($value) => $value !== null);
+        ];
+
+        return $this->kerbs = array_filter($kerbs, fn ($value) => $value !== null);
     }
 }

@@ -24,6 +24,7 @@ use Kirby\Cms\Page;
  * @method float tax() as monetary amount not as tax-rate
  * @method float discount() as monetary amount not as percentage
  */
+#[\AllowDynamicProperties]
 class OrderLine implements Kerbs
 {
     private readonly ?Page $product;
@@ -45,7 +46,8 @@ class OrderLine implements Kerbs
 
     public function __call(string $name, array $arguments): mixed
     {
-        if ($name == 'key') { // Merx
+        if ($name == 'key') {
+            // Merx
             return $this->id();
         }
         if (property_exists($this, $name)) {
@@ -108,21 +110,24 @@ class OrderLine implements Kerbs
             return $this->kerbs;
         }
 
-        return $this->kerbs = array_filter([
-            'discount' => $this->discount(),
-            'formattedDiscount' => $this->formattedDiscount(),
-            'formattedPrice' => $this->formattedPrice(),
-            'formattedSubtotal' => $this->formattedSubtotal(),
-            'formattedTax' => $this->formattedTax(),
-            'formattedTotal' => $this->formattedTotal(),
-            'licensekey' => $this->licensekey,
-            'price' => $this->price(),
-            'product' => $this->product()?->toKerbs(),
-            'quantity' => $this->quantity(),
-            'subtotal' => $this->subtotal(),
-            'tax' => $this->tax(),
-            'total' => $this->total(),
-            'variant' => $this->variant(),
-        ], fn ($value) => $value !== null);
+        return $this->kerbs = array_filter(
+            [
+                'discount' => $this->discount(),
+                'formattedDiscount' => $this->formattedDiscount(),
+                'formattedPrice' => $this->formattedPrice(),
+                'formattedSubtotal' => $this->formattedSubtotal(),
+                'formattedTax' => $this->formattedTax(),
+                'formattedTotal' => $this->formattedTotal(),
+                'licensekey' => $this->licensekey,
+                'price' => $this->price(),
+                'product' => $this->product()?->toKerbs(),
+                'quantity' => $this->quantity(),
+                'subtotal' => $this->subtotal(),
+                'tax' => $this->tax(),
+                'total' => $this->total(),
+                'variant' => $this->variant(),
+            ],
+            fn ($value) => $value !== null,
+        );
     }
 }

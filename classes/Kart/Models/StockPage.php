@@ -27,6 +27,7 @@ use Kirby\Toolkit\Str;
  * @method Field variants()
  * @method Field timestamp()
  */
+#[\AllowDynamicProperties]
 class StockPage extends Page
 {
     use ModelWithTurbo;
@@ -149,7 +150,14 @@ class StockPage extends Page
 
     public function timestampOrModified(): Field
     {
-        return new Field($this, 'timestampOrModified', date('Y-m-d H:i:s', max($this->timestamp()->toDate(), $this->modified())));
+        return new Field(
+            $this,
+            'timestampOrModified',
+            date(
+                'Y-m-d H:i:s',
+                max($this->timestamp()->toDate(), $this->modified()),
+            ),
+        );
     }
 
     public function onlyOneStockPagePerProduct(array $values): bool
@@ -162,9 +170,12 @@ class StockPage extends Page
         return $this->parent()
             ?->childrenAndDrafts()
             ->not($this)
-            ->filterBy(fn ($page) => $page->page()->toPages()->count() &&
-                $page->page()->toPage()?->uuid()->toString() === $productUuid
-            )->count() === 0;
+            ->filterBy(
+                fn ($page) => $page->page()->toPages()->count() &&
+                    $page->page()->toPage()?->uuid()->toString() ===
+                        $productUuid,
+            )
+            ->count() === 0;
     }
 
     /**
@@ -182,29 +193,39 @@ class StockPage extends Page
         return str_pad((string) $stock, $length, '0', STR_PAD_LEFT);
     }
 
-    public function updateStock(int $amount = 0, bool $queue = true, bool $set = false, ?string $variant = null): ?int
-    {
+    public function updateStock(
+        int $amount = 0,
+        bool $queue = true,
+        bool $set = false,
+        ?string $variant = null,
+    ): ?int {
         if ($amount === 0 && ! $set) {
             return 0;
         }
 
         if ($queue && kart()->option('stocks.queue')) {
-            kart()->queue()->push([
-                'page' => $this->uuid()->toString(),
-                'method' => 'updateStock',
-                'data' => [
-                    'amount' => $amount,
-                    'queue' => false,
-                    'set' => $set,
-                    'variant' => $variant,
-                ],
-            ]);
+            kart()
+                ->queue()
+                ->push([
+                    'page' => $this->uuid()->toString(),
+                    'method' => 'updateStock',
+                    'data' => [
+                        'amount' => $amount,
+                        'queue' => false,
+                        'set' => $set,
+                        'variant' => $variant,
+                    ],
+                ]);
 
             return null;
         }
 
         /** @var StockPage $p */
-        $p = $this->kirby()->impersonate('kirby', function () use ($amount, $set, $variant) {
+        $p = $this->kirby()->impersonate('kirby', function () use (
+            $amount,
+            $set,
+            $variant,
+        ) {
             $stock = $this;
             $foundVariant = false;
             if ($variant) {
@@ -215,9 +236,13 @@ class StockPage extends Page
                     sort($variants);
                     $v = implode(',', $variants); // no whitespace
                     if ($v === $variant) {
-                        $u = $set ?
-                            array_merge($variantItem->toArray(), ['stock' => $amount]) :
-                            array_merge($variantItem->toArray(), ['stock' => $variantItem->stock()->toInt() + $amount]);
+                        $u = $set
+                            ? array_merge($variantItem->toArray(), [
+                                'stock' => $amount,
+                            ])
+                            : array_merge($variantItem->toArray(), [
+                                'stock' => $variantItem->stock()->toInt() + $amount,
+                            ]);
                         unset($u['id']);
                         $updated[] = $u;
                         $foundVariant = true;
@@ -229,9 +254,9 @@ class StockPage extends Page
                 $stock = $stock->update(['variants' => Yaml::encode($updated)]);
             }
             if (! $foundVariant) {
-                $stock = $set ?
-                    $stock->update(['stock' => $amount]) :
-                    $stock->increment('stock', $amount);
+                $stock = $set
+                    ? $stock->update(['stock' => $amount])
+                    : $stock->increment('stock', $amount);
             }
 
             kirby()->trigger('kart.stocks.updated', [
@@ -254,8 +279,12 @@ class StockPage extends Page
                 sort($variants);
                 $v = implode(',', $variants); // no whitespace
                 if ($v === $variant) {
-                    return new Field($this, 'stock_'.Kart::hash($variant),
-                        $variantItem->stock()->isNotEmpty() ? $variantItem->stock()->toInt() : null
+                    return new Field(
+                        $this,
+                        'stock_'.Kart::hash($variant),
+                        $variantItem->stock()->isNotEmpty()
+                            ? $variantItem->stock()->toInt()
+                            : null,
                     );
                 }
             }

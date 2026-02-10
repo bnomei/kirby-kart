@@ -17,6 +17,7 @@ use Kirby\Toolkit\A;
 /**
  * Kart Cart Line
  */
+#[\AllowDynamicProperties]
 class CartLine implements Kerbs
 {
     private ?Page $product = null;
@@ -32,7 +33,10 @@ class CartLine implements Kerbs
             // id is expected to be the uuid in all cases!
             $this->uuid = $uuid->uuid()->id(); // @phpstan-ignore-line
         } elseif (is_string($this->uuid)) {
-            $this->product = page('page://'.$this->uuid) instanceof ProductPage ? page('page://'.$this->uuid) : null;
+            $this->product =
+                page('page://'.$this->uuid) instanceof ProductPage
+                    ? page('page://'.$this->uuid)
+                    : null;
         }
     }
 
@@ -41,13 +45,17 @@ class CartLine implements Kerbs
      */
     public function id(): string
     {
-        return ($this->product()?->uuid()->id() ?? $this->uuid).($this->variant ? '|'.$this->variant : '');
+        return ($this->product()?->uuid()->id() ?? $this->uuid).
+            ($this->variant ? '|'.$this->variant : '');
     }
 
     public function product(bool $refresh = false): ?ProductPage
     {
         if ($refresh) {
-            $this->product = page('page://'.$this->uuid) instanceof ProductPage ? page('page://'.$this->uuid) : null;
+            $this->product =
+                page('page://'.$this->uuid) instanceof ProductPage
+                    ? page('page://'.$this->uuid)
+                    : null;
         }
 
         return $this->product; // @phpstan-ignore-line
@@ -88,8 +96,13 @@ class CartLine implements Kerbs
         $new = $old;
 
         if (! $this->hasStockForQuantity()) {
-            $stock = $this->product()?->stock(withHold: $this->cart?->sessionToken(), variant: $this->variant);
-            $new = is_numeric($stock) ? $this->setQuantity(intval($stock)) : $old;
+            $stock = $this->product()?->stock(
+                withHold: $this->cart?->sessionToken(),
+                variant: $this->variant,
+            );
+            $new = is_numeric($stock)
+                ? $this->setQuantity(intval($stock))
+                : $old;
         }
 
         $updated = $this->setQuantity($new); // call will enforce maxapo even with same quantity
@@ -109,17 +122,22 @@ class CartLine implements Kerbs
 
     public function hasStockForQuantity(): bool
     {
-        $stock = $this->product()?->stock(withHold: $this->cart?->sessionToken(), variant: $this->variant);
+        $stock = $this->product()?->stock(
+            withHold: $this->cart?->sessionToken(),
+            variant: $this->variant,
+        );
 
-        if (is_string($stock)) { // unknown stock = unlimited
+        if (is_string($stock)) {
+            // unknown stock = unlimited
             return true;
         }
 
         return is_numeric($stock) && $stock >= $this->quantity;
     }
 
-    public function key(): string // Merx
+    public function key(): string
     {
+        // Merx
         return $this->id();
     }
 
@@ -145,10 +163,12 @@ class CartLine implements Kerbs
         $price = $this->product()->price()->toFloat();
         $variant = $this->variant();
         if ($this->product()->hasVariant($variant)) {
-            $matches = array_values(array_filter(
-                $this->product()->variantData(),
-                fn ($v) => $v['variant'] === $variant
-            ));
+            $matches = array_values(
+                array_filter(
+                    $this->product()->variantData(),
+                    fn ($v) => $v['variant'] === $variant,
+                ),
+            );
             if (count($matches)) {
                 $price = A::get($matches[0], 'price', $price);
             }
@@ -175,15 +195,18 @@ class CartLine implements Kerbs
             return $this->kerbs;
         }
 
-        return $this->kerbs = array_filter([
-            'formattedPrice' => $this->formattedPrice(),
-            'formattedSubtotal' => $this->formattedSubtotal(),
-            'hasStockForQuantity' => $this->hasStockForQuantity(),
-            'price' => $this->price(),
-            'product' => $this->product()?->toKerbs(full: false),
-            'quantity' => $this->quantity(),
-            'subtotal' => $this->subtotal(),
-            'variant' => $this->variant(),
-        ], fn ($value) => $value !== null);
+        return $this->kerbs = array_filter(
+            [
+                'formattedPrice' => $this->formattedPrice(),
+                'formattedSubtotal' => $this->formattedSubtotal(),
+                'hasStockForQuantity' => $this->hasStockForQuantity(),
+                'price' => $this->price(),
+                'product' => $this->product()?->toKerbs(full: false),
+                'quantity' => $this->quantity(),
+                'subtotal' => $this->subtotal(),
+                'variant' => $this->variant(),
+            ],
+            fn ($value) => $value !== null,
+        );
     }
 }

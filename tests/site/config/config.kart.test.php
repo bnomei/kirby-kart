@@ -18,10 +18,10 @@ return [
     'cache' => [
         'uuid' => false, // when switching providers a lot during dev this avoids mismatches
     ],
-    'auth' => [
-        'challenge.email.subject' => 'Your login link for {{ site.title }}', // no t() but query support here
-        'methods' => ['code', 'kart-magic-link', 'password'], // 'code', 'password', 'password-reset'
-    ],
+    //    'auth' => [
+    //        'challenge.email.subject' => 'Your login link for {{ site.title }}', // no t() but query support here
+    //        'methods' => ['code', 'kart-magic-link', 'password'], // 'code', 'password', 'password-reset'
+    //    ],
 
     // /////////////////////////////////
     // KART options used in the tests //
@@ -29,4 +29,9 @@ return [
 
     // 'bnomei.kart.router.encryption' => false,
     // 'bnomei.kart.expire' => null, // disable caching
+
+    'bnomei.kart.completed' => function (array $data, array $form) {
+        // ray($data, $form)->orange();
+        return $data;
+    },
 ];

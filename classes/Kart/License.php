@@ -22,6 +22,7 @@ use function kirby;
 use function option;
 use function t;
 
+#[\AllowDynamicProperties]
 class License extends KirbyLicense
 {
     const NAME = 'Kirby Kart';
@@ -40,7 +41,7 @@ class License extends KirbyLicense
         protected Plugin $plugin,
         protected string $name,
         protected ?string $link = null,
-        ?LicenseStatus $status = null
+        ?LicenseStatus $status = null,
     ) {
         $this->isLocal = kirby()->environment()->isLocal();
         $this->licenseKey = option('bnomei.kart.license'); // from options NOT from file
@@ -55,8 +56,10 @@ class License extends KirbyLicense
         parent::__construct(
             $plugin,
             $status->label(),
-            $status->value() !== 'active' ? 'https://buy-kart.bnomei.com' : null,
-            $status
+            $status->value() !== 'active'
+                ? 'https://buy-kart.bnomei.com'
+                : null,
+            $status,
         );
     }
 
@@ -88,7 +91,10 @@ class License extends KirbyLicense
         return self::$cachedStatus = new LicenseStatus(
             value: 'missing',
             icon: 'alert',
-            label: t('license.status.missing.info').': '.t('license.buy').'!',
+            label: t('license.status.missing.info').
+                ': '.
+                t('license.buy').
+                '!',
             theme: 'negative',
         );
     }
@@ -109,7 +115,8 @@ class License extends KirbyLicense
         }
 
         $json = $response->json();
-        if ($json['activated'] !== true ||
+        if (
+            $json['activated'] !== true ||
             $json['meta']['product_name'] !== static::NAME
         ) {
             return null;
@@ -121,7 +128,9 @@ class License extends KirbyLicense
         return new LicenseStatus(
             value: 'active',
             icon: 'check',
-            label: t('license.status.active.label').': '.$this->license['meta']['customer_name'],
+            label: t('license.status.active.label').
+                ': '.
+                $this->license['meta']['customer_name'],
             theme: 'positive',
         );
     }
@@ -142,8 +151,10 @@ class License extends KirbyLicense
         }
 
         $json = $response->json();
-        if ($json['deactivated'] !== true ||
-            $json['meta']['product_name'] !== static::NAME) {
+        if (
+            $json['deactivated'] !== true ||
+            $json['meta']['product_name'] !== static::NAME
+        ) {
             return null;
         }
 
@@ -159,20 +170,30 @@ class License extends KirbyLicense
             return null;
         }
 
-        $json = kirby()->cache('bnomei.kart')->getOrSet(md5(json_encode($this->license)), function () {
-            $response = $this->api('validate', [
-                'license_key' => $this->license['license_key']['key'],
-                'instance_id' => $this->license['instance']['id'],
-            ]);
+        $json = kirby()
+            ->cache('bnomei.kart')
+            ->getOrSet(
+                md5(json_encode($this->license)),
+                function () {
+                    $response = $this->api('validate', [
+                        'license_key' => $this->license['license_key']['key'],
+                        'instance_id' => $this->license['instance']['id'],
+                    ]);
 
-            if ($response->code() !== 200) {
-                return null;
-            }
+                    if ($response->code() !== 200) {
+                        return null;
+                    }
 
-            return $response->json();
-        }, 60 * 24);
+                    return $response->json();
+                },
+                60 * 24,
+            );
 
-        if (! $json || ! $json['valid'] || $json['meta']['product_name'] !== static::NAME) {
+        if (
+            ! $json ||
+            ! $json['valid'] ||
+            $json['meta']['product_name'] !== static::NAME
+        ) {
             return null;
         }
 
@@ -181,7 +202,9 @@ class License extends KirbyLicense
         return new LicenseStatus(
             value: 'active',
             icon: 'check',
-            label: t('license.status.active.label').': '.$this->license['meta']['customer_name'],
+            label: t('license.status.active.label').
+                ': '.
+                $this->license['meta']['customer_name'],
             theme: 'positive',
         );
     }
@@ -196,7 +219,7 @@ class License extends KirbyLicense
                     'Content-Type: application/x-www-form-urlencoded',
                 ],
                 'data' => $data,
-            ]
+            ],
         );
     }
 
@@ -223,7 +246,16 @@ class License extends KirbyLicense
     {
         $iv = random_bytes($l = openssl_cipher_iv_length('aes-256-cbc'));
 
-        return base64_encode($iv.openssl_encrypt(json_encode($d), 'aes-256-cbc', self::NAME, 0, $iv));
+        return base64_encode(
+            $iv.
+                openssl_encrypt(
+                    json_encode($d),
+                    'aes-256-cbc',
+                    self::NAME,
+                    0,
+                    $iv,
+                ),
+        );
     }
 
     private static function dec(string $d): ?array
@@ -231,7 +263,15 @@ class License extends KirbyLicense
         $d = base64_decode($d);
         $iv = substr($d, 0, $l = openssl_cipher_iv_length('aes-256-cbc'));
 
-        return ($j = openssl_decrypt(substr($d, $l), 'aes-256-cbc', self::NAME, 0, $iv)) ? json_decode($j, true) : null;
+        return ($j = openssl_decrypt(
+            substr($d, $l),
+            'aes-256-cbc',
+            self::NAME,
+            0,
+            $iv,
+        ))
+            ? json_decode($j, true)
+            : null;
     }
 
     private static function hash(array $data): string

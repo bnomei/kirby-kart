@@ -23,6 +23,7 @@ use Kirby\Uuid\Uuid;
 /**
  * Kart Cart
  */
+#[\AllowDynamicProperties]
 class Cart implements Kerbs
 {
     /** @var Collection<CartLine> */
@@ -34,8 +35,10 @@ class Cart implements Kerbs
 
     private ?string $sid = null;
 
-    public function __construct(private readonly string $id = 'cart', array $items = [])
-    {
+    public function __construct(
+        private readonly string $id = 'cart',
+        array $items = [],
+    ) {
         $this->kirby = kirby();
         $this->kart = kirby()->site()->kart();
 
@@ -50,10 +53,11 @@ class Cart implements Kerbs
                 [$uuid, $variant] = explode('|', $uuid);
             }
             $this->add(
-                $this->kirby->page($uuid) ?? $this->kirby->page('page://'.$uuid),
+                $this->kirby->page($uuid) ??
+                    $this->kirby->page('page://'.$uuid),
                 A::get($line, 'quantity'),
                 false,
-                A::get($line, 'variant', $variant)
+                A::get($line, 'variant', $variant),
             );
         }
         // NOTE: do NOT save here, handled separately
@@ -68,8 +72,12 @@ class Cart implements Kerbs
         ]);
     }
 
-    public function add(ProductPage|array|string|null $product, int $amount = 1, bool $set = false, ?string $variant = null): int
-    {
+    public function add(
+        ProductPage|array|string|null $product,
+        int $amount = 1,
+        bool $set = false,
+        ?string $variant = null,
+    ): int {
         // Merx compatibility
         if (is_array($product)) {
             $amount = intval(A::get($product, 'quantity', $amount));
@@ -77,7 +85,9 @@ class Cart implements Kerbs
         }
 
         if (is_string($product)) {
-            $product = $this->kirby->page($product) ?? $this->kirby->page('page://'.$product);
+            $product =
+                $this->kirby->page($product) ??
+                $this->kirby->page('page://'.$product);
         }
 
         if (! $product) {
@@ -85,7 +95,11 @@ class Cart implements Kerbs
         }
 
         $maxLines = intval(kart()->option('orders.order.maxlpo'));
-        if ($item = $this->lines->get($product->uuid()->id().($variant ? '|'.$variant : ''))) {
+        if (
+            $item = $this->lines->get(
+                $product->uuid()->id().($variant ? '|'.$variant : ''),
+            )
+        ) {
             /** @var CartLine $item */
             if ($set) {
                 $a = $item->setQuantity($amount);
@@ -100,7 +114,7 @@ class Cart implements Kerbs
                 $product->uuid()->id(),
                 $amount,
                 $variant,
-                $this
+                $this,
             );
             $this->lines->add($item);
         }
@@ -109,7 +123,14 @@ class Cart implements Kerbs
             $this->lines = $this->lines->flip()->slice(0, $maxLines);
         }
 
-        if (! $this->kirby->environment()->isLocal() && $this->kirby->plugin('bnomei/kart')->license()->status()->value() !== 'active') {
+        if (
+            ! $this->kirby->environment()->isLocal() &&
+            $this->kirby
+                ->plugin('bnomei/kart')
+                ->license()
+                ->status()
+                ->value() !== 'active'
+        ) {
             $this->lines = $this->lines->flip()->slice(0, 1);
         }
 
@@ -151,9 +172,9 @@ class Cart implements Kerbs
 
     public function quantity(): int
     {
-        return (int) array_sum($this->lines->values(
-            fn (CartLine $item) => $item->quantity()
-        ));
+        return (int) array_sum(
+            $this->lines->values(fn (CartLine $item) => $item->quantity()),
+        );
     }
 
     public function fix(): void
@@ -166,7 +187,6 @@ class Cart implements Kerbs
 
     public function canCheckout(): bool
     {
-
         if ($this->lines()->count() === 0) {
             return false;
         }
@@ -175,13 +195,22 @@ class Cart implements Kerbs
          * @var CartLine $line
          */
         foreach ($this->lines() as $line) {
-            if ($line->quantity() > ($line->product()?->maxAmountPerOrder() ?? intval(kart()->option('orders.order.maxapo')))) {
+            if (
+                $line->quantity() >
+                ($line->product()?->maxAmountPerOrder() ??
+                    intval(kart()->option('orders.order.maxapo')))
+            ) {
                 kart()->message('bnomei.kart.max-amount-per-order', 'checkout');
 
                 return false;
             }
 
-            $stock = $line->product()?->stock(withHold: $this->sessionToken(), variant: $line->variant());
+            $stock = $line
+                ->product()
+                ?->stock(
+                    withHold: $this->sessionToken(),
+                    variant: $line->variant(),
+                );
             if (is_int($stock) && $stock < $line->quantity()) {
                 kart()->message('bnomei.kart.out-of-stock', 'checkout');
 
@@ -234,22 +263,33 @@ class Cart implements Kerbs
 
     public function subtotal(): float
     {
-        return array_sum($this->lines->values(
-            fn (CartLine $item) => $item->product() ? ($item->quantity() *
-                $item->product()->priceWithVariant($item->variant())) : 0
-        ));
+        return array_sum(
+            $this->lines->values(
+                fn (CartLine $item) => $item->product()
+                    ? $item->quantity() *
+                        $item->product()->priceWithVariant($item->variant())
+                    : 0,
+            ),
+        );
     }
 
-    public function remove(ProductPage|array|string|null $product, int $amount = 1, ?string $variant = null): int
-    {
+    public function remove(
+        ProductPage|array|string|null $product,
+        int $amount = 1,
+        ?string $variant = null,
+    ): int {
         // Merx compatibility
         if (is_array($product)) {
             $amount = intval(A::get($product, 'quantity', $amount));
-            $product = $this->kirby->page($product['id']) ?? $this->kirby->page('page://'.$product['id']);
+            $product =
+                $this->kirby->page($product['id']) ??
+                $this->kirby->page('page://'.$product['id']);
         }
 
         if (is_string($product)) {
-            $product = $this->kirby->page($product) ?? $this->kirby->page('page://'.$product);
+            $product =
+                $this->kirby->page($product) ??
+                $this->kirby->page('page://'.$product);
         }
 
         if (! $product) {
@@ -257,7 +297,9 @@ class Cart implements Kerbs
         }
 
         /** @var CartLine|null $item */
-        $item = $this->lines->get($product->uuid()->id().($variant ? '|'.$variant : ''));
+        $item = $this->lines->get(
+            $product->uuid()->id().($variant ? '|'.$variant : ''),
+        );
         if (is_null($item)) {
             return 0;
         }
@@ -296,8 +338,10 @@ class Cart implements Kerbs
         ]);
     }
 
-    public function has(ProductPage|CartLine|string $product, ?string $variant = null): bool
-    {
+    public function has(
+        ProductPage|CartLine|string $product,
+        ?string $variant = null,
+    ): bool {
         if ($product instanceof ProductPage) {
             $product = $product->uuid()->id();
         }
@@ -306,7 +350,8 @@ class Cart implements Kerbs
             $product = $product->product()?->uuid()->id();
         }
 
-        return $product && $this->lines->has($product.($variant ? '|'.$variant : ''));
+        return $product &&
+            $this->lines->has($product.($variant ? '|'.$variant : ''));
     }
 
     public function merge(User $user): bool
@@ -340,7 +385,11 @@ class Cart implements Kerbs
             if (count($p) >= 2) {
                 $variant = $p[1];
             }
-            if ($product = $this->kirby->page($uuid) ?? $this->kirby->page('page://'.$uuid)) {
+            if (
+                $product =
+                    $this->kirby->page($uuid) ??
+                    $this->kirby->page('page://'.$uuid)
+            ) {
                 $this->add(
                     $product,
                     A::get($line, 'quantity'),
@@ -365,10 +414,9 @@ class Cart implements Kerbs
 
         // if the completed URL has been called with an invalid state, die silently
         if (empty($data)) {
-            return $this->kirby->session()->pull(
-                'kart.redirect.canceled',
-                $this->kirby->site()->url()
-            );
+            return $this->kirby
+                ->session()
+                ->pull('kart.redirect.canceled', $this->kirby->site()->url());
         }
 
         $customer = $this->kart->createOrUpdateCustomer($data);
@@ -380,13 +428,17 @@ class Cart implements Kerbs
         if ($orders) {
             $paymentId = A::get($data, 'paymentId');
             if (is_scalar($paymentId) && strval($paymentId) !== '') {
-                $existingOrder = $orders->children()->findBy('paymentId', strval($paymentId));
+                $existingOrder = $orders
+                    ->children()
+                    ->findBy('paymentId', strval($paymentId));
             }
 
             if (! $existingOrder) {
                 $orderId = A::get($data, 'order_id');
                 if (is_scalar($orderId) && strval($orderId) !== '') {
-                    $existingOrder = $orders->children()->findBy('order_id', strval($orderId));
+                    $existingOrder = $orders
+                        ->children()
+                        ->findBy('order_id', strval($orderId));
                 }
             }
         }
@@ -399,10 +451,14 @@ class Cart implements Kerbs
             $this->clear();
             $this->save();
 
-            return $this->kirby->session()->pull(
-                'kart.redirect.success',
-                $existingOrder instanceof OrderPage ? $existingOrder->urlWithSignature() : $existingOrder->url()
-            );
+            return $this->kirby
+                ->session()
+                ->pull(
+                    'kart.redirect.success',
+                    $existingOrder instanceof OrderPage
+                        ? $existingOrder->urlWithSignature()
+                        : $existingOrder->url(),
+                );
         }
 
         /** @var OrderPage|null $order */
@@ -423,22 +479,28 @@ class Cart implements Kerbs
         $this->clear();
         $this->save();
 
-        return $this->kirby->session()->pull(
-            'kart.redirect.success',
-            $order ? $order->urlWithSignature() : $this->kirby->site()->url()
-        );
+        return $this->kirby
+            ->session()
+            ->pull(
+                'kart.redirect.success',
+                $order
+                    ? $order->urlWithSignature()
+                    : $this->kirby->site()->url(),
+            );
     }
 
     public function releaseStock(?array $data = null): bool
     {
         if (! $data) {
-            $data = ['items' => $this->lines->toArray(
-                fn ($line) => [
-                    'key' => [$line->product()->uuid()->id()],
-                    'quantity' => $line->quantity(),
-                    'variant' => $line->variant(),
-                ]
-            )];
+            $data = [
+                'items' => $this->lines->toArray(
+                    fn ($line) => [
+                        'key' => [$line->product()->uuid()->id()],
+                        'quantity' => $line->quantity(),
+                        'variant' => $line->variant(),
+                    ],
+                ),
+            ];
         }
         $expire = kart()->option('stocks.hold');
         if (! is_numeric($expire) || ! kirby()->user()?->isCustomer()) {
@@ -447,22 +509,33 @@ class Cart implements Kerbs
 
         $hasOne = false;
         foreach ($data['items'] as $item) {
-            $product = $this->kirby->page($item['key'][0]) ?? $this->kirby->page('page://'.$item['key'][0]);
+            $product =
+                $this->kirby->page($item['key'][0]) ??
+                $this->kirby->page('page://'.$item['key'][0]);
             if (! $product) {
                 continue;
             }
             $variant = A::get($item, 'variant');
-            $holdKey = 'hold-'.Kart::hash($product->uuid()->toString().($variant ? '|'.$variant : ''));
-            $holds = $this->kirby->cache('bnomei.kart.stocks-holds')->get($holdKey, []);
+            $holdKey =
+                'hold-'.
+                Kart::hash(
+                    $product->uuid()->toString().
+                        ($variant ? '|'.$variant : ''),
+                );
+            $holds = $this->kirby
+                ->cache('bnomei.kart.stocks-holds')
+                ->get($holdKey, []);
             $sid = $this->sessionToken();
             if (array_key_exists($sid, $holds)) {
                 unset($holds[$sid]);
                 $hasOne = true;
             } else {
                 // find by product and quantity, sort by expiry desc (as the best guess)
-                $holds = array_filter($holds, fn ($hold) => $hold['product'] === $product->uuid()->id() &&
-                    $hold['quantity'] === intval($item['quantity']) &&
-                    (! $variant || $hold['variant'] === $variant)
+                $holds = array_filter(
+                    $holds,
+                    fn ($hold) => $hold['product'] === $product->uuid()->id() &&
+                        $hold['quantity'] === intval($item['quantity']) &&
+                        (! $variant || $hold['variant'] === $variant),
                 );
                 $holds = A::sort($holds, 'expires', 'desc');
                 if (count($holds) > 0) {
@@ -470,7 +543,9 @@ class Cart implements Kerbs
                     $hasOne = true;
                 }
             }
-            $this->kirby->cache('bnomei.kart.stocks-holds')->set($holdKey, $holds, intval($expire));
+            $this->kirby
+                ->cache('bnomei.kart.stocks-holds')
+                ->set($holdKey, $holds, intval($expire));
         }
 
         return $hasOne;
@@ -484,10 +559,13 @@ class Cart implements Kerbs
 
         // NOTE: no impersonation as that would shift to the kirby user.
         // retrieve a mutable copy now, just $this->kirby->user() fails.
-        $user = $this->kirby->user() ? $this->kirby->user($this->kirby->user()->id()) : null;
-        $writeToUser && $user?->update([
-            'kart_'.$this->id => $this->lines->toArray(),
-        ]);
+        $user = $this->kirby->user()
+            ? $this->kirby->user($this->kirby->user()->id())
+            : null;
+        $writeToUser &&
+            $user?->update([
+                'kart_'.$this->id => $this->lines->toArray(),
+            ]);
     }
 
     public function holdStock(): bool
@@ -506,9 +584,19 @@ class Cart implements Kerbs
             }
 
             $variant = $line->variant();
-            $holdKey = 'hold-'.Kart::hash($product->uuid()->toString().($variant ? '|'.$variant : ''));
-            $holds = $this->kirby->cache('bnomei.kart.stocks-holds')->get($holdKey, []);
-            $holds = array_filter($holds, fn ($hold) => $hold['expires'] > time()); // discard outdated
+            $holdKey =
+                'hold-'.
+                Kart::hash(
+                    $product->uuid()->toString().
+                        ($variant ? '|'.$variant : ''),
+                );
+            $holds = $this->kirby
+                ->cache('bnomei.kart.stocks-holds')
+                ->get($holdKey, []);
+            $holds = array_filter(
+                $holds,
+                fn ($hold) => $hold['expires'] > time(),
+            ); // discard outdated
             $sid = $this->sessionToken();
             $holds[$sid] = array_filter([
                 'product' => $product->uuid()->id(),
@@ -518,7 +606,9 @@ class Cart implements Kerbs
             ]);
 
             // the cache does not have to live longer than the expiry of each line
-            $this->kirby->cache('bnomei.kart.stocks-holds')->set($holdKey, $holds, intval($expire));
+            $this->kirby
+                ->cache('bnomei.kart.stocks-holds')
+                ->set($holdKey, $holds, intval($expire));
             $hasOne = true;
         }
 
@@ -533,16 +623,21 @@ class Cart implements Kerbs
             return $this->kerbs;
         }
 
-        return $this->kerbs = array_filter([
-            'canCheckout' => $this->canCheckout(),
-            'count' => $this->lines()->count(),
-            'formattedSubtotal' => $this->formattedSubtotal(),
-            'hash' => $this->hash(),
-            'id' => $this->id,
-            'lines' => $this->lines()->values(fn (CartLine $l) => $l->toKerbs()),
-            'quantity' => $this->quantity(),
-            'subtotal' => $this->subtotal(),
-            'url' => page($this->id)?->url(),
-        ], fn ($value) => $value !== null);
+        return $this->kerbs = array_filter(
+            [
+                'canCheckout' => $this->canCheckout(),
+                'count' => $this->lines()->count(),
+                'formattedSubtotal' => $this->formattedSubtotal(),
+                'hash' => $this->hash(),
+                'id' => $this->id,
+                'lines' => $this->lines()->values(
+                    fn (CartLine $l) => $l->toKerbs(),
+                ),
+                'quantity' => $this->quantity(),
+                'subtotal' => $this->subtotal(),
+                'url' => page($this->id)?->url(),
+            ],
+            fn ($value) => $value !== null,
+        );
     }
 }

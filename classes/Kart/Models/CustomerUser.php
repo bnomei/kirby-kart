@@ -38,6 +38,7 @@ use Kirby\Content\Field;
  * @method bool isCustomer()
  * @method string gravatar()
  */
+#[\AllowDynamicProperties]
 class CustomerUser extends User
 {
     public static function phpBlueprint(): array
