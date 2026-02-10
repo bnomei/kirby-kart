@@ -22,7 +22,6 @@ use function kirby;
 use function option;
 use function t;
 
-#[\AllowDynamicProperties]
 class License extends KirbyLicense
 {
     const NAME = 'Kirby Kart';

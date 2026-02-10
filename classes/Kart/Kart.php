@@ -99,7 +99,7 @@ class Kart implements Kerbs
                 (string) file_get_contents(
                     __DIR__.strrev(base64_decode('cGhwLmVzbmVjaUwv')),
                 ),
-            ) !== '3c6ae75256cab4962466ca2e23ecb9c9fef5b270' &&
+            ) !== '19a793ac5755e98cf3dfb5cf87847e26138468b9' &&
             ($kart = base64_decode('c2xlZXA='))
         ) {
             $kart(5); // @phpstan-ignore-line
