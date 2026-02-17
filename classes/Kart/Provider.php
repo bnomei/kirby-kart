@@ -444,7 +444,7 @@ abstract class Provider
         $u = $this->cache()->get($u);
 
         return $u
-            ? new Field(null, 'updatedAt', $u)->toDate(kart()->dateFormat())
+            ? (new Field(null, 'updatedAt', $u))->toDate(kart()->dateFormat())
             : '?';
     }
 

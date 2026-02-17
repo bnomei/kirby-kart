@@ -173,7 +173,7 @@ class Kart implements Kerbs
                     ->getOrSet(
                         $key,
                         fn () => is_string($data)
-                            ? new SymmetricCrypto(password: $password)->encrypt(
+                            ? (new SymmetricCrypto(password: $password))->encrypt(
                                 $data,
                             )
                             : $data,
@@ -181,7 +181,7 @@ class Kart implements Kerbs
                     );
             } else {
                 $data = is_string($data)
-                    ? new SymmetricCrypto(password: $password)->encrypt($data)
+                    ? (new SymmetricCrypto(password: $password))->encrypt($data)
                     : $data;
             }
         }
@@ -289,13 +289,13 @@ class Kart implements Kerbs
                         ->cache('bnomei.kart.crypto')
                         ->getOrSet(
                             $key,
-                            fn () => new SymmetricCrypto(
+                            fn () => (new SymmetricCrypto(
                                 password: $password,
-                            )->decrypt($data),
+                            ))->decrypt($data),
                             $expire,
                         );
                 } else {
-                    $data = new SymmetricCrypto(password: $password)->decrypt(
+                    $data = (new SymmetricCrypto(password: $password))->decrypt(
                         $data,
                     );
                 }
