@@ -518,9 +518,19 @@ App::plugin(
                 },
                 'shop' => function (): array {
                     return [
-                        'categories' => kart()->categories()->values(),
+                        'categories' => kart()->categories()->values(fn (Category $category) => [
+                            'id' => $category->id(),
+                            'text' => $category->text(),
+                            'url' => $category->url(),
+                            'count' => $category->count(),
+                        ]),
                         'products' => kart()->products()->values(fn (ProductPage $product) => $product->toKerbs(full: false)),
-                        'tags' => kart()->tags()->values(),
+                        'tags' => kart()->tags()->values(fn (Tag $tag) => [
+                            'id' => $tag->id(),
+                            'text' => $tag->text(),
+                            'url' => $tag->url(),
+                            'count' => $tag->count(),
+                        ]),
                     ];
                 },
                 'site' => function (): array {
