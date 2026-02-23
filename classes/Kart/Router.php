@@ -153,7 +153,13 @@ class Router
         }
 
         if ($mode === 'go') {
-            $url = strval(Router::get('redirect', $url ?? '/'));
+            $redirect = Router::get('redirect');
+            if (is_string($redirect) && $redirect !== '') {
+                $url = self::safeRedirect($redirect, '/');
+            } else {
+                $url ??= '/';
+            }
+
             Response::go($url, $code); // NOTE: code provided but a redirect will always be a 302, use the JSON API if you need the code
             // NOTE: this does not redirect
             // header('Location: ' . $url, true, $code);
@@ -285,7 +291,72 @@ class Router
 
     public static function back(): ?string
     {
-        return kirby()->request()->header('referer');
+        return self::safeRedirect(
+            kirby()->request()->header('referer'),
+            '/',
+        );
+    }
+
+    public static function safeRedirect(
+        ?string $target,
+        string $fallback = '/',
+    ): string {
+        if (! is_string($target)) {
+            return $fallback;
+        }
+
+        $target = trim($target);
+        if (
+            $target === '' ||
+            preg_match('/[\x00-\x1F\x7F]/', $target) === 1 ||
+            str_starts_with($target, '//')
+        ) {
+            return $fallback;
+        }
+
+        // allow internal redirect targets directly
+        if (
+            str_starts_with($target, '/') ||
+            str_starts_with($target, '?') ||
+            str_starts_with($target, '#')
+        ) {
+            return $target;
+        }
+
+        // for absolute URLs, only allow same host as Kirby
+        $parts = parse_url($target);
+        $site = parse_url(site()->url());
+        if (! is_array($parts) || ! is_array($site)) {
+            return $fallback;
+        }
+
+        $targetHost = strtolower(strval($parts['host'] ?? ''));
+        $siteHost = strtolower(strval($site['host'] ?? ''));
+        if ($targetHost === '' || $targetHost !== $siteHost) {
+            return $fallback;
+        }
+
+        $targetScheme = strtolower(strval($parts['scheme'] ?? ''));
+        $siteScheme = strtolower(strval($site['scheme'] ?? ''));
+        if ($targetScheme !== '' && $siteScheme !== '' && $targetScheme !== $siteScheme) {
+            return $fallback;
+        }
+
+        $targetPort = intval($parts['port'] ?? 0);
+        $sitePort = intval($site['port'] ?? 0);
+        if ($targetPort !== 0 && $sitePort !== 0 && $targetPort !== $sitePort) {
+            return $fallback;
+        }
+
+        $path = strval($parts['path'] ?? '/');
+        if ($path === '') {
+            $path = '/';
+        }
+
+        $query = isset($parts['query']) ? '?'.$parts['query'] : '';
+        $fragment = isset($parts['fragment']) ? '#'.$parts['fragment'] : '';
+
+        return $path.$query.$fragment;
     }
 
     public static function hasUser(): ?int

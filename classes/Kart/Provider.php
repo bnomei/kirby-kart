@@ -589,9 +589,16 @@ abstract class Provider
                 $this->kart->option('successPage'), // if null will use order page after creation
             );
 
+        $redirect = Router::get('redirect');
         $this->kirby()
             ->session()
-            ->set('kart.redirect.canceled', Router::get('redirect'));
+            ->set(
+                'kart.redirect.canceled',
+                Router::safeRedirect(
+                    is_string($redirect) ? $redirect : null,
+                    '/',
+                ),
+            );
 
         // put stock into hold
         kart()->cart()->holdStock();
@@ -650,9 +657,14 @@ abstract class Provider
         kirby()->trigger('kart.provider.'.$this->name.'.canceled');
         kart()->cart()->releaseStock();
 
-        return $this->kirby()
+        $target = $this->kirby()
             ->session()
             ->pull('kart.redirect.canceled', $this->kirby()->site()->url());
+
+        return Router::safeRedirect(
+            is_string($target) ? $target : null,
+            $this->kirby()->site()->url(),
+        );
     }
 
     public function completed(array $data = []): array

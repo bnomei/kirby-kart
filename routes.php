@@ -159,7 +159,7 @@ return function (App $kirby) {
                 $email = trim(strip_tags(urldecode(get('email', ''))));
                 // TODO: performance on a lot of users might drop
                 $user = $kirby->users()
-                    ->customers()
+                    ->customers() // @phpstan-ignore-line
                     ->findBy('email', $email);
 
                 $pw = get('password');
@@ -354,8 +354,13 @@ return function (App $kirby) {
                     return $r;
                 }
 
+                $redirect = Router::safeRedirect(
+                    Router::get('redirect'),
+                    '/',
+                );
+
                 return Router::go(kart()->provider()->portal(
-                    Router::get('redirect', site()->url())
+                    url($redirect),
                 ));
             },
         ],
@@ -666,6 +671,17 @@ return function (App $kirby) {
             'pattern' => Router::PROVIDER_SUCCESS,
             'method' => 'GET|POST',
             'action' => function () {
+                $checks = [
+                    Router::class.'::hasBlacklist',
+                    Router::class.'::hasRatelimit',
+                ];
+                if (kirby()->request()->is('POST')) {
+                    $checks[] = Router::class.'::hasCsrf';
+                }
+                if ($r = Router::denied($checks, exclusive: true)) {
+                    return $r;
+                }
+
                 Response::go(kart()->cart()->complete());
             },
         ],
@@ -673,6 +689,13 @@ return function (App $kirby) {
             'pattern' => Router::PROVIDER_CANCEL,
             'method' => 'GET',
             'action' => function () {
+                if ($r = Router::denied([
+                    Router::class.'::hasBlacklist',
+                    Router::class.'::hasRatelimit',
+                ], exclusive: true)) {
+                    return $r;
+                }
+
                 Response::go(kart()->provider()->canceled());
             },
         ],

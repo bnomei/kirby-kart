@@ -9,6 +9,7 @@
  */
 
 use Bnomei\Kart\Cart;
+use Bnomei\Kart\ContentPageEnum;
 use Bnomei\Kart\Models\ProductPage;
 use Kirby\Toolkit\Str;
 
@@ -262,6 +263,32 @@ it('can complete a cart', function (): void {
     );
 
     expect($this->cart->complete())->toBeString();
+});
+
+it('does not create orders when payment is not complete', function (): void {
+    $this->cart = new Cart(
+        'cart',
+        page('products')->children()->random(1)->toArray(fn ($p) => ['quantity' => 1])
+    );
+
+    $orders = kart()->page(ContentPageEnum::ORDERS);
+    $before = $orders?->children()->count() ?? 0;
+    $quantity = $this->cart->quantity();
+
+    $redirect = $this->cart->complete([
+        'paymentComplete' => false,
+        'email' => 'not-paid@kart.test',
+        'customer' => [
+            'email' => 'not-paid@kart.test',
+        ],
+        'items' => [],
+    ]);
+
+    $after = $orders?->children()->count() ?? 0;
+
+    expect($redirect)->toBeString()
+        ->and($after)->toBe($before)
+        ->and($this->cart->quantity())->toBe($quantity);
 });
 
 it('can export to kerbs', function (): void {

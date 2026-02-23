@@ -4,6 +4,7 @@ use Bnomei\Kart\Licenses;
 use Bnomei\Kart\Models\OrderPage;
 use Bnomei\Kart\Models\OrdersPage;
 use Bnomei\Kart\Models\ProductPage;
+use Kirby\Toolkit\Str;
 
 it('has a helper to work with licenses', function (): void {
     kirby()->cache('bnomei.kart.licenses')->flush();
@@ -13,6 +14,11 @@ it('has a helper to work with licenses', function (): void {
     $p = kart()->products()->first();
     /** @var OrdersPage $orders */
     $orders = kart()->page('orders');
+    $customer = kirby()->impersonate('kirby', fn () => kirby()->users()->create([
+        'email' => Str::random(5).'@kart.test',
+        'role' => 'customer',
+        'password' => Str::random(16),
+    ]));
 
     $lk = kart()->option('licenses.license.uuid')();
     /** @var OrderPage $o */
@@ -30,7 +36,7 @@ it('has a helper to work with licenses', function (): void {
                 'licensekey' => $lk,
             ],
         ],
-    ]);
+    ], $customer);
 
     $lickey = null;
     /** @var \Bnomei\Kart\OrderLine $line */
@@ -42,7 +48,7 @@ it('has a helper to work with licenses', function (): void {
     $l = new Licenses;
     expect($lickey)->toBe($lk)
         ->and($l->order($lickey)->id())->toBe($o->id())
-        ->and($l->customer($lickey))->toNotBeNull()
+        ->and($l->customer($lickey))->not()->toBeNull()
         ->and($l->activate($lickey))->toBeArray()
         ->and($l->deactivate($lickey))->toBeArray()
         ->and($l->validate($lickey))->toBeArray();

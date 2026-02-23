@@ -324,6 +324,7 @@ App::plugin(
                     'endpoint' => fn () => kart_env('INVOICENINJA_ENDPOINT', 'https://app.invoicing.co/api/v1'),
                     'token' => fn () => kart_env('INVOICENINJA_TOKEN'),
                     'company_key' => fn () => kart_env('INVOICENINJA_COMPANY_KEY'),
+                    'webhook_secret' => fn () => kart_env('INVOICENINJA_WEBHOOK_SECRET'),
                     'checkout_options' => function (Kart $kart) {
                         // https://api-docs.invoicing.co/#description/need-help
                         return [];

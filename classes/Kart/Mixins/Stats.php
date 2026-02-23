@@ -18,7 +18,7 @@ trait Stats
         if (! $customers) {
             // @phpstan-ignore-next-line
             $customers = kirby()->users()
-                ->customers()
+                ->customers() // @phpstan-ignore-line
                 ->count();
             kirby()->cache('bnomei.kart.stats')->set('customers', $customers, 15);
         }

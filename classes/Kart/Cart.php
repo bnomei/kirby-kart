@@ -414,9 +414,31 @@ class Cart implements Kerbs
 
         // if the completed URL has been called with an invalid state, die silently
         if (empty($data)) {
-            return $this->kirby
+            $target = $this->kirby
                 ->session()
                 ->pull('kart.redirect.canceled', $this->kirby->site()->url());
+
+            return Router::safeRedirect(
+                is_string($target) ? $target : null,
+                $this->kirby->site()->url(),
+            );
+        }
+
+        // Never create orders from callbacks that don't confirm payment.
+        $paymentComplete = filter_var(
+            A::get($data, 'paymentComplete'),
+            FILTER_VALIDATE_BOOLEAN,
+            FILTER_NULL_ON_FAILURE,
+        );
+        if ($paymentComplete !== true) {
+            $target = $this->kirby
+                ->session()
+                ->pull('kart.redirect.canceled', $this->kirby->site()->url());
+
+            return Router::safeRedirect(
+                is_string($target) ? $target : null,
+                $this->kirby->site()->url(),
+            );
         }
 
         $customer = $this->kart->createOrUpdateCustomer($data);
@@ -451,14 +473,17 @@ class Cart implements Kerbs
             $this->clear();
             $this->save();
 
-            return $this->kirby
+            $default = $existingOrder instanceof OrderPage
+                ? $existingOrder->urlWithSignature()
+                : $existingOrder->url();
+            $target = $this->kirby
                 ->session()
-                ->pull(
-                    'kart.redirect.success',
-                    $existingOrder instanceof OrderPage
-                        ? $existingOrder->urlWithSignature()
-                        : $existingOrder->url(),
-                );
+                ->pull('kart.redirect.success', $default);
+
+            return Router::safeRedirect(
+                is_string($target) ? $target : null,
+                $default,
+            );
         }
 
         /** @var OrderPage|null $order */
@@ -479,14 +504,17 @@ class Cart implements Kerbs
         $this->clear();
         $this->save();
 
-        return $this->kirby
+        $default = $order
+            ? $order->urlWithSignature()
+            : $this->kirby->site()->url();
+        $target = $this->kirby
             ->session()
-            ->pull(
-                'kart.redirect.success',
-                $order
-                    ? $order->urlWithSignature()
-                    : $this->kirby->site()->url(),
-            );
+            ->pull('kart.redirect.success', $default);
+
+        return Router::safeRedirect(
+            is_string($target) ? $target : null,
+            $default,
+        );
     }
 
     public function releaseStock(?array $data = null): bool

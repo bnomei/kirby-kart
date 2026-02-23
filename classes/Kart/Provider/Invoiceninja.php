@@ -204,7 +204,7 @@ class Invoiceninja extends Provider
     {
         $secret = strval($this->option('webhook_secret') ?? '');
         if (! $secret) {
-            return true; // opt-out: treat as valid when no secret configured
+            return false;
         }
 
         $signature = A::get($headers, 'x-api-signature') ??

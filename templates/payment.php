@@ -12,6 +12,7 @@ snippet('kart/kart', slots: true);
     <h1>Fake Payment Provider</h1>
 
     <form method="POST" action="<?= \Bnomei\Kart\Router::get('success_url') ?>">
+        <?php snippet('kart/input-csrf') ?>
         <?php // TODO: You should add an invisible CAPTCHA here, like...?>
         <?php // snippet('kart/turnstile-form')?>
         <label>
