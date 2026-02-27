@@ -50,7 +50,10 @@ class MagicLinkChallenge extends Challenge
             $link .= '&signup='.$options['signup'];
         }
         if (isset($options['success_url'])) {
-            $link .= '&redirect='.urlencode($options['success_url']);
+            $link .= '&success_url='.urlencode($options['success_url']);
+        }
+        if (isset($options['error_url'])) {
+            $link .= '&error_url='.urlencode($options['error_url']);
         }
         if (isset($options['name'])) {
             $link .= '&name='.urlencode($options['name']);

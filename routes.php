@@ -241,6 +241,7 @@ return function (App $kirby) {
                         'name' => A::get($data, 'name'),
                         'signup' => 1,
                         'success_url' => A::get($data, 'success_url'),
+                        'error_url' => A::get($data, 'error_url'),
                     ]);
                     if ($code) {
                         kirby()->session()->set('kirby.challenge.type', 'login');
@@ -276,6 +277,7 @@ return function (App $kirby) {
                         'timeout' => 10 * 60,
                         'email' => A::get($data, 'email'),
                         'success_url' => A::get($data, 'success_url'),
+                        'error_url' => A::get($data, 'error_url'),
                     ]);
                     if ($code) {
                         kirby()->session()->set('kirby.challenge.type', 'login');
@@ -339,9 +341,21 @@ return function (App $kirby) {
 
                     kirby()->session()->remove('kirby.challenge.code');
                     $user->loginPasswordless();
+                } else {
+                    $redirect = Router::safeRedirect(
+                        Router::get('error_url'),
+                        '/',
+                    );
+
+                    return Router::go(url($redirect));
                 }
 
-                return Router::go();
+                $redirect = Router::safeRedirect(
+                    Router::get('success_url'),
+                    '/',
+                );
+
+                return Router::go(url($redirect));
             },
         ],
         [
