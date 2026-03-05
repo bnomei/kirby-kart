@@ -16,6 +16,7 @@ use Bnomei\Kart\Provider;
 use Bnomei\Kart\ProviderEnum;
 use Bnomei\Kart\Router;
 use Closure;
+use Kirby\Cms\User;
 use Kirby\Http\Remote;
 use Kirby\Toolkit\A;
 
@@ -85,10 +86,11 @@ class Mollie extends Provider
         );
     }
 
-    private function createCustomer(array $contact = []): ?string
+    private function createCustomer(array $contact = [], ?User $user = null): ?string
     {
-        $email = $contact['email'] ?? $this->kirby()->user()?->email();
-        $name = $contact['name'] ?? $this->kirby()->user()?->name()->value();
+        $user = $this->freshUser($user);
+        $email = $contact['email'] ?? $user?->email();
+        $name = $contact['name'] ?? $user?->name()->value();
 
         // https://docs.mollie.com/reference/create-customer
         $remote = Remote::post('https://api.mollie.com/v2/customers', [
@@ -113,7 +115,7 @@ class Mollie extends Provider
             return null;
         }
 
-        if ($user = $this->kirby()->user()) {
+        if ($user) {
             $this->setUserData(['customerId' => $customerId], $user);
         }
 
@@ -137,12 +139,12 @@ class Mollie extends Provider
             );
 
             if ($remote->code() === 404) {
-                $this->removeUserData('customerId', $user);
+                $user = $this->removeUserData('customerId', $user);
                 $customerId = null;
             }
         }
 
-        return $customerId ?: $this->createCustomer($contact);
+        return $customerId ?: $this->createCustomer($contact, $user);
     }
 
     public function checkout(): string

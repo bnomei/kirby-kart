@@ -362,9 +362,19 @@ abstract class Provider
         return A::get($this->getUserData(), $key);
     }
 
-    public function getUserData(?User $user = null): array
+    protected function freshUser(?User $user = null): ?User
     {
         $user ??= $this->kirby->user();
+        if (! $user) {
+            return null;
+        }
+
+        return $this->kirby()->user($user->email()) ?? $user;
+    }
+
+    public function getUserData(?User $user = null): array
+    {
+        $user = $this->freshUser($user);
 
         if (! $user || $user->isCustomer() === false) {
             return [];
@@ -379,7 +389,7 @@ abstract class Provider
 
     public function setUserData(array $data, ?User $user): ?User
     {
-        $user ??= $this->kirby->user();
+        $user = $this->freshUser($user);
         $data = array_filter($data);
 
         if (empty($data) || ! $user || $user->isCustomer() === false) {
@@ -388,7 +398,7 @@ abstract class Provider
 
         $data = array_merge($this->getUserData($user), $data);
 
-        kirby()->impersonate('kirby', function () use ($user, $data) {
+        $updated = kirby()->impersonate('kirby', function () use ($user, $data) {
             $field = $this->name; // no prefix to align with KLUB
 
             return $user->update([
@@ -397,12 +407,12 @@ abstract class Provider
         });
 
         // fetch most current model
-        return kirby()->user($user->email());
+        return $this->freshUser($updated instanceof User ? $updated : $user);
     }
 
     public function removeUserData(string|array $keys, ?User $user = null): ?User
     {
-        $user ??= $this->kirby->user();
+        $user = $this->freshUser($user);
 
         if (! $user || $user->isCustomer() === false) {
             return $user;
@@ -430,7 +440,7 @@ abstract class Provider
             unset($data[$key]);
         }
 
-        kirby()->impersonate('kirby', function () use ($user, $data) {
+        $updated = kirby()->impersonate('kirby', function () use ($user, $data) {
             $field = $this->name; // no prefix to align with KLUB
 
             return $user->update([
@@ -439,7 +449,7 @@ abstract class Provider
         });
 
         // fetch most current model
-        return kirby()->user($user->email());
+        return $this->freshUser($updated instanceof User ? $updated : $user);
     }
 
     public function sync(ContentPageEnum|string|null $sync = null): int
