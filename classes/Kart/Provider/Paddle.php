@@ -24,6 +24,35 @@ class Paddle extends Provider
 {
     protected string $name = ProviderEnum::PADDLE->value;
 
+    private function headers(): array
+    {
+        return [
+            'Content-Type' => 'application/json',
+            'Authorization' => 'Bearer '.strval($this->option('secret_key')),
+        ];
+    }
+
+    private function resolveCheckoutCustomerId(string $endpoint): ?string
+    {
+        $user = $this->kirby()->user();
+        $customerId = $user ? $this->userData('customerId') : null;
+        if (! is_string($customerId) || $customerId === '') {
+            return null;
+        }
+
+        // https://developer.paddle.com/api-reference/customers/get-customer
+        $remote = Remote::get($endpoint.'/customers/'.$customerId, [
+            'headers' => $this->headers(),
+        ]);
+        if ($remote->code() === 404) {
+            $this->removeUserData('customerId', $user);
+
+            return null;
+        }
+
+        return $customerId;
+    }
+
     public function checkout(): string
     {
         $options = $this->option('checkout_options', false);
@@ -32,6 +61,7 @@ class Paddle extends Provider
         }
 
         $endpoint = strval($this->option('endpoint'));
+        $customerId = $this->resolveCheckoutCustomerId($endpoint);
         $lineItem = $this->option('checkout_line', false);
         if ($lineItem instanceof Closure === false) {
             $lineItem = fn ($kart, $item) => [];
@@ -42,13 +72,10 @@ class Paddle extends Provider
 
         // https://developer.paddle.com/api-reference/transactions/create-transaction
         $remote = Remote::post($endpoint.'/transactions', [
-            'headers' => [
-                'Content-Type' => 'application/json',
-                'Authorization' => 'Bearer '.strval($this->option('secret_key')),
-            ],
+            'headers' => $this->headers(),
             'data' => json_encode(array_filter(array_merge([
                 'collection_mode' => 'automatic',
-                'customer_id' => $this->userData('customerId'),
+                'customer_id' => $customerId,
                 'currency_code' => $this->kart->currency(),
                 'items' => array_merge($lines, $this->kart->cart()->lines()->values(function (CartLine $l) use ($lineItem) {
                     $price_id = null;
@@ -99,10 +126,7 @@ class Paddle extends Provider
 
         // https://developer.paddle.com/api-reference/transactions/get-transaction
         $remote = Remote::get($endpoint.'/transactions/'.$sessionId, [
-            'headers' => [
-                'Content-Type' => 'application/json',
-                'Authorization' => 'Bearer '.strval($this->option('secret_key')),
-            ],
+            'headers' => $this->headers(),
             'data' => [
                 'include' => implode(',', [
                     'customer',
@@ -117,10 +141,7 @@ class Paddle extends Provider
         $invoice_url = null;
         // https://developer.paddle.com/api-reference/transactions/get-transaction-invoice (short-lived PDF URL)
         $remote = Remote::get($endpoint.'/transactions/'.$sessionId.'/invoice', [
-            'headers' => [
-                'Content-Type' => 'application/json',
-                'Authorization' => 'Bearer '.strval($this->option('secret_key')),
-            ],
+            'headers' => $this->headers(),
         ]);
 
         $inv = $remote->code() === 200 ? $remote->json() : null;
@@ -132,10 +153,7 @@ class Paddle extends Provider
         $customer = [];
         // https://developer.paddle.com/api-reference/customers/get-customer
         $remote = Remote::get($endpoint.'/customers/'.A::get($json, 'data.customer_id'), [
-            'headers' => [
-                'Content-Type' => 'application/json',
-                'Authorization' => 'Bearer '.strval($this->option('secret_key')),
-            ],
+            'headers' => $this->headers(),
         ]);
 
         $cust = $remote->code() === 200 ? $remote->json() : null;
@@ -332,10 +350,7 @@ class Paddle extends Provider
 
         // https://developer.paddle.com/api-reference/customer-portal/create-customer-portal-session
         $remote = Remote::post("$endpoint/customers/$customer/portal-sessions", [
-            'headers' => [
-                'Content-Type' => 'application/json',
-                'Authorization' => 'Bearer '.strval($this->option('secret_key')),
-            ],
+            'headers' => $this->headers(),
         ]);
 
         $json = in_array($remote->code(), [200, 201]) ? $remote->json() : null;

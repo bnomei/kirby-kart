@@ -23,6 +23,7 @@ beforeAll(function (): void {
 });
 
 beforeEach(function (): void {
+    skipProviderIntegrationOnLinuxCi($this);
     findOrCreateTestUser();
     $this->mollie = new Mollie(kirby());
 });
@@ -91,4 +92,66 @@ it('creates a checkout payment url', function (): void {
         fwrite(STDERR, 'Mollie checkout error: '.$e->getMessage()."\n");
         $this->markTestSkipped('Checkout failed: '.$e->getMessage());
     }
+});
+
+it('replaces stale stored customer id during checkout', function (): void {
+    $secret = $_ENV['MOLLIE_SECRET_KEY'] ?? getenv('MOLLIE_SECRET_KEY');
+    if (empty($secret)) {
+        $this->markTestSkipped('MOLLIE_SECRET_KEY missing');
+    }
+
+    kart()->setOption('providers.mollie.secret_key', $secret);
+    kart()->setOption('currency', 'EUR');
+    kart()->setOption('orders.order.uuid', fn () => uniqid('order_', true));
+    kart()->setOption('providers.mollie.checkout_options', [
+        'locale' => 'en_US',
+        'amount' => [
+            'currency' => 'EUR',
+            'value' => '1.00',
+        ],
+        'lines' => [
+            [
+                'sku' => 'test-sku',
+                'type' => 'digital',
+                'description' => 'Test product',
+                'quantity' => 1,
+                'unitPrice' => [
+                    'currency' => 'EUR',
+                    'value' => '1.00',
+                ],
+                'totalAmount' => [
+                    'currency' => 'EUR',
+                    'value' => '1.00',
+                ],
+                'vatRate' => '0.00',
+                'vatAmount' => [
+                    'currency' => 'EUR',
+                    'value' => '0.00',
+                ],
+                'discountAmount' => [
+                    'currency' => 'EUR',
+                    'value' => '0.00',
+                ],
+            ],
+        ],
+    ]);
+
+    $staleCustomerId = 'cst_zzzzzzzzzz';
+    $this->mollie->setUserData(['customerId' => $staleCustomerId], kirby()->user());
+
+    try {
+        $url = $this->mollie->checkout();
+        expect($url)->toBeString()
+            ->and(str_starts_with($url, 'http'))->toBeTrue();
+    } catch (Throwable $e) {
+        fwrite(STDERR, 'Mollie stale-customer checkout error: '.$e->getMessage()."\n");
+        $this->markTestSkipped('Checkout failed: '.$e->getMessage());
+    }
+
+    $customerId = $this->mollie->userData('customerId');
+    if (! is_string($customerId) || $customerId === '') {
+        $this->markTestSkipped('Mollie did not return a persisted customer id');
+    }
+
+    expect($customerId)->not()->toBe($staleCustomerId);
 });

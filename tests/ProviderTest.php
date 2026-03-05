@@ -54,6 +54,33 @@ it('can set and read user data', function (): void {
     });
 });
 
+it('can remove selected user data keys', function (): void {
+    $customer = kirby()->impersonate('kirby', fn () => kirby()->users()->create([
+        'email' => Str::random(5).'@kart.test',
+        'role' => 'customer',
+        'password' => Str::random(16),
+    ]));
+    expect($customer->isCustomer())->toBeTrue();
+    kirby()->impersonate($customer);
+
+    $customer = $this->p->setUserData([
+        'customer_id' => 123,
+        'keep' => 'abc',
+        'ts' => time(),
+    ], $customer);
+    expect($this->p->userData('customer_id'))->toBe(123)
+        ->and($this->p->userData('keep'))->toBe('abc');
+
+    $customer = $this->p->removeUserData('customer_id', $customer);
+    $data = $this->p->getUserData($customer);
+    expect($data)->not()->toHaveKey('customer_id')
+        ->and($data)->toHaveKey('keep')
+        ->and($data)->toHaveKey('ts');
+
+    $customer = $this->p->removeUserData(['keep', 'ts'], $customer);
+    expect($this->p->getUserData($customer))->toBeEmpty();
+});
+
 it('can sync the data from the provider', function (): void {
     expect($this->p->sync())->toBeInt()
         ->and($this->p->updatedAt())->toBeString()

@@ -386,13 +386,55 @@ abstract class Provider
             return $user;
         }
 
-        $data = array_merge($this->getUserData(), $data);
+        $data = array_merge($this->getUserData($user), $data);
 
         kirby()->impersonate('kirby', function () use ($user, $data) {
             $field = $this->name; // no prefix to align with KLUB
 
             return $user->update([
                 $field => Yaml::encode($data),
+            ]);
+        });
+
+        // fetch most current model
+        return kirby()->user($user->email());
+    }
+
+    public function removeUserData(string|array $keys, ?User $user = null): ?User
+    {
+        $user ??= $this->kirby->user();
+
+        if (! $user || $user->isCustomer() === false) {
+            return $user;
+        }
+
+        if (is_string($keys)) {
+            $keys = [$keys];
+        }
+        $keys = array_values(
+            array_filter(
+                array_map(fn ($key) => trim(strval($key)), $keys),
+                fn ($key) => $key !== '',
+            ),
+        );
+        if (empty($keys)) {
+            return $user;
+        }
+
+        $data = $this->getUserData($user);
+        if (empty($data)) {
+            return $user;
+        }
+
+        foreach ($keys as $key) {
+            unset($data[$key]);
+        }
+
+        kirby()->impersonate('kirby', function () use ($user, $data) {
+            $field = $this->name; // no prefix to align with KLUB
+
+            return $user->update([
+                $field => empty($data) ? '' : Yaml::encode($data),
             ]);
         });
 

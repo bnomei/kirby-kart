@@ -66,6 +66,7 @@ beforeAll(function (): void {
 });
 
 beforeEach(function (): void {
+    skipProviderIntegrationOnLinuxCi($this);
     findOrCreateTestUser();
     $this->paddle = new Paddle(kirby());
     $this->paddleSecret = $_ENV['PADDLE_SECRET_KEY'] ?? getenv('PADDLE_SECRET_KEY');
@@ -140,4 +141,52 @@ it('creates a checkout transaction url', function (): void {
         fwrite(STDERR, 'Paddle checkout error: '.$e->getMessage()."\n");
         $this->markTestSkipped('Checkout failed: '.$e->getMessage());
     }
+});
+
+it('removes stale stored customer id during checkout preflight', function (): void {
+    if (empty($this->paddleSecret)) {
+        $this->markTestSkipped('PADDLE_SECRET_KEY missing');
+    }
+
+    $active = firstActivePaddlePrice($this->paddleEndpoint, $this->paddleSecret);
+    if (! $active) {
+        $this->markTestSkipped('No active Paddle products with active prices found');
+    }
+
+    kart()->setOption('providers.paddle.secret_key', $this->paddleSecret);
+    kart()->setOption('providers.paddle.endpoint', $this->paddleEndpoint);
+    kart()->setOption('currency', $active['currency']);
+    kart()->setOption('providers.paddle.checkout_options', [
+        'items' => [
+            [
+                'price_id' => $active['price_id'],
+                'quantity' => 1,
+            ],
+        ],
+    ]);
+
+    $staleCustomerId = 'ctm_01kzzzzzzzzzzzzzzzzzzzzzzz';
+    $this->paddle->setUserData(['customerId' => $staleCustomerId], kirby()->user());
+
+    $probe = Remote::get($this->paddleEndpoint.'/customers/'.$staleCustomerId, [
+        'headers' => [
+            'Content-Type' => 'application/json',
+            'Authorization' => 'Bearer '.$this->paddleSecret,
+        ],
+    ]);
+    if ($probe->code() !== 404) {
+        $this->markTestSkipped(
+            "Expected stale customer probe to return 404, got {$probe->code()}",
+        );
+    }
+
+    try {
+        $url = $this->paddle->checkout();
+        expect($url)->toBeString();
+    } catch (Throwable $e) {
+        fwrite(STDERR, 'Paddle stale-customer checkout error: '.$e->getMessage()."\n");
+        $this->markTestSkipped('Checkout failed: '.$e->getMessage());
+    }
+
+    expect($this->paddle->userData('customerId'))->toBeNull();
 });

@@ -23,6 +23,39 @@ class Square extends Provider
 {
     protected string $name = ProviderEnum::SQUARE->value;
 
+    private function headers(): array
+    {
+        return array_filter([
+            'Content-Type' => 'application/json',
+            'Authorization' => 'Bearer '.strval($this->option('access_token')),
+            'Square-Version' => $this->option('api_version'),
+        ]);
+    }
+
+    private function resolveCheckoutCustomerId(): ?string
+    {
+        $user = $this->kirby()->user();
+        $customerId = $user ? $this->userData('customerId') : null;
+        if (! is_string($customerId) || $customerId === '') {
+            return null;
+        }
+
+        // https://developer.squareup.com/reference/square/customers-api/retrieve-customer
+        $remote = Remote::get(
+            'https://connect.squareup.com/v2/customers/'.$customerId,
+            [
+                'headers' => $this->headers(),
+            ],
+        );
+        if ($remote->code() === 404) {
+            $this->removeUserData('customerId', $user);
+
+            return null;
+        }
+
+        return $customerId;
+    }
+
     public function checkout(): string
     {
         $options = $this->option('checkout_options', false);
@@ -64,6 +97,7 @@ class Square extends Provider
         if (is_array($quickPay) && ! array_key_exists('location_id', $quickPay)) {
             $quickPay['location_id'] = $this->option('location_id');
         }
+        $customerId = $this->resolveCheckoutCustomerId();
 
         $orderLines = A::get($orderOptions, 'line_items', []);
         unset($orderOptions['line_items']);
@@ -86,7 +120,7 @@ class Square extends Provider
 
         $order = array_filter(array_merge([
             'location_id' => $this->option('location_id'),
-            'customer_id' => $this->userData('customerId'),
+            'customer_id' => $customerId,
             'line_items' => $lineItems,
         ], $orderOptions));
 
@@ -94,11 +128,7 @@ class Square extends Provider
 
         // https://developer.squareup.com/reference/square/checkout-api/create-payment-link
         $remote = Remote::post('https://connect.squareup.com/v2/online-checkout/payment-links', [
-            'headers' => array_filter([
-                'Content-Type' => 'application/json',
-                'Authorization' => 'Bearer '.strval($this->option('access_token')),
-                'Square-Version' => $this->option('api_version'),
-            ]),
+            'headers' => $this->headers(),
             'data' => json_encode(array_filter(array_merge([
                 'idempotency_key' => $uuid,
                 // https://developer.squareup.com/reference/square/checkout-api/create-payment-link#request__property-checkout_options
@@ -139,11 +169,7 @@ class Square extends Provider
 
         // https://developer.squareup.com/reference/square/orders-api/retrieve-order
         $remote = Remote::get('https://connect.squareup.com/v2/orders/'.$sessionId, [
-            'headers' => array_filter([
-                'Content-Type' => 'application/json',
-                'Authorization' => 'Bearer '.strval($this->option('access_token')),
-                'Square-Version' => $this->option('api_version'),
-            ]),
+            'headers' => $this->headers(),
         ]);
 
         $json = $remote->code() === 200 ? $remote->json() : null;
@@ -156,11 +182,7 @@ class Square extends Provider
         if (is_string($paymentId) && $paymentId !== '') {
             // https://developer.squareup.com/reference/square/payments-api/get-payment
             $remote = Remote::get('https://connect.squareup.com/v2/payments/'.$paymentId, [
-                'headers' => array_filter([
-                    'Content-Type' => 'application/json',
-                    'Authorization' => 'Bearer '.strval($this->option('access_token')),
-                    'Square-Version' => $this->option('api_version'),
-                ]),
+                'headers' => $this->headers(),
             ]);
             $payment = $remote->code() === 200 ? $remote->json() : null;
             if (is_array($payment)) {
@@ -171,11 +193,7 @@ class Square extends Provider
         $customer = [];
         // https://developer.squareup.com/reference/square/customers-api/retrieve-customer
         $remote = Remote::get('https://connect.squareup.com/v2/customers/'.A::get($json, 'order.customer_id'), [
-            'headers' => array_filter([
-                'Content-Type' => 'application/json',
-                'Authorization' => 'Bearer '.strval($this->option('access_token')),
-                'Square-Version' => $this->option('api_version'),
-            ]),
+            'headers' => $this->headers(),
         ]);
 
         $cust = $remote->code() === 200 ? $remote->json() : null;

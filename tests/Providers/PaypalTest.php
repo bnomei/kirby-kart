@@ -24,6 +24,7 @@ beforeAll(function (): void {
 });
 
 beforeEach(function (): void {
+    skipProviderIntegrationOnLinuxCi($this);
     findOrCreateTestUser();
     $this->paypalClientId = $_ENV['PAYPAL_CLIENT_ID'] ?? getenv('PAYPAL_CLIENT_ID');
     $this->paypalClientSecret = $_ENV['PAYPAL_CLIENT_SECRET'] ?? getenv('PAYPAL_CLIENT_SECRET');

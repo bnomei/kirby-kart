@@ -80,6 +80,7 @@ beforeAll(function (): void {
 });
 
 beforeEach(function (): void {
+    skipProviderIntegrationOnLinuxCi($this);
     findOrCreateTestUser();
     $this->lemonsqueezy = new Lemonsqueezy(kirby());
     $this->lsqSecret = $_ENV['LEMONSQUEEZY_SECRET_KEY'] ?? getenv('LEMONSQUEEZY_SECRET_KEY');

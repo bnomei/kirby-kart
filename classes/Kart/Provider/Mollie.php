@@ -23,6 +23,14 @@ class Mollie extends Provider
 {
     protected string $name = ProviderEnum::MOLLIE->value;
 
+    private function customerHeaders(string $contentType): array
+    {
+        return [
+            'Content-Type' => $contentType,
+            'Authorization' => 'Bearer '.strval($this->option('secret_key')),
+        ];
+    }
+
     private function buildAddress(array $address, array $contact = []): array
     {
         if (empty($address)) {
@@ -77,6 +85,66 @@ class Mollie extends Provider
         );
     }
 
+    private function createCustomer(array $contact = []): ?string
+    {
+        $email = $contact['email'] ?? $this->kirby()->user()?->email();
+        $name = $contact['name'] ?? $this->kirby()->user()?->name()->value();
+
+        // https://docs.mollie.com/reference/create-customer
+        $remote = Remote::post('https://api.mollie.com/v2/customers', [
+            'headers' => $this->customerHeaders(
+                'application/x-www-form-urlencoded',
+            ),
+            'data' => array_filter([
+                'email' => $email,
+                'name' => $name,
+            ]),
+        ]);
+
+        $customer = in_array($remote->code(), [200, 201], true)
+            ? $remote->json()
+            : null;
+        if (! is_array($customer)) {
+            return null;
+        }
+
+        $customerId = A::get($customer, 'id');
+        if (! is_string($customerId) || $customerId === '') {
+            return null;
+        }
+
+        if ($user = $this->kirby()->user()) {
+            $this->setUserData(['customerId' => $customerId], $user);
+        }
+
+        return $customerId;
+    }
+
+    private function resolveCheckoutCustomerId(array $contact = []): ?string
+    {
+        $user = $this->kirby()->user();
+        $customerId = $user ? $this->userData('customerId') : null;
+        if (! is_string($customerId) || $customerId === '') {
+            $customerId = null;
+        }
+        if ($user && $customerId) {
+            // https://docs.mollie.com/reference/get-customer
+            $remote = Remote::get(
+                'https://api.mollie.com/v2/customers/'.$customerId,
+                [
+                    'headers' => $this->customerHeaders('application/json'),
+                ],
+            );
+
+            if ($remote->code() === 404) {
+                $this->removeUserData('customerId', $user);
+                $customerId = null;
+            }
+        }
+
+        return $customerId ?: $this->createCustomer($contact);
+    }
+
     public function checkout(): string
     {
         $options = $this->option('checkout_options', false);
@@ -108,40 +176,7 @@ class Mollie extends Provider
             $contact,
         );
 
-        $customerId = $this->kirby()->user()
-            ? $this->kart->provider()->userData('customerId')
-            : null;
-        if (! $customerId) {
-            $email = $contact['email'] ?? $this->kirby()->user()?->email();
-            $name =
-                $contact['name'] ?? $this->kirby()->user()?->name()->value();
-
-            // https://docs.mollie.com/reference/create-customer
-            $remote = Remote::post('https://api.mollie.com/v2/customers', [
-                'headers' => [
-                    'Content-Type' => 'application/x-www-form-urlencoded',
-                    'Authorization' => 'Bearer '.strval($this->option('secret_key')),
-                ],
-                'data' => array_filter([
-                    'email' => $email,
-                    'name' => $name,
-                ]),
-            ]);
-
-            $customer = in_array($remote->code(), [200, 201])
-                ? $remote->json()
-                : null;
-            if (is_array($customer)) {
-                $customerId = A::get($customer, 'id');
-            }
-
-            if ($customerId && $this->kirby()->user()) {
-                $this->setUserData(
-                    ['customerId' => $customerId],
-                    $this->kirby()->user(),
-                );
-            }
-        }
+        $customerId = $this->resolveCheckoutCustomerId($contact);
 
         $locale = $this->kirby->multilang()
             ? $this->kirby->language()?->locale()
@@ -158,10 +193,9 @@ class Mollie extends Provider
 
         // https://docs.mollie.com/reference/create-payment
         $remote = Remote::post('https://api.mollie.com/v2/payments', [
-            'headers' => [
-                'Content-Type' => 'application/x-www-form-urlencoded',
-                'Authorization' => 'Bearer '.strval($this->option('secret_key')),
-            ],
+            'headers' => $this->customerHeaders(
+                'application/x-www-form-urlencoded',
+            ),
             'data' => array_filter(
                 array_merge(
                     [
@@ -281,10 +315,7 @@ class Mollie extends Provider
         $remote = Remote::get(
             'https://api.mollie.com/v2/payments/'.$sessionId,
             [
-                'headers' => [
-                    'Content-Type' => 'application/json',
-                    'Authorization' => 'Bearer '.strval($this->option('secret_key')),
-                ],
+                'headers' => $this->customerHeaders('application/json'),
             ],
         );
 
@@ -309,10 +340,7 @@ class Mollie extends Provider
             $remote = Remote::get(
                 'https://api.mollie.com/v2/customers/'.$customerId,
                 [
-                    'headers' => [
-                        'Content-Type' => 'application/json',
-                        'Authorization' => 'Bearer '.strval($this->option('secret_key')),
-                    ],
+                    'headers' => $this->customerHeaders('application/json'),
                 ],
             );
 

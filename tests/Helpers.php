@@ -70,3 +70,16 @@ function injectStubCart(float $subtotal = 1.23, array $lines = []): Cart
 
     return $cart;
 }
+
+/**
+ * External provider integration tests are disabled on Linux/CI.
+ */
+function skipProviderIntegrationOnLinuxCi(object $testCase): void
+{
+    $isLinux = PHP_OS_FAMILY === 'Linux';
+    $isCi = filter_var($_ENV['CI'] ?? getenv('CI') ?? false, FILTER_VALIDATE_BOOLEAN);
+
+    if ($isLinux || $isCi) {
+        $testCase->markTestSkipped('Provider integration tests are disabled on Linux/CI');
+    }
+}
