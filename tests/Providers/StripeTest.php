@@ -10,6 +10,7 @@
 
 use Bnomei\Kart\Provider\Stripe;
 use Dotenv\Dotenv;
+use Kirby\Http\Remote;
 
 uses()->group('providers');
 
@@ -68,7 +69,7 @@ it('creates a checkout session url', function (): void {
     kart()->setOption('providers.stripe.secret_key', $secret);
 
     // fetch a one-time price with an active product
-    $remote = Kirby\Http\Remote::get('https://api.stripe.com/v1/prices', [
+    $remote = Remote::get('https://api.stripe.com/v1/prices', [
         'headers' => [
             'Authorization' => 'Bearer '.$secret,
         ],

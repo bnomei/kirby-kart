@@ -20,6 +20,7 @@ use Closure;
 use Kirby\Cms\File;
 use Kirby\Cms\Page;
 use Kirby\Cms\StructureObject;
+use Kirby\Cms\User;
 use Kirby\Content\Field;
 use Kirby\Content\Storage;
 use Kirby\Toolkit\A;
@@ -843,7 +844,7 @@ class ProductPage extends Page implements Kerbs
         return null;
     }
 
-    public function ownedByUser(?\Kirby\Cms\User $user = null): bool
+    public function ownedByUser(?User $user = null): bool
     {
         $user ??= kirby()->user();
         if ($user === null) {

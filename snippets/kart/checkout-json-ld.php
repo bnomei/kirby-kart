@@ -1,5 +1,8 @@
 <?php
-/** @var \Kirby\Cms\Page $page */
+
+use Kirby\Cms\Page;
+
+/** @var Page $page */
 ?>
 <script type="application/ld+json">
     {

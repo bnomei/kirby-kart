@@ -9,6 +9,7 @@
  */
 
 use Bnomei\Kart\Models\ProductPage;
+use Bnomei\Kart\ProductStorage;
 use Kirby\Data\Yaml;
 
 it('has a blueprint from PHP', function (): void {
@@ -18,7 +19,7 @@ it('has a blueprint from PHP', function (): void {
 it('has a custom storage to allow merging with the virtual pages', function (): void {
     /** @var ProductPage $p */
     $p = page('products')->children()->first();
-    expect($p->storage())->toBeInstanceOf(\Bnomei\Kart\ProductStorage::class);
+    expect($p->storage())->toBeInstanceOf(ProductStorage::class);
 });
 
 it('has a link to the url of its stock in the panel', function (): void {

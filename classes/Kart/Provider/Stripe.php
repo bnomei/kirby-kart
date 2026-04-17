@@ -171,7 +171,7 @@ class Stripe extends Provider
             return [];
         }
 
-        /** @var \Closure $likey */
+        /** @var Closure $likey */
         $likey = kart()->option('licenses.license.uuid');
 
         // https://docs.stripe.com/api/checkout/sessions/line_items

@@ -9,6 +9,7 @@
  */
 
 use Bnomei\Kart\Cart;
+use Bnomei\Kart\Provider;
 use Bnomei\Kart\Provider\Paypal;
 use Dotenv\Dotenv;
 
@@ -47,7 +48,7 @@ beforeEach(function (): void {
         $this->options['client_id'] = $clientId;
         $this->options['client_secret'] = $clientSecret;
     };
-    $bind = $bind->bindTo($this->paypal, \Bnomei\Kart\Provider::class);
+    $bind = $bind->bindTo($this->paypal, Provider::class);
     $bind();
 });
 

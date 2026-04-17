@@ -105,7 +105,7 @@ class Sumup extends Provider
             return [];
         }
 
-        /** @var \Closure $likey */
+        /** @var Closure $likey */
         $likey = kart()->option('licenses.license.uuid');
 
         $data = array_merge($data, array_filter([

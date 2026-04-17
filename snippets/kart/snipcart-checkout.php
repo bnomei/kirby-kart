@@ -1,4 +1,5 @@
-<?php use Bnomei\Kart\Router;
+<?php use Bnomei\Kart\CartLine;
+use Bnomei\Kart\Router;
 
 if (option('bnomei.kart.provider') === 'snipcart') { ?>
     <script type="text/javascript" defer>
@@ -18,7 +19,7 @@ if (option('bnomei.kart.provider') === 'snipcart') { ?>
 
             setTimeout(async function () {
                 try {
-                    const items = <?= json_encode(array_values(kart()->cart()->lines()->toArray(fn (\Bnomei\Kart\CartLine $line) => [
+                    const items = <?= json_encode(array_values(kart()->cart()->lines()->toArray(fn (CartLine $line) => [
                         'id' => $line->product()?->uuid()->id(),
                         'name' => $line->product()?->title()->value(),
                         'price' => $line->product()?->price()->toFloat(),

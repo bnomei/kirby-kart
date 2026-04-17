@@ -181,7 +181,7 @@ class Paddle extends Provider
             return [];
         }
 
-        /** @var \Closure $likey */
+        /** @var Closure $likey */
         $likey = kart()->option('licenses.license.uuid');
 
         foreach (A::get($json, 'data.details.line_items') as $line) {

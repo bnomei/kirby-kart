@@ -4,6 +4,7 @@ use Bnomei\Kart\Licenses;
 use Bnomei\Kart\Models\OrderPage;
 use Bnomei\Kart\Models\OrdersPage;
 use Bnomei\Kart\Models\ProductPage;
+use Bnomei\Kart\OrderLine;
 use Kirby\Toolkit\Str;
 
 it('has a helper to work with licenses', function (): void {
@@ -39,7 +40,7 @@ it('has a helper to work with licenses', function (): void {
     ], $customer);
 
     $lickey = null;
-    /** @var \Bnomei\Kart\OrderLine $line */
+    /** @var OrderLine $line */
     foreach ($o->orderLines() as $line) {
         $lickey = $line->licensekey();
         break;

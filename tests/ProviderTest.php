@@ -9,10 +9,11 @@
  */
 
 use Bnomei\Kart\ContentPageEnum;
+use Bnomei\Kart\Provider\Kirby;
 use Kirby\Toolkit\Str;
 
 beforeEach(function (): void {
-    $this->p = new Bnomei\Kart\Provider\Kirby(kirby());
+    $this->p = new Kirby(kirby());
 });
 
 it('can have a title and name', function (): void {

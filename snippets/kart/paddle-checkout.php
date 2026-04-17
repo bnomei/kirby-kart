@@ -1,4 +1,7 @@
-<?php if (option('bnomei.kart.provider') === 'paddle') { ?>
+<?php
+use Bnomei\Kart\Router;
+
+if (option('bnomei.kart.provider') === 'paddle') { ?>
     <script src="https://cdn.paddle.com/paddle/v2/paddle.js"></script>
     <script type="text/javascript">
         Paddle.Initialize({
@@ -11,7 +14,7 @@
             checkout: {
                 settings:{
                     locale: '<?= kirby()->language()?->code() ?? 'en' ?>',
-                    successUrl: '<?= url(\Bnomei\Kart\Router::PROVIDER_SUCCESS).'?session_id='.get('_ptxn') ?>',
+                    successUrl: '<?= url(Router::PROVIDER_SUCCESS).'?session_id='.get('_ptxn') ?>',
                 }
             }
         });

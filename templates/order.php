@@ -1,5 +1,7 @@
 <?php
 
+use Bnomei\Kart\OrderLine;
+
 kart()->validateSignatureOrGo();
 
 snippet('kart/kart', slots: true);
@@ -24,7 +26,7 @@ $order ??= $page;
 
         <table>
             <?php foreach ($order->orderLines() as $line) {
-                /** @var \Bnomei\Kart\OrderLine $line */
+                /** @var OrderLine $line */
                 /** @var ProductPage|null $product */
                 $product = $line->product();
                 ?>

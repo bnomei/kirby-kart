@@ -1,4 +1,7 @@
-<?php /** @var OrderPage $order */ ?>
+<?php
+use Bnomei\Kart\OrderLine;
+
+/** @var OrderPage $order */ ?>
 <main>
     <h1>Your Order: <a href="<?= $order->urlWithSignature() ?>" style="text-decoration: none"><code><?= $order->title() ?></code></a></h1>
 
@@ -27,7 +30,7 @@
 
     <table>
         <?php /** @var ProductPage|null $product */
-        /** @var \Bnomei\Kart\OrderLine $line */
+        /** @var OrderLine $line */
         foreach ($order->orderLines() as $line) {
             $product = $line->product();
             ?>

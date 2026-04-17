@@ -5,6 +5,7 @@ use Bnomei\Kart\Kart;
 use Bnomei\Kart\MagicLinkChallenge;
 use Bnomei\Kart\Models\ProductPage;
 use Bnomei\Kart\Router;
+use Bnomei\Kart\WebhookResult;
 use Kirby\Cms\App;
 use Kirby\Cms\Page;
 use Kirby\Cms\Response;
@@ -774,7 +775,7 @@ return function (App $kirby) {
                 if ($isJson) {
                     try {
                         $payload = json_decode($raw ?: '[]', true, 10, JSON_THROW_ON_ERROR);
-                    } catch (\JsonException) {
+                    } catch (JsonException) {
                         return Response::json(['status' => 'invalid', 'message' => 'invalid json'], 400);
                     }
                 } elseif ($isForm) {
@@ -803,7 +804,7 @@ return function (App $kirby) {
                 ];
 
                 $code = match ($result->status) {
-                    \Bnomei\Kart\WebhookResult::STATUS_INVALID => 400,
+                    WebhookResult::STATUS_INVALID => 400,
                     default => 200,
                 };
 

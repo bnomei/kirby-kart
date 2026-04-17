@@ -160,7 +160,7 @@ class Checkout extends Provider
             date('Y-m-d H:i:s', $paidDateTimestamp) :
             date('Y-m-d H:i:s');
 
-        /** @var \Closure $likey */
+        /** @var Closure $likey */
         $likey = kart()->option('licenses.license.uuid');
 
         $data = array_merge($data, array_filter([

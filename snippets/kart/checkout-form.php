@@ -1,4 +1,7 @@
 <?php
+
+use Kirby\Toolkit\A;
+
 // Example checkout form. Copy into site/snippets and adapt as needed.
 // Tip: compute rates/tax in bnomei.kart.checkoutFormData and forward via provider options.
 
@@ -20,17 +23,17 @@ $billingKeys = [
 ];
 $billingSame = true;
 foreach ($billingKeys as $key) {
-    if (\Kirby\Toolkit\A::get($checkout, $key)) {
+    if (A::get($checkout, $key)) {
         $billingSame = false;
         break;
     }
 }
-$billingSameValue = \Kirby\Toolkit\A::get($checkout, 'billing_same_as_shipping');
+$billingSameValue = A::get($checkout, 'billing_same_as_shipping');
 if ($billingSameValue !== null && $billingSameValue !== '') {
     $billingSame = in_array(strtolower((string) $billingSameValue), ['1', 'true', 'yes', 'on'], true);
 }
 $prefill = function (string $key, string $fallback = '') use ($checkout): string {
-    $value = \Kirby\Toolkit\A::get($checkout, $key, $fallback);
+    $value = A::get($checkout, $key, $fallback);
 
     return esc((string) $value);
 };

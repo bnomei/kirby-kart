@@ -290,7 +290,7 @@ class Paypal extends Provider
             'paymentId' => A::get($json, 'id'),
         ]));
 
-        /** @var \Closure $likey */
+        /** @var Closure $likey */
         $likey = kart()->option('licenses.license.uuid');
 
         foreach (A::get($json, 'purchase_units.0.items') as $line) {
