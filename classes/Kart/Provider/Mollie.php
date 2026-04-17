@@ -382,7 +382,7 @@ class Mollie extends Provider
             ]),
         );
 
-        /** @var \Closure $likey */
+        /** @var Closure $likey */
         $likey = kart()->option('licenses.license.uuid');
 
         foreach (A::get($json, 'lines') as $line) {
@@ -400,31 +400,24 @@ class Mollie extends Provider
                     }
                 }
             }
+            $quantity = intval(A::get($line, 'quantity', 1));
+            $price = round(floatval(A::get($line, 'unitPrice.value', 0)), 2);
+            $total = round(floatval(A::get($line, 'totalAmount.value', 0)), 2);
+            $tax = round(floatval(A::get($line, 'vatAmount.value', 0)), 2);
+            $discount = round(
+                floatval(A::get($line, 'discountAmount.value', 0)),
+                2,
+            );
             $data['items'][] = [
                 'key' => ['page://'.$sku], // pages field expect an array
                 'variant' => $variant,
-                'quantity' => A::get($line, 'quantity'),
-                'price' => round(
-                    floatval(A::get($line, 'unitPrice.value', 0)),
-                    2,
-                ),
+                'quantity' => $quantity,
+                'price' => $price,
                 // these values include the multiplication with quantity
-                'total' => round(
-                    floatval(A::get($line, 'totalAmount.value', 0)),
-                    2,
-                ),
-                'subtotal' => round(
-                    floatval(A::get($line, 'totalAmount.value', 0)),
-                    2,
-                ),
-                'tax' => round(
-                    floatval(A::get($line, 'vatAmount.value', 0)),
-                    2,
-                ),
-                'discount' => round(
-                    floatval(A::get($line, 'discountAmount.value', 0)),
-                    2,
-                ),
+                'total' => $total,
+                'subtotal' => round($price * $quantity, 2),
+                'tax' => $tax,
+                'discount' => $discount,
                 'licensekey' => $likey($data + ['line' => $line]),
             ];
         }
