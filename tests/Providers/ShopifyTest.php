@@ -142,7 +142,7 @@ it('skips Shopify product sync without client credentials', function (): void {
         ->and($shopify->requested)->toBeFalse();
 });
 
-it('records a Shopify product sync error when the admin token request fails', function (): void {
+it('throws a Shopify product sync error when the admin token request fails', function (): void {
     kart()->setOption('providers.shopify.store_domain', 'example.myshopify.com');
     kart()->setOption('providers.shopify.client_id', 'client-id');
     kart()->setOption('providers.shopify.client_secret', 'client-secret');
@@ -160,8 +160,8 @@ it('records a Shopify product sync error when the admin token request fails', fu
         }
     };
 
-    expect($shopify->products())->toBe([])
-        ->and($shopify->lastError('products'))->toBe('token failed')
+    expect(fn () => $shopify->products())
+        ->toThrow(RuntimeException::class, 'token failed')
         ->and($shopify->requested)->toBeTrue();
 });
 
@@ -190,14 +190,14 @@ it('keeps cached Shopify products when a refresh fails', function (): void {
     ];
     $shopify->cache()->set('products', $cached, 5);
 
-    $shopify->sync('products');
+    expect(fn () => $shopify->sync('products'))
+        ->toThrow(RuntimeException::class, 'token failed');
 
     expect($shopify->products())->toBe($cached)
-        ->and($shopify->lastError('products'))->toBe('token failed')
         ->and($shopify->requested)->toBeTrue();
 });
 
-it('records Shopify products API errors', function (): void {
+it('throws Shopify products API errors', function (): void {
     kart()->setOption('providers.shopify.store_domain', 'example.myshopify.com');
     kart()->setOption('providers.shopify.client_id', 'client-id');
     kart()->setOption('providers.shopify.client_secret', 'client-secret');
@@ -223,8 +223,9 @@ it('records Shopify products API errors', function (): void {
         }
     };
 
-    expect($shopify->products())->toBe([])
-        ->and($shopify->lastError('products'))->toBe(
+    expect(fn () => $shopify->products())
+        ->toThrow(
+            RuntimeException::class,
             'Shopify Admin products request failed with status 403: [API] This action requires merchant approval for read_products scope.'
         );
 });
