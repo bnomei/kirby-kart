@@ -354,7 +354,10 @@ class Mollie extends Provider
 
         $paymentMethod = A::get($json, 'method', []);
         if (is_array($paymentMethod)) {
-            $paymentMethod = implode(',', $paymentMethod);
+            $paymentMethod = implode(',', array_filter(array_map(
+                fn ($method) => is_scalar($method) ? strval($method) : null,
+                $paymentMethod
+            )));
         }
         $data = array_merge(
             $data,

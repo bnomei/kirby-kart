@@ -119,7 +119,10 @@ class Stripe extends Provider
 
         $paymentMethod = A::get($json, 'payment_method_types', []);
         if (is_array($paymentMethod)) {
-            $paymentMethod = implode(',', $paymentMethod);
+            $paymentMethod = implode(',', array_filter(array_map(
+                fn ($method) => is_scalar($method) ? strval($method) : null,
+                $paymentMethod
+            )));
         }
         $invoiceId = A::get($json, 'invoice');
         $invoiceUrl = null;
