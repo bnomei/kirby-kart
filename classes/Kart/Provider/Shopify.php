@@ -20,6 +20,8 @@ use Kirby\Toolkit\A;
 
 class Shopify extends Provider
 {
+    public const API_VERSION = '2024-07';
+
     protected string $name = ProviderEnum::SHOPIFY->value;
 
     public function checkout(): string
@@ -212,24 +214,32 @@ GQL,
 
     public function fetchProducts(): array
     {
+        if ($this->canFetchProducts() === false) {
+            return [];
+        }
+
         $products = [];
         $pageInfo = null;
 
         // REST Admin products listing
         while (true) {
-            // https://shopify.dev/docs/api/admin-rest/2024-07/resources/product#get-products
-            $remote = Remote::get($this->adminEndpoint().'/products.json', [
-                'headers' => $this->adminHeaders(),
-                'data' => array_filter([
-                    'limit' => 250,
-                    'page_info' => $pageInfo,
-                    'fields' => 'id,title,body_html,tags,images,variants',
-                ]),
-            ]);
+            // https://shopify.dev/docs/api/admin-rest/latest/resources/product#get-products
+            $remote = $this->requestAdminProducts($pageInfo);
 
-            $json = $remote->code() === 200 ? $remote->json() : null;
+            $json = $remote->json();
+            if ($remote->code() !== 200) {
+                $error = is_array($json)
+                    ? A::get($json, 'errors', A::get($json, 'error_description', A::get($json, 'error')))
+                    : null;
+                $message = 'Shopify Admin products request failed with status '.$remote->code();
+                if (is_string($error) && $error !== '') {
+                    $message .= ': '.$error;
+                }
+
+                throw new \RuntimeException($message);
+            }
             if (! is_array($json)) {
-                break;
+                throw new \RuntimeException('Shopify Admin products request did not return JSON');
             }
 
             foreach (A::get($json, 'products', []) as $product) {
@@ -258,6 +268,9 @@ GQL,
             if (is_string($query) && $query !== '') {
                 parse_str($query, $params);
                 $pageInfo = $params['page_info'] ?? null;
+                if (is_string($pageInfo) === false) {
+                    $pageInfo = null;
+                }
             }
             if (! $pageInfo) {
                 break;
@@ -294,10 +307,25 @@ GQL,
         )->mixinProduct($data)->toArray(), $products);
     }
 
+    protected function requestAdminProducts(?string $pageInfo): Remote
+    {
+        return Remote::get($this->adminEndpoint().'/products.json', [
+            'headers' => $this->adminHeaders(),
+            'data' => array_filter([
+                'limit' => 250,
+                'page_info' => $pageInfo,
+                'fields' => 'id,title,body_html,tags,images,variants',
+            ]),
+        ]);
+    }
+
     private function adminEndpoint(): string
     {
-        $domain = rtrim(strval($this->option('store_domain')), '/');
-        $version = strval($this->option('api_version') ?? '2024-07');
+        $version = $this->apiVersion();
+        $domain = $this->storeDomain();
+        if ($domain === '') {
+            throw new \RuntimeException('Shopify store_domain is required to fetch products');
+        }
 
         return 'https://'.$domain.'/admin/api/'.$version;
     }
@@ -305,17 +333,83 @@ GQL,
     private function adminHeaders(): array
     {
         return [
-            'X-Shopify-Access-Token' => strval($this->option('admin_token')),
+            'X-Shopify-Access-Token' => $this->adminAccessToken(),
             'Accept' => 'application/json',
         ];
     }
 
+    private function adminAccessToken(): string
+    {
+        $clientId = trim(strval($this->option('client_id')));
+        $clientSecret = trim(strval($this->option('client_secret')));
+
+        if ($clientId === '' || $clientSecret === '') {
+            throw new \RuntimeException('Shopify client_id and client_secret are required to request an Admin API token');
+        }
+
+        return $this->requestAdminAccessToken($clientId, $clientSecret);
+    }
+
+    protected function requestAdminAccessToken(string $clientId, string $clientSecret): string
+    {
+        // https://shopify.dev/docs/apps/build/authentication-authorization/client-secrets
+        $remote = Remote::post($this->adminAccessTokenEndpoint(), [
+            'headers' => [
+                'Content-Type' => 'application/x-www-form-urlencoded',
+                'Accept' => 'application/json',
+            ],
+            'data' => [
+                'client_id' => $clientId,
+                'client_secret' => $clientSecret,
+                'grant_type' => 'client_credentials',
+            ],
+        ]);
+
+        $json = $remote->json();
+        $token = $remote->code() === 200 && is_array($json)
+            ? A::get($json, 'access_token')
+            : null;
+        if (is_string($token) && $token !== '') {
+            return $token;
+        }
+
+        $error = is_array($json)
+            ? A::get($json, 'error_description', A::get($json, 'error'))
+            : null;
+        $message = 'Shopify Admin API token request failed with status '.$remote->code();
+        if (is_string($error) && $error !== '') {
+            $message .= ': '.$error;
+        }
+
+        throw new \RuntimeException($message);
+    }
+
+    protected function adminAccessTokenEndpoint(): string
+    {
+        $domain = $this->storeDomain();
+        if ($domain === '') {
+            throw new \RuntimeException('Shopify store_domain is required to request an Admin API token');
+        }
+
+        return 'https://'.$domain.'/admin/oauth/access_token';
+    }
+
     private function storefrontEndpoint(): string
     {
-        $domain = rtrim(strval($this->option('store_domain')), '/');
-        $version = strval($this->option('api_version') ?? '2025-01');
+        $version = $this->apiVersion();
+        $domain = $this->storeDomain();
+        if ($domain === '') {
+            throw new \RuntimeException('Shopify store_domain is required to create a checkout');
+        }
 
         return 'https://'.$domain.'/api/'.$version.'/graphql.json';
+    }
+
+    private function apiVersion(): string
+    {
+        $version = trim(strval($this->option('api_version') ?? ''));
+
+        return $version !== '' ? $version : self::API_VERSION;
     }
 
     private function storefrontHeaders(): array
@@ -329,5 +423,26 @@ GQL,
     private function variantGid(string $variantId): string
     {
         return str_contains($variantId, 'gid://') ? $variantId : 'gid://shopify/ProductVariant/'.$variantId;
+    }
+
+    private function canFetchProducts(): bool
+    {
+        if ($this->storeDomain() === '') {
+            return false;
+        }
+
+        $clientId = trim(strval($this->option('client_id')));
+        $clientSecret = trim(strval($this->option('client_secret')));
+
+        return $clientId !== '' && $clientSecret !== '';
+    }
+
+    private function storeDomain(): string
+    {
+        $domain = trim(strval($this->option('store_domain')));
+        $domain = preg_replace('#^https?://#', '', $domain) ?? $domain;
+        $domain = explode('/', $domain)[0];
+
+        return rtrim($domain, '/');
     }
 }
