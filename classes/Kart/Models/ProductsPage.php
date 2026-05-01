@@ -13,6 +13,8 @@ namespace Bnomei\Kart\Models;
 use Kirby\Cms\Page;
 use Kirby\Cms\Pages;
 use Kirby\Content\Field;
+use Kirby\Toolkit\A;
+use Kirby\Toolkit\Str;
 
 class ProductsPage extends Page
 {
@@ -144,18 +146,43 @@ class ProductsPage extends Page
 
         $this->children = parent::children();
         $uuids = $this->children->toArray(fn ($p) => $p->uuid()->id());
+        $slugs = $this->children->toArray(fn ($p) => $p->slug());
 
-        $this->kirby()->impersonate('kirby', function () use ($uuids): void {
+        $this->kirby()->impersonate('kirby', function () use (&$uuids, &$slugs): void {
             $uuid = kart()->option('products.product.uuid');
             foreach (kart()->provider()->products() as $product) {
-                if (is_callable($uuid) && in_array($uuid($this, $product), $uuids)) {
+                $productUuid = is_callable($uuid) ? $uuid($this, $product) : null;
+                $productSlug = $this->productSlug($product, is_string($productUuid) ? $productUuid : null);
+
+                if (
+                    (is_string($productUuid) && in_array($productUuid, $uuids, true)) ||
+                    ($productSlug !== '' && in_array($productSlug, $slugs, true))
+                ) {
                     continue;
                 }
+
                 $this->createChild($product);
+
+                if (is_string($productUuid)) {
+                    $uuids[] = $productUuid;
+                }
+                if ($productSlug !== '') {
+                    $slugs[] = $productSlug;
+                }
             }
         });
 
         return $this->children;
+    }
+
+    protected function productSlug(array $product, ?string $fallback = null): string
+    {
+        $title = A::get($product, 'content.title', $fallback);
+        if (is_scalar($title) && trim(strval($title)) !== '') {
+            return Str::slug(strval($title));
+        }
+
+        return '';
     }
 
     public function categories(): Field

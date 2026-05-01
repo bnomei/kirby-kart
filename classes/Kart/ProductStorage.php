@@ -13,9 +13,11 @@ namespace Bnomei\Kart;
 use Closure;
 use Exception;
 use Kirby\Cms\Language;
+use Kirby\Cms\Page;
 use Kirby\Content\PlainTextStorage;
 use Kirby\Content\VersionId;
 use Kirby\Toolkit\A;
+use Kirby\Toolkit\Str;
 
 class ProductStorage extends PlainTextStorage
 {
@@ -32,7 +34,10 @@ class ProductStorage extends PlainTextStorage
                 throw new Exception('kart.products.product.uuid must be a closure');
             }
             foreach (kart()->provider()->products() as $product) {
-                if (A::get($content, 'uuid', time()) === $uuid(null, $product)) {
+                if (
+                    A::get($content, 'uuid', time()) === $uuid(null, $product) ||
+                    $this->matchesProductSlug($product) === true
+                ) {
                     // provider overwrites local changes for allowed virtual fields
                     $virtualContent = A::get($product, 'content', []);
                     $virtualFields = is_array($virtual) ? $virtual : array_keys(A::filter(
@@ -50,6 +55,26 @@ class ProductStorage extends PlainTextStorage
         }
 
         return $content;
+    }
+
+    private function matchesProductSlug(array $product): bool
+    {
+        $model = $this->model();
+        if ($model instanceof Page === false) {
+            return false;
+        }
+
+        $title = A::get($product, 'content.title');
+        if (is_scalar($title) && trim(strval($title)) !== '') {
+            return Str::slug(strval($title)) === $model->slug();
+        }
+
+        $slug = A::get($product, 'slug');
+        if (is_scalar($slug) && trim(strval($slug)) !== '') {
+            return Str::slug(strval($slug)) === $model->slug();
+        }
+
+        return false;
     }
 
     protected function write(VersionId $versionId, Language $language, array $fields): void
