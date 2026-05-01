@@ -1,7 +1,7 @@
 {
   "name": "bnomei/kirby-kart",
   "type": "kirby-plugin",
-  "version": "5.12.4",
+  "version": "5.13.0",
   "description": "Streamlined E-Commerce Shopping Cart Solution",
   "license": "proprietary",
   "authors": [
@@ -78,8 +78,8 @@
   "scripts": {
     "stan": "./vendor/bin/phpstan analyse --memory-limit=1G",
     "fix": "./vendor/bin/pint",
-    "testBefore": "env KIRBY_HOST=kart.test vendor/bin/kirby testing:beforeAll",
-    "testAfter": "env KIRBY_HOST=kart.test vendor/bin/kirby testing:afterAll",
+    "testBefore": "env KIRBY_HOST=frankenphp.kart.orb.local vendor/bin/kirby testing:beforeAll",
+    "testAfter": "env KIRBY_HOST=frankenphp.kart.orb.local vendor/bin/kirby testing:afterAll",
     "test": "./vendor/bin/pest --profile",
     "rector": "./vendor/bin/rector",
     "dist": [
