@@ -473,8 +473,7 @@ abstract class Provider
 
         foreach ($sync as $interface) {
             $this->cache[$interface] = null;
-            $this->cache()->remove($interface);
-            $this->$interface();
+            $this->read($interface, refresh: true);
         }
 
         return intval(round(($t - microtime(true)) * 1000));
@@ -588,20 +587,23 @@ abstract class Provider
         return $this->read('products');
     }
 
-    public function read(string $interface): array
+    public function read(string $interface, bool $refresh = false): array
     {
         if ($interface !== ContentPageEnum::PRODUCTS->value) {
             return [];
         }
 
         // static per request cache
-        if ($data = A::get($this->cache, $interface)) {
+        if ($refresh === false && is_array($data = A::get($this->cache, $interface))) {
             return $data;
         }
 
         // file cache
-        if ($data = $this->cache()->get($interface)) {
-            return $data;
+        $cached = $this->cache()->get($interface);
+        if ($refresh === false && is_array($cached)) {
+            $this->cache[$interface] = $cached;
+
+            return $cached;
         }
 
         $method = 'fetch'.ucfirst($interface);
