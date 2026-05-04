@@ -161,8 +161,8 @@ class OrderPage extends Page implements Kerbs
                                 ],
                                 [
                                     'label' => 'bnomei.kart.total',
-                                    'value' => '{{ page.formattedSubtotal }}',
-                                    'info' => '+ {{ page.formattedTax }}',
+                                    'value' => '{{ page.formattedTotal }}',
+                                    'info' => '{{ page.formattedSubtotal }} - {{ page.formattedDiscount }} + {{ page.formattedTax }}',
                                 ],
                                 [
                                     'label' => 'bnomei.kart.items',

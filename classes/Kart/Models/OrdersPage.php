@@ -54,9 +54,9 @@ class OrdersPage extends Page
                         ],
                         [
                             'label' => 'bnomei.kart.revenue-30',
-                            'value' => '{{ page.children.trend("paidDate", "sum").toFormattedCurrency }}',
-                            'info' => '{{ page.children.trendPercent("paidDate", "sum").toFormattedNumber(true) }}%',
-                            'theme' => '{{ page.children.trendTheme("paidDate", "sum") }}',
+                            'value' => '{{ page.children.trend("paidDate", "total").toFormattedCurrency }}',
+                            'info' => '{{ page.children.trendPercent("paidDate", "total").toFormattedNumber(true) }}%',
+                            'theme' => '{{ page.children.trendTheme("paidDate", "total") }}',
                         ],
                         [
                             'label' => 'bnomei.kart.orders-30',
@@ -88,7 +88,7 @@ class OrdersPage extends Page
                     'search' => true,
                     'template' => 'order', // maps to OrderPage model
                     'sortBy' => 'invnumber desc',
-                    'text' => '[#{{ page.invoiceNumber }}] {{ page.customer.toUser.email }} ・ {{ page.formattedSubtotal }}',
+                    'text' => '[#{{ page.invoiceNumber }}] {{ page.customer.toUser.email }} ・ {{ page.formattedTotal }}',
                     'info' => '{{ page.title }} ・ {{ page.paidDate.toDate(site.kart.dateformat) }}',
                     'limit' => 1000,
                 ],
