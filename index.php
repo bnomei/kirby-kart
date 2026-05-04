@@ -25,6 +25,7 @@ use Bnomei\Kart\Models\ProductsPage;
 use Bnomei\Kart\Models\StockPage;
 use Bnomei\Kart\Models\StocksPage;
 use Bnomei\Kart\OrderLine;
+use Bnomei\Kart\Provider\Shopify;
 use Bnomei\Kart\Router;
 use Bnomei\Kart\Tag;
 use Bnomei\Kart\UuidCache;
@@ -412,9 +413,10 @@ App::plugin(
                 ],
                 'shopify' => [
                     'store_domain' => fn () => kart_env('SHOPIFY_STORE_DOMAIN'),
-                    'admin_token' => fn () => kart_env('SHOPIFY_ADMIN_TOKEN'),
+                    'client_id' => fn () => kart_env('SHOPIFY_CLIENT_ID'),
+                    'client_secret' => fn () => kart_env('SHOPIFY_CLIENT_SECRET'),
                     'storefront_token' => fn () => kart_env('SHOPIFY_STOREFRONT_TOKEN'),
-                    'api_version' => fn () => kart_env('SHOPIFY_API_VERSION', '2025-01'),
+                    'api_version' => fn () => kart_env('SHOPIFY_API_VERSION', Shopify::API_VERSION),
                     'checkout_channel' => fn () => kart_env('SHOPIFY_CHECKOUT_CHANNEL', 'headless-storefront'),
                     'webhook_secret' => fn () => kart_env('SHOPIFY_WEBHOOK_SECRET'),
                     'checkout_options' => function (Kart $kart) {
@@ -1057,7 +1059,7 @@ App::plugin(
                     $metadata = $metadata->metaArray(); // @phpstan-ignore-line
                 }
                 // else sane defaults
-                if ($page && $metadata instanceof Field) {
+                if ($metadata instanceof Field) {
                     $metadata = [
                         'title' => $page?->isHomePage() ? $site->title()->value() : $page->title().' | '.$site->title(),  // @phpstan-ignore-line
                         'description' => Str::esc($page->description()->kti()), // @phpstan-ignore-line
