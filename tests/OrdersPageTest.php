@@ -16,6 +16,20 @@ it('has a blueprint from PHP', function (): void {
     expect(Yaml::encode(OrdersPage::phpBlueprint()))->toMatchSnapshot();
 });
 
+it('uses final totals in the panel overview blueprint', function (): void {
+    $blueprint = OrdersPage::phpBlueprint();
+    $revenue = $blueprint['sections']['stats']['reports'][1];
+    $orders = $blueprint['sections']['orders'];
+
+    expect($revenue)->toMatchArray([
+        'label' => 'bnomei.kart.revenue-30',
+        'value' => '{{ page.children.trend("paidDate", "total").toFormattedCurrency }}',
+        'info' => '{{ page.children.trendPercent("paidDate", "total").toFormattedNumber(true) }}%',
+        'theme' => '{{ page.children.trendTheme("paidDate", "total") }}',
+    ])
+        ->and($orders['text'])->toBe('[#{{ page.invoiceNumber }}] {{ page.customer.toUser.email }} ・ {{ page.formattedTotal }}');
+});
+
 it('can disable order creation', function (): void {
     kart()->setOption('orders.enabled', false);
 

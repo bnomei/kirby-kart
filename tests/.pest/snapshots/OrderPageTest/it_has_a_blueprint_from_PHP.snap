@@ -29,8 +29,8 @@ tabs:
             info: '{{ page.paidDate.toDate(site.kart.dateformat) }}'
           - 
             label: bnomei.kart.total
-            value: '{{ page.formattedSubtotal }}'
-            info: '+ {{ page.formattedTax }}'
+            value: '{{ page.formattedTotal }}'
+            info: '{{ page.formattedSubtotal }} - {{ page.formattedDiscount }} + {{ page.formattedTax }}'
           - 
             label: bnomei.kart.items
             value: '{{ page.items.toStructure.count }}'

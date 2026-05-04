@@ -13,8 +13,54 @@ use Bnomei\Kart\Models\OrdersPage;
 use Bnomei\Kart\Models\ProductPage;
 use Kirby\Data\Yaml;
 
+beforeEach(function (): void {
+    kart()->setOption('provider', 'kirby');
+});
+
 it('has a blueprint from PHP', function (): void {
     expect(Yaml::encode(OrderPage::phpBlueprint()))->toMatchSnapshot();
+});
+
+it('uses the final total in the panel summary blueprint', function (): void {
+    $reports = OrderPage::phpBlueprint()['tabs']['order']['sections']['stats']['reports'];
+
+    expect($reports[1])->toMatchArray([
+        'label' => 'bnomei.kart.total',
+        'value' => '{{ page.formattedTotal }}',
+        'info' => '{{ page.formattedSubtotal }} - {{ page.formattedDiscount }} + {{ page.formattedTax }}',
+    ]);
+});
+
+it('keeps discounted totals separate from subtotals', function (): void {
+    /** @var OrdersPage $orders */
+    $orders = kart()->page('orders');
+
+    /** @var OrderPage $o */
+    $o = $orders->createOrder([
+        'paymentComplete' => true,
+        'items' => [
+            [
+                'key' => ['page://discounted-test-product'],
+                'quantity' => 1,
+                'price' => 985.0,
+                'total' => 492.5,
+                'subtotal' => 985.0,
+                'tax' => 0,
+                'discount' => 492.5,
+            ],
+        ],
+    ]);
+
+    expect($o->subtotal())->toBe(985.0)
+        ->and($o->formattedSubtotal())->toBe('€985.00')
+        ->and($o->discount())->toBe(492.5)
+        ->and($o->formattedDiscount())->toBe('€492.50')
+        ->and($o->tax())->toBe(0.0)
+        ->and($o->formattedTax())->toBe('€0.00')
+        ->and($o->sum())->toBe(985.0)
+        ->and($o->formattedSum())->toBe('€985.00')
+        ->and($o->total())->toBe(492.5)
+        ->and($o->formattedTotal())->toBe('€492.50');
 });
 
 it('is an order page', function (): void {
