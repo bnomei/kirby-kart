@@ -249,17 +249,26 @@ class Invoiceninja extends Provider
         $balance = floatval(A::get($invoice, 'balance', 0));
         $paid = floatval(A::get($invoice, 'paid_to_date', 0));
         $statusId = intval(A::get($invoice, 'status_id', 0));
+        $status = strtolower(strval(A::get($invoice, 'status', '')));
 
-        if ($amount > 0 && $balance <= 0.0) {
-            return true;
+        if (in_array($statusId, [5, 6], true)) {
+            return false;
         }
 
-        if ($paid >= $amount && $amount > 0) {
-            return true;
+        if (in_array($status, ['cancelled', 'canceled', 'reversed', 'deleted'], true)) {
+            return false;
         }
 
-        // Invoice Ninja paid/partial statuses are >= 4
-        return in_array($statusId, [4, 5, 6], true);
+        if ($amount <= 0) {
+            return false;
+        }
+
+        $hasPaidStatus = $statusId === 4 || $status === 'paid';
+        if (! $hasPaidStatus) {
+            return false;
+        }
+
+        return $balance <= 0.0 || $paid >= $amount;
     }
 
     private function buildOrderData(array $invoice, array $payload): array

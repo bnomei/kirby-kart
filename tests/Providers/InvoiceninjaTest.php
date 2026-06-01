@@ -43,3 +43,31 @@ it('requires webhook secret for webhook verification', function (): void {
 
     expect($result->status)->toBe(WebhookResult::STATUS_INVALID);
 });
+
+it('only treats explicit paid invoices as paid', function (): void {
+    $method = new ReflectionMethod(Invoiceninja::class, 'isInvoicePaid');
+
+    expect($method->invoke($this->provider, [
+        'amount' => 10,
+        'balance' => 0,
+        'paid_to_date' => 10,
+        'status_id' => 4,
+    ]))->toBeTrue()
+        ->and($method->invoke($this->provider, [
+            'amount' => 10,
+            'balance' => 0,
+            'paid_to_date' => 10,
+            'status_id' => 5,
+        ]))->toBeFalse()
+        ->and($method->invoke($this->provider, [
+            'amount' => 10,
+            'balance' => 0,
+            'paid_to_date' => 10,
+            'status_id' => 6,
+        ]))->toBeFalse()
+        ->and($method->invoke($this->provider, [
+            'amount' => 10,
+            'balance' => 0,
+            'paid_to_date' => 10,
+        ]))->toBeFalse();
+});
