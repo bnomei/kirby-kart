@@ -46,6 +46,8 @@ class Lemonsqueezy extends Provider
         }
 
         $contact = $this->checkoutContact();
+        $contactEmail = $contact['email'] ?? $this->kirby->user()?->email();
+        $contactName = $contact['name'] ?? $this->kirby->user()?->name()->value();
 
         $variantId = A::get($product?->raw()->yaml(), 'variants.0.id');
         if ($product && $line->variant()) {
@@ -53,6 +55,13 @@ class Lemonsqueezy extends Provider
         }
 
         $state = Str::uuid();
+        $cartHash = $this->kart->cart()->hash();
+        $binding = array_filter([
+            'state' => $state,
+            'cart_hash' => $cartHash,
+            'variant_id' => strval($variantId),
+            'email' => $contactEmail,
+        ], fn ($value) => $value !== null && $value !== '');
         $this->kirby->session()->set('bnomei.kart.'.$this->name.'.redirect_state', $state);
 
         // https://docs.lemonsqueezy.com/api/checkouts/create-checkout
@@ -81,11 +90,16 @@ class Lemonsqueezy extends Provider
                     'attributes' => array_filter(array_merge([
                         'product_options' => [
                             'enabled_variants' => [$variantId], // NOTE: array
-                            'redirect_url' => url(Router::PROVIDER_SUCCESS).'?order_id=[order_id]&state='.$state,
+                            'redirect_url' => url(Router::PROVIDER_SUCCESS).'?order_id=[order_id]&order_identifier=[order_identifier]&email=[email]&state='.$state,
                         ],
                         'checkout_data' => array_filter([
-                            'email' => $contact['email'] ?? $this->kirby->user()?->email(),
-                            'name' => $contact['name'] ?? $this->kirby->user()?->name()->value(),
+                            'email' => $contactEmail,
+                            'name' => $contactName,
+                            'custom' => array_filter([
+                                'kart_state' => $state,
+                                'kart_cart_hash' => $cartHash,
+                                'kart_variant_id' => strval($variantId),
+                            ], fn ($value) => $value !== null && $value !== ''),
                         ]),
                         'test_mode' => $this->kirby->environment()->isLocal(),
                         'expires_at' => date('c', time() + 60 * 60), // 1h
@@ -100,6 +114,10 @@ class Lemonsqueezy extends Provider
         }
 
         $session_id = A::get($json, 'data.id');
+        if (is_scalar($session_id) && strval($session_id) !== '') {
+            $binding['checkout_id'] = strval($session_id);
+        }
+        $this->kirby->session()->set('bnomei.kart.'.$this->name.'.checkout', $binding);
         $this->kirby->session()->set('bnomei.kart.'.$this->name.'.session_id', $session_id);
 
         return parent::checkout() && in_array($remote->code(), [200, 201]) ?
@@ -115,7 +133,12 @@ class Lemonsqueezy extends Provider
 
         $orderId = strval(get('order_id', ''));
         $state = strval(get('state', ''));
-        $expectedState = $this->kirby->session()->get('bnomei.kart.'.$this->name.'.redirect_state');
+        $binding = $this->checkoutBinding();
+        $expectedState = A::get(
+            $binding,
+            'state',
+            $this->kirby->session()->get('bnomei.kart.'.$this->name.'.redirect_state')
+        );
 
         if ($orderId === '' || $state === '' || ! is_string($expectedState) || $expectedState === '' || $state !== $expectedState) {
             return [];
@@ -126,13 +149,19 @@ class Lemonsqueezy extends Provider
             return [];
         }
 
+        if (! $this->orderMatchesCheckout($order, $binding, [
+            'order_identifier' => get('order_identifier'),
+            'email' => get('email'),
+        ])) {
+            return [];
+        }
+
         $orderData = $this->mapOrderData($order);
         if (empty($orderData) || A::get($orderData, 'paymentComplete') !== true) {
             return [];
         }
 
-        $this->kirby->session()->remove('bnomei.kart.'.$this->name.'.redirect_state');
-        $this->kirby->session()->remove('bnomei.kart.'.$this->name.'.session_id');
+        $this->clearCheckoutBinding();
 
         return parent::completed($orderData);
     }
@@ -372,6 +401,58 @@ class Lemonsqueezy extends Provider
         }
 
         return $data;
+    }
+
+    private function checkoutBinding(): array
+    {
+        $binding = $this->kirby->session()->get('bnomei.kart.'.$this->name.'.checkout', []);
+
+        return is_array($binding) ? $binding : [];
+    }
+
+    private function clearCheckoutBinding(): void
+    {
+        $this->kirby->session()->remove('bnomei.kart.'.$this->name.'.checkout');
+        $this->kirby->session()->remove('bnomei.kart.'.$this->name.'.redirect_state');
+        $this->kirby->session()->remove('bnomei.kart.'.$this->name.'.session_id');
+    }
+
+    private function orderMatchesCheckout(array $order, array $binding, array $redirect): bool
+    {
+        $attributes = A::get($order, 'attributes', $order);
+        if (! is_array($attributes)) {
+            return false;
+        }
+
+        $expectedCartHash = A::get($binding, 'cart_hash');
+        if (! is_scalar($expectedCartHash) || ! hash_equals(strval($expectedCartHash), $this->kart->cart()->hash())) {
+            return false;
+        }
+
+        $expectedVariantId = strval(A::get($binding, 'variant_id', ''));
+        $orderVariantId = strval(A::get($attributes, 'first_order_item.variant_id', ''));
+        if ($expectedVariantId === '' || $orderVariantId === '' || ! hash_equals($expectedVariantId, $orderVariantId)) {
+            return false;
+        }
+
+        $orderIdentifier = strval(A::get($attributes, 'identifier', ''));
+        $redirectIdentifier = strval(A::get($redirect, 'order_identifier', ''));
+        if ($orderIdentifier === '' || $redirectIdentifier === '' || ! hash_equals($orderIdentifier, $redirectIdentifier)) {
+            return false;
+        }
+
+        $orderEmail = strtolower(strval(A::get($attributes, 'user_email', '')));
+        $redirectEmail = strtolower(strval(A::get($redirect, 'email', '')));
+        if ($orderEmail === '' || $redirectEmail === '' || ! hash_equals($orderEmail, $redirectEmail)) {
+            return false;
+        }
+
+        $expectedEmail = strtolower(strval(A::get($binding, 'email', '')));
+        if ($expectedEmail !== '' && ! hash_equals($expectedEmail, $orderEmail)) {
+            return false;
+        }
+
+        return true;
     }
 
     private function mapSubscriptionInvoice(array $invoice, ?array $subscription = null): array
