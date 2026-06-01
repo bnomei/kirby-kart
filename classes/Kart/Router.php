@@ -309,6 +309,8 @@ class Router
         if (
             $target === '' ||
             preg_match('/[\x00-\x1F\x7F]/', $target) === 1 ||
+            str_contains($target, '\\') ||
+            stripos($target, '%5c') !== false ||
             str_starts_with($target, '//')
         ) {
             return $fallback;
