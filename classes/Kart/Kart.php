@@ -197,17 +197,24 @@ class Kart implements Kerbs
             $without = ['signature', 'prg'];
         }
 
+        $path = '';
         if (is_string($data)) {
-            $path = parse_url($data, PHP_URL_PATH);
+            $path = strval(parse_url($data, PHP_URL_PATH));
             $query = parse_url($data, PHP_URL_QUERY);
             $data = [];
             parse_str(is_string($query) ? $query : '', $data);
-            array_unshift($data, $path);
+        } elseif (array_key_exists(0, $data)) {
+            $path = strval($data[0]);
+            unset($data[0]);
         }
+
+        // build a canonical, key-aware representation before signing
+        $data = A::without($data, $without);
+        ksort($data);
 
         return hash_hmac(
             'sha256',
-            implode('', A::without($data, $without)),
+            $path."\n".http_build_query($data),
             strval(kart()->option('crypto.salt')),
         );
     }

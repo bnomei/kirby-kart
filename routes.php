@@ -247,6 +247,8 @@ return function (App $kirby) {
                     if ($code) {
                         kirby()->session()->set('kirby.challenge.type', 'login');
                         kirby()->session()->set('kirby.challenge.code', password_hash($code, PASSWORD_DEFAULT));
+                        kirby()->session()->set('kirby.challenge.email', $user->email());
+                        kirby()->session()->set('kirby.challenge.timeout', time() + 10 * 60);
 
                         return Router::go();
                     }
@@ -283,6 +285,8 @@ return function (App $kirby) {
                     if ($code) {
                         kirby()->session()->set('kirby.challenge.type', 'login');
                         kirby()->session()->set('kirby.challenge.code', password_hash($code, PASSWORD_DEFAULT));
+                        kirby()->session()->set('kirby.challenge.email', $user->email());
+                        kirby()->session()->set('kirby.challenge.timeout', time() + 10 * 60);
 
                         return Router::go();
                     }
@@ -317,6 +321,28 @@ return function (App $kirby) {
 
                 $code = A::get($data, 'code');
 
+                // the one-time code is only valid for the address it was
+                // issued for and only within its timeout window
+                $session = kirby()->session();
+                $challengeEmail = $session->get('kirby.challenge.email');
+                $challengeTimeout = $session->get('kirby.challenge.timeout');
+                if (
+                    ! is_string($challengeEmail) ||
+                    ! is_int($challengeTimeout) ||
+                    $challengeTimeout < time() ||
+                    ! hash_equals(
+                        strtolower($challengeEmail),
+                        strtolower(strval(A::get($data, 'email')))
+                    )
+                ) {
+                    $session->remove('kirby.challenge.type');
+                    $session->remove('kirby.challenge.code');
+                    $session->remove('kirby.challenge.email');
+                    $session->remove('kirby.challenge.timeout');
+
+                    return Router::go(url(Router::safeRedirect(Router::get('error_url'), '/')));
+                }
+
                 $user = null;
                 if (get('signup')) {
                     // try creating
@@ -340,7 +366,10 @@ return function (App $kirby) {
 
                 if ($user && $user->isCustomer() && MagicLinkChallenge::verify($user, $code)) {
 
-                    kirby()->session()->remove('kirby.challenge.code');
+                    $session->remove('kirby.challenge.type');
+                    $session->remove('kirby.challenge.code');
+                    $session->remove('kirby.challenge.email');
+                    $session->remove('kirby.challenge.timeout');
                     $user->loginPasswordless();
                 } else {
                     $redirect = Router::safeRedirect(
