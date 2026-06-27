@@ -659,6 +659,7 @@ App::plugin(
             'fr' => require_once __DIR__.'/translations/fr.php',
             'it' => require_once __DIR__.'/translations/it.php',
             'nl' => require_once __DIR__.'/translations/nl.php',
+            'sv' => require_once __DIR__.'/translations/sv.php',
             'ru' => require_once __DIR__.'/translations/ru.php',
             'tr' => require_once __DIR__.'/translations/tr.php',
         ],
