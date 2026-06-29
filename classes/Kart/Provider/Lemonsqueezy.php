@@ -38,7 +38,11 @@ class Lemonsqueezy extends Provider
     public function checkout(): string
     {
         $line = $this->kart->cart()->lines()->first();
-        $product = $line->product();
+        $product = $line?->product();
+
+        if ($product === null) {
+            return '/';
+        }
 
         $options = $this->option('checkout_options', false);
         if ($options instanceof Closure) {
@@ -49,8 +53,8 @@ class Lemonsqueezy extends Provider
         $contactEmail = $contact['email'] ?? $this->kirby->user()?->email();
         $contactName = $contact['name'] ?? $this->kirby->user()?->name()->value();
 
-        $variantId = A::get($product?->raw()->yaml(), 'variants.0.id');
-        if ($product && $line->variant()) {
+        $variantId = A::get($product->raw()->yaml(), 'variants.0.id');
+        if ($line->variant()) {
             $variantId = $product->priceIdForVariant($line->variant());
         }
 
@@ -99,7 +103,7 @@ class Lemonsqueezy extends Provider
                                 'kart_state' => $state,
                                 'kart_cart_hash' => $cartHash,
                                 'kart_variant_id' => strval($variantId),
-                            ], fn ($value) => $value !== null && $value !== ''),
+                            ], fn ($value) => $value !== ''),
                         ]),
                         'test_mode' => $this->kirby->environment()->isLocal(),
                         'expires_at' => date('c', time() + 60 * 60), // 1h
