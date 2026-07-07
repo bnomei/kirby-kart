@@ -416,7 +416,7 @@ GQL,
     {
         return [
             'Content-Type' => 'application/json',
-            'X-Shopify-Storefront-Access-Token' => strval($this->option('storefront_token')),
+            'Shopify-Storefront-Private-Token' => strval($this->option('storefront_token')),
         ];
     }
 
