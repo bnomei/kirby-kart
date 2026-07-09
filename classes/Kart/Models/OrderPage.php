@@ -108,19 +108,29 @@ class OrderPage extends Page implements Kerbs
             $page = $this->kirby()->impersonate('kirby', function () use (
                 $pageId,
             ) {
-                $next = page($pageId)
-                    ?->parent()
-                    ?->increment('invnumber', 1)
+                $order = page($pageId);
+                $orders = $order?->parent();
+
+                if ($order === null || $orders === null) {
+                    return null;
+                }
+
+                $next = $orders
+                    ->increment('invnumber', 1)
                     ->invnumber()
                     ->toInt();
 
-                return page($pageId)?->update([
+                return $order->update([
                     'invnumber' => $next,
                 ]);
             });
         }
 
-        return $page ?? $this; // @phpstan-ignore-line
+        if ($page instanceof Page) {
+            return $page;
+        }
+
+        return $this;
     }
 
     public static function phpBlueprint(): array
