@@ -290,13 +290,45 @@ GQL,
                         fn ($img) => A::get($img, 'src'), A::get($i, 'images', [])
                     )),
                     'variants' => function ($i) {
+                        $imageUrlsByImageId = [];
+                        $imageUrlsByVariantId = [];
+                        foreach (A::get($i, 'images', []) as $image) {
+                            $imageUrl = A::get($image, 'src');
+                            if (! $imageUrl) {
+                                continue;
+                            }
+
+                            $imageId = strval(A::get($image, 'id', ''));
+                            if ($imageId !== '') {
+                                $imageUrlsByImageId[$imageId] = $imageUrl;
+                            }
+
+                            foreach (A::get($image, 'variant_ids', []) as $variantId) {
+                                $imageUrlsByVariantId[strval($variantId)] = $imageUrl;
+                            }
+                        }
+
                         $variants = [];
                         foreach (A::get($i, 'variants', []) as $v) {
-                            $variants[] = [
+                            $variantId = strval(A::get($v, 'id'));
+                            $imageId = strval(A::get($v, 'image_id', ''));
+                            $variantImageUrl = A::get($imageUrlsByVariantId, $variantId)
+                                ?? A::get($imageUrlsByImageId, $imageId);
+
+                            $variant = [
                                 'price_id' => strval(A::get($v, 'id')),
                                 'variant' => A::get($v, 'title'),
                                 'price' => floatval(A::get($v, 'price', 0)),
                             ];
+
+                            if ($variantImageUrl) {
+                                $variantImage = $this->findImagesFromUrls($variantImageUrl);
+                                if (! empty($variantImage)) {
+                                    $variant['image'] = $variantImage;
+                                }
+                            }
+
+                            $variants[] = $variant;
                         }
 
                         return empty($variants) ? null : $variants;
