@@ -94,3 +94,82 @@ it('can handle variants data even if it has none', function (): void {
         ->and($p->variantGroups())->toBeArray()
         ->and($p->variantFromRequestData([]))->toBeNull();
 });
+
+it('builds valid product JSON-LD with a complete offer', function (): void {
+    /** @var ProductPage $p */
+    $p = page('products')->children()->first();
+    $data = $p->productJsonLd();
+
+    expect($data['@type'])->toBe('Product')
+        ->and($data)->not->toHaveKeys(['description', 'image'])
+        ->and($data['offers']['@type'])->toBe('Offer')
+        ->and($data['offers']['price'])->toBe(15.0)
+        ->and($data['offers']['priceCurrency'])->toBe('EUR')
+        ->and($data['offers']['availability'])->toBeIn([
+            'https://schema.org/InStock',
+            'https://schema.org/OutOfStock',
+        ])
+        ->and($data['offers']['url'])->toBe($p->url());
+
+    $html = snippet('kart/product-json-ld', ['product' => $p], true);
+    preg_match(
+        '/<script type="application\/ld\+json">\s*(.*?)\s*<\/script>/s',
+        strval($html),
+        $matches,
+    );
+
+    expect(json_decode($matches[1], true, flags: JSON_THROW_ON_ERROR))
+        ->toBe($data);
+});
+
+it('builds ProductGroup JSON-LD for multi-dimensional variants', function (): void {
+    $p = new ProductPage([
+        'slug' => 'special-product',
+        'parent' => page('products'),
+        'template' => 'product',
+        'model' => 'product',
+        'content' => [
+            'title' => 'Special "Product"',
+            'uuid' => 'special-product',
+            'description' => "First line\n\nSecond line </script>",
+            'price' => 10,
+            'variants' => Yaml::encode([
+                [
+                    'variant' => 'color:red, size:large',
+                    'price' => 12.5,
+                ],
+                [
+                    'variant' => 'license.desktop, material:wool',
+                    'price' => 20,
+                ],
+            ]),
+        ],
+    ]);
+
+    $data = $p->productJsonLd();
+
+    expect($data['@type'])->toBe('ProductGroup')
+        ->and($data['variesBy'])->toBe([
+            'https://schema.org/color',
+            'https://schema.org/material',
+            'https://schema.org/size',
+        ])
+        ->and($data['hasVariant'])->toHaveCount(2)
+        ->and($data['hasVariant'][0]['color'])->toBe('red')
+        ->and($data['hasVariant'][0]['size'])->toBe('large')
+        ->and($data['hasVariant'][0]['offers']['price'])->toBe(12.5)
+        ->and($data['hasVariant'][1]['name'])->toBe('Special "Product" – desktop, wool')
+        ->and($data['hasVariant'][1]['material'])->toBe('wool')
+        ->and($data['hasVariant'][1]['additionalProperty'][0])->toBe([
+            '@type' => 'PropertyValue',
+            'name' => 'license',
+            'value' => 'desktop',
+        ])
+        ->and($data['hasVariant'][1]['offers']['price'])->toBe(20.0)
+        ->and($data['hasVariant'][1]['offers']['url'])
+        ->toEndWith('?license=desktop&material=wool');
+
+    $html = snippet('kart/product-json-ld', ['product' => $p], true);
+
+    expect(substr_count(strval($html), '</script>'))->toBe(1);
+});

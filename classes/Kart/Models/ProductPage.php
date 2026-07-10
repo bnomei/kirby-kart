@@ -52,6 +52,13 @@ class ProductPage extends Page implements Kerbs
 {
     use ModelWithTurbo;
 
+    private const PRODUCT_JSON_LD_VARIANT_PROPERTIES = [
+        'color' => 'color',
+        'material' => 'material',
+        'pattern' => 'pattern',
+        'size' => 'size',
+    ];
+
     public static function create(array $props): Page
     {
         $parent = kart()->page(ContentPageEnum::PRODUCTS);
@@ -530,6 +537,207 @@ class ProductPage extends Page implements Kerbs
         return $this->gallery()->toFile();
     }
 
+    public function productJsonLd(): array
+    {
+        $url = $this->url();
+        $name = $this->title()->toString();
+        $image = $this->firstGalleryImageUrl();
+        $description = self::productJsonLdText($this->description());
+        $categories = self::productJsonLdValues($this->categories()->split());
+        $keywords = self::productJsonLdValues($this->tags()->split());
+        $variants = $this->productJsonLdVariants($name, $image, $description);
+
+        if (empty($variants)) {
+            $data = [
+                '@context' => 'https://schema.org',
+                '@type' => 'Product',
+                '@id' => $url.'#product',
+                'name' => $name,
+                'sku' => $this->slug(),
+                'url' => $url,
+                'mainEntityOfPage' => $url,
+                'offers' => $this->productJsonLdOffer(),
+            ];
+        } else {
+            $groupId = $url.'#product-group';
+            $variesBy = [];
+            foreach (array_keys($this->variantGroups()) as $group) {
+                $property = self::productJsonLdVariantProperty($group);
+                if ($property !== null) {
+                    $variesBy[] = 'https://schema.org/'.$property;
+                }
+            }
+
+            $data = [
+                '@context' => 'https://schema.org',
+                '@type' => 'ProductGroup',
+                '@id' => $groupId,
+                'name' => $name,
+                'productGroupID' => $this->slug(),
+                'url' => $url,
+                'mainEntityOfPage' => $url,
+                'hasVariant' => array_map(
+                    static fn (array $variant): array => array_merge($variant, [
+                        'isVariantOf' => ['@id' => $groupId],
+                    ]),
+                    $variants,
+                ),
+            ];
+
+            if (! empty($variesBy)) {
+                $variesBy = array_values(array_unique($variesBy));
+                sort($variesBy);
+                $data['variesBy'] = $variesBy;
+            }
+        }
+
+        if ($image !== null) {
+            $data['image'] = $image;
+        }
+        if ($description !== '') {
+            $data['description'] = $description;
+        }
+        if (! empty($categories)) {
+            $data['category'] = $categories;
+        }
+        if (! empty($keywords)) {
+            $data['keywords'] = $keywords;
+        }
+
+        return $data;
+    }
+
+    private function productJsonLdOffer(?string $variant = null): array
+    {
+        $stock = $this->stock(variant: $variant);
+
+        return [
+            '@type' => 'Offer',
+            'price' => $this->priceWithVariant($variant),
+            'priceCurrency' => strtoupper(kart()->currency()),
+            'availability' => 'https://schema.org/'.
+                (is_string($stock) || $stock > 0 ? 'InStock' : 'OutOfStock'),
+            'url' => $this->urlWithVariant($variant),
+        ];
+    }
+
+    private function productJsonLdVariants(
+        string $name,
+        ?string $fallbackImage,
+        string $fallbackDescription,
+    ): array {
+        $variants = [];
+
+        foreach ($this->variants()->toStructure() as $item) {
+            $tags = self::productJsonLdValues($item->variant()->split());
+            sort($tags);
+            $variant = implode(',', $tags);
+            $options = self::variantOptions($tags);
+
+            if ($variant === '' || empty($options)) {
+                continue;
+            }
+
+            $url = $this->urlWithVariant($variant);
+            $image = $item->image()->toFile()?->resize(1920)->url() ??
+                $fallbackImage;
+            $description = self::productJsonLdText($item->description());
+            if ($description === '') {
+                $description = $fallbackDescription;
+            }
+
+            $data = [
+                '@type' => 'Product',
+                '@id' => $url,
+                'name' => $name.' – '.implode(', ', array_values($options)),
+                'sku' => $this->slug().'-'.substr(hash('sha256', $variant), 0, 12),
+                'url' => $url,
+                'offers' => $this->productJsonLdOffer($variant),
+            ];
+            $additionalProperties = [];
+
+            foreach ($options as $optionName => $value) {
+                $property = self::productJsonLdVariantProperty($optionName);
+                if ($property !== null) {
+                    $data[$property] = $value;
+                } else {
+                    $additionalProperties[] = [
+                        '@type' => 'PropertyValue',
+                        'name' => $optionName,
+                        'value' => $value,
+                    ];
+                }
+            }
+
+            if ($image !== null) {
+                $data['image'] = $image;
+            }
+            if ($description !== '') {
+                $data['description'] = $description;
+            }
+            if (! empty($additionalProperties)) {
+                $data['additionalProperty'] = $additionalProperties;
+            }
+
+            $variants[] = $data;
+        }
+
+        return $variants;
+    }
+
+    private static function productJsonLdText(Field $field): string
+    {
+        return trim(html_entity_decode(
+            strip_tags($field->kirbytext()->value()),
+            ENT_QUOTES | ENT_HTML5,
+            'UTF-8',
+        ));
+    }
+
+    private static function productJsonLdValues(array $values): array
+    {
+        return array_values(array_filter(
+            array_map(
+                static fn ($value): string => trim(strval($value)),
+                $values,
+            ),
+            static fn (string $value): bool => $value !== '',
+        ));
+    }
+
+    private static function variantOptions(array $tags): array
+    {
+        $options = [];
+
+        foreach ($tags as $tag) {
+            foreach ([':', '=', '.'] as $separator) {
+                if (! str_contains($tag, $separator)) {
+                    continue;
+                }
+
+                [$name, $value] = array_map(
+                    'trim',
+                    explode($separator, $tag, 2),
+                );
+                if ($name !== '' && $value !== '') {
+                    $options[$name] = $value;
+                }
+                break;
+            }
+        }
+
+        ksort($options);
+
+        return $options;
+    }
+
+    private static function productJsonLdVariantProperty(string $name): ?string
+    {
+        $name = strtolower(strval(preg_replace('/[^a-z]/i', '', $name)));
+
+        return self::PRODUCT_JSON_LD_VARIANT_PROPERTIES[$name] ?? null;
+    }
+
     /**
      * @kql-allowed
      */
@@ -589,17 +797,14 @@ class ProductPage extends Page implements Kerbs
             return $this->url();
         }
 
-        $variants = array_map('trim', explode(',', $variant));
-        sort($variants);
-        $variant = implode(',', $variants); // no whitespace
+        $options = self::variantOptions(array_map('trim', explode(',', $variant)));
+        if (empty($options)) {
+            return $this->url();
+        }
 
         return $this->url().
             '?'.
-            str_replace(
-                [', ', ',', ':', ' '],
-                ['&', '&', '=', '%20'],
-                $variant,
-            );
+            http_build_query($options, '', '&', PHP_QUERY_RFC3986);
     }
 
     protected ?array $vardat = null;
