@@ -726,7 +726,7 @@ App::plugin(
                 kirby()->cache('bnomei.kart.stats')->remove('customers');
                 kirby()->cache('bnomei.kart.gravatar')->remove(md5(strtolower(trim($user->email() ?? $user->id()))));
             },
-            'page.created:after' => function (Page $page) {
+            'page.create:after' => function (Page $page) {
                 if ($page instanceof StocksPage) {
                     kirby()->cache('bnomei.kart.stocks')->flush();
                     kirby()->cache('bnomei.kart.stocks-holds')->flush();
