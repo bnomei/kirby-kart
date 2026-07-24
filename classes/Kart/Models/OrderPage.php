@@ -115,6 +115,12 @@ class OrderPage extends Page implements Kerbs
                     return null;
                 }
 
+                // The page instance that entered this method can be stale when
+                // another hook updated the order during creation.
+                if ($order->invnumber()->isNotEmpty()) {
+                    return $order;
+                }
+
                 $next = $orders
                     ->increment('invnumber', 1)
                     ->invnumber()
