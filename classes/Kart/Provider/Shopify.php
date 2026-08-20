@@ -11,6 +11,7 @@
 namespace Bnomei\Kart\Provider;
 
 use Bnomei\Kart\ContentPageEnum;
+use Bnomei\Kart\Models\ProductPage;
 use Bnomei\Kart\Provider;
 use Bnomei\Kart\ProviderEnum;
 use Bnomei\Kart\VirtualPage;
@@ -183,9 +184,16 @@ GQL,
                 $key = 'page://'.$uuid(null, ['id' => strval(A::get($line, 'product_id'))]);
             }
 
+            $variant = strval(A::get($line, 'variant_title', ''));
+            $variantId = strval(A::get($line, 'variant_id', ''));
+            $product = $key ? $this->kirby->page($key) : null;
+            if ($product instanceof ProductPage && $variantId !== '') {
+                $variant = $this->variantForProduct($product, $variantId, $variant);
+            }
+
             $items[] = array_filter([
                 'key' => $key ? [$key] : null,
-                'variant' => strval(A::get($line, 'variant_title', '')),
+                'variant' => $variant,
                 'quantity' => $quantity,
                 'price' => $unitPrice,
                 'subtotal' => $linePrice,
@@ -210,6 +218,17 @@ GQL,
         ], fn ($v) => $v !== null && $v !== []);
 
         return WebhookResult::ok($orderData, 'Shopify webhook processed');
+    }
+
+    protected function variantForProduct(ProductPage $product, string $variantId, string $fallback): string
+    {
+        foreach ($product->variantData(false) as $variant) {
+            if (strval(A::get($variant, 'price_id', '')) === $variantId) {
+                return strval(A::get($variant, 'variant', $fallback));
+            }
+        }
+
+        return $fallback;
     }
 
     public function fetchProducts(): array
@@ -290,6 +309,15 @@ GQL,
                         fn ($img) => A::get($img, 'src'), A::get($i, 'images', [])
                     )),
                     'variants' => function ($i) {
+                        $optionNames = [];
+                        foreach (A::get($i, 'options', []) as $index => $option) {
+                            $position = intval(A::get($option, 'position', $index + 1));
+                            $name = trim(strval(A::get($option, 'name', '')));
+                            if ($position > 0 && $name !== '') {
+                                $optionNames[$position] = $name;
+                            }
+                        }
+
                         $imageUrlsByImageId = [];
                         $imageUrlsByVariantId = [];
                         foreach (A::get($i, 'images', []) as $image) {
@@ -315,9 +343,19 @@ GQL,
                             $variantImageUrl = A::get($imageUrlsByVariantId, $variantId)
                                 ?? A::get($imageUrlsByImageId, $imageId);
 
+                            $options = [];
+                            foreach ([1, 2, 3] as $position) {
+                                $value = trim(strval(A::get($v, 'option'.$position, '')));
+                                if ($value !== '') {
+                                    $options[] = A::get($optionNames, $position, 'option'.$position).':'.$value;
+                                }
+                            }
+
                             $variant = [
                                 'price_id' => strval(A::get($v, 'id')),
-                                'variant' => A::get($v, 'title'),
+                                'variant' => empty($options)
+                                    ? A::get($v, 'title')
+                                    : implode(',', $options),
                                 'price' => floatval(A::get($v, 'price', 0)),
                             ];
 
@@ -346,7 +384,7 @@ GQL,
             'data' => array_filter([
                 'limit' => 250,
                 'page_info' => $pageInfo,
-                'fields' => 'id,title,body_html,tags,images,variants',
+                'fields' => 'id,title,body_html,tags,images,options,variants',
             ]),
         ]);
     }

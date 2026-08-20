@@ -8,7 +8,9 @@
  * Unauthorized copying, modification, or distribution is prohibited.
  */
 
+use Bnomei\Kart\Models\ProductPage;
 use Bnomei\Kart\Provider\Shopify;
+use Kirby\Data\Yaml;
 use Kirby\Http\Remote;
 
 uses()->group('providers');
@@ -228,4 +230,98 @@ it('throws Shopify products API errors', function (): void {
             RuntimeException::class,
             'Shopify Admin products request failed with status 403: [API] This action requires merchant approval for read_products scope.'
         );
+});
+
+it('maps Shopify option names and values to variant tags', function (): void {
+    kart()->setOption('providers.shopify.store_domain', 'example.myshopify.com');
+    kart()->setOption('providers.shopify.client_id', 'client-id');
+    kart()->setOption('providers.shopify.client_secret', 'client-secret');
+
+    $shopify = new class(kirby()) extends Shopify
+    {
+        protected function requestAdminAccessToken(string $clientId, string $clientSecret): string
+        {
+            return 'fresh-token';
+        }
+
+        protected function requestAdminProducts(?string $pageInfo): Remote
+        {
+            $remote = new Remote('https://example.myshopify.com/admin/api/2024-07/products.json', [
+                'test' => true,
+            ]);
+            $remote->info['http_code'] = 200;
+            $remote->content = json_encode([
+                'products' => [[
+                    'id' => 123,
+                    'title' => 'Cup',
+                    'options' => [
+                        ['name' => 'Material', 'position' => 1],
+                        ['name' => 'Color', 'position' => 2],
+                    ],
+                    'variants' => [
+                        [
+                            'id' => 456,
+                            'title' => 'Paper / Red',
+                            'option1' => 'Paper',
+                            'option2' => 'Red',
+                            'option3' => null,
+                            'price' => '12.50',
+                        ],
+                        [
+                            'id' => 789,
+                            'title' => 'Plastic / Blue',
+                            'option1' => 'Plastic',
+                            'option2' => 'Blue',
+                            'option3' => null,
+                            'price' => '15.00',
+                        ],
+                    ],
+                    'images' => [],
+                ]],
+            ]);
+
+            return $remote;
+        }
+    };
+
+    $products = $shopify->fetchProducts();
+    $product = reset($products);
+    $variants = Yaml::decode($product['content']['variants']);
+
+    expect($variants)->toMatchArray([
+        [
+            'price_id' => '456',
+            'variant' => 'Material:Paper,Color:Red',
+            'price' => 12.5,
+        ],
+        [
+            'price_id' => '789',
+            'variant' => 'Material:Plastic,Color:Blue',
+            'price' => 15.0,
+        ],
+    ]);
+
+    $productPage = new ProductPage([
+        'slug' => 'cup',
+        'parent' => page('products'),
+        'template' => 'product',
+        'model' => 'product',
+        'content' => $product['content'],
+    ]);
+    $variantForProduct = new ReflectionMethod(Shopify::class, 'variantForProduct');
+
+    expect($productPage->variantGroups())->toBe([
+        'Color' => [
+            'Blue' => 'Blue',
+            'Red' => 'Red',
+        ],
+        'Material' => [
+            'Paper' => 'Paper',
+            'Plastic' => 'Plastic',
+        ],
+    ])
+        ->and($variantForProduct->invoke($shopify, $productPage, '456', 'Paper / Red'))
+        ->toBe('Color:Red,Material:Paper')
+        ->and($variantForProduct->invoke($shopify, $productPage, 'missing', 'Unknown'))
+        ->toBe('Unknown');
 });
