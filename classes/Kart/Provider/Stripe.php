@@ -109,6 +109,8 @@ class Stripe extends Provider
             'data' => [
                 'expand' => [
                     'customer',
+                    'payment_intent.latest_charge',
+                    'payment_intent.payment_method',
                 ],
             ]]);
 
@@ -117,13 +119,9 @@ class Stripe extends Provider
             return [];
         }
 
-        $paymentMethod = A::get($json, 'payment_method_types', []);
-        if (is_array($paymentMethod)) {
-            $paymentMethod = implode(',', array_filter(array_map(
-                fn ($method) => is_scalar($method) ? strval($method) : null,
-                $paymentMethod
-            )));
-        }
+        $paymentMethod = A::get($json, 'payment_intent.latest_charge.payment_method_details.card.wallet.type') ??
+            A::get($json, 'payment_intent.latest_charge.payment_method_details.type') ??
+            A::get($json, 'payment_intent.payment_method.type');
         $invoiceId = A::get($json, 'invoice');
         $invoiceUrl = null;
         if (is_string($invoiceId) && $invoiceId !== '') {
