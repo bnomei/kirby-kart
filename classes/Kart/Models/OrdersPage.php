@@ -54,9 +54,9 @@ class OrdersPage extends Page
                         ],
                         [
                             'label' => 'bnomei.kart.revenue-30',
-                            'value' => '{{ page.children.trend("paidDate", "total").toFormattedCurrency }}',
-                            'info' => '{{ page.children.trendPercent("paidDate", "total").toFormattedNumber(true) }}%',
-                            'theme' => '{{ page.children.trendTheme("paidDate", "total") }}',
+                            'value' => '{{ page.children.filterBy("paymentComplete", true).trend("paidDate", "total").toFormattedCurrency }}',
+                            'info' => '{{ page.children.filterBy("paymentComplete", true).trendPercent("paidDate", "total").toFormattedNumber(true) }}%',
+                            'theme' => '{{ page.children.filterBy("paymentComplete", true).trendTheme("paidDate", "total") }}',
                         ],
                         [
                             'label' => 'bnomei.kart.orders-30',

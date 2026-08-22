@@ -789,6 +789,9 @@ App::plugin(
             'kart.cart.completed' => function (?User $user = null, ?OrderPage $order = null): void {
                 // fulfillment hook of Cart::complete()
             },
+            'kart.cart.authorized' => function (?User $user = null, ?OrderPage $order = null): void {
+                // payment authorized for later capture
+            },
             'kart.provider.*.checkout' => function (): void {
                 // kart()->provider()
             },
@@ -1156,7 +1159,7 @@ App::plugin(
              */
             'hasPurchased' => function (ProductPage|string $product): bool {
                 /** @var OrderPage $order */
-                foreach ($this->orders() as $order) {
+                foreach ($this->completedOrders() as $order) {
                     if ($order->hasProduct($product)) {
                         return true;
                     }

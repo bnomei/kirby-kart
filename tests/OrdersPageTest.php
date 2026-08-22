@@ -23,9 +23,9 @@ it('uses final totals in the panel overview blueprint', function (): void {
 
     expect($revenue)->toMatchArray([
         'label' => 'bnomei.kart.revenue-30',
-        'value' => '{{ page.children.trend("paidDate", "total").toFormattedCurrency }}',
-        'info' => '{{ page.children.trendPercent("paidDate", "total").toFormattedNumber(true) }}%',
-        'theme' => '{{ page.children.trendTheme("paidDate", "total") }}',
+        'value' => '{{ page.children.filterBy("paymentComplete", true).trend("paidDate", "total").toFormattedCurrency }}',
+        'info' => '{{ page.children.filterBy("paymentComplete", true).trendPercent("paidDate", "total").toFormattedNumber(true) }}%',
+        'theme' => '{{ page.children.filterBy("paymentComplete", true).trendTheme("paidDate", "total") }}',
     ])
         ->and($orders['text'])->toBe('[#{{ page.invoiceNumber }}] {{ page.customer.toUser.email }} ・ {{ page.formattedTotal }}');
 });

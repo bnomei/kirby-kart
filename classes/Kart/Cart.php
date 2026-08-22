@@ -490,7 +490,12 @@ class Cart implements Kerbs
         $stocks = $this->kart->page(ContentPageEnum::STOCKS);
         $stocks?->updateStocks($data, -1);
 
-        $this->kirby->trigger('kart.cart.completed', [
+        $paymentComplete = filter_var(
+            A::get($data, 'paymentComplete'),
+            FILTER_VALIDATE_BOOLEAN,
+            FILTER_NULL_ON_FAILURE,
+        ) === true;
+        $this->kirby->trigger($paymentComplete ? 'kart.cart.completed' : 'kart.cart.authorized', [
             'user' => $customer,
             'order' => $order,
         ]);
