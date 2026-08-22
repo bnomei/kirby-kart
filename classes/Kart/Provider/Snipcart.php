@@ -85,6 +85,7 @@ class Snipcart extends Provider
                 : null,
             'paymentMethod' => A::get($content, 'paymentMethod'),
             'paymentComplete' => in_array($paymentStatus, ['paid', 'processed'], true),
+            'paymentAuthorized' => $paymentStatus === 'authorized',
             'invoiceurl' => A::get($content, 'invoiceNumber'),
             'paymentId' => A::get($content, 'token'),
         ], fn ($v) => $v !== null && $v !== [] && $v !== '');

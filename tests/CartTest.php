@@ -291,6 +291,35 @@ it('does not create orders when payment is not complete', function (): void {
         ->and($this->cart->quantity())->toBe($quantity);
 });
 
+it('creates orders when payment is authorized', function (): void {
+    $this->cart = new Cart(
+        'cart',
+        page('products')->children()->random(1)->toArray(fn ($p) => ['quantity' => 1])
+    );
+
+    $orders = kart()->page(ContentPageEnum::ORDERS);
+    $paymentId = 'authorized-'.Str::random(8);
+    $before = $orders?->children()->count() ?? 0;
+
+    $redirect = $this->cart->complete([
+        'paymentComplete' => false,
+        'paymentAuthorized' => true,
+        'paymentId' => $paymentId,
+        'items' => [],
+    ]);
+
+    $order = $orders?->children()->findBy('paymentId', $paymentId);
+
+    expect($redirect)->toBeString()
+        ->and($orders?->children()->count())->toBe($before + 1)
+        ->and($order)->not()->toBeNull()
+        ->and($order?->paymentComplete()->toBool())->toBeFalse()
+        ->and($order?->paymentAuthorized()->toBool())->toBeTrue()
+        ->and($this->cart->isEmpty())->toBeTrue();
+
+    kirby()->impersonate('kirby', fn () => $order?->delete(true));
+});
+
 it('can export to kerbs', function (): void {
     $this->cart = new Cart(
         'cart',

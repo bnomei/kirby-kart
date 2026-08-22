@@ -738,6 +738,21 @@ abstract class Provider
         return $data;
     }
 
+    public function paymentAccepted(array $data): bool
+    {
+        foreach (['paymentComplete', 'paymentAuthorized'] as $key) {
+            if (filter_var(
+                A::get($data, $key),
+                FILTER_VALIDATE_BOOLEAN,
+                FILTER_NULL_ON_FAILURE,
+            ) === true) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     public function fetchProducts(): array
     {
         return [];

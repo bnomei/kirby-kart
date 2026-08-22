@@ -119,6 +119,7 @@ class Stripe extends Provider
             return [];
         }
 
+        $paymentIntentStatus = A::get($json, 'payment_intent.status');
         $paymentMethod = A::get($json, 'payment_intent.latest_charge.payment_method_details.card.wallet.type') ??
             A::get($json, 'payment_intent.latest_charge.payment_method_details.type') ??
             A::get($json, 'payment_intent.payment_method.type');
@@ -147,9 +148,10 @@ class Stripe extends Provider
             ],
             'paidDate' => date('Y-m-d H:i:s', A::get($json, 'created', time())),
             'paymentMethod' => $paymentMethod,
-            'paymentComplete' => A::get($json, 'payment_status') === 'paid',
+            'paymentComplete' => A::get($json, 'payment_status') === 'paid' || $paymentIntentStatus === 'succeeded',
+            'paymentAuthorized' => $paymentIntentStatus === 'requires_capture',
             'invoiceurl' => $invoiceValue,
-            'paymentId' => A::get($json, 'id', A::get($json, 'payment_intent')),
+            'paymentId' => A::get($json, 'payment_intent.id', A::get($json, 'id')),
         ]));
 
         $remote = Remote::get('https://api.stripe.com/v1/checkout/sessions/'.$sessionId.'/line_items', [

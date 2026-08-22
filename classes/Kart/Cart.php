@@ -424,13 +424,8 @@ class Cart implements Kerbs
             );
         }
 
-        // Never create orders from callbacks that don't confirm payment.
-        $paymentComplete = filter_var(
-            A::get($data, 'paymentComplete'),
-            FILTER_VALIDATE_BOOLEAN,
-            FILTER_NULL_ON_FAILURE,
-        );
-        if ($paymentComplete !== true) {
+        // Never create orders from callbacks that don't confirm payment or authorization.
+        if (! $this->kart->provider()->paymentAccepted($data)) {
             $target = $this->kirby
                 ->session()
                 ->pull('kart.redirect.canceled', $this->kirby->site()->url());

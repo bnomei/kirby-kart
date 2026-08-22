@@ -326,7 +326,8 @@ class Mollie extends Provider
             return [];
         }
 
-        if (A::get($json, 'status') !== 'paid') {
+        $paymentStatus = A::get($json, 'status');
+        if (! in_array($paymentStatus, ['paid', 'authorized'], true)) {
             $this->kirby
                 ->session()
                 ->remove('bnomei.kart.'.$this->name.'.session_id');
@@ -379,7 +380,8 @@ class Mollie extends Provider
                     ),
                 ),
                 'paymentMethod' => $paymentMethod,
-                'paymentComplete' => true,
+                'paymentComplete' => $paymentStatus === 'paid',
+                'paymentAuthorized' => $paymentStatus === 'authorized',
                 // 'invoiceurl' => A::get($json, 'invoice'),
                 'paymentId' => A::get($json, 'id'),
             ]),

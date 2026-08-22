@@ -121,6 +121,13 @@ it('can be completed', function (): void {
     expect($this->p->completed($data))->not()->toBeEmpty();
 });
 
+it('accepts completed or authorized payments', function (): void {
+    expect($this->p->paymentAccepted(['paymentComplete' => true]))->toBeTrue()
+        ->and($this->p->paymentAccepted(['paymentAuthorized' => true]))->toBeTrue()
+        ->and($this->p->paymentAccepted(['paymentComplete' => false]))->toBeFalse()
+        ->and($this->p->paymentAccepted([]))->toBeFalse();
+});
+
 it('can fetch products', function (): void {
     expect($this->p->products())->toBeArray();
 });
