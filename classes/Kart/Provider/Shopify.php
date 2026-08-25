@@ -239,6 +239,7 @@ GQL,
 
         $products = [];
         $pageInfo = null;
+        $metafields = $this->productMetafields();
 
         // REST Admin products listing
         while (true) {
@@ -261,8 +262,25 @@ GQL,
                 throw new \RuntimeException('Shopify Admin products request did not return JSON');
             }
 
-            foreach (A::get($json, 'products', []) as $product) {
-                $products[A::get($product, 'id')] = $product;
+            $pageProducts = A::get($json, 'products', []);
+            if (! is_array($pageProducts)) {
+                throw new \RuntimeException('Shopify Admin products request did not return products');
+            }
+            if ($metafields !== []) {
+                $pageProducts = $this->fetchProductMetafields($pageProducts, $metafields);
+            }
+
+            foreach ($pageProducts as $product) {
+                if (! is_array($product)) {
+                    throw new \RuntimeException('Shopify Admin products request returned an invalid product');
+                }
+
+                $productId = A::get($product, 'id');
+                if (! is_int($productId) && ! is_string($productId)) {
+                    throw new \RuntimeException('Shopify Admin products request returned a product without an id');
+                }
+
+                $products[$productId] = $product;
             }
 
             // Shopify pagination via Link header
@@ -377,6 +395,189 @@ GQL,
         )->mixinProduct($data)->toArray(), $products);
     }
 
+    private function fetchProductMetafields(array $products, array $metafields): array
+    {
+        $productIds = array_values(array_filter(array_map(
+            fn (array $product) => strval(A::get($product, 'id', '')),
+            $products
+        )));
+        if ($productIds === []) {
+            return $products;
+        }
+
+        $metafieldsByProduct = [];
+        $referenceIdsByMetafield = [];
+        $metaobjectIds = [];
+
+        // Keep each request comfortably below Shopify's 1,000 point query cost limit.
+        foreach (array_chunk($metafields, 10) as $metafieldBatch) {
+            $productBatchSize = min(250, max(1, intdiv(500, count($metafieldBatch))));
+            foreach (array_chunk($productIds, $productBatchSize) as $productIdBatch) {
+                $nodes = $this->graphqlNodes(
+                    $this->requestAdminProductMetafields($productIdBatch, $metafieldBatch),
+                    'product metafields'
+                );
+
+                foreach ($nodes as $node) {
+                    if (! is_array($node)) {
+                        continue;
+                    }
+
+                    $productId = strval(A::get($node, 'legacyResourceId', ''));
+                    if ($productId === '') {
+                        continue;
+                    }
+
+                    foreach ($metafieldBatch as $index => $identifier) {
+                        $metafield = A::get($node, 'metafield'.$index);
+                        if (! is_array($metafield)) {
+                            continue;
+                        }
+
+                        $namespace = strval(A::get($metafield, 'namespace', $identifier['namespace']));
+                        $key = strval(A::get($metafield, 'key', $identifier['key']));
+                        $metafieldsByProduct[$productId][$namespace][$key] = $metafield;
+
+                        $referenceIds = $this->metaobjectReferenceIds($metafield);
+                        $referenceIdsByMetafield[$productId][$namespace][$key] = $referenceIds;
+                        foreach ($referenceIds as $referenceId) {
+                            $metaobjectIds[$referenceId] = $referenceId;
+                        }
+                    }
+                }
+            }
+        }
+
+        $metaobjects = [];
+        foreach (array_chunk(array_values($metaobjectIds), 249) as $metaobjectIdBatch) {
+            $nodes = $this->graphqlNodes(
+                $this->requestAdminMetaobjects($metaobjectIdBatch),
+                'metaobjects'
+            );
+            foreach ($nodes as $node) {
+                if (! is_array($node)) {
+                    continue;
+                }
+
+                $metaobjectId = strval(A::get($node, 'id', ''));
+                if ($metaobjectId !== '') {
+                    $metaobjects[$metaobjectId] = $node;
+                }
+            }
+        }
+
+        foreach ($referenceIdsByMetafield as $productId => $namespaces) {
+            foreach ($namespaces as $namespace => $keys) {
+                foreach ($keys as $key => $referenceIds) {
+                    $references = [];
+                    foreach ($referenceIds as $referenceId) {
+                        if (isset($metaobjects[$referenceId])) {
+                            $references[] = $metaobjects[$referenceId];
+                        }
+                    }
+
+                    $type = $metafieldsByProduct[$productId][$namespace][$key]['type'] ?? null;
+                    if ($type === 'metaobject_reference') {
+                        if (isset($references[0])) {
+                            $metafieldsByProduct[$productId][$namespace][$key]['reference'] = $references[0];
+                        }
+                    } elseif ($type === 'list.metaobject_reference') {
+                        $metafieldsByProduct[$productId][$namespace][$key]['references'] = $references;
+                    }
+                }
+            }
+        }
+
+        foreach ($products as &$product) {
+            $productId = strval(A::get($product, 'id', ''));
+            $product['metafields'] = $metafieldsByProduct[$productId] ?? [];
+        }
+        unset($product);
+
+        return $products;
+    }
+
+    private function graphqlNodes(Remote $remote, string $resource): array
+    {
+        $json = $remote->json();
+        if ($remote->code() !== 200) {
+            throw new \RuntimeException('Shopify Admin '.$resource.' request failed with status '.$remote->code());
+        }
+        if (! is_array($json)) {
+            throw new \RuntimeException('Shopify Admin '.$resource.' request did not return JSON');
+        }
+
+        $errors = A::get($json, 'errors', []);
+        if (is_array($errors) && $errors !== []) {
+            $messages = array_map(
+                fn ($error) => is_array($error) ? strval(A::get($error, 'message', 'Unknown error')) : strval($error),
+                $errors
+            );
+
+            throw new \RuntimeException('Shopify Admin '.$resource.' request failed: '.implode('; ', $messages));
+        }
+
+        $nodes = A::get($json, 'data.nodes');
+        if (! is_array($nodes)) {
+            throw new \RuntimeException('Shopify Admin '.$resource.' request returned no nodes');
+        }
+
+        return $nodes;
+    }
+
+    private function metaobjectReferenceIds(array $metafield): array
+    {
+        $type = A::get($metafield, 'type');
+        $value = A::get($metafield, 'value');
+        if (! is_string($value) || $value === '') {
+            return [];
+        }
+
+        if ($type === 'metaobject_reference') {
+            return [$value];
+        }
+        if ($type !== 'list.metaobject_reference') {
+            return [];
+        }
+
+        $values = json_decode($value, true);
+        if (! is_array($values)) {
+            return [];
+        }
+
+        return array_values(array_filter($values, fn ($value) => is_string($value) && $value !== ''));
+    }
+
+    private function productMetafields(): array
+    {
+        $configured = $this->option('metafields');
+        if ($configured === null || $configured === false || $configured === []) {
+            return [];
+        }
+        if (! is_array($configured)) {
+            throw new \InvalidArgumentException('Shopify metafields must be configured as an array of namespace.key strings');
+        }
+
+        $metafields = [];
+        foreach ($configured as $configuredMetafield) {
+            if (! is_string($configuredMetafield) || ! str_contains($configuredMetafield, '.')) {
+                throw new \InvalidArgumentException('Shopify metafields must be configured as namespace.key strings');
+            }
+
+            [$namespace, $key] = array_map('trim', explode('.', $configuredMetafield, 2));
+            if ($namespace === '' || $key === '') {
+                throw new \InvalidArgumentException('Shopify metafields must be configured as namespace.key strings');
+            }
+
+            $metafields[$namespace.'.'.$key] = [
+                'namespace' => $namespace,
+                'key' => $key,
+            ];
+        }
+
+        return array_values($metafields);
+    }
+
     protected function requestAdminProducts(?string $pageInfo): Remote
     {
         return Remote::get($this->adminEndpoint().'/products.json', [
@@ -386,6 +587,77 @@ GQL,
                 'page_info' => $pageInfo,
                 'fields' => 'id,title,body_html,tags,images,options,variants',
             ]),
+        ]);
+    }
+
+    protected function requestAdminProductMetafields(array $productIds, array $metafields): Remote
+    {
+        $selections = [];
+        foreach ($metafields as $index => $metafield) {
+            $namespace = json_encode($metafield['namespace'], JSON_THROW_ON_ERROR);
+            $key = json_encode($metafield['key'], JSON_THROW_ON_ERROR);
+            $selections[] = "metafield{$index}: metafield(namespace: {$namespace}, key: {$key}) {\n"
+                .'        namespace key type value'."\n"
+                .'      }';
+        }
+
+        $query = str_replace('__METAFIELDS__', implode("\n      ", $selections), <<<'GQL'
+query ProductMetafields($ids: [ID!]!) {
+  nodes(ids: $ids) {
+    ... on Product {
+      legacyResourceId
+      __METAFIELDS__
+    }
+  }
+}
+GQL);
+
+        return Remote::post($this->adminEndpoint().'/graphql.json', [
+            'headers' => array_merge($this->adminHeaders(), [
+                'Content-Type' => 'application/json',
+            ]),
+            'data' => json_encode([
+                'query' => $query,
+                'variables' => [
+                    'ids' => array_map(
+                        fn (string $productId) => str_contains($productId, 'gid://')
+                            ? $productId
+                            : 'gid://shopify/Product/'.$productId,
+                        $productIds
+                    ),
+                ],
+            ], JSON_THROW_ON_ERROR),
+        ]);
+    }
+
+    protected function requestAdminMetaobjects(array $metaobjectIds): Remote
+    {
+        return Remote::post($this->adminEndpoint().'/graphql.json', [
+            'headers' => array_merge($this->adminHeaders(), [
+                'Content-Type' => 'application/json',
+            ]),
+            'data' => json_encode([
+                'query' => <<<'GQL'
+query Metaobjects($ids: [ID!]!) {
+  nodes(ids: $ids) {
+    ... on Metaobject {
+      id
+      type
+      handle
+      displayName
+      fields {
+        key
+        type
+        value
+      }
+    }
+  }
+}
+GQL,
+                'variables' => [
+                    'ids' => $metaobjectIds,
+                ],
+            ], JSON_THROW_ON_ERROR),
         ]);
     }
 

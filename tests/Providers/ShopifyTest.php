@@ -18,6 +18,7 @@ uses()->group('providers');
 beforeEach(function (): void {
     kirby()->cache('bnomei.kart.shopify')->flush();
     kart()->setOption('providers.shopify.api_version', '');
+    kart()->setOption('providers.shopify.metafields', []);
 });
 
 afterEach(function (): void {
@@ -324,4 +325,394 @@ it('maps Shopify option names and values to variant tags', function (): void {
         ->toBe('Color:Red,Material:Paper')
         ->and($variantForProduct->invoke($shopify, $productPage, 'missing', 'Unknown'))
         ->toBe('Unknown');
+});
+
+it('adds configured Shopify product metafields and metaobjects to raw provider data', function (): void {
+    kart()->setOption('providers.shopify.store_domain', 'example.myshopify.com');
+    kart()->setOption('providers.shopify.client_id', 'client-id');
+    kart()->setOption('providers.shopify.client_secret', 'client-secret');
+    kart()->setOption('providers.shopify.metafields', [
+        'custom.product_details',
+        'custom.material',
+        'custom.primary_detail',
+    ]);
+
+    $shopify = new class(kirby()) extends Shopify
+    {
+        public array $metafieldRequests = [];
+
+        public array $metaobjectRequests = [];
+
+        protected function requestAdminAccessToken(string $clientId, string $clientSecret): string
+        {
+            return 'fresh-token';
+        }
+
+        protected function requestAdminProducts(?string $pageInfo): Remote
+        {
+            $remote = new Remote('https://example.myshopify.com/admin/api/2024-07/products.json', [
+                'test' => true,
+            ]);
+            $remote->info['http_code'] = 200;
+            $remote->content = json_encode([
+                'products' => [[
+                    'id' => 123,
+                    'title' => 'Cup',
+                    'variants' => [],
+                    'images' => [],
+                ]],
+            ]);
+
+            return $remote;
+        }
+
+        protected function requestAdminProductMetafields(array $productIds, array $metafields): Remote
+        {
+            $this->metafieldRequests[] = compact('productIds', 'metafields');
+
+            $remote = new Remote('https://example.myshopify.com/admin/api/2024-07/graphql.json', [
+                'test' => true,
+            ]);
+            $remote->info['http_code'] = 200;
+            $remote->content = json_encode([
+                'data' => [
+                    'nodes' => [[
+                        'legacyResourceId' => '123',
+                        'metafield0' => [
+                            'namespace' => 'custom',
+                            'key' => 'product_details',
+                            'type' => 'list.metaobject_reference',
+                            'value' => '["gid://shopify/Metaobject/456"]',
+                        ],
+                        'metafield1' => [
+                            'namespace' => 'custom',
+                            'key' => 'material',
+                            'type' => 'single_line_text_field',
+                            'value' => 'Ceramic',
+                        ],
+                        'metafield2' => [
+                            'namespace' => 'custom',
+                            'key' => 'primary_detail',
+                            'type' => 'metaobject_reference',
+                            'value' => 'gid://shopify/Metaobject/457',
+                        ],
+                    ]],
+                ],
+            ]);
+
+            return $remote;
+        }
+
+        protected function requestAdminMetaobjects(array $metaobjectIds): Remote
+        {
+            $this->metaobjectRequests[] = $metaobjectIds;
+
+            $remote = new Remote('https://example.myshopify.com/admin/api/2024-07/graphql.json', [
+                'test' => true,
+            ]);
+            $remote->info['http_code'] = 200;
+            $remote->content = json_encode([
+                'data' => [
+                    'nodes' => [
+                        [
+                            'id' => 'gid://shopify/Metaobject/456',
+                            'type' => 'product_details_entry',
+                            'handle' => 'dishwasher-safe',
+                            'displayName' => 'Dishwasher safe',
+                            'fields' => [
+                                [
+                                    'key' => 'title',
+                                    'type' => 'single_line_text_field',
+                                    'value' => 'Dishwasher safe',
+                                ],
+                                [
+                                    'key' => 'content',
+                                    'type' => 'multi_line_text_field',
+                                    'value' => 'Safe for domestic dishwashers.',
+                                ],
+                            ],
+                        ],
+                        [
+                            'id' => 'gid://shopify/Metaobject/457',
+                            'type' => 'product_details_entry',
+                            'handle' => 'microwave-safe',
+                            'displayName' => 'Microwave safe',
+                            'fields' => [],
+                        ],
+                    ],
+                ],
+            ]);
+
+            return $remote;
+        }
+    };
+
+    $products = $shopify->fetchProducts();
+    $product = reset($products);
+    $raw = Yaml::decode($product['content']['raw']);
+
+    expect($shopify->metafieldRequests)->toBe([[
+        'productIds' => ['123'],
+        'metafields' => [
+            ['namespace' => 'custom', 'key' => 'product_details'],
+            ['namespace' => 'custom', 'key' => 'material'],
+            ['namespace' => 'custom', 'key' => 'primary_detail'],
+        ],
+    ]])
+        ->and($shopify->metaobjectRequests)->toBe([[
+            'gid://shopify/Metaobject/456',
+            'gid://shopify/Metaobject/457',
+        ]])
+        ->and($raw['metafields']['custom']['material'])->toBe([
+            'key' => 'material',
+            'namespace' => 'custom',
+            'type' => 'single_line_text_field',
+            'value' => 'Ceramic',
+        ])
+        ->and($raw['metafields']['custom']['product_details'])->toMatchArray([
+            'key' => 'product_details',
+            'namespace' => 'custom',
+            'type' => 'list.metaobject_reference',
+            'references' => [[
+                'id' => 'gid://shopify/Metaobject/456',
+                'type' => 'product_details_entry',
+                'handle' => 'dishwasher-safe',
+                'displayName' => 'Dishwasher safe',
+                'fields' => [
+                    [
+                        'key' => 'title',
+                        'type' => 'single_line_text_field',
+                        'value' => 'Dishwasher safe',
+                    ],
+                    [
+                        'key' => 'content',
+                        'type' => 'multi_line_text_field',
+                        'value' => 'Safe for domestic dishwashers.',
+                    ],
+                ],
+            ]],
+        ])
+        ->and($raw['metafields']['custom']['primary_detail']['reference'])->toMatchArray([
+            'id' => 'gid://shopify/Metaobject/457',
+            'type' => 'product_details_entry',
+            'handle' => 'microwave-safe',
+            'displayName' => 'Microwave safe',
+        ]);
+});
+
+it('reports Shopify GraphQL errors while fetching configured product metafields', function (): void {
+    kart()->setOption('providers.shopify.store_domain', 'example.myshopify.com');
+    kart()->setOption('providers.shopify.client_id', 'client-id');
+    kart()->setOption('providers.shopify.client_secret', 'client-secret');
+    kart()->setOption('providers.shopify.metafields', ['custom.product_details']);
+
+    $shopify = new class(kirby()) extends Shopify
+    {
+        protected function requestAdminAccessToken(string $clientId, string $clientSecret): string
+        {
+            return 'fresh-token';
+        }
+
+        protected function requestAdminProducts(?string $pageInfo): Remote
+        {
+            $remote = new Remote('https://example.myshopify.com/admin/api/2024-07/products.json', [
+                'test' => true,
+            ]);
+            $remote->info['http_code'] = 200;
+            $remote->content = json_encode([
+                'products' => [[
+                    'id' => 123,
+                    'title' => 'Cup',
+                ]],
+            ]);
+
+            return $remote;
+        }
+
+        protected function requestAdminProductMetafields(array $productIds, array $metafields): Remote
+        {
+            $remote = new Remote('https://example.myshopify.com/admin/api/2024-07/graphql.json', [
+                'test' => true,
+            ]);
+            $remote->info['http_code'] = 200;
+            $remote->content = json_encode([
+                'errors' => [[
+                    'message' => 'Access denied for Metaobject field. Required access: read_metaobjects.',
+                ]],
+            ]);
+
+            return $remote;
+        }
+    };
+
+    expect(fn () => $shopify->fetchProducts())
+        ->toThrow(
+            RuntimeException::class,
+            'Shopify Admin product metafields request failed: Access denied for Metaobject field. Required access: read_metaobjects.'
+        );
+});
+
+it('resolves complete Shopify metaobject lists in chunks while preserving order', function (): void {
+    kart()->setOption('providers.shopify.store_domain', 'example.myshopify.com');
+    kart()->setOption('providers.shopify.client_id', 'client-id');
+    kart()->setOption('providers.shopify.client_secret', 'client-secret');
+    kart()->setOption('providers.shopify.metafields', ['custom.product_details']);
+
+    $referenceIds = array_map(
+        fn (int $id) => 'gid://shopify/Metaobject/'.$id,
+        range(1, 251)
+    );
+
+    $shopify = new class(kirby(), $referenceIds) extends Shopify
+    {
+        public array $metaobjectRequests = [];
+
+        public function __construct($kirby, private array $referenceIds)
+        {
+            parent::__construct($kirby);
+        }
+
+        protected function requestAdminAccessToken(string $clientId, string $clientSecret): string
+        {
+            return 'fresh-token';
+        }
+
+        protected function requestAdminProducts(?string $pageInfo): Remote
+        {
+            $remote = new Remote('https://example.myshopify.com/admin/api/2024-07/products.json', [
+                'test' => true,
+            ]);
+            $remote->info['http_code'] = 200;
+            $remote->content = json_encode([
+                'products' => [[
+                    'id' => 123,
+                    'title' => 'Cup',
+                ]],
+            ]);
+
+            return $remote;
+        }
+
+        protected function requestAdminProductMetafields(array $productIds, array $metafields): Remote
+        {
+            $remote = new Remote('https://example.myshopify.com/admin/api/2024-07/graphql.json', [
+                'test' => true,
+            ]);
+            $remote->info['http_code'] = 200;
+            $remote->content = json_encode([
+                'data' => [
+                    'nodes' => [[
+                        'legacyResourceId' => '123',
+                        'metafield0' => [
+                            'namespace' => 'custom',
+                            'key' => 'product_details',
+                            'type' => 'list.metaobject_reference',
+                            'value' => json_encode($this->referenceIds),
+                        ],
+                    ]],
+                ],
+            ]);
+
+            return $remote;
+        }
+
+        protected function requestAdminMetaobjects(array $metaobjectIds): Remote
+        {
+            $this->metaobjectRequests[] = $metaobjectIds;
+
+            $remote = new Remote('https://example.myshopify.com/admin/api/2024-07/graphql.json', [
+                'test' => true,
+            ]);
+            $remote->info['http_code'] = 200;
+            $remote->content = json_encode([
+                'data' => [
+                    'nodes' => array_map(fn (string $id) => [
+                        'id' => $id,
+                        'type' => 'product_details_entry',
+                        'handle' => basename($id),
+                        'displayName' => basename($id),
+                        'fields' => [],
+                    ], $metaobjectIds),
+                ],
+            ]);
+
+            return $remote;
+        }
+    };
+
+    $products = $shopify->fetchProducts();
+    $product = reset($products);
+    $raw = Yaml::decode($product['content']['raw']);
+    $references = $raw['metafields']['custom']['product_details']['references'];
+
+    expect(array_map('count', $shopify->metaobjectRequests))->toBe([249, 2])
+        ->and($references)->toHaveCount(251)
+        ->and($references[0]['id'])->toBe('gid://shopify/Metaobject/1')
+        ->and($references[250]['id'])->toBe('gid://shopify/Metaobject/251');
+});
+
+it('cost bounds Shopify product metafield requests', function (): void {
+    kart()->setOption('providers.shopify.store_domain', 'example.myshopify.com');
+    kart()->setOption('providers.shopify.client_id', 'client-id');
+    kart()->setOption('providers.shopify.client_secret', 'client-secret');
+    kart()->setOption('providers.shopify.metafields', array_map(
+        fn (int $key) => 'custom.field_'.$key,
+        range(1, 10)
+    ));
+
+    $products = array_map(fn (int $id) => [
+        'id' => $id,
+        'title' => 'Product '.$id,
+    ], range(1, 60));
+
+    $shopify = new class(kirby(), $products) extends Shopify
+    {
+        public array $metafieldRequests = [];
+
+        public function __construct($kirby, private array $products)
+        {
+            parent::__construct($kirby);
+        }
+
+        protected function requestAdminAccessToken(string $clientId, string $clientSecret): string
+        {
+            return 'fresh-token';
+        }
+
+        protected function requestAdminProducts(?string $pageInfo): Remote
+        {
+            $remote = new Remote('https://example.myshopify.com/admin/api/2024-07/products.json', [
+                'test' => true,
+            ]);
+            $remote->info['http_code'] = 200;
+            $remote->content = json_encode(['products' => $this->products]);
+
+            return $remote;
+        }
+
+        protected function requestAdminProductMetafields(array $productIds, array $metafields): Remote
+        {
+            $this->metafieldRequests[] = [count($productIds), count($metafields)];
+
+            $remote = new Remote('https://example.myshopify.com/admin/api/2024-07/graphql.json', [
+                'test' => true,
+            ]);
+            $remote->info['http_code'] = 200;
+            $remote->content = json_encode([
+                'data' => [
+                    'nodes' => array_map(fn (string $productId) => [
+                        'legacyResourceId' => $productId,
+                    ], $productIds),
+                ],
+            ]);
+
+            return $remote;
+        }
+    };
+
+    expect($shopify->fetchProducts())->toHaveCount(60)
+        ->and($shopify->metafieldRequests)->toBe([
+            [50, 10],
+            [10, 10],
+        ]);
 });

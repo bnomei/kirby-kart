@@ -1,5 +1,11 @@
 # Changelog
 
+## 5.17.0 - 2026-08-25
+
+### Added
+
+- Add configurable Shopify product metafields to raw provider data with complete, ordered one-level metaobject resolution and cost-bounded GraphQL batching.
+
 ## 5.15.0 - 2026-07-10
 
 ### Added

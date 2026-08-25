@@ -60,6 +60,21 @@ You can find the full [documentation for Kirby Kart](https://kart.bnomei.com) on
 | stripe        | ✅               | return URL          | ✅            | ✅             | ✅           |
 | sumup         | JS snippet      | return URL          | -            | -             | -           |
 
+### Shopify product metafields
+
+Shopify product metafields can be added to the product's raw provider data with an allowlist of `namespace.key` values:
+
+```php
+return [
+    'bnomei.kart.providers.shopify.metafields' => [
+        'custom.product_details',
+    ],
+];
+```
+
+The Shopify app needs the `read_products` and `read_metaobjects` access scopes. Scalar values and one level of referenced
+metaobjects are available under `$product->raw()->yaml()['metafields']`; nested references are not resolved.
+
 ## Disclaimer
 
 This plugin is provided "as is" with no guarantee. You can use it at your own risk and always test it before using it in

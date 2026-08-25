@@ -419,6 +419,7 @@ App::plugin(
                     'api_version' => fn () => kart_env('SHOPIFY_API_VERSION', Shopify::API_VERSION),
                     'checkout_channel' => fn () => kart_env('SHOPIFY_CHECKOUT_CHANNEL', 'headless-storefront'),
                     'webhook_secret' => fn () => kart_env('SHOPIFY_WEBHOOK_SECRET'),
+                    'metafields' => [], // namespace.key strings; metaobject references are resolved one level deep
                     'checkout_options' => function (Kart $kart) {
                         // https://shopify.dev/docs/storefronts/headless/building-with-the-storefront-api/cart/manage
                         return [];
