@@ -27,17 +27,23 @@ class ProductStorage extends PlainTextStorage
         $content = parent::read($versionId, $language);
 
         // hydrate with provider
-        $virtual = kart()->provider()->virtual();
+        $provider = kart()->provider();
+        $virtual = $provider->virtual();
         if ($virtual !== false) {
             $uuid = kart()->option('products.product.uuid');
             if ($uuid instanceof Closure === false) {
                 throw new Exception('kart.products.product.uuid must be a closure');
             }
-            foreach (kart()->provider()->products() as $product) {
-                if (
-                    A::get($content, 'uuid', time()) === $uuid(null, $product) ||
-                    $this->matchesProductSlug($product) === true
-                ) {
+            $rawProvider = trim(strval(A::get($content, 'raw_provider', '')));
+            foreach ($provider->products() as $product) {
+                $productId = A::get($product, 'id');
+                $matches = $rawProvider === ''
+                    ? A::get($content, 'uuid') === $uuid(null, $product) ||
+                        $this->matchesProductSlug($product) === true
+                    : (is_int($productId) || is_string($productId)) &&
+                        $rawProvider === $provider->name().'|'.trim(strval($productId));
+
+                if ($matches) {
                     // provider overwrites local changes for allowed virtual fields
                     $virtualContent = A::get($product, 'content', []);
                     $virtualFields = is_array($virtual) ? $virtual : array_keys(A::filter(

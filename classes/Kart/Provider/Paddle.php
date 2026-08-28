@@ -19,10 +19,16 @@ use Bnomei\Kart\VirtualPage;
 use Closure;
 use Kirby\Http\Remote;
 use Kirby\Toolkit\A;
+use RuntimeException;
 
 class Paddle extends Provider
 {
     protected string $name = ProviderEnum::PADDLE->value;
+
+    protected function canSyncProducts(): bool
+    {
+        return trim(strval($this->option('secret_key'))) !== '';
+    }
 
     private function headers(): array
     {
@@ -214,6 +220,10 @@ class Paddle extends Provider
 
     public function fetchProducts(): array
     {
+        if ($this->canSyncProducts() === false) {
+            return [];
+        }
+
         $products = [];
         $cursor = null;
         $endpoint = strval($this->option('endpoint'));
@@ -233,32 +243,37 @@ class Paddle extends Provider
                 ]),
             ]);
 
-            $json = $remote->code() === 200 ? $remote->json() : null;
-            if (! is_array($json)) {
-                break;
-            }
+            $json = $this->productResponseJson($remote, 'Paddle products');
 
-            $items = A::get($json, 'data', []);
-            if (! is_array($items) || $items === []) {
-                break;
+            $items = A::get($json, 'data');
+            if (! is_array($items)) {
+                throw new RuntimeException('Malformed Paddle products list.');
             }
 
             foreach ($items as $product) {
                 if (! is_array($product)) {
-                    continue;
+                    throw new RuntimeException('Malformed Paddle product list item.');
                 }
                 $id = $product['id'] ?? null;
                 if (! is_string($id) && ! is_int($id)) {
-                    continue;
+                    throw new RuntimeException('Missing Paddle product ID.');
                 }
                 $id = (string) $id;
                 if ($id === '') {
-                    continue;
+                    throw new RuntimeException('Missing Paddle product ID.');
                 }
                 $products[$id] = $product;
             }
 
             $next = A::get($json, 'meta.pagination.next');
+            $hasMore = A::get($json, 'meta.pagination.has_more');
+            if (! is_bool($hasMore)) {
+                throw new RuntimeException('Malformed Paddle product pagination.');
+            }
+            if ($hasMore === false) {
+                break;
+            }
+
             $nextCursor = null;
             if (is_string($next) && $next !== '') {
                 $query = parse_url($next, PHP_URL_QUERY);
@@ -268,8 +283,8 @@ class Paddle extends Provider
                 }
             }
 
-            if (! $nextCursor || $nextCursor === $cursor) {
-                break;
+            if (! is_string($nextCursor) || $nextCursor === '' || $nextCursor === $cursor) {
+                throw new RuntimeException('Paddle product pagination cannot advance.');
             }
             $cursor = $nextCursor;
         }

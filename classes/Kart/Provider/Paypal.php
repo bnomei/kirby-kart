@@ -19,6 +19,7 @@ use Bnomei\Kart\VirtualPage;
 use Closure;
 use Kirby\Http\Remote;
 use Kirby\Toolkit\A;
+use RuntimeException;
 
 class Paypal extends Provider
 {
@@ -26,7 +27,13 @@ class Paypal extends Provider
 
     protected ?string $token = null;
 
-    private function token(): ?string
+    protected function canSyncProducts(): bool
+    {
+        return trim(strval($this->option('client_id'))) !== '' &&
+            trim(strval($this->option('client_secret'))) !== '';
+    }
+
+    private function token(bool $required = false): ?string
     {
         if ($this->token) {
             return $this->token;
@@ -41,9 +48,16 @@ class Paypal extends Provider
             ],
         ]);
 
-        $json = $remote->code() === 200 ? $remote->json() : null;
+        $json = $required ? $this->productResponseJson($remote, 'PayPal access token') :
+            ($remote->code() === 200 ? $remote->json() : null);
         if (is_array($json)) {
-            $this->token = A::get($json, 'access_token');
+            $token = A::get($json, 'access_token');
+            if (is_string($token) && trim($token) !== '') {
+                $this->token = $token;
+            }
+        }
+        if ($required && $this->token === null) {
+            throw new RuntimeException('Malformed PayPal access token response.');
         }
 
         return $this->token;
@@ -317,6 +331,11 @@ class Paypal extends Provider
 
     public function fetchProducts(): array
     {
+        if ($this->canSyncProducts() === false) {
+            return [];
+        }
+
+        $this->token(true);
         $products = [];
         $page = 1;
         $endpoint = strval($this->option('endpoint'));
@@ -327,12 +346,20 @@ class Paypal extends Provider
                 'headers' => $this->headers(),
             ]);
 
-            $json = $remote->code() === 200 ? $remote->json() : null;
-            if (! is_array($json)) {
-                break;
+            $json = $this->productResponseJson($remote, 'PayPal products');
+            $items = A::get($json, 'products');
+            if (! is_array($items)) {
+                throw new RuntimeException('Malformed PayPal products list.');
             }
 
-            foreach (A::get($json, 'products') as $product) {
+            foreach ($items as $product) {
+                if (! is_array($product)) {
+                    throw new RuntimeException('Malformed PayPal product list item.');
+                }
+                $id = A::get($product, 'id');
+                if (! is_string($id) || trim($id) === '') {
+                    throw new RuntimeException('Missing PayPal product ID.');
+                }
                 $detailsUrl = null;
                 foreach (A::get($product, 'links', []) as $link) {
                     if (! is_array($link)) {
@@ -343,25 +370,44 @@ class Paypal extends Provider
                         break;
                     }
                 }
-                if (! $detailsUrl && isset($product['id'])) {
-                    $detailsUrl = $endpoint.'/v1/catalogs/products/'.$product['id'];
+                if (! $detailsUrl) {
+                    $detailsUrl = $endpoint.'/v1/catalogs/products/'.$id;
                 }
                 if (! $detailsUrl || ! is_string($detailsUrl)) {
-                    continue;
+                    throw new RuntimeException("Missing PayPal product details URL for $id.");
                 }
 
                 $remote = Remote::get($detailsUrl, [
                     'headers' => $this->headers(),
                 ]);
 
-                $prod = $remote->code() === 200 ? $remote->json() : null;
-                if (is_array($prod)) {
-                    $products[$product['id']] = $prod;
+                $prod = $this->productResponseJson($remote, "PayPal product $id");
+                $detailId = A::get($prod, 'id');
+                if (! is_string($detailId) || trim($detailId) !== $id) {
+                    throw new RuntimeException("Missing PayPal product detail ID for $id.");
                 }
+                $products[$id] = $prod;
             }
 
-            if ($page >= intval(A::get($json, 'total_pages'))) {
+            $advertisedTotalPages = A::get($json, 'total_pages');
+            if ($advertisedTotalPages === null && count($items) < 20) {
+                $advertisedTotalPages = $page;
+            }
+            if (! is_int($advertisedTotalPages) && (! is_string($advertisedTotalPages) || ! ctype_digit($advertisedTotalPages))) {
+                throw new RuntimeException('Malformed PayPal product pagination.');
+            }
+            $totalPages = intval($advertisedTotalPages);
+            if ($totalPages === 0 && $items === []) {
                 break;
+            }
+            if ($totalPages < $page) {
+                throw new RuntimeException('PayPal product pagination cannot advance.');
+            }
+            if ($page >= $totalPages) {
+                break;
+            }
+            if ($items === []) {
+                throw new RuntimeException('PayPal product pagination cannot advance.');
             }
             $page++;
         }

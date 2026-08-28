@@ -188,6 +188,7 @@ App::plugin(
                 'page' => 'products',
                 'product' => [
                     'uuid' => fn (?ProductsPage $products = null, array $props = []) => 'pr-'.Kart::hash(A::get($props, 'id', Kart::nonAmbiguousUuid(7))),
+                    'missing' => 'draft', // keep, draft or delete provider products missing after a successful sync
                 ],
                 'variants' => [ // overwrite and define your own sorting orders
                     'size' => ['XS', 'xs', 'S', 's', 'M', 'm', 'L', 'l', 'XL', 'xl', 'XXL', 'xxl'],

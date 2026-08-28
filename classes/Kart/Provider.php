@@ -10,6 +10,7 @@
 
 namespace Bnomei\Kart;
 
+use Bnomei\Kart\Models\ProductsPage;
 use Closure;
 use Kirby\Cache\Cache;
 use Kirby\Cms\App;
@@ -17,9 +18,11 @@ use Kirby\Cms\User;
 use Kirby\Content\Field;
 use Kirby\Data\Yaml;
 use Kirby\Filesystem\F;
+use Kirby\Http\Remote;
 use Kirby\Toolkit\A;
 use Kirby\Toolkit\Date;
 use Kirby\Toolkit\Str;
+use RuntimeException;
 
 #[\AllowDynamicProperties]
 abstract class Provider
@@ -472,11 +475,88 @@ abstract class Provider
         $t = microtime(true);
 
         foreach ($sync as $interface) {
-            $this->cache[$interface] = null;
-            $this->read($interface, refresh: true);
+            if ($this->canSyncProducts() === false) {
+                continue;
+            }
+
+            $previous = A::get($this->cache, $interface);
+            if (! is_array($previous)) {
+                $previous = $this->cache()->get($interface);
+            }
+            if (! is_array($previous)) {
+                $previous = [];
+            }
+
+            $current = $this->fetch($interface);
+            $visible = $this->limitProducts($current);
+
+            $productsPage = $this->kart->page(ContentPageEnum::PRODUCTS);
+            if ($productsPage instanceof ProductsPage) {
+                $productsPage->syncProviderProducts($this, $current, $visible, $previous);
+            }
+
+            $this->store($interface, $visible);
         }
 
         return intval(round(($t - microtime(true)) * 1000));
+    }
+
+    protected function canSyncProducts(): bool
+    {
+        return false;
+    }
+
+    protected function productResponseJson(
+        Remote $remote,
+        string $context,
+        int|array $successCodes = 200,
+    ): array {
+        if (! in_array($remote->code(), (array) $successCodes, true)) {
+            throw new RuntimeException($context.' request failed with status '.$remote->code());
+        }
+
+        $json = $remote->json();
+        if (! is_array($json)) {
+            throw new RuntimeException($context.' request did not return JSON');
+        }
+
+        return $json;
+    }
+
+    private function fetch(string $interface): array
+    {
+        $method = 'fetch'.ucfirst($interface);
+
+        return $this->$method();
+    }
+
+    private function limitProducts(array $products): array
+    {
+        if (
+            ! $this->kirby()->environment()->isLocal() &&
+            $this->kirby()
+                ->plugin('bnomei/kart')
+                ->license()
+                ->status()
+                ->value() !== 'active'
+        ) {
+            return array_slice($products, 0, 10);
+        }
+
+        return $products;
+    }
+
+    private function store(string $interface, array $data): void
+    {
+        $expire = $this->kart->option('expire');
+        if (! is_null($expire)) {
+            $this->cache()->set($interface, $data, intval($expire));
+        }
+
+        $this->cache[$interface] = $data;
+        $t = str_replace('+00:00', '', Date::now()->toString());
+        $this->cache()->set('updatedAt', $t);
+        $this->cache()->set('updatedAt-'.$interface, $t);
     }
 
     public function cache(): Cache
@@ -606,30 +686,8 @@ abstract class Provider
             return $cached;
         }
 
-        $method = 'fetch'.ucfirst($interface);
-        $data = $this->$method(); // concrete implementation
-
-        if (
-            ! $this->kirby()->environment()->isLocal() &&
-            $this->kirby()
-                ->plugin('bnomei/kart')
-                ->license()
-                ->status()
-                ->value() !== 'active'
-        ) {
-            $data = array_slice($data, 0, 10);
-        }
-
-        $expire = $this->kart->option('expire');
-        if (! is_null($expire)) {
-            $this->cache()->set($interface, $data, intval($expire));
-        }
-
-        // update timestamp
-        $this->cache[$interface] = $data;
-        $t = str_replace('+00:00', '', Date::now()->toString());
-        $this->cache()->set('updatedAt', $t);
-        $this->cache()->set('updatedAt-'.$interface, $t);
+        $data = $this->limitProducts($this->fetch($interface));
+        $this->store($interface, $data);
 
         return $data;
     }

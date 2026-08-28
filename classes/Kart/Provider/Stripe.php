@@ -19,10 +19,16 @@ use Bnomei\Kart\VirtualPage;
 use Closure;
 use Kirby\Http\Remote;
 use Kirby\Toolkit\A;
+use RuntimeException;
 
 class Stripe extends Provider
 {
     protected string $name = ProviderEnum::STRIPE->value;
+
+    protected function canSyncProducts(): bool
+    {
+        return trim(strval($this->option('secret_key'))) !== '';
+    }
 
     public function checkout(): string
     {
@@ -200,6 +206,10 @@ class Stripe extends Provider
 
     public function fetchProducts(): array
     {
+        if ($this->canSyncProducts() === false) {
+            return [];
+        }
+
         $products = [];
         $cursor = null;
 
@@ -218,38 +228,78 @@ class Stripe extends Provider
                 ]),
             ]);
 
-            $json = $remote->code() === 200 ? $remote->json() : null;
-            if (! is_array($json)) {
-                break;
+            $json = $this->productResponseJson($remote, 'Stripe products');
+            $items = A::get($json, 'data');
+            if (! is_array($items)) {
+                throw new RuntimeException('Malformed Stripe products list.');
             }
 
-            foreach (A::get($json, 'data') as $product) {
-                $cursor = A::get($product, 'id');
-                $products[$cursor] = $product;
+            $previousCursor = $cursor;
+            foreach ($items as $product) {
+                if (! is_array($product)) {
+                    throw new RuntimeException('Malformed Stripe product list item.');
+                }
+                $id = A::get($product, 'id');
+                if (! is_string($id) || trim($id) === '') {
+                    throw new RuntimeException('Missing Stripe product ID.');
+                }
+                $cursor = $id;
+                $products[$id] = $product;
 
                 // https://docs.stripe.com/api/prices/list?lang=curl
-                $remote = Remote::get('https://api.stripe.com/v1/prices', [
-                    'headers' => [
-                        'Content-Type' => 'application/json',
-                        'Authorization' => 'Bearer '.strval($this->option('secret_key')),
-                    ],
-                    'data' => array_filter([
-                        'product' => $cursor,
-                        // 'type' => 'one_time', // otherwise checkout needs to switch to subscription
-                        'active' => 'true',
-                        'limit' => 100,
-                        'currency' => strtolower($this->kart->currency()),
-                    ]),
-                ]);
-
-                $productPrices = $remote->code() === 200 ? $remote->json() : null;
-                if (is_array($productPrices)) {
-                    $products[$cursor]['prices'] = A::get($productPrices, 'data', []);
-                }
+                $prices = [];
+                $priceCursor = null;
+                do {
+                    $remote = Remote::get('https://api.stripe.com/v1/prices', [
+                        'headers' => [
+                            'Content-Type' => 'application/json',
+                            'Authorization' => 'Bearer '.strval($this->option('secret_key')),
+                        ],
+                        'data' => array_filter([
+                            'product' => $id,
+                            'active' => 'true',
+                            'limit' => 100,
+                            'currency' => strtolower($this->kart->currency()),
+                            'starting_after' => $priceCursor,
+                        ]),
+                    ]);
+                    $productPrices = $this->productResponseJson($remote, "Stripe prices for product $id");
+                    $priceItems = A::get($productPrices, 'data');
+                    if (! is_array($priceItems)) {
+                        throw new RuntimeException("Malformed Stripe prices list for product $id.");
+                    }
+                    $previousPriceCursor = $priceCursor;
+                    foreach ($priceItems as $price) {
+                        if (! is_array($price)) {
+                            throw new RuntimeException("Malformed Stripe price list item for product $id.");
+                        }
+                        $priceId = A::get($price, 'id');
+                        if (! is_string($priceId) || trim($priceId) === '') {
+                            throw new RuntimeException("Missing Stripe price ID for product $id.");
+                        }
+                        $priceCursor = $priceId;
+                        $prices[] = $price;
+                    }
+                    $hasMorePrices = A::get($productPrices, 'has_more');
+                    if (! is_bool($hasMorePrices)) {
+                        throw new RuntimeException("Malformed Stripe price pagination for product $id.");
+                    }
+                    if ($hasMorePrices && ($priceCursor === null || $priceCursor === $previousPriceCursor)) {
+                        throw new RuntimeException("Stripe price pagination cannot advance for product $id.");
+                    }
+                } while ($hasMorePrices);
+                $products[$id]['prices'] = $prices;
             }
 
-            if (! A::get($json, 'has_more')) {
+            $hasMore = A::get($json, 'has_more');
+            if (! is_bool($hasMore)) {
+                throw new RuntimeException('Malformed Stripe product pagination.');
+            }
+            if (! $hasMore) {
                 break;
+            }
+            if ($cursor === null || $cursor === $previousCursor) {
+                throw new RuntimeException('Stripe product pagination cannot advance.');
             }
         }
 

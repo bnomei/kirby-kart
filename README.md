@@ -75,6 +75,23 @@ return [
 The Shopify app needs the `read_products` and `read_metaobjects` access scopes. Scalar values and one level of referenced
 metaobjects are available under `$product->raw()->yaml()['metafields']`; nested references are not resolved.
 
+### Missing synced products
+
+Synced product pages store their provider identity as a single persisted field such as
+`Raw-provider: shopify|123456789`. After a complete successful product sync from any provider, Kart drafts tagged pages
+whose remote product disappeared. Drafted pages remain drafts if the product reappears so manually drafted products are
+never published automatically. Remote request failures, malformed responses, incomplete pagination, and unconfigured
+providers do not trigger reconciliation or replace the last successful cache. Custom providers must override
+`canSyncProducts()` and return `true` only when `fetchProducts()` returns their complete authoritative catalog.
+
+The missing-product policy can be changed to preserve or permanently delete these pages:
+
+```php
+return [
+    'bnomei.kart.products.product.missing' => 'draft', // keep, draft or delete
+];
+```
+
 ## Disclaimer
 
 This plugin is provided "as is" with no guarantee. You can use it at your own risk and always test it before using it in

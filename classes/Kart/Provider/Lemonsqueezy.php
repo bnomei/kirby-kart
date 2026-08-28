@@ -20,10 +20,17 @@ use Closure;
 use Kirby\Http\Remote;
 use Kirby\Toolkit\A;
 use Kirby\Toolkit\Str;
+use RuntimeException;
 
 class Lemonsqueezy extends Provider
 {
     protected string $name = ProviderEnum::LEMONSQUEEZY->value;
+
+    protected function canSyncProducts(): bool
+    {
+        return trim(strval($this->option('secret_key'))) !== '' &&
+            trim(strval($this->option('store_id'))) !== '';
+    }
 
     /* Checkout but no redirect
     public function checkout(): string
@@ -251,6 +258,10 @@ class Lemonsqueezy extends Provider
 
     public function fetchProducts(): array
     {
+        if ($this->canSyncProducts() === false) {
+            return [];
+        }
+
         $products = [];
         $page = 1;
 
@@ -268,48 +279,106 @@ class Lemonsqueezy extends Provider
                 ]),
             ]);
 
-            $json = $remote->code() === 200 ? $remote->json() : null;
-            if (! is_array($json)) {
-                break;
+            $json = $this->productResponseJson($remote, 'Lemon Squeezy products');
+            $items = A::get($json, 'data');
+            if (! is_array($items)) {
+                throw new RuntimeException('Malformed Lemon Squeezy products list.');
             }
 
-            foreach (A::get($json, 'data') as $product) {
+            foreach ($items as $product) {
+                if (! is_array($product)) {
+                    throw new RuntimeException('Malformed Lemon Squeezy product list item.');
+                }
+                $id = A::get($product, 'id');
+                $attributes = A::get($product, 'attributes');
+                if (! is_string($id) || trim($id) === '') {
+                    throw new RuntimeException('Missing Lemon Squeezy product ID.');
+                }
+                if (! is_array($attributes)) {
+                    throw new RuntimeException("Malformed Lemon Squeezy product $id.");
+                }
                 if (A::get($product, 'attributes.status') !== 'published') {
                     continue;
                 }
                 $variants = [];
+                $variantPage = 1;
                 // https://docs.lemonsqueezy.com/api/variants/list-all-variants
-                $remote = Remote::get('https://api.lemonsqueezy.com/v1/variants', [
-                    'headers' => [
-                        'Accept' => 'application/vnd.api+json',
-                        'Content-Type' => 'application/vnd.api+json',
-                        'Authorization' => 'Bearer '.strval($this->option('secret_key')),
-                    ],
-                    'data' => array_filter([
-                        'filter[product_id]' => $product['id'],
-                    ]),
-                ]);
+                while (true) {
+                    $remote = Remote::get('https://api.lemonsqueezy.com/v1/variants', [
+                        'headers' => [
+                            'Accept' => 'application/vnd.api+json',
+                            'Content-Type' => 'application/vnd.api+json',
+                            'Authorization' => 'Bearer '.strval($this->option('secret_key')),
+                        ],
+                        'data' => [
+                            'filter[product_id]' => $id,
+                            'page[number]' => $variantPage,
+                        ],
+                    ]);
 
-                $productVariants = $remote->code() === 200 ? $remote->json() : null;
-                if (is_array($productVariants)) {
-                    foreach (A::get($productVariants, 'data', []) as $variant) {
+                    $productVariants = $this->productResponseJson($remote, "Lemon Squeezy variants for product $id");
+                    $variantItems = A::get($productVariants, 'data');
+                    if (! is_array($variantItems)) {
+                        throw new RuntimeException("Malformed Lemon Squeezy variants list for product $id.");
+                    }
+                    foreach ($variantItems as $variant) {
+                        if (! is_array($variant)) {
+                            throw new RuntimeException("Malformed Lemon Squeezy variant list item for product $id.");
+                        }
+                        $variantId = A::get($variant, 'id');
+                        $variantAttributes = A::get($variant, 'attributes');
+                        if (! is_string($variantId) || trim($variantId) === '') {
+                            throw new RuntimeException("Missing Lemon Squeezy variant ID for product $id.");
+                        }
+                        if (! is_array($variantAttributes)) {
+                            throw new RuntimeException("Malformed Lemon Squeezy variant $variantId.");
+                        }
                         // NOTE: the default variant will always be pending status
                         if (strtolower(A::get($variant, 'attributes.name', 'default')) !== 'default' &&
                         A::get($variant, 'attributes.status') !== 'published') {
                             continue;
                         }
-                        $variants[] = $variant['attributes'] + ['id' => $variant['id']];
+                        $variants[] = $variantAttributes + ['id' => $variantId];
                     }
+                    $variantLastPage = A::get($productVariants, 'meta.page.lastPage');
+                    if (! is_int($variantLastPage) && (! is_string($variantLastPage) || ! ctype_digit($variantLastPage))) {
+                        throw new RuntimeException("Malformed Lemon Squeezy variant pagination for product $id.");
+                    }
+                    $variantLastPage = intval($variantLastPage);
+                    if ($variantLastPage < $variantPage) {
+                        throw new RuntimeException("Lemon Squeezy variant pagination cannot advance for product $id.");
+                    }
+                    if ($variantPage >= $variantLastPage) {
+                        break;
+                    }
+                    if ($variantItems === []) {
+                        throw new RuntimeException("Lemon Squeezy variant pagination cannot advance for product $id.");
+                    }
+                    $variantPage++;
                 }
 
-                $products[$product['id']] = $product['attributes'] + [
-                    'id' => $product['id'],
+                $products[$id] = $attributes + [
+                    'id' => $id,
                     'variants' => $variants,
                 ];
             }
 
-            if (A::get($json, 'meta.page.lastPage') <= $page) {
+            $lastPage = A::get($json, 'meta.page.lastPage');
+            if (! is_int($lastPage) && (! is_string($lastPage) || ! ctype_digit($lastPage))) {
+                throw new RuntimeException('Malformed Lemon Squeezy product pagination.');
+            }
+            $lastPage = intval($lastPage);
+            if ($lastPage === 0 && $items === []) {
                 break;
+            }
+            if ($lastPage < $page) {
+                throw new RuntimeException('Lemon Squeezy product pagination cannot advance.');
+            }
+            if ($page >= $lastPage) {
+                break;
+            }
+            if ($items === []) {
+                throw new RuntimeException('Lemon Squeezy product pagination cannot advance.');
             }
             $page++;
         }

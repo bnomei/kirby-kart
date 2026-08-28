@@ -10,6 +10,7 @@
 
 use Bnomei\Kart\Models\ProductPage;
 use Bnomei\Kart\Provider\Shopify;
+use Kirby\Cms\App;
 use Kirby\Data\Yaml;
 use Kirby\Http\Remote;
 
@@ -200,6 +201,65 @@ it('keeps cached Shopify products when a refresh fails', function (): void {
         ->and($shopify->requested)->toBeTrue();
 });
 
+it('drafts Shopify product pages removed by a successful sync', function (): void {
+    kart()->setOption('products.product.missing', 'draft');
+    kart()->setOption('providers.shopify.store_domain', 'example.myshopify.com');
+    kart()->setOption('providers.shopify.client_id', 'client-id');
+    kart()->setOption('providers.shopify.client_secret', 'client-secret');
+    kirby()->cache('bnomei.kart.shopify')->flush();
+
+    $productId = strval(random_int(100_000, 999_999));
+    $shopify = new class(kirby(), $productId) extends Shopify
+    {
+        public int $requests = 0;
+
+        public function __construct(App $kirby, private readonly string $productId)
+        {
+            parent::__construct($kirby);
+        }
+
+        protected function requestAdminAccessToken(string $clientId, string $clientSecret): string
+        {
+            return 'fresh-token';
+        }
+
+        protected function requestAdminProducts(?string $pageInfo): Remote
+        {
+            $remote = new Remote('https://example.myshopify.com/admin/api/2024-07/products.json', [
+                'test' => true,
+            ]);
+            $remote->info['http_code'] = 200;
+            $remote->content = json_encode([
+                'products' => $this->requests++ === 0 ? [[
+                    'id' => $this->productId,
+                    'title' => 'Removed Shopify product '.$this->productId,
+                    'variants' => [],
+                    'images' => [],
+                ]] : [],
+            ]);
+
+            return $remote;
+        }
+    };
+    $page = null;
+
+    try {
+        $shopify->sync('products');
+        $page = page('products')->childrenAndDrafts()->findBy('raw_provider', 'shopify|'.$productId);
+
+        expect($page)->toBeInstanceOf(ProductPage::class)
+            ->and($page->isListed())->toBeTrue();
+
+        $shopify->sync('products');
+        $page = page('products')->childrenAndDrafts()->findBy('raw_provider', 'shopify|'.$productId);
+
+        expect($page)->toBeInstanceOf(ProductPage::class)
+            ->and($page->isDraft())->toBeTrue();
+    } finally {
+        kirby()->impersonate('kirby', fn () => $page?->delete(true));
+    }
+});
+
 it('throws Shopify products API errors', function (): void {
     kart()->setOption('providers.shopify.store_domain', 'example.myshopify.com');
     kart()->setOption('providers.shopify.client_id', 'client-id');
@@ -231,6 +291,39 @@ it('throws Shopify products API errors', function (): void {
             RuntimeException::class,
             'Shopify Admin products request failed with status 403: [API] This action requires merchant approval for read_products scope.'
         );
+});
+
+it('throws when Shopify product pagination cannot advance', function (): void {
+    kart()->setOption('providers.shopify.store_domain', 'example.myshopify.com');
+    kart()->setOption('providers.shopify.client_id', 'client-id');
+    kart()->setOption('providers.shopify.client_secret', 'client-secret');
+
+    $shopify = new class(kirby()) extends Shopify
+    {
+        protected function requestAdminAccessToken(string $clientId, string $clientSecret): string
+        {
+            return 'fresh-token';
+        }
+
+        protected function requestAdminProducts(?string $pageInfo): Remote
+        {
+            $remote = new Remote('https://example.myshopify.com/admin/api/2024-07/products.json', [
+                'test' => true,
+            ]);
+            $remote->info['http_code'] = 200;
+            $remote->headers = [
+                'Link' => '<https://example.myshopify.com/admin/api/2024-07/products.json?limit=250>; rel="next"',
+            ];
+            $remote->content = json_encode([
+                'products' => [],
+            ]);
+
+            return $remote;
+        }
+    };
+
+    expect(fn () => $shopify->fetchProducts())
+        ->toThrow(RuntimeException::class, 'Shopify product pagination cannot advance');
 });
 
 it('maps Shopify option names and values to variant tags', function (): void {

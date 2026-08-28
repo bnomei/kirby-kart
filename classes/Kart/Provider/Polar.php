@@ -228,6 +228,10 @@ class Polar extends Provider
 
     public function fetchProducts(): array
     {
+        if ($this->canSyncProducts() === false) {
+            return [];
+        }
+
         $products = [];
         $page = 1;
 
@@ -243,16 +247,37 @@ class Polar extends Provider
                 ],
             ]);
 
-            $json = $remote->code() === 200 ? $remote->json() : null;
-            if (! is_array($json)) {
+            $json = $this->productResponseJson($remote, 'Polar products page '.$page);
+            $list = A::get($json, 'items');
+            if (! is_array($list)) {
+                throw new \RuntimeException('Malformed Polar products list.');
+            }
+
+            foreach ($list as $product) {
+                if (! is_array($product)) {
+                    throw new \RuntimeException('Malformed Polar product.');
+                }
+                $id = trim(strval(A::get($product, 'id')));
+                if ($id === '') {
+                    throw new \RuntimeException('Polar product is missing an ID.');
+                }
+                $products[$id] = $product;
+            }
+
+            $advertisedMaxPage = A::get($json, 'pagination.max_page');
+            if ($advertisedMaxPage === null && count($list) < 100) {
+                $advertisedMaxPage = $page;
+            }
+            if (! is_int($advertisedMaxPage) && (! is_string($advertisedMaxPage) || ! ctype_digit($advertisedMaxPage))) {
+                throw new \RuntimeException('Malformed Polar product pagination.');
+            }
+            $maxPage = intval($advertisedMaxPage);
+            if ($maxPage === 0 && $list === []) {
                 break;
             }
-
-            foreach (A::get($json, 'items', []) as $product) {
-                $products[A::get($product, 'id')] = $product;
+            if ($maxPage < 1 || $page > $maxPage) {
+                throw new \RuntimeException('Polar product pagination cannot advance.');
             }
-
-            $maxPage = intval(A::get($json, 'pagination.max_page', 1));
             if ($page >= $maxPage) {
                 break;
             }
@@ -295,6 +320,11 @@ class Polar extends Provider
             ],
             $this->kart->page(ContentPageEnum::PRODUCTS))
         )->mixinProduct($data)->toArray(), $products);
+    }
+
+    protected function canSyncProducts(): bool
+    {
+        return trim(strval($this->option('access_token'))) !== '';
     }
 
     private function endpoint(): string

@@ -18,10 +18,16 @@ use Bnomei\Kart\WebhookResult;
 use Kirby\Http\Remote;
 use Kirby\Toolkit\A;
 use Kirby\Uuid\Uuid;
+use RuntimeException;
 
 class Snipcart extends Provider
 {
     protected string $name = ProviderEnum::SNIPCART->value;
+
+    protected function canSyncProducts(): bool
+    {
+        return trim(strval($this->option('secret_key'))) !== '';
+    }
 
     private function headers(): array
     {
@@ -125,6 +131,10 @@ class Snipcart extends Provider
 
     public function fetchProducts(): array
     {
+        if ($this->canSyncProducts() === false) {
+            return [];
+        }
+
         $products = [];
         $offset = 0;
         $limit = 50;
@@ -135,19 +145,16 @@ class Snipcart extends Provider
                 'headers' => $this->headers(),
             ]);
 
-            $json = $remote->code() === 200 ? $remote->json() : null;
-            if (! is_array($json)) {
-                break;
-            }
+            $json = $this->productResponseJson($remote, 'Snipcart products');
 
-            $items = A::get($json, 'items', []);
-            if (! is_array($items) || $items === []) {
-                break;
+            $items = A::get($json, 'items');
+            if (! is_array($items)) {
+                throw new RuntimeException('Malformed Snipcart products list.');
             }
 
             foreach ($items as $product) {
                 if (! is_array($product)) {
-                    continue;
+                    throw new RuntimeException('Malformed Snipcart product list item.');
                 }
                 // keep active products; skip archived ones
                 if (A::get($product, 'archived')) {
@@ -155,18 +162,28 @@ class Snipcart extends Provider
                 }
                 $id = $product['id'] ?? null;
                 if (! is_string($id) && ! is_int($id)) {
-                    continue;
+                    throw new RuntimeException('Missing Snipcart product ID.');
                 }
                 $id = (string) $id;
                 if ($id === '') {
-                    continue;
+                    throw new RuntimeException('Missing Snipcart product ID.');
                 }
                 $products[$id] = $product;
             }
 
-            $totalItems = intval(A::get($json, 'totalItems', 0));
+            $advertisedTotal = A::get($json, 'totalItems');
+            if (! is_int($advertisedTotal) && (! is_string($advertisedTotal) || ! ctype_digit($advertisedTotal))) {
+                throw new RuntimeException('Malformed Snipcart product pagination.');
+            }
+            $totalItems = intval($advertisedTotal);
+            if ($totalItems < $offset + count($items)) {
+                throw new RuntimeException('Malformed Snipcart product total.');
+            }
             if ($offset + $limit >= $totalItems) {
                 break;
+            }
+            if ($items === []) {
+                throw new RuntimeException('Snipcart product pagination cannot advance.');
             }
             $offset += $limit;
         }

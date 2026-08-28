@@ -244,8 +244,13 @@ class Chargebee extends Provider
 
     public function fetchProducts(): array
     {
+        if ($this->canSyncProducts() === false) {
+            return [];
+        }
+
         $products = [];
         $offset = null;
+        $seenOffsets = [];
 
         while (true) {
             // https://apidocs.chargebee.com/docs/api/item_prices#list_item_prices
@@ -259,24 +264,36 @@ class Chargebee extends Provider
                 ]),
             ]);
 
-            $json = $remote->code() === 200 ? $remote->json() : null;
-            if (! is_array($json)) {
-                break;
+            $json = $this->productResponseJson($remote, 'Chargebee item prices');
+            $list = A::get($json, 'list');
+            if (! is_array($list)) {
+                throw new \RuntimeException('Malformed Chargebee item prices list.');
             }
 
-            foreach (A::get($json, 'list', []) as $entry) {
-                $itemPrice = A::get($entry, 'item_price', []);
+            foreach ($list as $entry) {
+                if (! is_array($entry)) {
+                    throw new \RuntimeException('Malformed Chargebee item price entry.');
+                }
+                $itemPrice = A::get($entry, 'item_price');
                 if (! is_array($itemPrice)) {
-                    continue;
+                    throw new \RuntimeException('Malformed Chargebee item price.');
                 }
 
-                $products[A::get($itemPrice, 'id')] = $itemPrice;
+                $id = trim(strval(A::get($itemPrice, 'id')));
+                if ($id === '') {
+                    throw new \RuntimeException('Chargebee item price is missing an ID.');
+                }
+                $products[$id] = $itemPrice;
             }
 
             $offset = A::get($json, 'next_offset');
-            if (! $offset) {
+            if ($offset === null || $offset === '') {
                 break;
             }
+            if (! is_string($offset) || isset($seenOffsets[$offset])) {
+                throw new \RuntimeException('Chargebee item price pagination cannot advance.');
+            }
+            $seenOffsets[$offset] = true;
         }
 
         return array_map(fn (array $data) => (new VirtualPage(
@@ -299,6 +316,12 @@ class Chargebee extends Provider
             ],
             $this->kart->page(ContentPageEnum::PRODUCTS))
         )->mixinProduct($data)->toArray(), $products);
+    }
+
+    protected function canSyncProducts(): bool
+    {
+        return trim(strval($this->option('api_key'))) !== ''
+            && trim(strval($this->option('site'))) !== '';
     }
 
     public function portal(?string $returnUrl = null): ?string

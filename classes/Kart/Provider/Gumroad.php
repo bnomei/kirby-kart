@@ -118,30 +118,59 @@ class Gumroad extends Provider
 
     public function fetchProducts(): array
     {
-        $products = [];
-
-        // https://gumroad.com/api#products
-        $remote = Remote::get('https://api.gumroad.com/v2/products?access_token='.strval($this->option('access_token')), [
-            'headers' => [
-                'Content-Type' => 'application/json',
-                'Accept' => 'application/json',
-            ],
-        ]);
-
-        $json = $remote->code() === 200 ? $remote->json() : null;
-        if (! is_array($json)) {
+        if ($this->canSyncProducts() === false) {
             return [];
         }
 
-        foreach (A::get($json, 'products') as $product) {
-            if (! A::get($product, 'published')) {
-                continue;
+        $products = [];
+        $pageKey = null;
+        $seenPageKeys = [];
+
+        // https://gumroad.com/api#products
+        do {
+            $json = $this->productResponseJson(
+                $this->requestProducts($pageKey),
+                'Gumroad products'
+            );
+            if (A::get($json, 'success') !== true) {
+                throw new \RuntimeException('Gumroad products request was not successful.');
             }
-            if (A::get($product, 'deleted')) {
-                continue;
+            $list = A::get($json, 'products');
+            if (! is_array($list)) {
+                throw new \RuntimeException('Malformed Gumroad products list.');
             }
-            $products[$product['id']] = $product;
-        }
+
+            foreach ($list as $product) {
+                if (! is_array($product)) {
+                    throw new \RuntimeException('Malformed Gumroad product.');
+                }
+                if (! A::get($product, 'published')) {
+                    continue;
+                }
+                if (A::get($product, 'deleted')) {
+                    continue;
+                }
+                $id = trim(strval(A::get($product, 'id')));
+                if ($id === '') {
+                    throw new \RuntimeException('Gumroad product is missing an ID.');
+                }
+                $products[$id] = $product;
+            }
+
+            $nextPageKey = A::get($json, 'next_page_key');
+            if ($nextPageKey === null) {
+                break;
+            }
+            if (! is_string($nextPageKey) || trim($nextPageKey) === '') {
+                throw new \RuntimeException('Malformed Gumroad product pagination.');
+            }
+
+            $pageKey = trim($nextPageKey);
+            if (isset($seenPageKeys[$pageKey])) {
+                throw new \RuntimeException('Gumroad product pagination cannot advance.');
+            }
+            $seenPageKeys[$pageKey] = true;
+        } while (true);
 
         return array_map(fn (array $data) =>
             // NOTE: changes here require a cache flush to take effect
@@ -167,5 +196,27 @@ class Gumroad extends Provider
             ],
             $this->kart->page(ContentPageEnum::PRODUCTS))
         )->mixinProduct($data)->toArray(), $products);
+    }
+
+    protected function requestProducts(?string $pageKey): Remote
+    {
+        $query = [
+            'access_token' => strval($this->option('access_token')),
+        ];
+        if ($pageKey !== null) {
+            $query['page_key'] = $pageKey;
+        }
+
+        return Remote::get('https://api.gumroad.com/v2/products?'.http_build_query($query), [
+            'headers' => [
+                'Content-Type' => 'application/json',
+                'Accept' => 'application/json',
+            ],
+        ]);
+    }
+
+    protected function canSyncProducts(): bool
+    {
+        return trim(strval($this->option('access_token'))) !== '';
     }
 }

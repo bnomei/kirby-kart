@@ -239,6 +239,7 @@ GQL,
 
         $products = [];
         $pageInfo = null;
+        $seenPageInfo = [];
         $metafields = $this->productMetafields();
 
         // REST Admin products listing
@@ -289,10 +290,14 @@ GQL,
             $nextUrl = null;
             if (is_string($link) && $link !== '') {
                 foreach (explode(',', $link) as $part) {
-                    if (str_contains($part, 'rel="next"') && preg_match('/<([^>]+)>/', $part, $match)) {
-                        $nextUrl = $match[1];
-                        break;
+                    if (! str_contains($part, 'rel="next"')) {
+                        continue;
                     }
+                    if (! preg_match('/<([^>]+)>/', $part, $match)) {
+                        throw new \RuntimeException('Malformed Shopify product pagination link');
+                    }
+                    $nextUrl = $match[1];
+                    break;
                 }
             }
 
@@ -309,9 +314,10 @@ GQL,
                     $pageInfo = null;
                 }
             }
-            if (! $pageInfo) {
-                break;
+            if (! $pageInfo || isset($seenPageInfo[$pageInfo])) {
+                throw new \RuntimeException('Shopify product pagination cannot advance');
             }
+            $seenPageInfo[$pageInfo] = true;
         }
 
         return array_map(fn (array $data) => (new VirtualPage(
@@ -393,6 +399,11 @@ GQL,
             ],
             $this->kart->page(ContentPageEnum::PRODUCTS))
         )->mixinProduct($data)->toArray(), $products);
+    }
+
+    protected function canSyncProducts(): bool
+    {
+        return $this->canFetchProducts();
     }
 
     private function fetchProductMetafields(array $products, array $metafields): array

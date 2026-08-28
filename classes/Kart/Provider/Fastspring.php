@@ -45,31 +45,68 @@ class Fastspring extends Provider
 
     public function fetchProducts(): array
     {
-        $products = [];
-
-        // https://developer.fastspring.com/reference/list-all-product-paths
-        $remote = Remote::get('https://api.fastspring.com/products', [
-            'headers' => $this->headers(),
-        ]);
-
-        $json = $remote->code() === 200 ? $remote->json() : null;
-        if (! is_array($json)) {
+        if ($this->canSyncProducts() === false) {
             return [];
         }
 
-        foreach (A::get($json, 'products', []) as $path) {
-            // https://developer.fastspring.com/reference/retrieve-a-product
-            $remote = Remote::get('https://api.fastspring.com/products/'.$path, [
-                'headers' => $this->headers(),
-            ]);
+        $products = [];
+        $paths = [];
+        $page = null;
+        $seenPages = [];
 
-            $product = $remote->code() === 200 ? $remote->json() : null;
-            if (! is_array($product)) {
-                continue;
+        // https://developer.fastspring.com/reference/list-all-product-paths
+        do {
+            $json = $this->productResponseJson(
+                $this->requestProducts($page),
+                'FastSpring products'
+            );
+            $pagePaths = A::get($json, 'products');
+            if (! is_array($pagePaths)) {
+                throw new \RuntimeException('Malformed FastSpring products list.');
             }
 
-            foreach (A::get($product, 'products') as $p) {
-                $products[$p['product']] = $p;
+            foreach ($pagePaths as $path) {
+                if (! is_string($path) || trim($path) === '') {
+                    throw new \RuntimeException('Malformed FastSpring product path.');
+                }
+                $paths[trim($path)] = true;
+            }
+
+            $nextPage = A::get($json, 'nextPage');
+            if ($nextPage === null) {
+                break;
+            }
+            if (! is_int($nextPage) && (! is_string($nextPage) || ! ctype_digit($nextPage))) {
+                throw new \RuntimeException('Malformed FastSpring product pagination.');
+            }
+
+            $page = intval($nextPage);
+            if (isset($seenPages[$page])) {
+                throw new \RuntimeException('FastSpring product pagination cannot advance.');
+            }
+            $seenPages[$page] = true;
+        } while (true);
+
+        foreach (array_keys($paths) as $path) {
+            // https://developer.fastspring.com/reference/retrieve-a-product
+            $product = $this->productResponseJson(
+                $this->requestProduct($path),
+                'FastSpring product '.$path
+            );
+            $details = A::get($product, 'products');
+            if (! is_array($details) || $details === []) {
+                throw new \RuntimeException('Malformed FastSpring product detail.');
+            }
+
+            foreach ($details as $p) {
+                if (! is_array($p)) {
+                    throw new \RuntimeException('Malformed FastSpring product detail item.');
+                }
+                $id = trim(strval(A::get($p, 'product')));
+                if ($id === '') {
+                    throw new \RuntimeException('FastSpring product is missing an ID.');
+                }
+                $products[$id] = $p;
             }
         }
 
@@ -97,5 +134,30 @@ class Fastspring extends Provider
             ],
             $this->kart->page(ContentPageEnum::PRODUCTS))
         )->mixinProduct($data)->toArray(), $products);
+    }
+
+    protected function requestProducts(?int $page): Remote
+    {
+        $url = 'https://api.fastspring.com/products';
+        if ($page !== null) {
+            $url .= '?page='.$page;
+        }
+
+        return Remote::get($url, [
+            'headers' => $this->headers(),
+        ]);
+    }
+
+    protected function requestProduct(string $path): Remote
+    {
+        return Remote::get('https://api.fastspring.com/products/'.rawurlencode($path), [
+            'headers' => $this->headers(),
+        ]);
+    }
+
+    protected function canSyncProducts(): bool
+    {
+        return trim(strval($this->option('username'))) !== ''
+            && trim(strval($this->option('password'))) !== '';
     }
 }

@@ -29,6 +29,9 @@ tabs:
       meta:
         type: fields
         fields:
+          raw_provider:
+            type: hidden
+            translate: false
           line:
             type: line
           description:

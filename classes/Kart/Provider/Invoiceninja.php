@@ -155,6 +155,10 @@ class Invoiceninja extends Provider
 
     public function fetchProducts(): array
     {
+        if ($this->canSyncProducts() === false) {
+            return [];
+        }
+
         $products = [];
         $page = 1;
 
@@ -168,16 +172,37 @@ class Invoiceninja extends Provider
                 ],
             ]);
 
-            $json = $remote->code() === 200 ? $remote->json() : null;
-            if (! is_array($json)) {
+            $json = $this->productResponseJson($remote, 'Invoice Ninja products page '.$page);
+            $list = A::get($json, 'data');
+            if (! is_array($list)) {
+                throw new \RuntimeException('Malformed Invoice Ninja products list.');
+            }
+
+            foreach ($list as $product) {
+                if (! is_array($product)) {
+                    throw new \RuntimeException('Malformed Invoice Ninja product.');
+                }
+                $id = trim(strval(A::get($product, 'id')));
+                if ($id === '') {
+                    throw new \RuntimeException('Invoice Ninja product is missing an ID.');
+                }
+                $products[$id] = $product;
+            }
+
+            $advertisedTotal = A::get($json, 'meta.pagination.total_pages');
+            if ($advertisedTotal === null && count($list) < 200) {
+                $advertisedTotal = $page;
+            }
+            if (! is_int($advertisedTotal) && (! is_string($advertisedTotal) || ! ctype_digit($advertisedTotal))) {
+                throw new \RuntimeException('Malformed Invoice Ninja product pagination.');
+            }
+            $total = intval($advertisedTotal);
+            if ($total === 0 && $list === []) {
                 break;
             }
-
-            foreach (A::get($json, 'data', []) as $product) {
-                $products[A::get($product, 'id')] = $product;
+            if ($total < 1 || $page > $total) {
+                throw new \RuntimeException('Invoice Ninja product pagination cannot advance.');
             }
-
-            $total = intval(A::get($json, 'meta.pagination.total_pages', 1));
             if ($page >= $total) {
                 break;
             }
@@ -198,6 +223,11 @@ class Invoiceninja extends Provider
             ],
             $this->kart->page(ContentPageEnum::PRODUCTS))
         )->mixinProduct($data)->toArray(), $products);
+    }
+
+    protected function canSyncProducts(): bool
+    {
+        return trim(strval($this->option('token'))) !== '';
     }
 
     private function verifySignature(array $payload, array $headers): bool

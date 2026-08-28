@@ -10,6 +10,9 @@
 
 use Bnomei\Kart\Models\ProductPage;
 use Bnomei\Kart\ProductStorage;
+use Bnomei\Kart\Provider;
+use Kirby\Cms\Language;
+use Kirby\Content\VersionId;
 use Kirby\Data\Yaml;
 
 it('has a blueprint from PHP', function (): void {
@@ -20,6 +23,74 @@ it('has a custom storage to allow merging with the virtual pages', function (): 
     /** @var ProductPage $p */
     $p = page('products')->children()->first();
     expect($p->storage())->toBeInstanceOf(ProductStorage::class);
+});
+
+it('hydrates tagged products only from their exact provider identity', function (): void {
+    $kart = kart();
+    $previousProvider = $kart->provider();
+    $ownedId = uniqid('owned-', true);
+    $otherId = uniqid('other-', true);
+    $title = 'Provider identity collision '.$ownedId;
+    $page = null;
+    $setProvider = function (Provider $provider): void {
+        $this->provider = $provider;
+    };
+
+    try {
+        $page = kirby()->impersonate('kirby', fn () => page('products')->createChild([
+            'id' => $ownedId,
+            'model' => 'product',
+            'template' => 'product',
+            'content' => [
+                'title' => $title,
+                'description' => 'Local description',
+                'raw_provider' => 'shopify|'.$ownedId,
+            ],
+        ]));
+        $provider = new class(kirby()) extends Provider
+        {
+            protected string $name = 'shopify';
+
+            public array $catalog = [];
+
+            public function products(): array
+            {
+                return $this->catalog;
+            }
+
+            public function virtual(): bool|array
+            {
+                return ['description'];
+            }
+        };
+        $setProvider->call($kart, $provider);
+        $storage = new ProductStorage(model: $page);
+
+        $provider->catalog = [[
+            'id' => $otherId,
+            'content' => [
+                'title' => $title,
+                'description' => 'Wrong description',
+            ],
+        ]];
+        $content = $storage->read(VersionId::latest(), Language::single());
+
+        expect($content['description'])->toBe('Local description');
+
+        $provider->catalog = [[
+            'id' => $ownedId,
+            'content' => [
+                'title' => 'Renamed provider product',
+                'description' => 'Exact description',
+            ],
+        ]];
+        $content = $storage->read(VersionId::latest(), Language::single());
+
+        expect($content['description'])->toBe('Exact description');
+    } finally {
+        $setProvider->call($kart, $previousProvider);
+        kirby()->impersonate('kirby', fn () => $page?->delete(true));
+    }
 });
 
 it('has a link to the url of its stock in the panel', function (): void {

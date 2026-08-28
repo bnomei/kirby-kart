@@ -42,6 +42,7 @@ use Kirby\Toolkit\Str;
  * @method Field price()
  * @method Field ptype()
  * @method Field raw()
+ * @method Field raw_provider()
  * @method Field rrprice()
  * @method Field tags()
  * @method Field tax()
@@ -128,6 +129,10 @@ class ProductPage extends Page implements Kerbs
                         'meta' => [
                             'type' => 'fields',
                             'fields' => [
+                                'raw_provider' => [
+                                    'type' => 'hidden',
+                                    'translate' => false,
+                                ],
                                 'line' => [
                                     'type' => 'line',
                                 ],
