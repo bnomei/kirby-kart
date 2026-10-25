@@ -1,5 +1,12 @@
 # Changelog
 
+## 5.17.1 - 2026-10-25
+
+### Fixed
+
+- Preserve plus-addressed emails and literal percent sequences in password login, authentication form prefills, and Kirby checkout completion by avoiding redundant URL decoding.
+- Escape email values when rendering authentication form attributes.
+
 ## 5.17.0 - 2026-08-25
 
 ### Added

@@ -5,7 +5,7 @@
         <label>
             <input type="email" name="email" required
                       placeholder="<?= t('email') ?>" autocomplete="email"
-                      value="<?= urldecode((string) get('email', '')) ?>">
+                      value="<?= esc((string) get('email', ''), 'attr') ?>">
         </label>
         <?php // TODO: You should add an CAPTCHA here, like...?>
         <?php // snippet('kart/turnstile-form') // or?>

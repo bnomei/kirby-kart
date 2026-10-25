@@ -157,7 +157,7 @@ return function (App $kirby) {
                     return Response::json([], 451);
                 }
 
-                $email = trim(strip_tags(urldecode(get('email', ''))));
+                $email = trim(strip_tags((string) get('email', '')));
                 // TODO: performance on a lot of users might drop
                 $user = $kirby->users()
                     ->customers() // @phpstan-ignore-line

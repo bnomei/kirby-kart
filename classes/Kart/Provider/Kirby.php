@@ -101,7 +101,7 @@ class Kirby extends Provider
 
         $contact = $this->checkoutContact();
         $input = (array) Kart::sanitize(array_filter([
-            'email' => strtolower(urldecode(strval($contact['email'] ?? get('email', $this->kirby->user()?->email())))),
+            'email' => strtolower(strval($contact['email'] ?? get('email', $this->kirby->user()?->email()))),
             'name' => urldecode(strval($contact['name'] ?? get('name', $this->kirby->user()?->name()))),
             'payment_method' => urldecode(strval(get('payment_method', ''))),
             'payment_status' => urldecode(strval(get('payment_status', ''))),
