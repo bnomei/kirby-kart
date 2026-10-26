@@ -23,15 +23,15 @@ tabs:
         size: huge
         type: stats
         reports:
-          - 
+          -
             label: bnomei.kart.invoiceNumber
             value: '#{{ page.invoiceNumber }}'
             info: '{{ page.paidDate.toDate(site.kart.dateformat) }}'
-          - 
+          -
             label: bnomei.kart.total
             value: '{{ page.formattedTotal }}'
             info: '{{ page.formattedSubtotal }} - {{ page.formattedDiscount }} + {{ page.formattedTax }}'
-          - 
+          -
             label: bnomei.kart.items
             value: '{{ page.items.toStructure.count }}'
       order:
@@ -55,10 +55,10 @@ tabs:
             type: toggle
             width: 1/4
             text:
-              - 
+              -
                 en: 'No'
                 de: Nein
-              - 
+              -
                 en: 'Yes'
                 de: Ja
             translate: false
@@ -96,7 +96,7 @@ tabs:
               key:
                 label: bnomei.kart.product
                 type: pages
-                query: site.kart.page("products")
+                query: 'site.kart.page("products")'
                 multiple: false
                 subpages: false
               variant:

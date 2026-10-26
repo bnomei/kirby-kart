@@ -43,11 +43,17 @@ class Cart implements Kerbs
         $this->kart = kirby()->site()->kart();
 
         if (empty($items)) {
-            $items = $this->kirby->session()->get($this->id, []);
+            $storedItems = $this->kirby->session()->get($this->id, []);
+            $items = is_array($storedItems) ? $storedItems : [];
         }
 
         $this->lines = new Collection;
         foreach ($items as $uuid => $line) {
+            if (! is_array($line)) {
+                continue;
+            }
+
+            $uuid = strval($uuid);
             $variant = null;
             if (str_contains($uuid, '|')) {
                 [$uuid, $variant] = explode('|', $uuid);

@@ -18,10 +18,9 @@ return [
     'cache' => [
         'uuid' => false, // when switching providers a lot during dev this avoids mismatches
     ],
-    //    'auth' => [
-    //        'challenge.email.subject' => 'Your login link for {{ site.title }}', // no t() but query support here
-    //        'methods' => ['code', 'kart-magic-link', 'password'], // 'code', 'password', 'password-reset'
-    //    ],
+    'auth' => [
+        'challenges' => ['email', 'kart-magic-link'],
+    ],
 
     // /////////////////////////////////
     // KART options used in the tests //

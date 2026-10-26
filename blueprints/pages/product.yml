@@ -15,14 +15,14 @@ tabs:
         label: bnomei.kart.summary
         type: stats
         reports:
-          - 
+          -
             label: bnomei.kart.price
             value: '{{ page.formattedPrice() }}'
-          - 
+          -
             label: bnomei.kart.sales-count
             value: '{{ page.salesCount }}'
             link: '{{ site.kart.page("orders")?.panel.url }}'
-          - 
+          -
             label: bnomei.kart.stock
             value: '{{ page.stockWithVariants }}'
             link: '{{ page.stockUrl }}'
@@ -96,9 +96,7 @@ tabs:
             type: tags
             options:
               type: query
-              query: >
-                page.siblings.pluck("categories", ",",
-                true)
+              query: 'page.siblings.pluck("categories", ",", true)'
             width: 1/3
             translate: false
             virtual: true
@@ -107,7 +105,7 @@ tabs:
             type: tags
             options:
               type: query
-              query: page.siblings.pluck("tags", ",", true)
+              query: 'page.siblings.pluck("tags", ",", true)'
             width: 1/3
             translate: false
             virtual: true

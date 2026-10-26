@@ -19,17 +19,17 @@ sections:
     label: bnomei.kart.summary
     type: stats
     reports:
-      - 
+      -
         label: bnomei.kart.products
         value: '{{ page.children.count }}'
         link: '{{ site.kart.page("products")?.panel.url }}'
-      - 
+      -
         label: bnomei.kart.out-of-stock
         value: '{{ site.kart.page("products")?.outOfStock.count }}'
-      - 
+      -
         label: bnomei.kart.stocks
         value: '{{ page.stock(null, null, "*") ?? 0 }}'
-      - 
+      -
         label: bnomei.kart.latest
         value: '{{ page.children.sortBy("timestampOrModified", "desc").first.timestampOrModified.toDate(site.kart.dateformat) }}'
   meta:
@@ -41,7 +41,7 @@ sections:
     label: bnomei.kart.stocks
     type: pages
     template: stock
-    sortBy: timestampOrModified desc
+    sortBy: 'timestampOrModified desc'
     text: '{{ page.page.toPage.inStock ? "" : "⚠️ " }}[{{ page.stockPad(3) }}] {{ page.page.toPage.title }}'
     info: '{{ page.title }} ・ {{ page.timestampOrModified.toDate(site.kart.dateformat) }}'
     limit: 1000

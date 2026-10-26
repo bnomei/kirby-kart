@@ -14,21 +14,11 @@ class Testing
     public static function beforeAll(): void
     {
         kirby()->impersonate('kirby', function (): void {
-            page('products')?->children()->map(function ($p) {
-                $p->delete(true);
-
-                return $p;
-            });
-            page('stocks')?->children()->map(function ($p) {
-                $p->delete(true);
-
-                return $p;
-            });
-            page('orders')?->children()->map(function ($p) {
-                $p->delete(true);
-
-                return $p;
-            });
+            foreach (['products', 'stocks', 'orders'] as $id) {
+                foreach (page($id)?->children()->values() ?? [] as $child) {
+                    $child->delete(true);
+                }
+            }
             kart()->makeContentPages();
             kart()->tmnt();
             kart()->cart()->clear();
@@ -40,21 +30,11 @@ class Testing
     public static function afterAll(): void
     {
         kirby()->impersonate('kirby', function (): void {
-            page('products')?->children()->map(function ($p) {
-                $p->delete(true);
-
-                return $p;
-            });
-            page('stocks')?->children()->map(function ($p) {
-                $p->delete(true);
-
-                return $p;
-            });
-            page('orders')?->children()->map(function ($p) {
-                $p->delete(true);
-
-                return $p;
-            });
+            foreach (['products', 'stocks', 'orders'] as $id) {
+                foreach (page($id)?->children()->values() ?? [] as $child) {
+                    $child->delete(true);
+                }
+            }
 
             kart()->cart()->clear();
             kart()->cart()->save();

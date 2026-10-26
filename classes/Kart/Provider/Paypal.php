@@ -198,7 +198,7 @@ class Paypal extends Provider
                                 'currency_code' => $currency,
                                 'value' => $this->moneyValue($l->price()),
                             ],
-                            'image_url' => A::get($l->product()?->raw()->yaml(), 'image_url', $l->product()?->firstGalleryImageUrl()),
+                            'image_url' => A::get($l->product()?->raw()->yaml() ?? [], 'image_url', $l->product()?->firstGalleryImageUrl()),
                             'url' => $l->product()?->url(),
                             'quantity' => strval($l->quantity()),
                         ], $lineItem($this->kart, $l)))),

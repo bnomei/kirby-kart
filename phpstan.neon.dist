@@ -6,6 +6,8 @@ parameters:
     excludePaths:
         - classes/Kart/License.php
         - tests
+    stubFiles:
+        - tests/KirbyBlocks.stub
 
     ignoreErrors:
         - '#Call to an undefined method Kirby\\Cms\\File::#'
@@ -15,9 +17,7 @@ parameters:
         - '#Call to an undefined method Kirby\\Cms\\StructureObject::#'
         - '#Call to an undefined method Kirby\\Cms\\User::#'
         - '#Call to an undefined method Kirby\\Content\\Field::#'
-        - '#Call to an undefined method Kirby\\Session\\Session::#'
         - '#Call to an undefined static method Kirby\\Http\\Remote::#'
-        - '#Call to an undefined static method Kirby\\Toolkit\\V::#'
         - '#Cannot call method license\(\) on Kirby\\Plugin\\Plugin\|null#'
         - '#Undefined variable: \$this#'
         - '/Parameter #1 \$value of function intval expects/'

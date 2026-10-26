@@ -494,9 +494,11 @@ abstract class Provider
         }
         $u = $this->cache()->get($u);
 
-        return $u
+        $formatted = $u
             ? (new Field(null, 'updatedAt', $u))->toDate(kart()->dateFormat())
             : '?';
+
+        return is_string($formatted) ? $formatted : '?';
     }
 
     public function findImagesFromUrls(string|array $urls): array

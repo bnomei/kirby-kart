@@ -16,7 +16,7 @@ fields:
   page:
     label: bnomei.kart.product
     type: pages
-    query: site.kart.page("products")
+    query: 'site.kart.page("products")'
     info: '{{ page.formattedPrice }}{{ page.featured.ecco(" ★") }}{{ page.variants.ecco(" ❖") }}'
     multiple: false
     subpages: false

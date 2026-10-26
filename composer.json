@@ -60,13 +60,13 @@
     }
   },
   "require": {
-    "php": ">=8.2",
+    "php": ">=8.3",
     "getkirby/composer-installer": "^1.1",
     "ext-intl": "*",
     "s1syphos/php-simple-captcha": "^2.3"
   },
   "require-dev": {
-    "getkirby/cms": "^5.1.0-rc.1",
+    "getkirby/cms": "6.0.0-beta.1",
     "larastan/larastan": "^v3.0.0",
     "laravel/pint": "^1.13",
     "pestphp/pest": "^v3.5.1",
@@ -78,8 +78,8 @@
   "scripts": {
     "stan": "./vendor/bin/phpstan analyse --memory-limit=1G",
     "fix": "./vendor/bin/pint",
-    "testBefore": "env KIRBY_HOST=frankenphp.kart.orb.local vendor/bin/kirby testing:beforeAll",
-    "testAfter": "env KIRBY_HOST=frankenphp.kart.orb.local vendor/bin/kirby testing:afterAll",
+    "testBefore": "env KIRBY_HOST=kart.test php -r 'require \"tests/index.php\"; Testing::beforeAll();'",
+    "testAfter": "env KIRBY_HOST=kart.test php -r 'require \"tests/index.php\"; Testing::afterAll();'",
     "test": "./vendor/bin/pest --profile",
     "rector": "./vendor/bin/rector",
     "dist": [
@@ -92,9 +92,6 @@
     ],
     "kirby": [
       "composer install",
-      "composer update",
-      "composer install --working-dir=tests/kirby --no-dev --optimize-autoloader",
-      "composer update --working-dir=tests/kirby",
       "sed -i.bak 's/function dump(/function xdump(/g' tests/kirby/config/helpers.php",
       "sed -i.bak 's/function e(/function xe(/g' tests/kirby/config/helpers.php"
     ]

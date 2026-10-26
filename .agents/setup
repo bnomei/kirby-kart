@@ -1,0 +1,29 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# PHP 8.4 matches CI; Debian 12's default PHP is too old for Kirby 6.
+packages=(php8.4-cli php8.4-intl php8.4-mbstring php8.4-xml php8.4-curl php8.4-zip php8.4-gd)
+missing=()
+for package in "${packages[@]}"; do
+    dpkg-query -W -f='${Status}' "$package" 2>/dev/null | grep -q 'install ok installed' || missing+=("$package")
+done
+if ((${#missing[@]})); then
+    keyring=$(mktemp --suffix=.deb)
+    curl -fsSL https://packages.sury.org/debsuryorg-archive-keyring.deb -o "$keyring"
+    sudo dpkg -i "$keyring"
+    rm "$keyring"
+    echo 'deb [signed-by=/usr/share/keyrings/debsuryorg-archive-keyring.gpg] https://packages.sury.org/php/ bookworm main' | sudo tee /etc/apt/sources.list.d/php.list >/dev/null
+    sudo apt-get update -qq
+    sudo env DEBIAN_FRONTEND=noninteractive apt-get install -y "${missing[@]}"
+fi
+
+if [[ ! -x /usr/local/bin/composer ]]; then
+    installer=$(mktemp)
+    curl -fsSL https://getcomposer.org/installer -o "$installer"
+    expected=$(curl -fsSL https://composer.github.io/installer.sig)
+    echo "$expected  $installer" | sha384sum --check
+    sudo php "$installer" --install-dir=/usr/local/bin --filename=composer
+    rm "$installer"
+fi
+
+composer kirby --no-interaction

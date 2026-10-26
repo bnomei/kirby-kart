@@ -33,7 +33,7 @@ it('has a price', function (): void {
     $p = page('products')->children()->first();
 
     expect($p->price()->toInt())->toBe(15)
-        ->and($p->rrprice()->value())->toBe('')
+        ->and($p->rrprice()->isEmpty())->toBeTrue()
         ->and($p->rrpp())->toBe(0.0)
         ->and($p->formattedPrice())->toBe('€15.00');
 });

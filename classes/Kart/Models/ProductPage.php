@@ -688,7 +688,7 @@ class ProductPage extends Page implements Kerbs
     private static function productJsonLdText(Field $field): string
     {
         return trim(html_entity_decode(
-            strip_tags($field->kirbytext()->value()),
+            strip_tags($field->kirbytext()->toString()),
             ENT_QUOTES | ENT_HTML5,
             'UTF-8',
         ));

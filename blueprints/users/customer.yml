@@ -1,5 +1,5 @@
 name: customer
-title: Kart Customer
+title: 'Kart Customer'
 icon: cart
 permissions:
   access:

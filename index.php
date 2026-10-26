@@ -13,6 +13,9 @@ use Bnomei\Kart\CaptchaBuilder;
 use Bnomei\Kart\Cart;
 use Bnomei\Kart\CartLine;
 use Bnomei\Kart\Category;
+use Bnomei\Kart\Fields\AllCategoriesField;
+use Bnomei\Kart\Fields\AllTagsField;
+use Bnomei\Kart\Fields\AllVariantsField;
 use Bnomei\Kart\Kart;
 use Bnomei\Kart\License;
 use Bnomei\Kart\MagicLinkChallenge;
@@ -710,7 +713,7 @@ App::plugin(
                 kart()->wishlist()->merge($user);
                 kart()->wishlist()->save();
             },
-            'user.logout:after' => function (User $user, Session $session) {
+            'user.logout:after' => function (User $user, ?Session $session) {
                 kart()->cart()->releaseStock();
                 kart()->cart()->clear();
                 kart()->cart()->save(false);
@@ -883,7 +886,7 @@ App::plugin(
                             'columns' => $layout->columns()->values(function (LayoutColumn $column) {
                                 return [
                                     'span' => $column->span(),
-                                    'blocks' => $column->blocks()->toKerbs(), // @phpstan-ignore-line
+                                    'blocks' => $column->blocks()->toKerbs(),
                                 ];
                             }),
                         ];
@@ -1244,44 +1247,17 @@ App::plugin(
             'sendMagicLink' => function (?string $success_url = null): void {
                 /** @var User $user */
                 $user = $this;
-                $code = MagicLinkChallenge::create($user, [
-                    'mode' => 'login',
-                    'timeout' => 10 * 60,
+                (new MagicLinkChallenge($user, 'login', 10 * 60, [
                     'email' => $user->email(),
                     'name' => $user->nameOrEmail(),
                     'success_url' => $success_url ?? url('/'),
-                ]);
-                if ($code) {
-                    kirby()->session()->set('kirby.challenge.type', 'login');
-                    kirby()->session()->set('kirby.challenge.code', password_hash($code, PASSWORD_DEFAULT));
-                }
+                ]))->start();
             },
         ],
         'fields' => [
-            'allcategories' => [
-                'extends' => 'tags',
-                'props' => [
-                    'value' => function () {
-                        return kart()->allCategories();
-                    },
-                ],
-            ],
-            'alltags' => [
-                'extends' => 'tags',
-                'props' => [
-                    'value' => function () {
-                        return kart()->allTags();
-                    },
-                ],
-            ],
-            'allvariants' => [
-                'extends' => 'tags',
-                'props' => [
-                    'value' => function () {
-                        return kart()->allVariants();
-                    },
-                ],
-            ],
+            'allcategories' => AllCategoriesField::class,
+            'alltags' => AllTagsField::class,
+            'allvariants' => AllVariantsField::class,
         ],
         'commands' => [
             'kart:blueprints-publish' => [

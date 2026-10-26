@@ -25,17 +25,17 @@ tabs:
         label: bnomei.kart.summary
         type: stats
         reports:
-          - 
+          -
             label: bnomei.kart.products
             value: '{{ page.children.count }}'
-          - 
+          -
             label: bnomei.kart.out-of-stock
             value: '{{ page.outOfStock.count }}'
             link: '{{ site.kart.page("stocks")?.panel.url }}'
-          - 
+          -
             label: bnomei.kart.provider
             value: '{{ site.kart.provider.title }}'
-          - 
+          -
             label: bnomei.kart.last-sync
             value: '{{ site.kart.provider.updatedAt("products") }}'
       meta:
@@ -70,10 +70,10 @@ tabs:
         info: '{{ page.formattedPrice }} [{{ page.stockWithVariants }}]{{ page.inStock ? "" : " ⚠️" }}{{ page.featured.ecco(" ★") }}{{ page.variants.ecco(" ❖") }}{{ page.downloads.ecco(" ↓") }}'
         image:
           cover: true
-          query: page.gallery.first.toFile
+          query: page.gallery.toFiles.first
         limit: 1000
         sortable: false
-        sortBy: title asc
+        sortBy: 'title asc'
   files:
     sections:
       files:
@@ -85,4 +85,4 @@ tabs:
         limit: 1000
         search: true
         sortable: false
-        sortBy: filename asc
+        sortBy: 'filename asc'

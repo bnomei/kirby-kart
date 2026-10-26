@@ -19,17 +19,17 @@ sections:
     label: bnomei.kart.summary
     type: stats
     reports:
-      - 
+      -
         label: bnomei.kart.latest-order
         value: '#{{ page.children.sortBy("paidDate", "desc").first.invoiceNumber }} ・ {{ page.children.sortBy("paidDate", "desc").first.customer.toUser.email }}'
         info: '{{ page.children.sortBy("paidDate", "desc").first.paidDate.toDate(site.kart.dateformat) }}'
         link: '{{ page.children.sortBy("paidDate", "desc").first.panel.url }}'
-      - 
+      -
         label: bnomei.kart.revenue-30
         value: '{{ page.children.filterBy("paymentComplete", true).trend("paidDate", "total").toFormattedCurrency }}'
         info: '{{ page.children.filterBy("paymentComplete", true).trendPercent("paidDate", "total").toFormattedNumber(true) }}%'
         theme: '{{ page.children.filterBy("paymentComplete", true).trendTheme("paidDate", "total") }}'
-      - 
+      -
         label: bnomei.kart.orders-30
         value: '{{ page.children.interval("paidDate", "-30 days", "now").count }}'
         info: '{{ page.children.interval("paidDate", "-60 days", "-31 days").count }}'
@@ -51,7 +51,7 @@ sections:
     type: pages
     search: true
     template: order
-    sortBy: invnumber desc
+    sortBy: 'invnumber desc'
     text: '[#{{ page.invoiceNumber }}] {{ page.customer.toUser.email }} ・ {{ page.formattedTotal }}'
     info: '{{ page.title }} ・ {{ page.paidDate.toDate(site.kart.dateformat) }}'
     limit: 1000

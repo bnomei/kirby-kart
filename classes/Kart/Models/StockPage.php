@@ -150,12 +150,18 @@ class StockPage extends Page
 
     public function timestampOrModified(): Field
     {
+        $timestamp = $this->timestamp()->toDate();
+        $modified = $this->modified();
+
         return new Field(
             $this,
             'timestampOrModified',
             date(
                 'Y-m-d H:i:s',
-                max($this->timestamp()->toDate(), $this->modified()),
+                max(
+                    is_int($timestamp) ? $timestamp : 0,
+                    is_int($modified) ? $modified : 0,
+                ),
             ),
         );
     }

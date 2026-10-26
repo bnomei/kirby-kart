@@ -79,7 +79,7 @@ class Paddle extends Provider
                 'currency_code' => $this->kart->currency(),
                 'items' => array_merge($lines, $this->kart->cart()->lines()->values(function (CartLine $l) use ($lineItem) {
                     $price_id = null;
-                    foreach (A::get($l->product()?->raw()->yaml(), 'prices', []) as $price) {
+                    foreach (A::get($l->product()?->raw()->yaml() ?? [], 'prices', []) as $price) {
                         if (A::get($price, 'status') !== 'active') {
                             continue;
                         }

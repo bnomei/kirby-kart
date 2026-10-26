@@ -109,7 +109,7 @@ class ProductsPage extends Page
                             'info' => '{{ page.formattedPrice }} [{{ page.stockWithVariants }}]{{ page.inStock ? "" : " ⚠️" }}{{ page.featured.ecco(" ★") }}{{ page.variants.ecco(" ❖") }}{{ page.downloads.ecco(" ↓") }}',
                             'image' => [
                                 'cover' => true,
-                                'query' => 'page.gallery.first.toFile',
+                                'query' => 'page.gallery.toFiles.first',
                             ],
                             'limit' => 1000,
                             'sortable' => false,

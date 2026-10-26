@@ -1,0 +1,12 @@
+<?php
+
+namespace Kirby\Cms;
+
+/**
+ * Kart registers this collection method through blocksMethods in index.php.
+ *
+ * @method array<int, array{id: string, type: string, html: string}> toKerbs()
+ */
+class Blocks
+{
+}

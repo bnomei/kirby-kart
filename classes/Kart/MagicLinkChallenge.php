@@ -10,30 +10,58 @@
 
 namespace Bnomei\Kart;
 
-use Kirby\Cms\Auth\Challenge;
+use Kirby\Auth\Challenge\EmailChallenge;
 use Kirby\Cms\User;
+use Kirby\Exception\PermissionException;
 use Kirby\Toolkit\I18n;
 use Kirby\Toolkit\Str;
 
-class MagicLinkChallenge extends Challenge
+class MagicLinkChallenge extends EmailChallenge
 {
-    public static function isAvailable(User $user, string $mode): bool
+    public function __construct(User $user, string $mode, int $timeout, private ?array $options = null)
     {
-        return true;
+        parent::__construct($user, $mode, $timeout);
     }
 
-    public static function create(User $user, array $options): ?string
+    public function type(): string
     {
-        $code = Str::random(6, 'num');
-        if (! $code) {
-            return null;
+        return 'kart-magic-link';
+    }
+
+    public function start(): void
+    {
+        if (Router::hasMagicLink() !== null) {
+            throw new PermissionException(message: 'Enable kart-magic-link in auth.challenges');
         }
 
-        // insert a space in the middle for easier readability
-        $formatted = substr($code, 0, 3).' '.substr($code, 3, 3);
+        $this->kirby->auth()->limits()->ensure($this->user->email());
+        $this->kirby->auth()->limits()->track($this->user->email(), triggerHook: false);
+        $session = $this->kirby->session();
+        $this->kirby->auth()->challenges()->clear($session);
+        $pending = $this->create();
+        $session->set('kirby.challenge.type', $this->type());
+        $session->set('kirby.challenge.mode', $this->mode());
+        $session->set('kirby.challenge.email', $this->user->email());
+        $session->set('kirby.challenge.timeout', time() + $this->timeout());
+        $session->set('kirby.challenge.data', $pending->toArray());
+    }
+
+    protected function send(string $code): void
+    {
+        // Kirby's Panel uses the inherited code form, including for 2FA.
+        if ($this->options === null) {
+            parent::send($code);
+
+            return;
+        }
+
+        $formatted = $code;
+        $code = str_replace(' ', '', $code);
+        $options = $this->options;
+        $user = $this->user;
 
         // use the login templates for 2FA
-        $mode = $options['mode'];
+        $mode = $this->mode;
         if ($mode === '2fa') {
             $mode = 'login';
         }
@@ -70,7 +98,7 @@ class MagicLinkChallenge extends Challenge
             'link' => $link,
             'preview' => t('login.code.label.login'),
             'formatted' => $formatted,
-            'timeout' => round($options['timeout'] / 60),
+            'timeout' => round($this->timeout / 60),
         ];
         $from = 'noreply@'.($kirby->url('index', true)->domain() ?? 'localhost');
         $kirby->email([
@@ -87,6 +115,5 @@ class MagicLinkChallenge extends Challenge
             ],
         ]);
 
-        return $code;
     }
 }

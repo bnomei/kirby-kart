@@ -11,6 +11,23 @@
 
 Streamlined E-Commerce Shopping Cart Solution
 
+## Kirby 6 testing branch
+
+This branch targets Kirby **6.0.0-beta.1** and requires PHP 8.3 or newer. It is not a production release.
+Run `composer kirby`, `composer testBefore`, then `KIRBY_HOST=kart.test composer test` to test the turtle fixtures.
+Run `composer testAfter` to remove the generated fixtures.
+
+Enable Kart magic links in your site's `auth.challenges` option, not `auth.methods`:
+
+```php
+'auth' => [
+    'challenges' => ['webauthn', 'totp', 'email', 'kart-magic-link'],
+],
+```
+
+Kart's frontend routes send signed login links. When selected through Kirby's Panel authentication,
+the challenge uses Kirby's email-code form and sends a code instead; it preserves Kirby's second-factor rules.
+
 ## Installation
 
 - unzip [master.zip](https://github.com/bnomei/kirby-kart/archive/master.zip) as folder `site/plugins/kirby-kart` or

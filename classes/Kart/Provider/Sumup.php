@@ -62,10 +62,11 @@ class Sumup extends Provider
         }
 
         $checkout_id = A::get($remote->json(), 'id');
+        $customer = $this->kirby->session()->get('bnomei.kart.'.$this->name.'.customer', []);
 
         $this->kirby->session()->set('bnomei.kart.'.$this->name.'.cart_hash', $this->kart->cart()->hash());
         $this->kirby->session()->set('bnomei.kart.'.$this->name.'.customer', array_merge(
-            kirby()->session()->get('bnomei.kart.'.$this->name.'.customer', []),
+            is_array($customer) ? $customer : [],
             array_filter([
                 'email' => Router::get('email'),
                 'name' => Router::get('name'),
@@ -88,6 +89,10 @@ class Sumup extends Provider
         }
 
         $checkoutId = $this->kirby->session()->get('bnomei.kart.'.$this->name.'.checkout_id');
+        if (! is_string($checkoutId) || $checkoutId === '') {
+            return [];
+        }
+
         $customer = (array) Kart::sanitize($this->kirby->session()->get('bnomei.kart.'.$this->name.'.customer', []));
 
         // https://developer.sumup.com/api/checkouts/get

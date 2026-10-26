@@ -112,10 +112,6 @@ it('honors the max amount of product per order (global and in product)', functio
         ->and($this->cartLine->product()->maxAmountPerOrder())->toBe(15);
     $this->cartLine->setQuantity(20);
     expect($this->cartLine->quantity())->toBe(15);
-
-    // https://github.com/laravel/framework/issues/49502
-    restore_error_handler();
-    restore_exception_handler();
 });
 
 it('can export to kerbs', function (): void {

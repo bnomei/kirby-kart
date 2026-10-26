@@ -1,5 +1,5 @@
 name: deleted
-title: Soft Deleted User
+title: 'Soft Deleted User'
 icon: cancel
 permissions:
   access: false

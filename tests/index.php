@@ -10,6 +10,11 @@ require __DIR__.'/../vendor/autoload.php';
 require __DIR__.'/load-env.php';
 require __DIR__.'/Testing.php';
 
+// Let PHPUnit own error handling, including during Kirby model operations.
+if (PHP_SAPI === 'cli') {
+    App::$enableWhoops = false;
+}
+
 $host = $_SERVER['HTTP_HOST'] ?? getenv('KIRBY_HOST') ?: 'frankenphp.kart.orb.local';
 $_SERVER['SERVER_NAME'] = explode(':', strval($host))[0]; // k->env->isLocal()
 $_SERVER['HTTP_HOST'] ??= $_SERVER['SERVER_NAME'];

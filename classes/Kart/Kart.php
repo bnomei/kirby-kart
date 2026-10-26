@@ -464,9 +464,11 @@ class Kart implements Kerbs
         string $channel = 'default',
     ): ?string {
         if ($message === null) {
-            return $this->kirby()
+            $storedMessage = $this->kirby()
                 ->session()
                 ->pull('bnomei.kart.message-'.$channel);
+
+            return is_string($storedMessage) ? $storedMessage : null;
         }
 
         $this->kirby()
@@ -1250,7 +1252,9 @@ class Kart implements Kerbs
      */
     public function checkoutFormData(): array
     {
-        return kirby()->session()->get('bnomei.kart.checkout_form_data', []);
+        $data = kirby()->session()->get('bnomei.kart.checkout_form_data', []);
+
+        return is_array($data) ? $data : [];
     }
 
     protected ?array $kerbs = null;

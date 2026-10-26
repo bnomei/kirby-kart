@@ -36,7 +36,7 @@ jobs:
         run: composer kirby
 
       - name: Prepare content
-        run: env KIRBY_HOST=kart.test vendor/bin/kirby testing:beforeAll
+        run: composer testBefore
 
       - name: Test code
-        run: vendor/bin/pest --ci
+        run: env KIRBY_HOST=kart.test vendor/bin/pest --ci

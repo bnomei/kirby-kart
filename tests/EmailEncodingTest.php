@@ -51,7 +51,8 @@ it('preserves and escapes email query values in authentication forms', function 
     try {
         $html = snippet($snippet, ['page' => site()], true);
         $dom = new DOMDocument;
-        @$dom->loadHTML($html);
+        // Parse HTML5 snippets with libxml's HTML4 parser without its syntax warnings.
+        $dom->loadHTML($html, LIBXML_NOERROR | LIBXML_NOWARNING);
         $xpath = new DOMXPath($dom);
         $input = $xpath->query('//input[@name="email"]')->item(0);
 
