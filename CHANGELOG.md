@@ -1,5 +1,19 @@
 # Changelog
 
+## 6.0.0 — Unreleased
+
+### Changed
+
+- Target Kirby 6 (currently tested with 6.0.0-beta.1) and PHP 8.3 or newer.
+- Migrate magic-link challenges to Kirby's instance-based authentication API and computed Panel fields to field classes.
+- Continue accepting `kart-magic-link` in `auth.methods` for standalone frontend login/signup; also accept `auth.challenges`. No configuration move is required, and the compatibility method adds no Panel login option.
+- Keep frontend magic links independent of Panel second-factor requirements.
+
+### Fixed
+
+- Resolve product gallery thumbnails in gallery order and accept nullable sessions in logout hooks.
+- Update runtime type contracts, repeatable test-fixture preparation, and generated blueprints for Kirby 6.
+
 ## 5.17.1 - 2026-10-25
 
 ### Fixed

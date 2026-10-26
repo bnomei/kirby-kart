@@ -1,7 +1,7 @@
 # Kirby Kart
 
-[![Kirby 5](https://flat.badgen.net/badge/Kirby/5?color=ECC748)](https://getkirby.com)
-![PHP 8.2](https://flat.badgen.net/badge/PHP/8.2?color=4E5B93&icon=php&label)
+[![Kirby 6](https://flat.badgen.net/badge/Kirby/6?color=ECC748)](https://getkirby.com)
+![PHP 8.3](https://flat.badgen.net/badge/PHP/8.3?color=4E5B93&icon=php&label)
 ![Release](https://flat.badgen.net/packagist/v/bnomei/kirby-kart?color=ae81ff&icon=github&label)
 ![Downloads](https://flat.badgen.net/packagist/dt/bnomei/kirby-kart?color=272822&icon=github&label)
 ![Unittests](https://github.com/bnomei/kirby-kart/actions/workflows/pest-tests.yml/badge.svg)
@@ -13,26 +13,31 @@ Streamlined E-Commerce Shopping Cart Solution
 
 ## Kirby 6 testing branch
 
-This branch targets Kirby **6.0.0-beta.1** and requires PHP 8.3 or newer. It is not a production release.
+This branch prepares Kart **6.0.0** (unreleased), targets Kirby **6.0.0-beta.1**, and requires PHP 8.3 or newer. The plugin version and Kirby's beta dependency pin are separate. It is not a production release.
 Run `composer kirby`, `composer testBefore`, then `KIRBY_HOST=kart.test composer test` to test the turtle fixtures.
 Run `composer testAfter` to remove the generated fixtures.
 
-Enable Kart magic links in your site's `auth.challenges` option, not `auth.methods`:
+Existing `kart-magic-link` entries in `auth.methods` continue to enable frontend login/signup, in both list and map configurations. No configuration migration is required:
 
 ```php
 'auth' => [
-    'challenges' => ['webauthn', 'totp', 'email', 'kart-magic-link'],
+    'methods' => ['password', 'kart-magic-link'],
 ],
 ```
 
-Kart's frontend routes send signed login links. When selected through Kirby's Panel authentication,
-the challenge uses Kirby's email-code form and sends a code instead; it preserves Kirby's second-factor rules.
+Alternatively, include `kart-magic-link` in `auth.challenges`. Either option enables the frontend endpoints; omitting it from both disables them. The method flag adds no Panel login option.
+
+Kart's frontend routes send signed standalone login links, independent of Panel second-factor requirements. Registering the challenge in `auth.challenges` also makes it available to Kirby's native authentication flows, where it uses Kirby's email-code form and second-factor rules.
 
 ## Installation
 
-- unzip [master.zip](https://github.com/bnomei/kirby-kart/archive/master.zip) as folder `site/plugins/kirby-kart` or
-- `git submodule add https://github.com/bnomei/kirby-kart.git site/plugins/kirby-kart` or
-- `composer require bnomei/kirby-kart`
+For testing before publication:
+
+- unzip [kirby-6.zip](https://github.com/bnomei/kirby-kart/archive/refs/heads/kirby-6.zip) as folder `site/plugins/kirby-kart` or
+- `git submodule add -b kirby-6 https://github.com/bnomei/kirby-kart.git site/plugins/kirby-kart` or
+- `composer require bnomei/kirby-kart:dev-kirby-6` (Composer's branch selector, not the plugin version).
+
+After 6.0.0 is published, use `composer require bnomei/kirby-kart:^6.0`. Kirby 5 sites should stay on Kart 5.x.
 
 ## Licensing
 
@@ -42,7 +47,7 @@ can [purchase a license here](https://buy-kart.bnomei.com).
 
 ## Quickstart
 
-1. ⬇️ Download the ZIP or, for easier updates later on, use `composer require bnomei/kirby-kart`.
+1. ⬇️ Install the Kirby 6 testing branch using one of the methods above.
 2. 🏎️ Access the `/kart`-route on your local setup to initialize Kart and start the demo.
 3. 🪞 Copy the snippets and templates from the plugin into your project `site`-folder.
 4. 🎨 Modify the copied snippets and templates to match your projects style and site structure.

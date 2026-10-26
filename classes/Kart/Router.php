@@ -383,7 +383,9 @@ class Router
 
     public static function hasMagicLink(): ?int
     {
-        if (! in_array('kart-magic-link', kirby()->auth()->challenges()->enabled(), true)) {
+        $auth = kirby()->auth();
+        if (! array_key_exists('kart-magic-link', $auth->methods()->config()) &&
+            ! in_array('kart-magic-link', $auth->challenges()->enabled(), true)) {
             return 405;
         }
 

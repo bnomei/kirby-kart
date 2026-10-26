@@ -31,7 +31,7 @@ class MagicLinkChallenge extends EmailChallenge
     public function start(): void
     {
         if (Router::hasMagicLink() !== null) {
-            throw new PermissionException(message: 'Enable kart-magic-link in auth.challenges');
+            throw new PermissionException(message: 'Enable kart-magic-link in auth.methods or auth.challenges');
         }
 
         $this->kirby->auth()->limits()->ensure($this->user->email());

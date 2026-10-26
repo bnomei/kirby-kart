@@ -19,6 +19,7 @@ use Bnomei\Kart\Fields\AllVariantsField;
 use Bnomei\Kart\Kart;
 use Bnomei\Kart\License;
 use Bnomei\Kart\MagicLinkChallenge;
+use Bnomei\Kart\MagicLinkMethod;
 use Bnomei\Kart\Models\CustomerUser;
 use Bnomei\Kart\Models\DeletedUser;
 use Bnomei\Kart\Models\OrderPage;
@@ -654,6 +655,9 @@ App::plugin(
         ],
         'authChallenges' => [
             'kart-magic-link' => MagicLinkChallenge::class,
+        ],
+        'authMethods' => [
+            'kart-magic-link' => MagicLinkMethod::class,
         ],
         'translations' => [
             'da' => require_once __DIR__.'/translations/da.php',

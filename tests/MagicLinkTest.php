@@ -14,6 +14,14 @@ beforeEach(function (): void {
     $this->loginLog = is_file($this->loginLogFile) ? file_get_contents($this->loginLogFile) : null;
     F::remove($this->loginLogFile);
     $this->request = kirby()->request();
+    $this->kirbyOptions = (new ReflectionProperty(kirby(), 'options'))->getValue(kirby());
+    $this->configureAuth = function (array $methods, array $challenges): void {
+        $options = $this->kirbyOptions;
+        $options['auth']['methods'] = $methods;
+        $options['auth']['challenges'] = $challenges;
+        (new ReflectionProperty(kirby(), 'options'))->setValue(kirby(), $options);
+        (new ReflectionProperty(kirby(), 'auth'))->setValue(kirby(), null);
+    };
     $this->emailDebug = Email::$debug;
     $this->emails = Email::$emails;
     Email::$debug = true;
@@ -50,6 +58,8 @@ afterEach(function (): void {
         kirby()->impersonate('kirby', fn () => $user->delete());
     }
     (new ReflectionProperty(kirby(), 'request'))->setValue(kirby(), $this->request);
+    (new ReflectionProperty(kirby(), 'options'))->setValue(kirby(), $this->kirbyOptions);
+    (new ReflectionProperty(kirby(), 'auth'))->setValue(kirby(), null);
     Email::$debug = $this->emailDebug;
     Email::$emails = $this->emails;
     foreach ($this->kartOptions as $key => $value) {
@@ -57,7 +67,11 @@ afterEach(function (): void {
     }
 });
 
-it('consumes magic links once for login, signup and the user method', function (string $flow): void {
+it('consumes magic links once for login, signup and the user method', function (string $flow, array $methods, array $challenges): void {
+    ($this->configureAuth)($methods, $challenges);
+    expect(kirby()->auth()->methods()->enabled())->toHaveKey('password')
+        ->not->toHaveKey('kart-magic-link');
+
     if ($flow !== 'signup') {
         $user = kirby()->impersonate('kirby', fn () => kirby()->users()->create([
             'email' => $this->email,
@@ -88,7 +102,26 @@ it('consumes magic links once for login, signup and the user method', function (
     kirby()->auth()->logout();
     ($this->callRoute)(Router::MAGIC_LINK, 'GET', $query);
     expect(kirby()->user())->toBeNull();
-})->with(['login', 'signup', 'method']);
+})->with(['login', 'signup', 'method'])->with([
+    'method list' => [['password', 'kart-magic-link'], ['email']],
+    'method map' => [['password' => [], 'kart-magic-link' => []], ['email']],
+    'challenge only' => [['password'], ['email', 'kart-magic-link']],
+    'both' => [['password', 'kart-magic-link'], ['email', 'kart-magic-link']],
+    'standalone with Panel 2FA' => [['password' => ['2fa' => true], 'kart-magic-link' => true], ['totp']],
+]);
+
+it('disables frontend endpoints when neither auth option contains the flag', function (): void {
+    ($this->configureAuth)(['password'], ['email']);
+    foreach ([Router::SIGNUP_MAGIC, Router::MAGIC_LINK] as $pattern) {
+        foreach (['GET', 'POST'] as $method) {
+            $response = ($this->callRoute)($pattern, $method, ['email' => $this->email]);
+            expect($response->code())->toBe(405);
+        }
+    }
+    expect(Email::$emails)->toBe([])
+        ->and(kirby()->user($this->email))->toBeNull()
+        ->and(kirby()->auth()->methods()->enabled())->toHaveKey('password');
+});
 
 it('rejects invalid signup links before creating an account', function (string $failure): void {
     ($this->callRoute)(Router::SIGNUP_MAGIC, 'POST', ['email' => $this->email, 'name' => 'Magic Customer']);

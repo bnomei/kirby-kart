@@ -192,6 +192,7 @@ return function (App $kirby) {
             'method' => 'GET',
             'action' => function () {
                 if ($r = Router::denied([
+                    Router::class.'::hasMagicLink',
                     Router::class.'::hasBlacklist',
                     Router::class.'::hasRatelimit',
                 ], exclusive: true)) {
@@ -214,6 +215,7 @@ return function (App $kirby) {
             'method' => 'POST',
             'action' => function () {
                 if ($r = Router::denied([
+                    Router::class.'::hasMagicLink',
                     Router::class.'::hasCaptcha',
                     Router::class.'::hasTurnstile',
                 ])) {
@@ -255,6 +257,7 @@ return function (App $kirby) {
             'method' => 'POST',
             'action' => function () {
                 if ($r = Router::denied([
+                    Router::class.'::hasMagicLink',
                     Router::class.'::hasCaptcha',
                     Router::class.'::hasTurnstile',
                 ])) {

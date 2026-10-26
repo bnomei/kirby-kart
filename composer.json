@@ -1,7 +1,7 @@
 {
   "name": "bnomei/kirby-kart",
   "type": "kirby-plugin",
-  "version": "5.17.1",
+  "version": "6.0.0",
   "description": "Streamlined E-Commerce Shopping Cart Solution",
   "license": "proprietary",
   "authors": [
@@ -23,7 +23,7 @@
     "invoice",
     "invoice-ninja",
     "kirby",
-    "kirby5",
+    "kirby6",
     "kirby-cms",
     "kirby-plugin",
     "lemonsqueezy",
