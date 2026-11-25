@@ -11,11 +11,13 @@
 
 Streamlined E-Commerce Shopping Cart Solution
 
-## Kirby 6 testing branch
+## Kirby 6 compatibility
 
-This branch prepares Kart **6.0.0** (unreleased), targets Kirby **6.0.0-beta.1**, and requires PHP 8.3 or newer. The plugin version and Kirby's beta dependency pin are separate. It is not a production release.
-Run `composer kirby`, `composer testBefore`, then `KIRBY_HOST=kart.test composer test` to test the turtle fixtures.
-Run `composer testAfter` to remove the generated fixtures.
+Kart **6.0.0** supports Kirby 6 and requires PHP 8.3 or newer. Kirby 5 sites should stay on Kart 5.x.
+
+Use a disposable checkout: `composer testBefore` replaces product, stock and order fixtures. Run `composer kirby`, `composer testBefore`, then `KIRBY_HOST=kart.test composer test` for the PHP suite.
+
+In an Amp orb, run `composer testBefore && tests/panel-smoke.sh` for the Chromium check. It starts a loopback-only Panel, signs in with a temporary admin, checks catalog chips and gallery order, edits a price, verifies the stored price after reload, and opens Stocks and Orders. It removes its account and product and stops the server on exit. Run `composer testAfter` to remove the seeded catalog.
 
 Existing `kart-magic-link` entries in `auth.methods` continue to enable frontend login/signup, in both list and map configurations. No configuration migration is required:
 
@@ -31,13 +33,9 @@ Kart's frontend routes send signed standalone login links, independent of Panel 
 
 ## Installation
 
-For testing before publication:
-
-- unzip [kirby-6.zip](https://github.com/bnomei/kirby-kart/archive/refs/heads/kirby-6.zip) as folder `site/plugins/kirby-kart` or
-- `git submodule add -b kirby-6 https://github.com/bnomei/kirby-kart.git site/plugins/kirby-kart` or
-- `composer require bnomei/kirby-kart:dev-kirby-6` (Composer's branch selector, not the plugin version).
-
-After 6.0.0 is published, use `composer require bnomei/kirby-kart:^6.0`. Kirby 5 sites should stay on Kart 5.x.
+- Composer: `composer require bnomei/kirby-kart:^6.0`
+- ZIP: unpack the [v6.0.0 release](https://github.com/bnomei/kirby-kart/archive/refs/tags/v6.0.0.zip) into `site/plugins/kirby-kart`.
+- Git submodule: `git submodule add https://github.com/bnomei/kirby-kart.git site/plugins/kirby-kart`, then `git -C site/plugins/kirby-kart checkout v6.0.0`.
 
 ## Licensing
 
@@ -47,7 +45,7 @@ can [purchase a license here](https://buy-kart.bnomei.com).
 
 ## Quickstart
 
-1. ⬇️ Install the Kirby 6 testing branch using one of the methods above.
+1. ⬇️ Install Kart using one of the methods above.
 2. 🏎️ Access the `/kart`-route on your local setup to initialize Kart and start the demo.
 3. 🪞 Copy the snippets and templates from the plugin into your project `site`-folder.
 4. 🎨 Modify the copied snippets and templates to match your projects style and site structure.

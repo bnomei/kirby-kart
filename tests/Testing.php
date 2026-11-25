@@ -14,6 +14,15 @@ class Testing
     public static function beforeAll(): void
     {
         kirby()->impersonate('kirby', function (): void {
+            // Kirby requires the first account on an installation to be an admin.
+            if (kirby()->users()->isEmpty()) {
+                kirby()->users()->create([
+                    'email' => 'fixture-admin@example.test',
+                    'role' => 'admin',
+                    'password' => bin2hex(random_bytes(32)),
+                ]);
+            }
+
             foreach (['products', 'stocks', 'orders'] as $id) {
                 foreach (page($id)?->children()->values() ?? [] as $child) {
                     $child->delete(true);

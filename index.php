@@ -654,10 +654,10 @@ App::plugin(
             'seo/schemas' => __DIR__.'/snippets/seo/schemas.php',
         ],
         'authChallenges' => [
-            'kart-magic-link' => MagicLinkChallenge::class,
+            MagicLinkChallenge::TYPE => MagicLinkChallenge::class,
         ],
         'authMethods' => [
-            'kart-magic-link' => MagicLinkMethod::class,
+            MagicLinkChallenge::TYPE => MagicLinkMethod::class,
         ],
         'translations' => [
             'da' => require_once __DIR__.'/translations/da.php',
@@ -1251,11 +1251,11 @@ App::plugin(
             'sendMagicLink' => function (?string $success_url = null): void {
                 /** @var User $user */
                 $user = $this;
-                (new MagicLinkChallenge($user, 'login', 10 * 60, [
+                MagicLinkChallenge::start($user, [
                     'email' => $user->email(),
                     'name' => $user->nameOrEmail(),
                     'success_url' => $success_url ?? url('/'),
-                ]))->start();
+                ]);
             },
         ],
         'fields' => [

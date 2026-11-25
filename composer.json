@@ -65,8 +65,11 @@
     "ext-intl": "*",
     "s1syphos/php-simple-captcha": "^2.3"
   },
+  "conflict": {
+    "getkirby/cms": "<6.0.0-stable"
+  },
   "require-dev": {
-    "getkirby/cms": "6.0.0-beta.1",
+    "getkirby/cms": "^6.0",
     "larastan/larastan": "^v3.0.0",
     "laravel/pint": "^1.13",
     "pestphp/pest": "^v3.5.1",

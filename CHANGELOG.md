@@ -1,13 +1,13 @@
 # Changelog
 
-## 6.0.0 — Unreleased
+## 6.0.0 - 2026-11-25
 
 ### Changed
 
-- Target Kirby 6 (currently tested with 6.0.0-beta.1) and PHP 8.3 or newer.
+- Target Kirby 6.0.0 stable and PHP 8.3 or newer. Product, stock and order pages use Kirby's native inventory; Turbo's array-based inventory override is no longer used.
 - Migrate magic-link challenges to Kirby's instance-based authentication API and computed Panel fields to field classes.
 - Continue accepting `kart-magic-link` in `auth.methods` for standalone frontend login/signup; also accept `auth.challenges`. No configuration move is required, and the compatibility method adds no Panel login option.
-- Keep frontend magic links independent of Panel second-factor requirements.
+- Keep frontend magic links independent of Panel second-factor requirements. Links issued on the beta branch must be requested again after upgrading.
 
 ### Fixed
 

@@ -333,13 +333,9 @@ class Kart implements Kerbs
     public static function formatter(?int $style = null): NumberFormatter
     {
         $kirby = kirby();
-        $locale = $kirby->multilang() ? $kirby->language()?->locale() : null;
-        if (is_array($locale)) {
-            $locale = array_shift($locale);
-        }
-        if (is_null($locale)) {
-            $locale = kart()->option('locale', 'en_US');
-        }
+        $category = $style === NumberFormatter::CURRENCY ? LC_MONETARY : LC_NUMERIC;
+        $locale = ($kirby->multilang() ? $kirby->language()?->locale($category) : null)
+            ?? kart()->option('locale', 'en_US');
 
         if (
             ! $kirby->environment()->isLocal() &&
@@ -349,7 +345,7 @@ class Kart implements Kerbs
             $locale = 'ja_JP';
         }
 
-        return new NumberFormatter($locale, $style ?? NumberFormatter::DECIMAL);
+        return new NumberFormatter(is_string($locale) ? $locale : 'en_US', $style ?? NumberFormatter::DECIMAL);
     }
 
     public static function nonAmbiguousUuid(int $length): string

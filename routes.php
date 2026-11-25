@@ -6,7 +6,6 @@ use Bnomei\Kart\MagicLinkChallenge;
 use Bnomei\Kart\Models\ProductPage;
 use Bnomei\Kart\Router;
 use Bnomei\Kart\WebhookResult;
-use Kirby\Auth\Pending;
 use Kirby\Cms\App;
 use Kirby\Cms\Page;
 use Kirby\Cms\Response;
@@ -238,13 +237,13 @@ return function (App $kirby) {
                     'role' => kart()->option('customers.roles')[0],
                 ]);
                 if ($user && is_null($maybe)) { // @phpstan-ignore-line
-                    (new MagicLinkChallenge($user, 'login', 10 * 60, [
+                    MagicLinkChallenge::start($user, [
                         'email' => A::get($data, 'email'),
                         'name' => A::get($data, 'name'),
                         'signup' => 1,
                         'success_url' => A::get($data, 'success_url'),
                         'error_url' => A::get($data, 'error_url'),
-                    ]))->start();
+                    ]);
 
                     return Router::go();
                 }
@@ -271,11 +270,11 @@ return function (App $kirby) {
                     kart()->message(t('error.access.login'));
                 }
                 if ($user && $user->isCustomer()) {
-                    (new MagicLinkChallenge($user, 'login', 10 * 60, [
+                    MagicLinkChallenge::start($user, [
                         'email' => A::get($data, 'email'),
                         'success_url' => A::get($data, 'success_url'),
                         'error_url' => A::get($data, 'error_url'),
-                    ]))->start();
+                    ]);
 
                     return Router::go();
                 }
@@ -307,36 +306,8 @@ return function (App $kirby) {
 
                 $data = Kart::sanitize(kirby()->request()->data());
 
-                $code = A::get($data, 'code');
-
-                // the one-time code is only valid for the address it was
-                // issued for and only within its timeout window
-                $session = kirby()->session();
-                $challengeEmail = $session->get('kirby.challenge.email');
-                $challengeTimeout = $session->get('kirby.challenge.timeout');
-                if (
-                    $session->get('kirby.challenge.type') !== 'kart-magic-link' ||
-                    $session->get('kirby.challenge.mode') !== 'login' ||
-                    ! is_string($code) ||
-                    ! is_string($challengeEmail) ||
-                    ! is_int($challengeTimeout) ||
-                    $challengeTimeout < time() ||
-                    ! hash_equals(
-                        strtolower($challengeEmail),
-                        strtolower(strval(A::get($data, 'email')))
-                    )
-                ) {
-                    kirby()->auth()->challenges()->clear($session);
-
-                    return Router::go(url(Router::safeRedirect(Router::get('error_url'), '/')));
-                }
-
-                // Verify before signup creates an account or fires its hook.
-                kirby()->auth()->limits()->ensure($challengeEmail);
-                $challenge = new MagicLinkChallenge(new User(['email' => $challengeEmail]), 'login', 10 * 60);
-                if (! $challenge->verify($code, Pending::from($session->get('kirby.challenge.data', [])))) {
-                    kirby()->auth()->limits()->track($challengeEmail);
-
+                // Consume the one-time link before signup creates an account or fires its hook.
+                if (! MagicLinkChallenge::consume(A::get($data, 'email'), A::get($data, 'code'))) {
                     return Router::go(url(Router::safeRedirect(Router::get('error_url'), '/')));
                 }
 
@@ -362,8 +333,8 @@ return function (App $kirby) {
                 }
 
                 if ($user && $user->isCustomer()) {
-
-                    kirby()->auth()->verifyChallenge($code);
+                    kirby()->auth()->logout();
+                    $user->loginPasswordless();
                 } else {
                     $redirect = Router::safeRedirect(
                         Router::get('error_url'),

@@ -8,11 +8,14 @@ for package in "${packages[@]}"; do
     dpkg-query -W -f='${Status}' "$package" 2>/dev/null | grep -q 'install ok installed' || missing+=("$package")
 done
 if ((${#missing[@]})); then
-    keyring=$(mktemp --suffix=.deb)
-    curl -fsSL https://packages.sury.org/debsuryorg-archive-keyring.deb -o "$keyring"
-    sudo dpkg -i "$keyring"
-    rm "$keyring"
-    echo 'deb [signed-by=/usr/share/keyrings/debsuryorg-archive-keyring.gpg] https://packages.sury.org/php/ bookworm main' | sudo tee /etc/apt/sources.list.d/php.list >/dev/null
+    source /etc/os-release
+    if [[ $VERSION_CODENAME == bookworm ]]; then
+        keyring=$(mktemp --suffix=.deb)
+        curl -fsSL https://packages.sury.org/debsuryorg-archive-keyring.deb -o "$keyring"
+        sudo dpkg -i "$keyring"
+        rm "$keyring"
+        echo 'deb [signed-by=/usr/share/keyrings/debsuryorg-archive-keyring.gpg] https://packages.sury.org/php/ bookworm main' | sudo tee /etc/apt/sources.list.d/php.list >/dev/null
+    fi
     sudo apt-get update -qq
     sudo env DEBIAN_FRONTEND=noninteractive apt-get install -y "${missing[@]}"
 fi

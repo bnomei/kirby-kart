@@ -30,17 +30,6 @@ trait ModelWithTurbo
         return true;
     }
 
-    public function inventory(): array
-    {
-        $turbo = '\\Bnomei\\Turbo';
-
-        if (class_exists($turbo)) {
-            return $turbo::singleton()->inventory($this->root()) ?? parent::inventory();
-        }
-
-        return parent::inventory();
-    }
-
     public function storage(): Storage
     {
         $turboStorage = '\\Bnomei\\TurboStorage';

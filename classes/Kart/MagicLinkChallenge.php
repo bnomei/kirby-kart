@@ -11,6 +11,7 @@
 namespace Bnomei\Kart;
 
 use Kirby\Auth\Challenge\EmailChallenge;
+use Kirby\Auth\Pending;
 use Kirby\Cms\User;
 use Kirby\Exception\PermissionException;
 use Kirby\Toolkit\I18n;
@@ -18,38 +19,68 @@ use Kirby\Toolkit\Str;
 
 class MagicLinkChallenge extends EmailChallenge
 {
-    public function __construct(User $user, string $mode, int $timeout, private ?array $options = null)
-    {
-        parent::__construct($user, $mode, $timeout);
-    }
+    public const TYPE = 'kart-magic-link';
 
-    public function type(): string
-    {
-        return 'kart-magic-link';
-    }
+    private const SESSION = 'kart.magic-link';
 
-    public function start(): void
+    private ?array $linkOptions = null;
+
+    public static function start(User $user, array $linkOptions): void
     {
         if (Router::hasMagicLink() !== null) {
             throw new PermissionException(message: 'Enable kart-magic-link in auth.methods or auth.challenges');
         }
 
-        $this->kirby->auth()->limits()->ensure($this->user->email());
-        $this->kirby->auth()->limits()->track($this->user->email(), triggerHook: false);
-        $session = $this->kirby->session();
-        $this->kirby->auth()->challenges()->clear($session);
-        $pending = $this->create();
-        $session->set('kirby.challenge.type', $this->type());
-        $session->set('kirby.challenge.mode', $this->mode());
-        $session->set('kirby.challenge.email', $this->user->email());
-        $session->set('kirby.challenge.timeout', time() + $this->timeout());
-        $session->set('kirby.challenge.data', $pending->toArray());
+        $kirby = $user->kirby();
+        $email = $user->email();
+        $limits = $kirby->auth()->limits();
+        $limits->ensure($email);
+        $limits->track($email, triggerHook: false);
+
+        // A standalone link must not become a pending Panel login or second factor.
+        $session = $kirby->session();
+        $session->remove(self::SESSION);
+        $challenge = new self($user, self::TYPE, 'login', 10 * 60);
+        $challenge->linkOptions = $linkOptions;
+        $pending = $challenge->create();
+        $session->set(self::SESSION, [
+            'email' => $email,
+            'expires' => time() + $challenge->timeout(),
+            'data' => $pending->toArray(),
+        ]);
+    }
+
+    public static function consume(mixed $email, mixed $code): bool
+    {
+        $session = kirby()->session();
+        $state = $session->get(self::SESSION);
+        if (! is_string($email) || ! is_string($code) || ! is_array($state) ||
+            ! is_string($state['email'] ?? null) || ! is_int($state['expires'] ?? null) ||
+            ! is_array($state['data'] ?? null) || $state['expires'] < time() ||
+            strcasecmp($state['email'], $email) !== 0) {
+            $session->remove(self::SESSION);
+
+            return false;
+        }
+
+        $limits = kirby()->auth()->limits();
+        $limits->ensure($email);
+        $challenge = kirby()->auth()->challenges()->get(self::TYPE, new User(['email' => $email]), 'login');
+        if (! $challenge->verify($code, Pending::from($state['data']))) {
+            $limits->track($email);
+
+            return false;
+        }
+
+        $session->remove(self::SESSION);
+
+        return true;
     }
 
     protected function send(string $code): void
     {
         // Kirby's Panel uses the inherited code form, including for 2FA.
-        if ($this->options === null) {
+        if ($this->linkOptions === null) {
             parent::send($code);
 
             return;
@@ -57,18 +88,9 @@ class MagicLinkChallenge extends EmailChallenge
 
         $formatted = $code;
         $code = str_replace(' ', '', $code);
-        $options = $this->options;
+        $options = $this->linkOptions;
         $user = $this->user;
-
-        // use the login templates for 2FA
-        $mode = $this->mode;
-        if ($mode === '2fa') {
-            $mode = 'login';
-        }
-        if ($mode === 'login') {
-            $mode = 'login-magic';
-        }
-
+        $mode = 'login-magic';
         $kirby = $user->kirby();
         $link = url(Router::MAGIC_LINK).'?'.implode('&', [
             'email='.urlencode($user->email() ?? ''),
