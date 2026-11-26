@@ -11,6 +11,7 @@
 namespace Bnomei\Kart\Provider;
 
 use Bnomei\Kart\ContentPageEnum;
+use Bnomei\Kart\ProductSyncException;
 use Bnomei\Kart\Provider;
 use Bnomei\Kart\ProviderEnum;
 use Bnomei\Kart\VirtualPage;
@@ -125,46 +126,38 @@ class Snipcart extends Provider
 
     public function fetchProducts(): array
     {
+        $this->requireProductSyncOptions('secret_key');
+
         $products = [];
         $offset = 0;
         $limit = 50;
 
         while (true) {
             // https://docs.snipcart.com/v3/api-reference/products
-            $remote = Remote::get("https://app.snipcart.com/api/products?limit=$limit&offset=$offset", [
+            $json = $this->productSyncJson('products', fn () => $this->sendProductSyncRequest('GET', "https://app.snipcart.com/api/products?limit=$limit&offset=$offset", [
                 'headers' => $this->headers(),
-            ]);
+            ]), 'items');
 
-            $json = $remote->code() === 200 ? $remote->json() : null;
-            if (! is_array($json)) {
-                break;
+            $totalItems = intval(A::get($json, 'totalItems', 0));
+            if ($json['items'] === [] && $offset < $totalItems) {
+                throw new ProductSyncException('Snipcart returned an empty products page before the end of the catalog. Try syncing again.');
             }
 
-            $items = A::get($json, 'items', []);
-            if (! is_array($items) || $items === []) {
-                break;
-            }
-
-            foreach ($items as $product) {
+            foreach ($json['items'] as $product) {
                 if (! is_array($product)) {
-                    continue;
+                    throw new ProductSyncException('Snipcart returned an invalid product. Try syncing again.');
                 }
                 // keep active products; skip archived ones
                 if (A::get($product, 'archived')) {
                     continue;
                 }
                 $id = $product['id'] ?? null;
-                if (! is_string($id) && ! is_int($id)) {
-                    continue;
-                }
-                $id = (string) $id;
-                if ($id === '') {
-                    continue;
+                if ((! is_string($id) && ! is_int($id)) || $id === '') {
+                    throw new ProductSyncException('Snipcart returned a product without an ID. Try syncing again.');
                 }
                 $products[$id] = $product;
             }
 
-            $totalItems = intval(A::get($json, 'totalItems', 0));
             if ($offset + $limit >= $totalItems) {
                 break;
             }

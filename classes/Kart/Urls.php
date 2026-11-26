@@ -37,6 +37,7 @@ use Bnomei\Kart\Models\ProductPage;
  * @method string provider_success(array $params = [])
  * @method string signup_magic(?string $email = null)
  * @method string sync()
+ * @method string sync_dialog()
  * @method string wishlist_add(ProductPage $product)
  * @method string wishlist_now(ProductPage $product)
  * @method string wishlist_remove(ProductPage $product)

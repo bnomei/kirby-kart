@@ -11,6 +11,7 @@
 namespace Bnomei\Kart\Provider;
 
 use Bnomei\Kart\ContentPageEnum;
+use Bnomei\Kart\ProductSyncException;
 use Bnomei\Kart\Provider;
 use Bnomei\Kart\ProviderEnum;
 use Bnomei\Kart\VirtualPage;
@@ -155,26 +156,27 @@ class Invoiceninja extends Provider
 
     public function fetchProducts(): array
     {
+        $this->requireProductSyncOptions('token');
+
         $products = [];
         $page = 1;
 
         while (true) {
             // https://api-docs.invoiceninja.com/#/products/getProducts
-            $remote = Remote::get($this->endpoint().'/products', [
+            $json = $this->productSyncJson('products', fn () => $this->sendProductSyncRequest('GET', $this->endpoint().'/products', [
                 'headers' => $this->headers(),
                 'data' => [
                     'per_page' => 200,
                     'page' => $page,
                 ],
-            ]);
+            ]), 'data');
 
-            $json = $remote->code() === 200 ? $remote->json() : null;
-            if (! is_array($json)) {
-                break;
-            }
-
-            foreach (A::get($json, 'data', []) as $product) {
-                $products[A::get($product, 'id')] = $product;
+            foreach ($json['data'] as $product) {
+                $id = is_array($product) ? ($product['id'] ?? null) : null;
+                if ((! is_string($id) && ! is_int($id)) || $id === '') {
+                    throw new ProductSyncException('Invoice Ninja returned a product without an ID. Try syncing again.');
+                }
+                $products[$id] = $product;
             }
 
             $total = intval(A::get($json, 'meta.pagination.total_pages', 1));

@@ -11,11 +11,11 @@
 namespace Bnomei\Kart\Provider;
 
 use Bnomei\Kart\ContentPageEnum;
+use Bnomei\Kart\ProductSyncException;
 use Bnomei\Kart\Provider;
 use Bnomei\Kart\ProviderEnum;
 use Bnomei\Kart\VirtualPage;
 use Bnomei\Kart\WebhookResult;
-use Kirby\Http\Remote;
 use Kirby\Toolkit\A;
 
 class Fastspring extends Provider
@@ -45,31 +45,34 @@ class Fastspring extends Provider
 
     public function fetchProducts(): array
     {
+        $this->requireProductSyncOptions('username', 'password');
         $products = [];
+        $options = ['headers' => $this->headers()];
+        $url = 'https://api.fastspring.com/products';
 
         // https://developer.fastspring.com/reference/list-all-product-paths
-        $remote = Remote::get('https://api.fastspring.com/products', [
-            'headers' => $this->headers(),
-        ]);
-
-        $json = $remote->code() === 200 ? $remote->json() : null;
-        if (! is_array($json)) {
-            return [];
+        $json = $this->productSyncJson('products', fn () => $this->sendProductSyncRequest('GET', $url, $options), 'products');
+        if (($json['result'] ?? 'success') !== 'success') {
+            throw new ProductSyncException('FastSpring returned an invalid products response. Try syncing again.');
         }
 
-        foreach (A::get($json, 'products', []) as $path) {
-            // https://developer.fastspring.com/reference/retrieve-a-product
-            $remote = Remote::get('https://api.fastspring.com/products/'.$path, [
-                'headers' => $this->headers(),
-            ]);
-
-            $product = $remote->code() === 200 ? $remote->json() : null;
-            if (! is_array($product)) {
-                continue;
+        foreach ($json['products'] as $path) {
+            if (! is_string($path) || $path === '') {
+                throw new ProductSyncException('FastSpring returned an invalid product path. Try syncing again.');
             }
 
-            foreach (A::get($product, 'products') as $p) {
-                $products[$p['product']] = $p;
+            // https://developer.fastspring.com/reference/retrieve-a-product
+            $product = $this->productSyncJson('product details', fn () => $this->sendProductSyncRequest('GET', $url.'/'.$path, $options), 'products');
+            if (($product['result'] ?? 'success') !== 'success' || $product['products'] === []) {
+                throw new ProductSyncException('FastSpring returned an invalid product details response. Try syncing again.');
+            }
+
+            foreach ($product['products'] as $p) {
+                $id = $p['product'] ?? null;
+                if (! is_string($id) || $id === '' || ($p['result'] ?? 'success') !== 'success') {
+                    throw new ProductSyncException('FastSpring returned an invalid product details response. Try syncing again.');
+                }
+                $products[$id] = $p;
             }
         }
 

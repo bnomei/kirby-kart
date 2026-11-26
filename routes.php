@@ -815,17 +815,9 @@ return function (App $kirby) {
                 }
 
                 $productsPage = kart()->page(ContentPageEnum::PRODUCTS);
-                $page = $productsPage?->uuid()->id();
                 $url = $productsPage?->panel()->url() ?? site()->url();
 
-                $from = Router::get('user');
-                $user = kirby()->user();
-                if (! $user || $user->id() !== $from || $user->role()->name() !== 'admin') {
-                    go($url);
-                }
-
-                kart()->provider()->sync($page);
-
+                // Old blueprint links only navigate; the Panel dialog POST performs the refresh.
                 Response::go($url);
             },
         ],

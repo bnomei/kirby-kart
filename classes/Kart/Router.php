@@ -660,6 +660,11 @@ class Router
         return url(self::CAPTCHA);
     }
 
+    public static function sync_dialog(): string
+    {
+        return '/'.self::PROVIDER_SYNC;
+    }
+
     public static function sync(): string
     {
         $pageId = kart()->page(ContentPageEnum::PRODUCTS)?->uuid()->id();

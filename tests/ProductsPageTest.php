@@ -9,11 +9,19 @@
  */
 
 use Bnomei\Kart\Models\ProductsPage;
+use Bnomei\Kart\Router;
 use Kirby\Cms\Page;
 use Kirby\Data\Yaml;
+use Kirby\Panel\Ui\Button\ModelButton;
 
 it('has a blueprint from PHP', function (): void {
     expect(Yaml::encode(ProductsPage::phpBlueprint()))->toMatchSnapshot();
+});
+
+it('resolves the sync button to the Panel dialog route', function (): void {
+    $button = new ModelButton(page('products'), ...ProductsPage::phpBlueprint()['buttons']['sync']);
+
+    expect($button->dialog())->toBe('/'.Router::PROVIDER_SYNC);
 });
 
 it('uses gallery order for product card images and allows an empty gallery', function (): void {

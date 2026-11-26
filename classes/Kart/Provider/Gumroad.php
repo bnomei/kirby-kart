@@ -11,11 +11,11 @@
 namespace Bnomei\Kart\Provider;
 
 use Bnomei\Kart\ContentPageEnum;
+use Bnomei\Kart\ProductSyncException;
 use Bnomei\Kart\Provider;
 use Bnomei\Kart\ProviderEnum;
 use Bnomei\Kart\VirtualPage;
 use Bnomei\Kart\WebhookResult;
-use Kirby\Http\Remote;
 use Kirby\Toolkit\A;
 
 class Gumroad extends Provider
@@ -118,29 +118,34 @@ class Gumroad extends Provider
 
     public function fetchProducts(): array
     {
+        $this->requireProductSyncOptions('access_token');
         $products = [];
 
         // https://gumroad.com/api#products
-        $remote = Remote::get('https://api.gumroad.com/v2/products?access_token='.strval($this->option('access_token')), [
+        $url = 'https://api.gumroad.com/v2/products?access_token='.strval($this->option('access_token'));
+        $json = $this->productSyncJson('products', fn () => $this->sendProductSyncRequest('GET', $url, [
             'headers' => [
                 'Content-Type' => 'application/json',
                 'Accept' => 'application/json',
             ],
-        ]);
+        ]), 'products');
 
-        $json = $remote->code() === 200 ? $remote->json() : null;
-        if (! is_array($json)) {
-            return [];
+        if (($json['success'] ?? true) !== true) {
+            throw new ProductSyncException('Gumroad returned an invalid products response. Try syncing again.');
         }
 
-        foreach (A::get($json, 'products') as $product) {
+        foreach ($json['products'] as $product) {
+            $id = $product['id'] ?? null;
+            if ((! is_string($id) && ! is_int($id)) || $id === '') {
+                throw new ProductSyncException('Gumroad returned a product without an ID. Try syncing again.');
+            }
             if (! A::get($product, 'published')) {
                 continue;
             }
             if (A::get($product, 'deleted')) {
                 continue;
             }
-            $products[$product['id']] = $product;
+            $products[$id] = $product;
         }
 
         return array_map(fn (array $data) =>

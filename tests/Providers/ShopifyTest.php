@@ -9,6 +9,7 @@
  */
 
 use Bnomei\Kart\Models\ProductPage;
+use Bnomei\Kart\ProductSyncException;
 use Bnomei\Kart\Provider\Shopify;
 use Kirby\Data\Yaml;
 use Kirby\Http\Remote;
@@ -100,10 +101,10 @@ it('requires Shopify client credentials for admin headers', function (): void {
     };
 
     expect(fn () => shopifyAdminHeadersForTest($shopify))
-        ->toThrow(RuntimeException::class, 'Shopify client_id and client_secret are required to request an Admin API token');
+        ->toThrow(ProductSyncException::class, 'Shopify client_id and client_secret are required to request an Admin API token');
 });
 
-it('skips Shopify product sync without a store domain', function (): void {
+it('rejects Shopify product sync without a store domain', function (): void {
     kart()->setOption('providers.shopify.store_domain', '');
     kart()->setOption('providers.shopify.client_id', 'client-id');
     kart()->setOption('providers.shopify.client_secret', 'client-secret');
@@ -120,11 +121,12 @@ it('skips Shopify product sync without a store domain', function (): void {
         }
     };
 
-    expect($shopify->fetchProducts())->toBe([])
+    expect(fn () => $shopify->sync())
+        ->toThrow(ProductSyncException::class, 'bnomei.kart.providers.shopify.store_domain')
         ->and($shopify->requested)->toBeFalse();
 });
 
-it('skips Shopify product sync without client credentials', function (): void {
+it('rejects Shopify product sync without client credentials', function (): void {
     kart()->setOption('providers.shopify.store_domain', 'example.myshopify.com');
     kart()->setOption('providers.shopify.client_id', '');
     kart()->setOption('providers.shopify.client_secret', '');
@@ -141,11 +143,12 @@ it('skips Shopify product sync without client credentials', function (): void {
         }
     };
 
-    expect($shopify->fetchProducts())->toBe([])
+    expect(fn () => $shopify->sync())
+        ->toThrow(ProductSyncException::class, 'bnomei.kart.providers.shopify.client_id')
         ->and($shopify->requested)->toBeFalse();
 });
 
-it('throws a Shopify product sync error when the admin token request fails', function (): void {
+it('does not publish an empty Shopify catalog when a cold read cannot obtain a token', function (): void {
     kart()->setOption('providers.shopify.store_domain', 'example.myshopify.com');
     kart()->setOption('providers.shopify.client_id', 'client-id');
     kart()->setOption('providers.shopify.client_secret', 'client-secret');
@@ -163,8 +166,9 @@ it('throws a Shopify product sync error when the admin token request fails', fun
         }
     };
 
-    expect(fn () => $shopify->products())
-        ->toThrow(RuntimeException::class, 'token failed')
+    expect($shopify->products())->toBe([])
+        ->and($shopify->cache()->get('products'))->toBeNull()
+        ->and($shopify->cache()->get('updatedAt-products'))->toBeNull()
         ->and($shopify->requested)->toBeTrue();
 });
 
@@ -194,7 +198,7 @@ it('keeps cached Shopify products when a refresh fails', function (): void {
     $shopify->cache()->set('products', $cached, 5);
 
     expect(fn () => $shopify->sync('products'))
-        ->toThrow(RuntimeException::class, 'token failed');
+        ->toThrow(ProductSyncException::class, 'Could not reach Shopify to load Admin products');
 
     expect($shopify->products())->toBe($cached)
         ->and($shopify->requested)->toBeTrue();
@@ -226,10 +230,10 @@ it('throws Shopify products API errors', function (): void {
         }
     };
 
-    expect(fn () => $shopify->products())
+    expect(fn () => $shopify->sync())
         ->toThrow(
-            RuntimeException::class,
-            'Shopify Admin products request failed with status 403: [API] This action requires merchant approval for read_products scope.'
+            ProductSyncException::class,
+            'Shopify denied access to Admin products. Check the API credentials and their read permissions, then try again.'
         );
 });
 
@@ -547,8 +551,8 @@ it('reports Shopify GraphQL errors while fetching configured product metafields'
 
     expect(fn () => $shopify->fetchProducts())
         ->toThrow(
-            RuntimeException::class,
-            'Shopify Admin product metafields request failed: Access denied for Metaobject field. Required access: read_metaobjects.'
+            ProductSyncException::class,
+            'Shopify could not load product metafields. Check the read_products and read_metaobjects permissions, then try again.'
         );
 });
 

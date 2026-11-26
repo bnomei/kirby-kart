@@ -11,6 +11,7 @@
 namespace Bnomei\Kart\Provider;
 
 use Bnomei\Kart\ContentPageEnum;
+use Bnomei\Kart\ProductSyncException;
 use Bnomei\Kart\Provider;
 use Bnomei\Kart\ProviderEnum;
 use Bnomei\Kart\Router;
@@ -251,64 +252,69 @@ class Lemonsqueezy extends Provider
 
     public function fetchProducts(): array
     {
+        $this->requireProductSyncOptions('secret_key');
         $products = [];
         $page = 1;
+        $headers = [
+            'Accept' => 'application/vnd.api+json',
+            'Content-Type' => 'application/vnd.api+json',
+            'Authorization' => 'Bearer '.strval($this->option('secret_key')),
+        ];
 
         while (true) {
             // https://docs.lemonsqueezy.com/api/products/list-all-products
-            $remote = Remote::get('https://api.lemonsqueezy.com/v1/products', [
-                'headers' => [
-                    'Accept' => 'application/vnd.api+json',
-                    'Content-Type' => 'application/vnd.api+json',
-                    'Authorization' => 'Bearer '.strval($this->option('secret_key')),
-                ],
+            $json = $this->productSyncJson('products', fn () => $this->sendProductSyncRequest('GET', 'https://api.lemonsqueezy.com/v1/products', [
+                'headers' => $headers,
                 'data' => array_filter([
                     'filter[store_id]' => $this->option('store_id'),
                     'page[number]' => $page,
                 ]),
-            ]);
-
-            $json = $remote->code() === 200 ? $remote->json() : null;
-            if (! is_array($json)) {
-                break;
+            ]), 'data');
+            $lastPage = filter_var(A::get($json, 'meta.page.lastPage', $page), FILTER_VALIDATE_INT, ['options' => ['min_range' => 0]]);
+            if (isset($json['errors']) || $lastPage === false) {
+                throw new ProductSyncException('Lemon Squeezy returned an invalid products response. Try syncing again.');
             }
 
-            foreach (A::get($json, 'data') as $product) {
+            foreach ($json['data'] as $product) {
+                $id = $product['id'] ?? null;
+                if ((! is_string($id) && ! is_int($id)) || $id === '' || ! is_array($product['attributes'] ?? null)) {
+                    throw new ProductSyncException('Lemon Squeezy returned an invalid product. Try syncing again.');
+                }
                 if (A::get($product, 'attributes.status') !== 'published') {
                     continue;
                 }
                 $variants = [];
                 // https://docs.lemonsqueezy.com/api/variants/list-all-variants
-                $remote = Remote::get('https://api.lemonsqueezy.com/v1/variants', [
-                    'headers' => [
-                        'Accept' => 'application/vnd.api+json',
-                        'Content-Type' => 'application/vnd.api+json',
-                        'Authorization' => 'Bearer '.strval($this->option('secret_key')),
-                    ],
+                $productVariants = $this->productSyncJson('variants', fn () => $this->sendProductSyncRequest('GET', 'https://api.lemonsqueezy.com/v1/variants', [
+                    'headers' => $headers,
                     'data' => array_filter([
-                        'filter[product_id]' => $product['id'],
+                        'filter[product_id]' => $id,
                     ]),
-                ]);
-
-                $productVariants = $remote->code() === 200 ? $remote->json() : null;
-                if (is_array($productVariants)) {
-                    foreach (A::get($productVariants, 'data', []) as $variant) {
-                        // NOTE: the default variant will always be pending status
-                        if (strtolower(A::get($variant, 'attributes.name', 'default')) !== 'default' &&
-                        A::get($variant, 'attributes.status') !== 'published') {
-                            continue;
-                        }
-                        $variants[] = $variant['attributes'] + ['id' => $variant['id']];
-                    }
+                ]), 'data');
+                if (isset($productVariants['errors'])) {
+                    throw new ProductSyncException('Lemon Squeezy returned an invalid variants response. Try syncing again.');
                 }
 
-                $products[$product['id']] = $product['attributes'] + [
-                    'id' => $product['id'],
+                foreach ($productVariants['data'] as $variant) {
+                    $variantId = $variant['id'] ?? null;
+                    if ((! is_string($variantId) && ! is_int($variantId)) || $variantId === '' || ! is_array($variant['attributes'] ?? null)) {
+                        throw new ProductSyncException('Lemon Squeezy returned an invalid variant. Try syncing again.');
+                    }
+                    // NOTE: the default variant will always be pending status
+                    if (strtolower(A::get($variant, 'attributes.name', 'default')) !== 'default' &&
+                        A::get($variant, 'attributes.status') !== 'published') {
+                        continue;
+                    }
+                    $variants[] = $variant['attributes'] + ['id' => $variantId];
+                }
+
+                $products[$id] = $product['attributes'] + [
+                    'id' => $id,
                     'variants' => $variants,
                 ];
             }
 
-            if (A::get($json, 'meta.page.lastPage') <= $page) {
+            if ($lastPage <= $page) {
                 break;
             }
             $page++;

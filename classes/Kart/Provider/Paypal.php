@@ -12,6 +12,7 @@ namespace Bnomei\Kart\Provider;
 
 use Bnomei\Kart\CartLine;
 use Bnomei\Kart\ContentPageEnum;
+use Bnomei\Kart\ProductSyncException;
 use Bnomei\Kart\Provider;
 use Bnomei\Kart\ProviderEnum;
 use Bnomei\Kart\Router;
@@ -26,7 +27,7 @@ class Paypal extends Provider
 
     protected ?string $token = null;
 
-    private function token(): ?string
+    private function token(bool $forProductSync = false): ?string
     {
         if ($this->token) {
             return $this->token;
@@ -34,14 +35,23 @@ class Paypal extends Provider
 
         // https://developer.paypal.com/api/rest/authentication/
         $endpoint = strval($this->option('endpoint'));
-        $remote = Remote::post($endpoint.'/v1/oauth2/token?grant_type=client_credentials', [
+        $url = $endpoint.'/v1/oauth2/token?grant_type=client_credentials';
+        $options = [
             'headers' => [
                 'Content-Type' => 'application/x-www-form-urlencoded',
                 'Authorization' => 'Basic '.base64_encode(strval($this->option('client_id')).':'.strval($this->option('client_secret'))),
             ],
-        ]);
+        ];
 
-        $json = $remote->code() === 200 ? $remote->json() : null;
+        if ($forProductSync) {
+            $json = $this->productSyncJson('an OAuth access token', fn () => $this->sendProductSyncRequest('POST', $url, $options));
+            if (! is_string($json['access_token'] ?? null) || trim($json['access_token']) === '') {
+                throw new ProductSyncException('PayPal returned no OAuth access token. Check your client ID and secret.');
+            }
+        } else {
+            $remote = Remote::post($url, $options);
+            $json = $remote->code() === 200 ? $remote->json() : null;
+        }
         if (is_array($json)) {
             $this->token = A::get($json, 'access_token');
         }
@@ -49,13 +59,13 @@ class Paypal extends Provider
         return $this->token;
     }
 
-    private function headers(): array
+    private function headers(bool $forProductSync = false): array
     {
         return [
             'Content-Type' => 'application/json',
             'Accept' => 'application/json',
             'Prefer' => 'return=representation',
-            'Authorization' => 'Bearer '.$this->token(),
+            'Authorization' => 'Bearer '.$this->token($forProductSync),
         ];
     }
 
@@ -317,22 +327,33 @@ class Paypal extends Provider
 
     public function fetchProducts(): array
     {
+        $this->requireProductSyncOptions('endpoint', 'client_id', 'client_secret');
         $products = [];
         $page = 1;
         $endpoint = strval($this->option('endpoint'));
+        $options = ['headers' => $this->headers(forProductSync: true)];
 
         while (true) {
             // https://developer.paypal.com/docs/api/catalog-products/v1/#products_list
-            $remote = Remote::get("$endpoint/v1/catalogs/products?page_size=20&page=$page&total_required=true", [
-                'headers' => $this->headers(),
-            ]);
+            $json = $this->productSyncJson(
+                'products',
+                fn () => $this->sendProductSyncRequest('GET', "$endpoint/v1/catalogs/products?page_size=20&page=$page&total_required=true", $options),
+            );
 
-            $json = $remote->code() === 200 ? $remote->json() : null;
-            if (! is_array($json)) {
+            // PayPal's collection schema allows the products field to be omitted when there are no items.
+            $items = $json['products'] ?? null;
+            if ($page === 1 && ! array_key_exists('products', $json) && ($json['total_items'] ?? null) === 0) {
                 break;
             }
+            if (! is_array($items) || ! array_is_list($items) || ($items === [] && intval($json['total_items'] ?? 0) > 0)) {
+                throw new ProductSyncException('PayPal returned an invalid products response. Try syncing again.');
+            }
 
-            foreach (A::get($json, 'products') as $product) {
+            foreach ($items as $product) {
+                $id = $product['id'] ?? null;
+                if (! is_string($id) || $id === '') {
+                    throw new ProductSyncException('PayPal returned a product without an ID. Try syncing again.');
+                }
                 $detailsUrl = null;
                 foreach (A::get($product, 'links', []) as $link) {
                     if (! is_array($link)) {
@@ -343,21 +364,15 @@ class Paypal extends Provider
                         break;
                     }
                 }
-                if (! $detailsUrl && isset($product['id'])) {
-                    $detailsUrl = $endpoint.'/v1/catalogs/products/'.$product['id'];
-                }
                 if (! $detailsUrl || ! is_string($detailsUrl)) {
-                    continue;
+                    $detailsUrl = $endpoint.'/v1/catalogs/products/'.$id;
                 }
 
-                $remote = Remote::get($detailsUrl, [
-                    'headers' => $this->headers(),
-                ]);
-
-                $prod = $remote->code() === 200 ? $remote->json() : null;
-                if (is_array($prod)) {
-                    $products[$product['id']] = $prod;
+                $prod = $this->productSyncJson('product details', fn () => $this->sendProductSyncRequest('GET', $detailsUrl, $options));
+                if (($prod['id'] ?? null) !== $id) {
+                    throw new ProductSyncException('PayPal returned invalid product details. Try syncing again.');
                 }
+                $products[$id] = $prod;
             }
 
             if ($page >= intval(A::get($json, 'total_pages'))) {
@@ -386,6 +401,6 @@ class Paypal extends Provider
                 ],
             ],
             $this->kart->page(ContentPageEnum::PRODUCTS))
-        )->mixinProduct($data)->toArray(), array_filter($products));
+        )->mixinProduct($data)->toArray(), $products);
     }
 }

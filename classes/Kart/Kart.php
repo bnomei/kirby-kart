@@ -16,6 +16,7 @@ use Bnomei\Kart\Mixins\Stats;
 use Bnomei\Kart\Mixins\TMNT;
 use Bnomei\Kart\Models\OrderPage;
 use Bnomei\Kart\Models\ProductPage;
+use Bnomei\Kart\Provider\Invoiceninja;
 use Bnomei\Kart\Provider\Kirby;
 use Closure;
 use Exception;
@@ -543,10 +544,11 @@ class Kart implements Kerbs
         if (! $this->provider) {
             $class = strval($this->option('provider'));
             // try finding provider from string if it's not a class yet
-            if ($class === 'kirby') {
-                // should have been kirby_cms
-                $class = Kirby::class;
-            }
+            $class = match (strtolower($class)) {
+                'kirby', ProviderEnum::KIRBY->value => Kirby::class,
+                ProviderEnum::INVOICE_NINJA->value => Invoiceninja::class,
+                default => $class,
+            };
             if (
                 in_array(
                     strtolower($class),

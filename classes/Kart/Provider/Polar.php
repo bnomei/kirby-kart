@@ -12,6 +12,7 @@ namespace Bnomei\Kart\Provider;
 
 use Bnomei\Kart\CartLine;
 use Bnomei\Kart\ContentPageEnum;
+use Bnomei\Kart\ProductSyncException;
 use Bnomei\Kart\Provider;
 use Bnomei\Kart\ProviderEnum;
 use Bnomei\Kart\Router;
@@ -228,12 +229,14 @@ class Polar extends Provider
 
     public function fetchProducts(): array
     {
+        $this->requireProductSyncOptions('access_token');
+
         $products = [];
         $page = 1;
 
         while (true) {
             // https://polar.sh/docs/api-reference/operations/products_list
-            $remote = Remote::get($this->endpoint().'/products', [
+            $json = $this->productSyncJson('products', fn () => $this->sendProductSyncRequest('GET', $this->endpoint().'/products', [
                 'headers' => $this->headers(),
                 'data' => [
                     'page' => $page,
@@ -241,15 +244,14 @@ class Polar extends Provider
                     'is_archived' => 'false',
                     'is_recurring' => 'false', // one-time purchases only
                 ],
-            ]);
+            ]), 'items');
 
-            $json = $remote->code() === 200 ? $remote->json() : null;
-            if (! is_array($json)) {
-                break;
-            }
-
-            foreach (A::get($json, 'items', []) as $product) {
-                $products[A::get($product, 'id')] = $product;
+            foreach ($json['items'] as $product) {
+                $id = is_array($product) ? ($product['id'] ?? null) : null;
+                if ((! is_string($id) && ! is_int($id)) || $id === '') {
+                    throw new ProductSyncException('Polar returned a product without an ID. Try syncing again.');
+                }
+                $products[$id] = $product;
             }
 
             $maxPage = intval(A::get($json, 'pagination.max_page', 1));

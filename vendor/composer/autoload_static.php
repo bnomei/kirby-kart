@@ -4,7 +4,7 @@
 
 namespace Composer\Autoload;
 
-class ComposerStaticInitf595708cbd97e7bc1344e801da9361be
+class ComposerStaticInitc5a32511ed2b0ab2cce9ff90e6a04aaf
 {
     public static $prefixLengthsPsr4 = array (
         'S' =>
@@ -69,6 +69,7 @@ class ComposerStaticInitf595708cbd97e7bc1344e801da9361be
         'Bnomei\\Kart\\Models\\StocksPage' => __DIR__ . '/../..' . '/classes/Kart/Models/StocksPage.php',
         'Bnomei\\Kart\\OrderLine' => __DIR__ . '/../..' . '/classes/Kart/OrderLine.php',
         'Bnomei\\Kart\\ProductStorage' => __DIR__ . '/../..' . '/classes/Kart/ProductStorage.php',
+        'Bnomei\\Kart\\ProductSyncException' => __DIR__ . '/../..' . '/classes/Kart/ProductSyncException.php',
         'Bnomei\\Kart\\Provider' => __DIR__ . '/../..' . '/classes/Kart/Provider.php',
         'Bnomei\\Kart\\ProviderEnum' => __DIR__ . '/../..' . '/classes/Kart/ProviderEnum.php',
         'Bnomei\\Kart\\Provider\\Chargebee' => __DIR__ . '/../..' . '/classes/Kart/Provider/Chargebee.php',
@@ -114,9 +115,9 @@ class ComposerStaticInitf595708cbd97e7bc1344e801da9361be
     public static function getInitializer(ClassLoader $loader)
     {
         return \Closure::bind(function () use ($loader) {
-            $loader->prefixLengthsPsr4 = ComposerStaticInitf595708cbd97e7bc1344e801da9361be::$prefixLengthsPsr4;
-            $loader->prefixDirsPsr4 = ComposerStaticInitf595708cbd97e7bc1344e801da9361be::$prefixDirsPsr4;
-            $loader->classMap = ComposerStaticInitf595708cbd97e7bc1344e801da9361be::$classMap;
+            $loader->prefixLengthsPsr4 = ComposerStaticInitc5a32511ed2b0ab2cce9ff90e6a04aaf::$prefixLengthsPsr4;
+            $loader->prefixDirsPsr4 = ComposerStaticInitc5a32511ed2b0ab2cce9ff90e6a04aaf::$prefixDirsPsr4;
+            $loader->classMap = ComposerStaticInitc5a32511ed2b0ab2cce9ff90e6a04aaf::$classMap;
 
         }, null, ClassLoader::class);
     }

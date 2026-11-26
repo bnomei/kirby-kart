@@ -13,7 +13,7 @@ Streamlined E-Commerce Shopping Cart Solution
 
 ## Kirby 6 compatibility
 
-Kart **6.0.0** supports Kirby 6 and requires PHP 8.3 or newer. Kirby 5 sites should stay on Kart 5.x.
+Kart **6.x** supports Kirby 6 and requires PHP 8.3 or newer. Kirby 5 sites should stay on Kart 5.x.
 
 Use a disposable checkout: `composer testBefore` replaces product, stock and order fixtures. Run `composer kirby`, `composer testBefore`, then `KIRBY_HOST=kart.test composer test` for the PHP suite.
 
@@ -33,9 +33,9 @@ Kart's frontend routes send signed standalone login links, independent of Panel 
 
 ## Installation
 
-- Composer: `composer require bnomei/kirby-kart:^6.0`
-- ZIP: unpack the [v6.0.0 release](https://github.com/bnomei/kirby-kart/archive/refs/tags/v6.0.0.zip) into `site/plugins/kirby-kart`.
-- Git submodule: `git submodule add https://github.com/bnomei/kirby-kart.git site/plugins/kirby-kart`, then `git -C site/plugins/kirby-kart checkout v6.0.0`.
+- Composer: `composer require bnomei/kirby-kart:^6.1`
+- ZIP: unpack the [v6.1.0 release](https://github.com/bnomei/kirby-kart/archive/refs/tags/v6.1.0.zip) into `site/plugins/kirby-kart`.
+- Git submodule: `git submodule add https://github.com/bnomei/kirby-kart.git site/plugins/kirby-kart`, then `git -C site/plugins/kirby-kart checkout v6.1.0`.
 
 ## Licensing
 
@@ -79,6 +79,14 @@ You can find the full [documentation for Kirby Kart](https://kart.bnomei.com) on
 | square        | ✅               | return URL          | -            | -             | ✅           |
 | stripe        | ✅               | return URL          | ✅            | ✅             | ✅           |
 | sumup         | JS snippet      | return URL          | -            | -             | -           |
+
+### Provider product sync
+
+For providers with product sync, configure their API credentials under `bnomei.kart.providers.<provider>` and grant read
+access to the catalog. For example, Stripe needs `bnomei.kart.providers.stripe.secret_key` (or `STRIPE_SECRET_KEY` with the
+DotEnv plugin) and access to both products and prices. If a refresh fails, the Panel shows an error without changing the
+last cached catalog or its sync timestamp. If you copied the products blueprint into your site, replace the Sync Provider
+button's `link` with `dialog: '{< site.kart.urls.sync_dialog() >}'`. The old link only opens Products; sync runs on dialog submission.
 
 ### Shopify product metafields
 

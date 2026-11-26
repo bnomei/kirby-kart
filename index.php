@@ -13,6 +13,7 @@ use Bnomei\Kart\CaptchaBuilder;
 use Bnomei\Kart\Cart;
 use Bnomei\Kart\CartLine;
 use Bnomei\Kart\Category;
+use Bnomei\Kart\ContentPageEnum;
 use Bnomei\Kart\Fields\AllCategoriesField;
 use Bnomei\Kart\Fields\AllTagsField;
 use Bnomei\Kart\Fields\AllVariantsField;
@@ -46,9 +47,12 @@ use Kirby\Cms\User;
 use Kirby\Cms\Users;
 use Kirby\Content\Field;
 use Kirby\Data\Yaml;
+use Kirby\Exception\PermissionException;
 use Kirby\Http\Remote;
+use Kirby\Panel\Ui\Dialog\TextDialog;
 use Kirby\Session\Session;
 use Kirby\Toolkit\A;
+use Kirby\Toolkit\I18n;
 use Kirby\Toolkit\Str;
 
 @include_once __DIR__.'/vendor/autoload.php';
@@ -618,6 +622,33 @@ App::plugin(
         ],
         'cacheTypes' => [
             'kart-uuid' => UuidCache::class,
+        ],
+        'areas' => [
+            'kart' => [
+                'dialogs' => [
+                    Router::PROVIDER_SYNC => [
+                        'load' => function (): TextDialog {
+                            if (Router::hasAdmin() !== null) {
+                                throw new PermissionException;
+                            }
+
+                            return new TextDialog(
+                                text: I18n::template('bnomei.kart.sync-provider.confirm', 'Refresh the product catalog from the configured provider?'),
+                                submitButton: I18n::template('bnomei.kart.sync-provider', 'Sync Provider'),
+                            );
+                        },
+                        'submit' => function (): array {
+                            if (Router::hasAdmin() !== null) {
+                                throw new PermissionException;
+                            }
+
+                            kart()->provider()->sync(ContentPageEnum::PRODUCTS);
+
+                            return ['reload' => true];
+                        },
+                    ],
+                ],
+            ],
         ],
         'routes' => require __DIR__.'/routes.php',
         'snippets' => [

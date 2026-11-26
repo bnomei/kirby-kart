@@ -1,7 +1,7 @@
 {
   "name": "bnomei/kirby-kart",
   "type": "kirby-plugin",
-  "version": "6.0.0",
+  "version": "6.1.0",
   "description": "Streamlined E-Commerce Shopping Cart Solution",
   "license": "proprietary",
   "authors": [

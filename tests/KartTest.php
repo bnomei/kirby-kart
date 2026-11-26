@@ -18,6 +18,7 @@ use Bnomei\Kart\Models\OrdersPage;
 use Bnomei\Kart\Models\ProductPage;
 use Bnomei\Kart\Models\ProductsPage;
 use Bnomei\Kart\Provider;
+use Bnomei\Kart\Provider\Invoiceninja;
 use Bnomei\Kart\Queue;
 use Bnomei\Kart\Urls;
 use Bnomei\Kart\Wishlist;
@@ -59,6 +60,13 @@ it('has a cart and a wishlist', function (): void {
 
 it('has the current provider', function (): void {
     expect(kart()->provider())->toBeInstanceOf(Provider::class);
+});
+
+it('selects Invoice Ninja by its configured name', function (): void {
+    $kart = new Kart;
+    $kart->setOption('provider', 'invoice_ninja');
+
+    expect($kart->provider())->toBeInstanceOf(Invoiceninja::class);
 });
 
 it('can flush caches', function (): void {

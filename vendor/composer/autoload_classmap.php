@@ -38,6 +38,7 @@ return array(
     'Bnomei\\Kart\\Models\\StocksPage' => $baseDir . '/classes/Kart/Models/StocksPage.php',
     'Bnomei\\Kart\\OrderLine' => $baseDir . '/classes/Kart/OrderLine.php',
     'Bnomei\\Kart\\ProductStorage' => $baseDir . '/classes/Kart/ProductStorage.php',
+    'Bnomei\\Kart\\ProductSyncException' => $baseDir . '/classes/Kart/ProductSyncException.php',
     'Bnomei\\Kart\\Provider' => $baseDir . '/classes/Kart/Provider.php',
     'Bnomei\\Kart\\ProviderEnum' => $baseDir . '/classes/Kart/ProviderEnum.php',
     'Bnomei\\Kart\\Provider\\Chargebee' => $baseDir . '/classes/Kart/Provider/Chargebee.php',

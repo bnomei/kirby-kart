@@ -1,5 +1,11 @@
 # Changelog
 
+## 6.1.0 - 2026-11-26
+
+### Fixed
+
+- Report product sync failures in the Panel for all catalog providers without overwriting the last good catalog, prices, or sync timestamp ([#23](https://github.com/bnomei/kirby-kart/issues/23)).
+
 ## 6.0.0 - 2026-11-25
 
 ### Changed

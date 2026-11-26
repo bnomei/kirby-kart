@@ -12,6 +12,7 @@ namespace Bnomei\Kart\Provider;
 
 use Bnomei\Kart\CartLine;
 use Bnomei\Kart\ContentPageEnum;
+use Bnomei\Kart\ProductSyncException;
 use Bnomei\Kart\Provider;
 use Bnomei\Kart\ProviderEnum;
 use Bnomei\Kart\Router;
@@ -200,56 +201,43 @@ class Stripe extends Provider
 
     public function fetchProducts(): array
     {
+        $this->requireProductSyncOptions('secret_key');
         $products = [];
         $cursor = null;
 
         while (true) {
+            $previousCursor = $cursor;
             // https://docs.stripe.com/api/products/list?lang=curl
-            $remote = Remote::get('https://api.stripe.com/v1/products', [
-                'headers' => [
-                    'Content-Type' => 'application/json',
-                    'Authorization' => 'Bearer '.strval($this->option('secret_key')),
-                ],
-                'data' => array_filter([
-                    'active' => 'true',
-                    'limit' => 100,
-                    'starting_after' => $cursor,
-                    'expand' => ['data.default_price'],
-                ]),
-            ]);
+            $json = $this->catalogPage('products', array_filter([
+                'active' => 'true',
+                'limit' => 100,
+                'starting_after' => $cursor,
+                'expand' => ['data.default_price'],
+            ]));
 
-            $json = $remote->code() === 200 ? $remote->json() : null;
-            if (! is_array($json)) {
-                break;
-            }
-
-            foreach (A::get($json, 'data') as $product) {
-                $cursor = A::get($product, 'id');
+            foreach ($json['data'] as $product) {
+                $cursor = $product['id'] ?? null;
+                if (! is_string($cursor) || $cursor === '') {
+                    throw new ProductSyncException('Stripe returned a product without an ID. Try syncing again.');
+                }
                 $products[$cursor] = $product;
 
                 // https://docs.stripe.com/api/prices/list?lang=curl
-                $remote = Remote::get('https://api.stripe.com/v1/prices', [
-                    'headers' => [
-                        'Content-Type' => 'application/json',
-                        'Authorization' => 'Bearer '.strval($this->option('secret_key')),
-                    ],
-                    'data' => array_filter([
-                        'product' => $cursor,
-                        // 'type' => 'one_time', // otherwise checkout needs to switch to subscription
-                        'active' => 'true',
-                        'limit' => 100,
-                        'currency' => strtolower($this->kart->currency()),
-                    ]),
+                $productPrices = $this->catalogPage('prices', [
+                    'product' => $cursor,
+                    // 'type' => 'one_time', // otherwise checkout needs to switch to subscription
+                    'active' => 'true',
+                    'limit' => 100,
+                    'currency' => strtolower($this->kart->currency()),
                 ]);
-
-                $productPrices = $remote->code() === 200 ? $remote->json() : null;
-                if (is_array($productPrices)) {
-                    $products[$cursor]['prices'] = A::get($productPrices, 'data', []);
-                }
+                $products[$cursor]['prices'] = $productPrices['data'];
             }
 
             if (! A::get($json, 'has_more')) {
                 break;
+            }
+            if ($cursor === null || $cursor === $previousCursor) {
+                throw new ProductSyncException('Stripe returned an incomplete products page. Try syncing again.');
             }
         }
 
@@ -296,6 +284,21 @@ class Stripe extends Provider
                 ],
                 $this->kart->page(ContentPageEnum::PRODUCTS))
         )->mixinProduct($data)->toArray(), $products);
+    }
+
+    private function catalogPage(string $resource, array $data): array
+    {
+        return $this->productSyncJson(
+            $resource,
+            fn () => $this->sendProductSyncRequest('GET', 'https://api.stripe.com/v1/'.$resource, [
+                'headers' => [
+                    'Content-Type' => 'application/json',
+                    'Authorization' => 'Bearer '.trim(strval($this->option('secret_key'))),
+                ],
+                'data' => $data,
+            ]),
+            'data',
+        );
     }
 
     public function portal(?string $returnUrl = null): ?string

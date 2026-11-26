@@ -12,10 +12,12 @@ namespace Bnomei\Kart\Provider;
 
 use Bnomei\Kart\ContentPageEnum;
 use Bnomei\Kart\Models\ProductPage;
+use Bnomei\Kart\ProductSyncException;
 use Bnomei\Kart\Provider;
 use Bnomei\Kart\ProviderEnum;
 use Bnomei\Kart\VirtualPage;
 use Bnomei\Kart\WebhookResult;
+use Closure;
 use Kirby\Http\Remote;
 use Kirby\Toolkit\A;
 
@@ -180,7 +182,7 @@ GQL,
             $discount = round(floatval(A::get($line, 'total_discount_set.shop_money.amount', 0)), 2);
 
             $key = null;
-            if ($uuid instanceof \Closure) {
+            if ($uuid instanceof Closure) {
                 $key = 'page://'.$uuid(null, ['id' => strval(A::get($line, 'product_id'))]);
             }
 
@@ -199,7 +201,7 @@ GQL,
                 'subtotal' => $linePrice,
                 'discount' => $discount,
                 'total' => max(0, $linePrice - $discount),
-                'licensekey' => $likey instanceof \Closure ? $likey(['order' => $payload, 'line' => $line]) : null,
+                'licensekey' => $likey instanceof Closure ? $likey(['order' => $payload, 'line' => $line]) : null,
             ], fn ($v) => $v !== null && $v !== '');
         }
 
@@ -233,10 +235,7 @@ GQL,
 
     public function fetchProducts(): array
     {
-        if ($this->canFetchProducts() === false) {
-            return [];
-        }
-
+        $this->requireProductSyncOptions('store_domain', 'client_id', 'client_secret');
         $products = [];
         $pageInfo = null;
         $metafields = $this->productMetafields();
@@ -244,47 +243,35 @@ GQL,
         // REST Admin products listing
         while (true) {
             // https://shopify.dev/docs/api/admin-rest/latest/resources/product#get-products
-            $remote = $this->requestAdminProducts($pageInfo);
+            $headers = [];
+            $json = $this->productSyncJson('Admin products', function () use ($pageInfo, &$headers): Remote {
+                $remote = $this->requestAdminProducts($pageInfo);
+                $headers = $remote->headers();
 
-            $json = $remote->json();
-            if ($remote->code() !== 200) {
-                $error = is_array($json)
-                    ? A::get($json, 'errors', A::get($json, 'error_description', A::get($json, 'error')))
-                    : null;
-                $message = 'Shopify Admin products request failed with status '.$remote->code();
-                if (is_string($error) && $error !== '') {
-                    $message .= ': '.$error;
+                return $remote;
+            }, 'products');
+            $pageProducts = $json['products'];
+
+            foreach ($pageProducts as $product) {
+                if (! is_array($product)) {
+                    throw new ProductSyncException('Shopify Admin products request returned an invalid product.');
                 }
 
-                throw new \RuntimeException($message);
-            }
-            if (! is_array($json)) {
-                throw new \RuntimeException('Shopify Admin products request did not return JSON');
+                $productId = A::get($product, 'id');
+                if (! is_int($productId) && (! is_string($productId) || $productId === '')) {
+                    throw new ProductSyncException('Shopify Admin products request returned a product without an ID.');
+                }
             }
 
-            $pageProducts = A::get($json, 'products', []);
-            if (! is_array($pageProducts)) {
-                throw new \RuntimeException('Shopify Admin products request did not return products');
-            }
             if ($metafields !== []) {
                 $pageProducts = $this->fetchProductMetafields($pageProducts, $metafields);
             }
 
             foreach ($pageProducts as $product) {
-                if (! is_array($product)) {
-                    throw new \RuntimeException('Shopify Admin products request returned an invalid product');
-                }
-
-                $productId = A::get($product, 'id');
-                if (! is_int($productId) && ! is_string($productId)) {
-                    throw new \RuntimeException('Shopify Admin products request returned a product without an id');
-                }
-
-                $products[$productId] = $product;
+                $products[$product['id']] = $product;
             }
 
             // Shopify pagination via Link header
-            $headers = $remote->headers();
             $link = A::get($headers, 'Link', A::get($headers, 'link'));
             $nextUrl = null;
             if (is_string($link) && $link !== '') {
@@ -301,17 +288,15 @@ GQL,
             }
 
             $query = parse_url($nextUrl, PHP_URL_QUERY);
-            $pageInfo = null;
+            $nextPageInfo = null;
             if (is_string($query) && $query !== '') {
                 parse_str($query, $params);
-                $pageInfo = $params['page_info'] ?? null;
-                if (is_string($pageInfo) === false) {
-                    $pageInfo = null;
-                }
+                $nextPageInfo = $params['page_info'] ?? null;
             }
-            if (! $pageInfo) {
-                break;
+            if (! is_string($nextPageInfo) || $nextPageInfo === '' || $nextPageInfo === $pageInfo) {
+                throw new ProductSyncException('Shopify returned an invalid next products page. Try syncing again.');
             }
+            $pageInfo = $nextPageInfo;
         }
 
         return array_map(fn (array $data) => (new VirtualPage(
@@ -414,7 +399,7 @@ GQL,
             $productBatchSize = min(250, max(1, intdiv(500, count($metafieldBatch))));
             foreach (array_chunk($productIds, $productBatchSize) as $productIdBatch) {
                 $nodes = $this->graphqlNodes(
-                    $this->requestAdminProductMetafields($productIdBatch, $metafieldBatch),
+                    fn () => $this->requestAdminProductMetafields($productIdBatch, $metafieldBatch),
                     'product metafields'
                 );
 
@@ -451,7 +436,7 @@ GQL,
         $metaobjects = [];
         foreach (array_chunk(array_values($metaobjectIds), 249) as $metaobjectIdBatch) {
             $nodes = $this->graphqlNodes(
-                $this->requestAdminMetaobjects($metaobjectIdBatch),
+                fn () => $this->requestAdminMetaobjects($metaobjectIdBatch),
                 'metaobjects'
             );
             foreach ($nodes as $node) {
@@ -497,29 +482,16 @@ GQL,
         return $products;
     }
 
-    private function graphqlNodes(Remote $remote, string $resource): array
+    private function graphqlNodes(Closure $request, string $resource): array
     {
-        $json = $remote->json();
-        if ($remote->code() !== 200) {
-            throw new \RuntimeException('Shopify Admin '.$resource.' request failed with status '.$remote->code());
-        }
-        if (! is_array($json)) {
-            throw new \RuntimeException('Shopify Admin '.$resource.' request did not return JSON');
-        }
-
-        $errors = A::get($json, 'errors', []);
-        if (is_array($errors) && $errors !== []) {
-            $messages = array_map(
-                fn ($error) => is_array($error) ? strval(A::get($error, 'message', 'Unknown error')) : strval($error),
-                $errors
-            );
-
-            throw new \RuntimeException('Shopify Admin '.$resource.' request failed: '.implode('; ', $messages));
+        $json = $this->productSyncJson('Admin '.$resource, $request);
+        if (! empty($json['errors'])) {
+            throw new ProductSyncException('Shopify could not load '.$resource.'. Check the read_products and read_metaobjects permissions, then try again.');
         }
 
         $nodes = A::get($json, 'data.nodes');
         if (! is_array($nodes)) {
-            throw new \RuntimeException('Shopify Admin '.$resource.' request returned no nodes');
+            throw new ProductSyncException('Shopify Admin '.$resource.' request returned no nodes.');
         }
 
         return $nodes;
@@ -555,18 +527,18 @@ GQL,
             return [];
         }
         if (! is_array($configured)) {
-            throw new \InvalidArgumentException('Shopify metafields must be configured as an array of namespace.key strings');
+            throw new ProductSyncException('Shopify metafields must be configured as an array of namespace.key strings.');
         }
 
         $metafields = [];
         foreach ($configured as $configuredMetafield) {
             if (! is_string($configuredMetafield) || ! str_contains($configuredMetafield, '.')) {
-                throw new \InvalidArgumentException('Shopify metafields must be configured as namespace.key strings');
+                throw new ProductSyncException('Shopify metafields must be configured as namespace.key strings.');
             }
 
             [$namespace, $key] = array_map('trim', explode('.', $configuredMetafield, 2));
             if ($namespace === '' || $key === '') {
-                throw new \InvalidArgumentException('Shopify metafields must be configured as namespace.key strings');
+                throw new ProductSyncException('Shopify metafields must be configured as namespace.key strings.');
             }
 
             $metafields[$namespace.'.'.$key] = [
@@ -580,7 +552,7 @@ GQL,
 
     protected function requestAdminProducts(?string $pageInfo): Remote
     {
-        return Remote::get($this->adminEndpoint().'/products.json', [
+        return $this->sendProductSyncRequest('GET', $this->adminEndpoint().'/products.json', [
             'headers' => $this->adminHeaders(),
             'data' => array_filter([
                 'limit' => 250,
@@ -612,7 +584,7 @@ query ProductMetafields($ids: [ID!]!) {
 }
 GQL);
 
-        return Remote::post($this->adminEndpoint().'/graphql.json', [
+        return $this->sendProductSyncRequest('POST', $this->adminEndpoint().'/graphql.json', [
             'headers' => array_merge($this->adminHeaders(), [
                 'Content-Type' => 'application/json',
             ]),
@@ -632,7 +604,7 @@ GQL);
 
     protected function requestAdminMetaobjects(array $metaobjectIds): Remote
     {
-        return Remote::post($this->adminEndpoint().'/graphql.json', [
+        return $this->sendProductSyncRequest('POST', $this->adminEndpoint().'/graphql.json', [
             'headers' => array_merge($this->adminHeaders(), [
                 'Content-Type' => 'application/json',
             ]),
@@ -666,7 +638,7 @@ GQL,
         $version = $this->apiVersion();
         $domain = $this->storeDomain();
         if ($domain === '') {
-            throw new \RuntimeException('Shopify store_domain is required to fetch products');
+            throw new ProductSyncException('Shopify store_domain is required to fetch products.');
         }
 
         return 'https://'.$domain.'/admin/api/'.$version;
@@ -686,7 +658,7 @@ GQL,
         $clientSecret = trim(strval($this->option('client_secret')));
 
         if ($clientId === '' || $clientSecret === '') {
-            throw new \RuntimeException('Shopify client_id and client_secret are required to request an Admin API token');
+            throw new ProductSyncException('Shopify client_id and client_secret are required to request an Admin API token.');
         }
 
         return $this->requestAdminAccessToken($clientId, $clientSecret);
@@ -695,7 +667,7 @@ GQL,
     protected function requestAdminAccessToken(string $clientId, string $clientSecret): string
     {
         // https://shopify.dev/docs/apps/build/authentication-authorization/client-secrets
-        $remote = Remote::post($this->adminAccessTokenEndpoint(), [
+        $json = $this->productSyncJson('an Admin API access token', fn () => $this->sendProductSyncRequest('POST', $this->adminAccessTokenEndpoint(), [
             'headers' => [
                 'Content-Type' => 'application/x-www-form-urlencoded',
                 'Accept' => 'application/json',
@@ -705,32 +677,21 @@ GQL,
                 'client_secret' => $clientSecret,
                 'grant_type' => 'client_credentials',
             ],
-        ]);
+        ]));
 
-        $json = $remote->json();
-        $token = $remote->code() === 200 && is_array($json)
-            ? A::get($json, 'access_token')
-            : null;
+        $token = $json['access_token'] ?? null;
         if (is_string($token) && $token !== '') {
             return $token;
         }
 
-        $error = is_array($json)
-            ? A::get($json, 'error_description', A::get($json, 'error'))
-            : null;
-        $message = 'Shopify Admin API token request failed with status '.$remote->code();
-        if (is_string($error) && $error !== '') {
-            $message .= ': '.$error;
-        }
-
-        throw new \RuntimeException($message);
+        throw new ProductSyncException('Shopify returned no Admin API access token. Check your store domain, client ID and secret.');
     }
 
     protected function adminAccessTokenEndpoint(): string
     {
         $domain = $this->storeDomain();
         if ($domain === '') {
-            throw new \RuntimeException('Shopify store_domain is required to request an Admin API token');
+            throw new ProductSyncException('Shopify store_domain is required to request an Admin API token.');
         }
 
         return 'https://'.$domain.'/admin/oauth/access_token';
@@ -765,18 +726,6 @@ GQL,
     private function variantGid(string $variantId): string
     {
         return str_contains($variantId, 'gid://') ? $variantId : 'gid://shopify/ProductVariant/'.$variantId;
-    }
-
-    private function canFetchProducts(): bool
-    {
-        if ($this->storeDomain() === '') {
-            return false;
-        }
-
-        $clientId = trim(strval($this->option('client_id')));
-        $clientSecret = trim(strval($this->option('client_secret')));
-
-        return $clientId !== '' && $clientSecret !== '';
     }
 
     private function storeDomain(): string

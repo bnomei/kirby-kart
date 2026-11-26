@@ -11,15 +11,19 @@
 namespace Bnomei\Kart;
 
 use Closure;
+use Exception;
 use Kirby\Cache\Cache;
+use Kirby\Cache\Value;
 use Kirby\Cms\App;
 use Kirby\Cms\User;
 use Kirby\Content\Field;
 use Kirby\Data\Yaml;
 use Kirby\Filesystem\F;
+use Kirby\Http\Remote;
 use Kirby\Toolkit\A;
 use Kirby\Toolkit\Date;
 use Kirby\Toolkit\Str;
+use stdClass;
 
 #[\AllowDynamicProperties]
 abstract class Provider
@@ -472,7 +476,6 @@ abstract class Provider
         $t = microtime(true);
 
         foreach ($sync as $interface) {
-            $this->cache[$interface] = null;
             $this->read($interface, refresh: true);
         }
 
@@ -589,6 +592,51 @@ abstract class Provider
         return $this->read('products');
     }
 
+    protected function requireProductSyncOptions(string ...$keys): void
+    {
+        foreach ($keys as $key) {
+            if (trim(strval($this->option($key))) === '') {
+                throw new ProductSyncException("{$this->title()} product sync requires bnomei.kart.providers.{$this->name}.$key.");
+            }
+        }
+    }
+
+    protected function sendProductSyncRequest(string $method, string $url, array $options): Remote
+    {
+        return $method === 'GET'
+            ? Remote::get($url, $options)
+            : Remote::post($url, $options);
+    }
+
+    /** @param Closure(): Remote $request */
+    protected function productSyncJson(string $resource, Closure $request, ?string $listField = null): array
+    {
+        try {
+            $remote = $request();
+        } catch (ProductSyncException $e) {
+            throw $e;
+        } catch (Exception) {
+            throw new ProductSyncException("Could not reach {$this->title()} to load $resource. Check the connection and try again.");
+        }
+
+        $status = $remote->code();
+        // Never echo provider error bodies or transport messages; they can include credentials.
+        if ($status === 401 || $status === 403) {
+            throw new ProductSyncException("{$this->title()} denied access to $resource. Check the API credentials and their read permissions, then try again.");
+        }
+        if ($status !== 200) {
+            throw new ProductSyncException("{$this->title()} could not load $resource (HTTP $status). Check the provider configuration and try again.");
+        }
+
+        // Decode as objects for validation so an empty JSON object is not mistaken for an empty list.
+        $object = $remote->json(false);
+        if (! $object instanceof stdClass || ($listField !== null && ! is_array($object->{$listField} ?? null))) {
+            throw new ProductSyncException("{$this->title()} returned an invalid $resource response. Try syncing again.");
+        }
+
+        return $remote->json() ?? [];
+    }
+
     public function read(string $interface, bool $refresh = false): array
     {
         if ($interface !== ContentPageEnum::PRODUCTS->value) {
@@ -600,16 +648,29 @@ abstract class Provider
             return $data;
         }
 
-        // file cache
-        $cached = $this->cache()->get($interface);
-        if ($refresh === false && is_array($cached)) {
-            $this->cache[$interface] = $cached;
-
-            return $cached;
+        // Expiry controls when to refresh, not when to discard the last good catalog.
+        $expire = $this->kart->option('expire');
+        $cache = $this->cache();
+        $snapshot = $expire === null ? null : $cache->retrieve($interface);
+        $cached = $snapshot?->value();
+        if ($refresh === false && $snapshot !== null && is_array($cached)) {
+            $expires = (new Value($cached, intval($expire), $snapshot->created()))->expires();
+            if ($expires === null || $expires > time()) {
+                return $this->cache[$interface] = $cached;
+            }
         }
 
         $method = 'fetch'.ucfirst($interface);
-        $data = $this->$method(); // concrete implementation
+        try {
+            $data = $this->$method(); // concrete implementation
+        } catch (ProductSyncException $e) {
+            if ($refresh) {
+                throw $e;
+            }
+
+            // With no successful snapshot, a cold read can still show local pages.
+            return $this->cache[$interface] = is_array($cached) ? $cached : [];
+        }
 
         if (
             ! $this->kirby()->environment()->isLocal() &&
@@ -622,16 +683,20 @@ abstract class Provider
             $data = array_slice($data, 0, 10);
         }
 
-        $expire = $this->kart->option('expire');
-        if (! is_null($expire)) {
-            $this->cache()->set($interface, $data, intval($expire));
+        if ($expire !== null) {
+            $cache->set($interface, $data);
+            if ($cached !== $data) {
+                foreach (['products', 'categories', 'tags', 'variants'] as $derived) {
+                    $this->kirby()->cache('bnomei.kart.'.$derived)->flush();
+                }
+            }
         }
 
         // update timestamp
         $this->cache[$interface] = $data;
         $t = str_replace('+00:00', '', Date::now()->toString());
-        $this->cache()->set('updatedAt', $t);
-        $this->cache()->set('updatedAt-'.$interface, $t);
+        $cache->set('updatedAt', $t);
+        $cache->set('updatedAt-'.$interface, $t);
 
         return $data;
     }

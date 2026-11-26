@@ -12,6 +12,7 @@ namespace Bnomei\Kart\Provider;
 
 use Bnomei\Kart\CartLine;
 use Bnomei\Kart\ContentPageEnum;
+use Bnomei\Kart\ProductSyncException;
 use Bnomei\Kart\Provider;
 use Bnomei\Kart\ProviderEnum;
 use Bnomei\Kart\Router;
@@ -214,50 +215,39 @@ class Paddle extends Provider
 
     public function fetchProducts(): array
     {
+        $this->requireProductSyncOptions('secret_key', 'endpoint');
         $products = [];
         $cursor = null;
-        $endpoint = strval($this->option('endpoint'));
+        $url = strval($this->option('endpoint')).'/products';
+        $headers = $this->headers();
 
         while (true) {
             // https://developer.paddle.com/api-reference/products/list-products
-            $remote = Remote::get($endpoint.'/products', [
-                'headers' => [
-                    'Content-Type' => 'application/json',
-                    'Authorization' => 'Bearer '.strval($this->option('secret_key')),
-                ],
+            $json = $this->productSyncJson('products', fn () => $this->sendProductSyncRequest('GET', $url, [
+                'headers' => $headers,
                 'data' => array_filter([
                     'status' => 'active',
                     'after' => $cursor,
                     'per_page' => 200,
                     'include' => implode(',', ['prices']),
                 ]),
-            ]);
-
-            $json = $remote->code() === 200 ? $remote->json() : null;
-            if (! is_array($json)) {
-                break;
+            ]), 'data');
+            if (isset($json['error'])) {
+                throw new ProductSyncException('Paddle returned an invalid products response. Try syncing again.');
             }
 
-            $items = A::get($json, 'data', []);
-            if (! is_array($items) || $items === []) {
-                break;
-            }
-
-            foreach ($items as $product) {
-                if (! is_array($product)) {
-                    continue;
-                }
+            foreach ($json['data'] as $product) {
                 $id = $product['id'] ?? null;
-                if (! is_string($id) && ! is_int($id)) {
-                    continue;
+                if ((! is_string($id) && ! is_int($id)) || $id === '') {
+                    throw new ProductSyncException('Paddle returned a product without an ID. Try syncing again.');
                 }
-                $id = (string) $id;
-                if ($id === '') {
-                    continue;
-                }
-                $products[$id] = $product;
+                $products[(string) $id] = $product;
             }
 
+            // Paddle includes a next URL on the last page too.
+            if (A::get($json, 'meta.pagination.has_more') !== true) {
+                break;
+            }
             $next = A::get($json, 'meta.pagination.next');
             $nextCursor = null;
             if (is_string($next) && $next !== '') {
@@ -268,8 +258,8 @@ class Paddle extends Provider
                 }
             }
 
-            if (! $nextCursor || $nextCursor === $cursor) {
-                break;
+            if (! is_string($nextCursor) || $nextCursor === '' || $nextCursor === $cursor) {
+                throw new ProductSyncException('Paddle returned an incomplete products page. Try syncing again.');
             }
             $cursor = $nextCursor;
         }
