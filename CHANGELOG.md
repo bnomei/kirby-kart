@@ -1,5 +1,12 @@
 # Changelog
 
+## 5.17.2 - 2026-11-26
+
+### Fixed
+
+- Keep storefront login and signup links separate from Kirby 5's Panel codes. Links issued by `$user->sendMagicLink()` now have the same email binding, ten-minute expiry and single-use verification as links issued by the routes.
+- Verify the link before creating the customer or firing the signup hook. Links requested before updating must be requested again.
+
 ## 5.17.1 - 2026-10-25
 
 ### Fixed

@@ -10,38 +10,28 @@
 
 namespace Bnomei\Kart;
 
-use Kirby\Cms\Auth\Challenge;
+use Kirby\Cms\Auth\EmailChallenge;
 use Kirby\Cms\User;
 use Kirby\Toolkit\I18n;
 use Kirby\Toolkit\Str;
 
-class MagicLinkChallenge extends Challenge
+class MagicLinkChallenge extends EmailChallenge
 {
-    public static function isAvailable(User $user, string $mode): bool
-    {
-        return true;
-    }
+    private const SESSION = 'kart.magic-link';
 
-    public static function create(User $user, array $options): ?string
+    private const TIMEOUT = 600;
+
+    public static function start(User $user, array $options): void
     {
-        $code = Str::random(6, 'num');
-        if (! $code) {
-            return null;
-        }
+        $kirby = $user->kirby();
+        $session = $kirby->session();
+        $session->remove(self::SESSION);
+        $code = sprintf('%06d', random_int(0, 999999));
 
         // insert a space in the middle for easier readability
         $formatted = substr($code, 0, 3).' '.substr($code, 3, 3);
 
-        // use the login templates for 2FA
-        $mode = $options['mode'];
-        if ($mode === '2fa') {
-            $mode = 'login';
-        }
-        if ($mode === 'login') {
-            $mode = 'login-magic';
-        }
-
-        $kirby = $user->kirby();
+        $mode = 'login-magic';
         $link = url(Router::MAGIC_LINK).'?'.implode('&', [
             'email='.urlencode($user->email() ?? ''),
             'code='.$code,
@@ -70,7 +60,7 @@ class MagicLinkChallenge extends Challenge
             'link' => $link,
             'preview' => t('login.code.label.login'),
             'formatted' => $formatted,
-            'timeout' => round($options['timeout'] / 60),
+            'timeout' => self::TIMEOUT / 60,
         ];
         $from = 'noreply@'.($kirby->url('index', true)->domain() ?? 'localhost');
         $kirby->email([
@@ -87,6 +77,20 @@ class MagicLinkChallenge extends Challenge
             ],
         ]);
 
-        return $code;
+        $session->set(self::SESSION, [
+            'email' => $user->email(),
+            'expires' => time() + self::TIMEOUT,
+            'hash' => password_hash($code, PASSWORD_DEFAULT),
+        ]);
+    }
+
+    public static function consume(mixed $email, mixed $code): bool
+    {
+        $link = kirby()->session()->pull(self::SESSION);
+
+        return is_array($link) && is_string($email) && is_string($code)
+            && is_int($link['expires'] ?? null) && $link['expires'] >= time()
+            && is_string($link['email'] ?? null) && strcasecmp($link['email'], $email) === 0
+            && is_string($link['hash'] ?? null) && password_verify($code, $link['hash']);
     }
 }

@@ -235,23 +235,14 @@ return function (App $kirby) {
                     'role' => kart()->option('customers.roles')[0],
                 ]);
                 if ($user && is_null($maybe)) { // @phpstan-ignore-line
-                    $code = MagicLinkChallenge::create($user, [
-                        'mode' => 'login',
-                        'timeout' => 10 * 60,
-                        'email' => A::get($data, 'email'),
+                    MagicLinkChallenge::start($user, [
                         'name' => A::get($data, 'name'),
                         'signup' => 1,
                         'success_url' => A::get($data, 'success_url'),
                         'error_url' => A::get($data, 'error_url'),
                     ]);
-                    if ($code) {
-                        kirby()->session()->set('kirby.challenge.type', 'login');
-                        kirby()->session()->set('kirby.challenge.code', password_hash($code, PASSWORD_DEFAULT));
-                        kirby()->session()->set('kirby.challenge.email', $user->email());
-                        kirby()->session()->set('kirby.challenge.timeout', time() + 10 * 60);
 
-                        return Router::go();
-                    }
+                    return Router::go();
                 }
 
                 return Router::go(Router::back(), code: 401);
@@ -275,21 +266,12 @@ return function (App $kirby) {
                     kart()->message(t('error.access.login'));
                 }
                 if ($user && $user->isCustomer()) {
-                    $code = MagicLinkChallenge::create($user, [
-                        'mode' => 'login-magic',
-                        'timeout' => 10 * 60,
-                        'email' => A::get($data, 'email'),
+                    MagicLinkChallenge::start($user, [
                         'success_url' => A::get($data, 'success_url'),
                         'error_url' => A::get($data, 'error_url'),
                     ]);
-                    if ($code) {
-                        kirby()->session()->set('kirby.challenge.type', 'login');
-                        kirby()->session()->set('kirby.challenge.code', password_hash($code, PASSWORD_DEFAULT));
-                        kirby()->session()->set('kirby.challenge.email', $user->email());
-                        kirby()->session()->set('kirby.challenge.timeout', time() + 10 * 60);
 
-                        return Router::go();
-                    }
+                    return Router::go();
                 }
 
                 return Router::go(Router::back(), code: 401);
@@ -319,27 +301,7 @@ return function (App $kirby) {
 
                 $data = Kart::sanitize(kirby()->request()->data());
 
-                $code = A::get($data, 'code');
-
-                // the one-time code is only valid for the address it was
-                // issued for and only within its timeout window
-                $session = kirby()->session();
-                $challengeEmail = $session->get('kirby.challenge.email');
-                $challengeTimeout = $session->get('kirby.challenge.timeout');
-                if (
-                    ! is_string($challengeEmail) ||
-                    ! is_int($challengeTimeout) ||
-                    $challengeTimeout < time() ||
-                    ! hash_equals(
-                        strtolower($challengeEmail),
-                        strtolower(strval(A::get($data, 'email')))
-                    )
-                ) {
-                    $session->remove('kirby.challenge.type');
-                    $session->remove('kirby.challenge.code');
-                    $session->remove('kirby.challenge.email');
-                    $session->remove('kirby.challenge.timeout');
-
+                if (! MagicLinkChallenge::consume(A::get($data, 'email'), A::get($data, 'code'))) {
                     return Router::go(url(Router::safeRedirect(Router::get('error_url'), '/')));
                 }
 
@@ -364,12 +326,7 @@ return function (App $kirby) {
                     kart()->message(t('error.access.login'));
                 }
 
-                if ($user && $user->isCustomer() && MagicLinkChallenge::verify($user, $code)) {
-
-                    $session->remove('kirby.challenge.type');
-                    $session->remove('kirby.challenge.code');
-                    $session->remove('kirby.challenge.email');
-                    $session->remove('kirby.challenge.timeout');
+                if ($user && $user->isCustomer()) {
                     $user->loginPasswordless();
                 } else {
                     $redirect = Router::safeRedirect(

@@ -1244,17 +1244,10 @@ App::plugin(
             'sendMagicLink' => function (?string $success_url = null): void {
                 /** @var User $user */
                 $user = $this;
-                $code = MagicLinkChallenge::create($user, [
-                    'mode' => 'login',
-                    'timeout' => 10 * 60,
-                    'email' => $user->email(),
+                MagicLinkChallenge::start($user, [
                     'name' => $user->nameOrEmail(),
                     'success_url' => $success_url ?? url('/'),
                 ]);
-                if ($code) {
-                    kirby()->session()->set('kirby.challenge.type', 'login');
-                    kirby()->session()->set('kirby.challenge.code', password_hash($code, PASSWORD_DEFAULT));
-                }
             },
         ],
         'fields' => [
